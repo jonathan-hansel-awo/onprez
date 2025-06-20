@@ -6,9 +6,9 @@ import { cn } from '@/utils/cn';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'OnPrez - Professional Websites for Local Businesses',
+  title: 'OnPrez - Smart Booking Solution for Local Businesses',
   description:
-    'Create your professional business website with integrated booking in minutes.',
+    'Accept online bookings with a professional profile page that matches your brand. Set up in minutes, manage appointments effortlessly.',
 };
 
 export default function RootLayout({
