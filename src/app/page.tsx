@@ -23,7 +23,6 @@ export default function HomePage() {
           </nav>
         </div>
       </header>
-
       <main className="flex-1">
         <section className="container mx-auto px-4 py-24 text-center">
           <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">

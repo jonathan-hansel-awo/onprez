@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Enums
+enum UserRole {
+  OWNER
+  STAFF
+  ADMIN
+}
+
+enum BusinessCategory {
+  SALON
+  BARBERSHOP
+  SPA
+  FITNESS
+  MEDICAL
+  DENTAL
+  CONSULTING
+  OTHER
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+// Models
+model User {
+  id                String              @id @default(uuid())
+  email             String              @unique
+  passwordHash      String              @map("password_hash")
+  emailVerified     Boolean             @default(false) @map("email_verified")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  businesses        UserBusinessRole[]
+  
+  @@map("users")
+}
+
+model Business {
+  id                String              @id @default(uuid())
+  slug              String              @unique
+  name              String
+  category          BusinessCategory
+  description       String?             @db.Text
+  phone             String?
+  email             String?
+  address           String?
+  timezone          String              @default("America/New_York")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  // Settings stored as JSON
+  settings          Json                @default("{}")
+  
+  // Relations
+  users             UserBusinessRole[]
+  services          Service[]
+  customers         Customer[]
+  appointments      Appointment[]
+  businessHours     BusinessHours[]
+  
+  @@map("businesses")
+}
+
+model UserBusinessRole {
+  id                String              @id @default(uuid())
+  userId            String              @map("user_id")
+  businessId        String              @map("business_id")
+  role              UserRole            @default(OWNER)
+  createdAt         DateTime            @default(now()) @map("created_at")
+  
+  // Relations
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business          Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, businessId])
+  @@map("user_business_roles")
+}
+
+model Service {
+  id                String              @id @default(uuid())
+  businessId        String              @map("business_id")
+  name              String
+  description       String?             @db.Text
+  price             Decimal?            @db.Decimal(10, 2)
+  duration          Int                 // in minutes
+  active            Boolean             @default(true)
+  order             Int                 @default(0)
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  // Relations
+  business          Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointments      Appointment[]
+  
+  @@index([businessId, active])
+  @@map("services")
+}
+
+model Customer {
+  id                String              @id @default(uuid())
+  businessId        String              @map("business_id")
+  email             String
+  name              String
+  phone             String?
+  notes             String?             @db.Text
+  tags              String[]            @default([])
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  // Relations
+  business          Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointments      Appointment[]
+  
+  @@unique([businessId, email])
+  @@index([businessId])
+  @@map("customers")
+}
+
+model Appointment {
+  id                String              @id @default(uuid())
+  businessId        String              @map("business_id")
+  serviceId         String              @map("service_id")
+  customerId        String              @map("customer_id")
+  startTime         DateTime            @map("start_time")
+  endTime           DateTime            @map("end_time")
+  status            AppointmentStatus   @default(PENDING)
+  notes             String?             @db.Text
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  
+  // Relations
+  business          Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  service           Service             @relation(fields: [serviceId], references: [id])
+  customer          Customer            @relation(fields: [customerId], references: [id])
+  
+  @@index([businessId, startTime])
+  @@index([businessId, status])
+  @@index([customerId])
+  @@map("appointments")
+}
+
+model BusinessHours {
+  id                String              @id @default(uuid())
+  businessId        String              @map("business_id")
+  dayOfWeek         Int                 @map("day_of_week") // 0-6 (Sunday-Saturday)
+  openTime          String              @map("open_time")   // HH:MM format
+  closeTime         String              @map("close_time")  // HH:MM format
+  isOpen            Boolean             @default(true) @map("is_open")
+  
+  // Relations
+  business          Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  @@unique([businessId, dayOfWeek])
+  @@map("business_hours")
+}
