@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { Moon, Sun } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Button } from '@/components/ui/button'
+import { Moon, Sun } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export function DarkModeToggle() {
   const [isDark, setIsDark] = useState(false)
@@ -16,13 +16,13 @@ export function DarkModeToggle() {
   const toggleDarkMode = () => {
     const html = document.documentElement
     const newIsDark = !isDark
-    
+
     if (newIsDark) {
       html.classList.add('dark')
     } else {
       html.classList.remove('dark')
     }
-    
+
     setIsDark(newIsDark)
   }
 
@@ -34,11 +34,7 @@ export function DarkModeToggle() {
       className="fixed top-4 right-4"
       aria-label="Toggle dark mode"
     >
-      {isDark ? (
-        <Sun className="h-4 w-4" />
-      ) : (
-        <Moon className="h-4 w-4" />
-      )}
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </Button>
   )
 }

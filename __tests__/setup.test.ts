@@ -35,7 +35,7 @@ describe('Project Setup', () => {
     const project: ProjectInfo = {
       name: 'OnPrez',
       version: '0.1.0',
-      framework: 'Next.js 14'
+      framework: 'Next.js 14',
     }
 
     expect(project.name).toBe('OnPrez')

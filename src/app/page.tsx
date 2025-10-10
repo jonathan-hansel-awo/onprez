@@ -1,20 +1,18 @@
-import { DarkModeToggle } from "@/components/dark-mode-toggle";
-import { Button } from "@/components/ui/button"
+import { DarkModeToggle } from '@/components/dark-mode-toggle'
+import { Button } from '@/components/ui/button'
 
 export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
-           {/* Dark mode toggle in top-right corner */}
+      {/* Dark mode toggle in top-right corner */}
       <DarkModeToggle />
-      
+
       <div className="text-center max-w-2xl">
-        <h1 className="text-4xl font-bold mb-6">
-          Hello from  OnPrez! 🚀
-        </h1>
+        <h1 className="text-4xl font-bold mb-6">Hello from OnPrez! 🚀</h1>
         <p className="text-xl mb-8 text-muted-foreground">
           Welcome to your digital identity platform with integrated booking.
         </p>
-        
+
         {/* Showcase Button Components */}
         <div className="mb-8 space-y-4">
           <div className="flex flex-wrap gap-4 justify-center">
@@ -25,7 +23,7 @@ export default function HomePage() {
             <Button variant="ghost">Ghost</Button>
             <Button variant="link">Link</Button>
           </div>
-          
+
           <div className="flex flex-wrap gap-4 justify-center">
             <Button size="sm">Small</Button>
             <Button size="default">Default</Button>
@@ -74,5 +72,5 @@ export default function HomePage() {
         </div>
       </div>
     </main>
-  );
+  )
 }

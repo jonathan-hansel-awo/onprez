@@ -9,17 +9,11 @@ export const metadata: Metadata = {
   description: 'Digital identity platform with integrated booking for service professionals',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <div className="min-h-screen bg-background font-sans antialiased">
-          {children}
-        </div>
+        <div className="min-h-screen bg-background font-sans antialiased">{children}</div>
       </body>
     </html>
   )

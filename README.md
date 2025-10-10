@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OnPrez
+
+Digital identity platform with integrated booking for service professionals.
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Code Quality Tools
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses several tools to maintain code quality:
 
-## Learn More
+### ESLint
 
-To learn more about Next.js, take a look at the following resources:
+Identifies and fixes code problems:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint        # Check for issues
+npm run lint:fix    # Auto-fix issues
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Prettier
 
-## Deploy on Vercel
+Formats code consistently:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run format        # Format all files
+npm run format:check  # Check if files are formatted
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Pre-commit Hooks (Husky)
+
+Automatically runs linting and formatting before each commit. This ensures:
+
+- ✅ All code is properly formatted
+- ✅ No ESLint errors
+- ✅ Consistent code style across the team
+
+### TypeScript Type Checking
+
+```bash
+npm run type-check  # Verify TypeScript types
+```
+
+### Running Tests
+
+```bash
+npm run test         # Run all tests
+npm run test:watch   # Run tests in watch mode
+```
+
+## VSCode Setup
+
+For the best development experience:
+
+1. **Install recommended extensions** (VSCode will prompt you)
+2. **Enable format on save** (already configured in `.vscode/settings.json`)
+3. **Reload window** after installing extensions
+
+## Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint issues
+- `npm run format` - Format all files with Prettier
+- `npm run format:check` - Check if files are formatted
+- `npm run type-check` - Run TypeScript type checking
+- `npm run test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
+
+## Project Structure
+
+```
+onprez/
+├── src/
+│   ├── app/              # Next.js App Router
+│   ├── components/       # React components
+│   │   └── ui/          # Shadcn/ui components
+│   ├── lib/             # Utilities
+│   └── types/           # TypeScript types
+├── __tests__/           # Test files
+├── .husky/              # Git hooks
+├── .vscode/             # VSCode settings
+├── public/              # Static files
+└── ...config files
+```
+
+## Tech Stack
+
+- **Framework:** Next.js 14 with App Router
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS v4
+- **Components:** Shadcn/ui
+- **Testing:** Jest + React Testing Library
+- **Linting:** ESLint + Prettier
+- **Git Hooks:** Husky + lint-staged
+
+---

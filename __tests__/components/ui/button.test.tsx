@@ -13,7 +13,7 @@ describe('Button Component', () => {
   it('handles click events', () => {
     const handleClick = jest.fn()
     render(<Button onClick={handleClick}>Click me</Button>)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
     expect(handleClick).toHaveBeenCalledTimes(1)
