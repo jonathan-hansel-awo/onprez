@@ -31,7 +31,7 @@ export function DarkModeToggle() {
       variant="outline"
       size="icon"
       onClick={toggleDarkMode}
-      className="fixed top-4 right-4"
+      className=""
       aria-label="Toggle dark mode"
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

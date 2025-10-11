@@ -1,585 +1,633 @@
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { DarkModeToggle } from '@/components/dark-mode-toggle'
 import {
   Calendar,
-  Sparkles,
-  Users,
-  Zap,
-  ArrowRight,
-  Globe,
-  Share2,
-  Star,
-  Heart,
   Palette,
-  Rocket,
+  Share2,
+  Sparkles,
   TrendingUp,
+  Users,
+  CheckCircle,
+  ArrowRight,
+  BarChart3,
+  Star,
+  Globe,
+  Image,
+  Layout,
+  Zap,
+  Eye,
+  MousePointerClick,
 } from 'lucide-react'
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Super Creative Animated Background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        {/* Vibrant gradient mesh */}
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-100 via-purple-50 to-cyan-100 dark:from-purple-950/30 dark:via-pink-950/20 dark:to-cyan-950/30" />
+    <div className="min-h-screen">
+      {/* Hero Section - Sophisticated with depth */}
+      <section className="relative pt-20 pb-32 px-4 overflow-hidden">
+        {/* Sophisticated gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-50 dark:from-slate-950 dark:via-indigo-950/20 dark:to-slate-950" />
 
-        {/* Floating colorful blobs */}
-        <div className="absolute top-0 -left-20 w-[500px] h-[500px] bg-gradient-to-br from-pink-400 to-rose-600 dark:from-pink-600/40 dark:to-rose-800/40 rounded-full blur-3xl animate-blob opacity-70" />
-        <div className="absolute top-1/4 -right-20 w-[600px] h-[600px] bg-gradient-to-br from-purple-400 to-indigo-600 dark:from-purple-600/40 dark:to-indigo-800/40 rounded-full blur-3xl animate-blob animation-delay-2000 opacity-70" />
-        <div className="absolute -bottom-20 left-1/3 w-[500px] h-[500px] bg-gradient-to-br from-cyan-400 to-blue-600 dark:from-cyan-600/40 dark:to-blue-800/40 rounded-full blur-3xl animate-blob animation-delay-4000 opacity-70" />
-        <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-gradient-to-br from-yellow-400 to-orange-500 dark:from-yellow-600/30 dark:to-orange-700/30 rounded-full blur-3xl animate-blob animation-delay-6000 opacity-60" />
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080801a_1px,transparent_1px),linear-gradient(to_bottom,#8080801a_1px,transparent_1px)] bg-[size:4rem_4rem]" />
 
-        {/* Decorative shapes */}
-        <div className="absolute top-20 left-10 w-20 h-20 border-4 border-pink-400/30 dark:border-pink-500/20 rounded-xl rotate-12 animate-float" />
-        <div className="absolute bottom-40 right-20 w-16 h-16 border-4 border-purple-400/30 dark:border-purple-500/20 rounded-full animate-float animation-delay-2000" />
-        <div className="absolute top-1/3 right-1/4 w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 dark:from-cyan-500/30 dark:to-blue-600/30 rounded-lg rotate-45 animate-float animation-delay-4000 opacity-50" />
-      </div>
+        {/* Ambient glow effects */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
 
-      {/* Header */}
-      <header className="sticky px-12 top-0 z-50 w-full border-b border-white/20 dark:border-white/10 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl shadow-lg shadow-purple-500/5">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
-            <div className="flex items-center gap-3 group cursor-pointer">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl blur-md opacity-75 group-hover:opacity-100 transition-opacity" />
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg group-hover:scale-110 transition-transform">
-                  <Sparkles className="h-5 w-5 text-white animate-pulse" />
-                </div>
-              </div>
-              <span className="text-xl font-black bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-600 dark:from-pink-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                OnPrez
-              </span>
-            </div>
-
-            <nav className="hidden md:flex items-center gap-8">
-              <a
-                href="#features"
-                className="text-sm font-semibold text-purple-700 dark:text-purple-300 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-200 hover:scale-110"
-              >
-                Features <span className="preserve-emoji">✨</span>
-              </a>
-              <a
-                href="#how-it-works"
-                className="text-sm font-semibold text-purple-700 dark:text-purple-300 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-200 hover:scale-110"
-              >
-                How It Works <span className="preserve-emoji">🚀</span>
-              </a>
-              <a
-                href="#testimonials"
-                className="text-sm font-semibold text-purple-700 dark:text-purple-300 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-200 hover:scale-110"
-              >
-                Love <span className="preserve-emoji">💖</span>
-              </a>
-            </nav>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              <DarkModeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hidden sm:inline-flex font-semibold hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-300 transition-all"
-              >
-                Sign In
-              </Button>
-              <Button
-                size="sm"
-                className="font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105 transition-all"
-              >
-                Start Free <span className="preserve-emoji">✨</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative py-20 md:py-32">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-5xl mx-auto">
-            <Badge className="mb-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white border-0 shadow-lg shadow-purple-500/50 hover:shadow-xl hover:scale-105 transition-all px-4 py-2 text-sm font-bold animate-bounce-slow">
-              <Sparkles className="mr-2 h-4 w-4 animate-spin-slow" />
-              Your Digital Identity, Supercharged!
-              <Rocket className="ml-2 h-4 w-4" />
-            </Badge>
-
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-8 leading-tight">
-              <span className="inline-block animate-slide-up bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent">
-                Own Your
-              </span>
-              <br />
-              <span className="inline-block animate-slide-up-delay-2 bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent">
-                Online Presence!
-              </span>
-              <span className="preserve-emoji">🎉</span>
-            </h1>
-
-            <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-gray-700 dark:text-gray-300 leading-relaxed animate-fade-in font-medium">
-              Get your own{' '}
-              <span className="relative inline-block">
-                <span className="absolute inset-0 bg-gradient-to-r from-pink-400 to-purple-500 blur-lg opacity-50" />
-                <span className="relative font-black text-purple-700 dark:text-purple-300 px-3 py-1 bg-white/80 dark:bg-gray-900/80 rounded-lg border-2 border-purple-400 dark:border-purple-500">
-                  onprez.com/yourname
-                </span>
-              </span>{' '}
-              handle and create a stunning presence where clients can discover, explore, and book
-              your services instantly! <span className="preserve-emoji">💫</span>
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up-delay-2">
-              <Button
-                size="lg"
-                className="text-lg font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-600 hover:from-pink-700 hover:via-purple-700 hover:to-cyan-700 text-white shadow-2xl shadow-purple-500/50 hover:shadow-3xl hover:shadow-purple-500/60 hover:scale-110 transition-all group border-2 border-white/20 px-8 py-6"
-              >
-                <Heart className="mr-2 h-5 w-5 group-hover:scale-125 transition-transform" />
-                Create Your Presence
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-lg font-bold border-3 border-purple-600 dark:border-purple-400 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 shadow-xl hover:shadow-2xl hover:scale-110 transition-all group px-8 py-6"
-              >
-                <Globe className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-                See Examples
-              </Button>
-            </div>
-
-            {/* Social Proof - More Vibrant */}
-            <div className="flex flex-wrap items-center justify-center gap-6 animate-fade-in-delay">
-              <div className="flex items-center gap-3 bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 px-6 py-3 rounded-full border-2 border-pink-300/50 dark:border-pink-700/50 shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-                <div className="flex -space-x-3">
-                  {[
-                    'from-pink-500 to-rose-600',
-                    'from-purple-500 to-indigo-600',
-                    'from-cyan-500 to-blue-600',
-                    'from-yellow-500 to-orange-600',
-                  ].map((gradient, i) => (
-                    <div
-                      key={i}
-                      className={`h-10 w-10 rounded-full border-3 border-white dark:border-gray-900 bg-gradient-to-br ${gradient} shadow-lg hover:scale-125 hover:z-10 transition-transform cursor-pointer`}
-                    />
-                  ))}
-                </div>
-                <span className="font-bold text-purple-700 dark:text-purple-300">
-                  500+ Happy Creators! <span className="preserve-emoji">🎨</span>
+        <div className="max-w-7xl mx-auto relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Content */}
+            <div className="space-y-8 animate-fade-in">
+              <div className="inline-flex items-center px-4 py-2 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-sm">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-3" />
+                <span className="text-sm font-medium text-primary">
+                  2,500+ professionals trust OnPrez
                 </span>
               </div>
-              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 px-6 py-3 rounded-full border-2 border-yellow-300/50 dark:border-yellow-700/50 shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-5 w-5 fill-yellow-500 text-yellow-500 animate-pulse"
-                    style={{ animationDelay: `${i * 100}ms` }}
-                  />
-                ))}
-                <span className="ml-1 font-bold text-orange-700 dark:text-orange-300">
-                  Rated Amazing!
-                </span>
+
+              <div className="space-y-4">
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+                  Own Your
+                  <br />
+                  <span className="text-primary">Online Presence</span>
+                </h1>
+                <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">
+                  Create a fully customizable presence at{' '}
+                  <span className="font-semibold text-foreground">onprez.com/yourname</span> where
+                  clients discover your work and book appointments—all in one seamless experience.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  size="lg"
+                  className="text-lg px-8 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all group"
+                >
+                  Claim Your Handle Free
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button size="lg" variant="outline" className="text-lg px-8 group border-2">
+                  <Eye className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                  See Live Examples
+                </Button>
+              </div>
+
+              {/* Trust indicators - horizontal layout */}
+              <div className="flex flex-wrap gap-8 pt-8 border-t border-border">
+                <div>
+                  <div className="text-3xl font-bold">15min</div>
+                  <div className="text-sm text-muted-foreground">To go live</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold">45K+</div>
+                  <div className="text-sm text-muted-foreground">Monthly bookings</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold">Free</div>
+                  <div className="text-sm text-muted-foreground">Forever</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Visual showcase */}
+            <div className="relative lg:h-[600px] animate-slide-up [animation-delay:200ms]">
+              {/* Mockup container with glassmorphism */}
+              <div className="relative h-full">
+                {/* Main mockup card - floating */}
+                <div className="absolute inset-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-xl rounded-3xl border border-border shadow-2xl p-8 transform hover:scale-[1.02] transition-transform duration-500">
+                  {/* Fake browser chrome */}
+                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-border/50">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-400" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                      <div className="w-3 h-3 rounded-full bg-green-400" />
+                    </div>
+                    <div className="flex-1 flex justify-center">
+                      <div className="px-4 py-1.5 rounded-lg bg-muted text-xs font-mono text-muted-foreground">
+                        onprez.com/sarah-salon
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Simulated profile content */}
+                  <div className="space-y-6">
+                    {/* Profile header */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400" />
+                      <div className="flex-1">
+                        <div className="h-4 w-32 bg-foreground/80 rounded mb-2" />
+                        <div className="h-3 w-48 bg-muted-foreground/40 rounded" />
+                      </div>
+                    </div>
+
+                    {/* Service cards */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {[1, 2, 3, 4].map(i => (
+                        <div
+                          key={i}
+                          className="aspect-square rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-border/50 p-4 hover:scale-105 transition-transform"
+                        />
+                      ))}
+                    </div>
+
+                    {/* CTA button */}
+                    <div className="h-12 rounded-lg bg-primary/80 shadow-lg shadow-primary/20" />
+                  </div>
+                </div>
+
+                {/* Floating accent cards */}
+                <div className="absolute -right-8 top-20 w-48 h-32 bg-card/80 backdrop-blur-xl rounded-2xl border border-border shadow-xl p-4 animate-float">
+                  <Calendar className="w-8 h-8 text-primary mb-2" />
+                  <div className="h-2 w-24 bg-muted rounded mb-2" />
+                  <div className="h-2 w-16 bg-muted rounded" />
+                </div>
+
+                <div className="absolute -left-8 bottom-32 w-48 h-32 bg-card/80 backdrop-blur-xl rounded-2xl border border-border shadow-xl p-4 animate-float [animation-delay:1s]">
+                  <Star className="w-8 h-8 text-amber-400 mb-2" />
+                  <div className="h-2 w-28 bg-muted rounded mb-2" />
+                  <div className="h-2 w-20 bg-muted rounded" />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section - Super Colorful */}
-      <section id="features" className="py-20 md:py-32 relative">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-4xl md:text-6xl">
-              <span className="font-black mb-4 bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
-                Everything You Need
-              </span>{' '}
-              <span className="preserve-emoji">🎁</span>
+      {/* What Makes OnPrez Different - Bento Box Layout */}
+      <section className="py-32 px-4 bg-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Not just booking. Not just a website.
+              <br />
+              <span className="text-primary">Your complete online presence.</span>
             </h2>
-            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto font-semibold">
-              All the tools to build your empire, wrapped in one beautiful package
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Everything service professionals need in one shareable handle
+            </p>
+          </div>
+
+          {/* Bento grid - asymmetric, modern layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+            {/* Large feature - spans 2 columns */}
+            <div className="lg:col-span-2 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent backdrop-blur-sm rounded-3xl border border-border p-8 md:p-12 hover:shadow-2xl transition-all group">
+              <div className="flex items-start gap-6">
+                <div className="p-4 rounded-2xl bg-primary/10 group-hover:scale-110 transition-transform">
+                  <Palette className="w-8 h-8 text-primary" />
+                </div>
+                <div className="flex-1 space-y-4">
+                  <h3 className="text-3xl font-bold">Fully Customizable</h3>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    Your handle, your brand. Customize colors, layouts, fonts, and content sections
+                    to match your unique style. Add galleries to showcase your work, testimonials to
+                    build trust, and an about section to tell your story.
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-4">
+                    {['Brand Colors', 'Photo Galleries', 'Custom Sections', 'Your Typography'].map(
+                      tag => (
+                        <span
+                          key={tag}
+                          className="px-4 py-2 bg-background/50 rounded-lg text-sm font-medium border border-border"
+                        >
+                          {tag}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Medium feature */}
+            <div className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm rounded-3xl border border-border p-8 hover:shadow-2xl transition-all group">
+              <div className="space-y-6">
+                <div className="p-4 rounded-2xl bg-primary/10 w-fit group-hover:scale-110 transition-transform">
+                  <Eye className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold">Discovery First</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Clients don&#39;t just book—they discover you. They browse your gallery, read your
+                  story, explore your services, and get excited about working with you.
+                </p>
+                <div className="pt-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                    <ArrowRight className="w-4 h-4" />
+                    Then they book seamlessly
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Medium feature */}
+            <div className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm rounded-3xl border border-border p-8 hover:shadow-2xl transition-all group">
+              <div className="space-y-6">
+                <div className="p-4 rounded-2xl bg-primary/10 w-fit group-hover:scale-110 transition-transform">
+                  <Share2 className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold">One Link Everywhere</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Put onprez.com/yourname in your Instagram bio, on business cards, email
+                  signature—everywhere. One link becomes your professional identity.
+                </p>
+                <div className="pt-4 space-y-2">
+                  {['Instagram', 'Business Cards', 'Email', 'Google'].map(place => (
+                    <div key={place} className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-primary" />
+                      <span className="text-sm text-muted-foreground">{place}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Large feature - spans 2 columns */}
+            <div className="lg:col-span-2 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent backdrop-blur-sm rounded-3xl border border-border p-8 md:p-12 hover:shadow-2xl transition-all group">
+              <div className="flex items-start gap-6">
+                <div className="p-4 rounded-2xl bg-amber-500/10 group-hover:scale-110 transition-transform">
+                  <Calendar className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1 space-y-4">
+                  <h3 className="text-3xl font-bold">Seamless Booking</h3>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    Booking is integrated right into your presence—no redirects, no third-party
+                    forms. Clients see your availability, pick a time, and book. You get automatic
+                    confirmations, reminders, and a complete customer database.
+                  </p>
+                  <div className="grid sm:grid-cols-3 gap-4 pt-4">
+                    {[
+                      { icon: Calendar, label: 'Real-time Availability' },
+                      { icon: Zap, label: 'Instant Confirmations' },
+                      { icon: Users, label: 'Customer Management' },
+                    ].map(item => (
+                      <div
+                        key={item.label}
+                        className="flex items-center gap-3 p-4 bg-background/50 rounded-xl border border-border"
+                      >
+                        <item.icon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                        <span className="text-sm font-medium">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features - Clean Grid with Hover Effects */}
+      <section id="features" className="py-32 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Everything you need, nothing you don&#39;t
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Purpose-built for service professionals who want control over their presence
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
-              <Card
+              <div
                 key={index}
-                className={`relative overflow-hidden border-3 ${feature.borderColor} hover:scale-105 transition-all duration-300 hover:shadow-2xl group bg-white/90 dark:bg-gray-900/90 backdrop-blur animate-slide-up`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group relative bg-card rounded-2xl p-8 border border-border hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
               >
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-5 group-hover:opacity-10 transition-opacity`}
-                />
-                <CardContent className="pt-8 relative">
-                  <div
-                    className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${feature.gradient} shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all`}
-                  >
-                    <feature.icon className="h-8 w-8 text-white" />
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+
+                <div className="relative space-y-4">
+                  <div className="p-3 rounded-xl bg-primary/10 w-fit group-hover:scale-110 transition-transform">
+                    <feature.icon className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-2xl font-black mb-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                    {feature.description}
-                  </p>
-                  <div
-                    className={`absolute -bottom-2 -right-2 w-24 h-24 bg-gradient-to-br ${feature.gradient} rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity`}
-                  />
-                </CardContent>
-              </Card>
+                  <h3 className="text-xl font-bold">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works - Fun & Colorful */}
-      <section
-        id="how-it-works"
-        className="py-20 md:py-32 relative bg-gradient-to-b from-transparent via-purple-50/50 to-transparent dark:via-purple-950/20"
-      >
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-4xl md:text-6xl ">
-              <span className="font-black mb-4 bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
-                3 Steps to Glory{' '}
-              </span>
-              <span className="preserve-emoji">🌟</span>
-            </h2>
-            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto font-semibold">
-              Go from zero to hero in under 15 minutes!
-            </p>
+      {/* How It Works - Timeline Style */}
+      <section id="how-it-works" className="py-32 px-4 bg-muted/30">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">From idea to live in 15 minutes</h2>
+            <p className="text-xl text-muted-foreground">No technical skills required</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="space-y-12">
             {steps.map((step, index) => (
-              <div
-                key={index}
-                className="relative group animate-slide-up"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-16 left-full w-full h-1 bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 dark:from-pink-600 dark:via-purple-600 dark:to-cyan-600 z-0 -translate-x-1/2" />
-                )}
-                <div className="relative text-center">
-                  <div
-                    className={`mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br ${step.gradient} text-3xl font-black text-white shadow-2xl group-hover:scale-125 group-hover:rotate-12 transition-all preserve-emoji`}
-                  >
-                    {step.emoji}
+              <div key={index} className="flex gap-8 items-start group">
+                {/* Number badge */}
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                    {index + 1}
                   </div>
-                  <h3 className="text-2xl font-black mb-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                    {step.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 pt-2">
+                  <h3 className="text-2xl font-bold mb-3">{step.title}</h3>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
                     {step.description}
                   </p>
                 </div>
+
+                {/* Connecting line (except last) */}
+                {index < steps.length - 1 && (
+                  <div className="absolute left-8 top-20 w-0.5 h-12 bg-border" />
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials - Vibrant */}
-      <section id="testimonials" className="py-20 md:py-32 relative">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-4xl md:text-6xl">
-              <span className="font-black mb-4 bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
-                People Love Us!{' '}
-              </span>
-              <span className="preserve-emoji">💖</span>
+      {/* Testimonials - Card Stack Style */}
+      <section className="py-32 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Professionals who own their presence
             </h2>
-            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto font-semibold">
-              Don&apos;t just take our word for it - hear from the community
-            </p>
+            <p className="text-xl text-muted-foreground">Real results from real businesses</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card
+              <div
                 key={index}
-                className={`border-3 ${testimonial.borderColor} hover:scale-105 transition-all duration-300 hover:shadow-2xl group bg-white/90 dark:bg-gray-900/90 backdrop-blur relative overflow-hidden animate-slide-up`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group bg-card rounded-2xl p-8 border border-border hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
               >
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${testimonial.gradient} opacity-5 group-hover:opacity-10 transition-opacity`}
-                />
-                <CardContent className="pt-6 relative">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-5 w-5 fill-yellow-500 text-yellow-500 group-hover:scale-125 transition-transform"
-                        style={{ transitionDelay: `${i * 50}ms` }}
-                      />
-                    ))}
+                {/* Stars */}
+                <div className="flex gap-1 mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-5 h-5 fill-amber-400 text-amber-400 group-hover:scale-110 transition-transform"
+                      style={{ transitionDelay: `${i * 50}ms` }}
+                    />
+                  ))}
+                </div>
+
+                {/* Quote */}
+                <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                  &quot;{testimonial.quote}&quot;
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-4 pt-6 border-t border-border">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center font-bold text-primary-foreground text-lg">
+                    {testimonial.name.charAt(0)}
                   </div>
-                  <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed font-medium italic text-lg">
-                    &quot;{testimonial.quote}&quot;{' '}
-                    <span className="preserve-emoji">{testimonial.quoteEmoji}</span>
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`h-14 w-14 rounded-full bg-gradient-to-br ${testimonial.avatarGradient} shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center text-2xl preserve-emoji`}
-                    >
-                      {testimonial.emoji}
-                    </div>
-                    <div>
-                      <p className="font-black text-lg group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">
-                        {testimonial.role}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="font-semibold">{testimonial.name}</p>
+                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section - Bold & Fun */}
-      <section className="py-20 md:py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-600 via-purple-600 to-cyan-600" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMiIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30" />
-
-        {/* Floating elements */}
-        <div className="absolute top-10 left-10 w-20 h-20 border-4 border-white/30 rounded-full animate-float" />
-        <div className="absolute bottom-20 right-20 w-16 h-16 border-4 border-white/30 rounded-xl rotate-45 animate-float animation-delay-2000" />
-
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-6xl font-black mb-6 text-white animate-bounce-slow">
-              Ready to Shine? <span className="preserve-emoji">✨</span>
+      {/* Pricing - Side by Side Cards */}
+      <section id="pricing" className="py-32 px-4 bg-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Start free. Grow when you&#39;re ready.
             </h2>
-            <p className="text-xl md:text-2xl mb-10 text-white/95 leading-relaxed font-bold">
-              Join hundreds of amazing professionals creating their digital empires right now!
+            <p className="text-xl text-muted-foreground">
+              No credit card required. Premium features when you need them.
             </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Free Plan */}
+            <div className="relative bg-card rounded-3xl p-10 border-2 border-border hover:shadow-2xl transition-all group">
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-3xl font-bold mb-2">Free</h3>
+                  <p className="text-muted-foreground">Perfect to get started</p>
+                </div>
+
+                <div>
+                  <div className="text-5xl font-bold mb-2">$0</div>
+                  <p className="text-sm text-muted-foreground">Forever free</p>
+                </div>
+
+                <ul className="space-y-4">
+                  {[
+                    'Your onprez.com/your-handle',
+                    'Customizable presence page',
+                    'Photo gallery (up to 5 images)',
+                    '30 bookings per month',
+                    'Basic calendar management',
+                    'Email notifications',
+                    'Customer database',
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button size="lg" variant="outline" className="w-full text-lg border-2">
+                  Claim Your Handle Free
+                </Button>
+              </div>
+            </div>
+
+            {/* Premium Plan */}
+            <div className="relative bg-gradient-to-br from-primary/10 via-primary/5 to-transparent backdrop-blur-sm rounded-3xl p-10 border-2 border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all group">
+              {/* Popular badge */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <span className="px-6 py-2 bg-primary text-primary-foreground text-sm font-bold rounded-full shadow-lg">
+                  Most Popular
+                </span>
+              </div>
+
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-3xl font-bold mb-2">Premium</h3>
+                  <p className="text-muted-foreground">For growing businesses</p>
+                </div>
+
+                <div>
+                  <div className="text-5xl font-bold mb-2">
+                    $29<span className="text-2xl text-muted-foreground">/mo</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Billed monthly</p>
+                </div>
+
+                <ul className="space-y-4">
+                  {[
+                    { text: 'Everything in Free, plus:', bold: true },
+                    { text: 'Unlimited gallery images', bold: false },
+                    { text: 'Advanced analytics & insights', bold: false },
+                    { text: 'Automated SMS reminders', bold: false },
+                    { text: 'Team member accounts', bold: false },
+                    { text: 'Priority support', bold: false },
+                    { text: 'Remove OnPrez branding', bold: false },
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className={feature.bold ? 'font-semibold' : 'text-muted-foreground'}>
+                        {feature.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button size="lg" className="w-full text-lg shadow-lg shadow-primary/20">
+                  Start Premium Free for 14 Days
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section - Sophisticated */}
+      <section className="relative py-32 px-4 overflow-hidden">
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/80" />
+
+        {/* Pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+
+        {/* Ambient glows */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+
+        <div className="max-w-4xl mx-auto text-center relative">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-primary-foreground">
+            Ready to own your online presence?
+          </h2>
+          <p className="text-xl mb-12 text-primary-foreground/90">
+            Join thousands of professionals who&#39;ve claimed their handle and built a presence
+            clients love to explore and book from.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
               variant="secondary"
-              className="text-xl font-black shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-125 group px-10 py-8 bg-white text-purple-600 hover:bg-yellow-300"
+              className="text-lg px-8 shadow-2xl hover:scale-105 hover:bg-primary-foreground/5 transition-transform group"
             >
-              <Rocket className="mr-2 h-6 w-6 group-hover:translate-y-[-4px] transition-transform" />
-              Start Creating Now!
-              <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-2 transition-transform" />
+              Claim Your Handle Free
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 border-2 border-primary-foreground/20 text-primary hover:bg-primary-foreground/10 group"
+            >
+              <Eye className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+              See Live Examples
             </Button>
           </div>
+          <p className="mt-8 text-primary-foreground/75 text-sm">
+            Free forever • No credit card required • 2 minutes to get started
+          </p>
         </div>
       </section>
-
-      {/* Footer - Colorful */}
-      <footer className="border-t-4 border-purple-300 dark:border-purple-700 py-12 md:py-16 bg-gradient-to-b from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-950/30">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div className="col-span-2">
-              <div className="flex items-center gap-3 mb-4 group cursor-pointer">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl blur-md opacity-75" />
-                  <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg group-hover:scale-110 transition-transform">
-                    <Sparkles className="h-6 w-6 text-white animate-pulse" />
-                  </div>
-                </div>
-                <span className="text-2xl font-black bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 bg-clip-text text-transparent">
-                  OnPrez
-                </span>
-              </div>
-              <p className="text-gray-700 dark:text-gray-300 max-w-xs leading-relaxed font-semibold">
-                Your digital identity platform with booking superpowers!{' '}
-                <span className="preserve-emoji">🚀</span>
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-black mb-4 text-purple-700 dark:text-purple-300 text-lg">
-                Product <span className="preserve-emoji">✨</span>
-              </h4>
-              <ul className="space-y-2 text-gray-600 dark:text-gray-400 font-semibold">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-pink-600 dark:hover:text-pink-400 transition-all hover:translate-x-2 inline-block"
-                  >
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-pink-600 dark:hover:text-pink-400 transition-all hover:translate-x-2 inline-block"
-                  >
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-pink-600 dark:hover:text-pink-400 transition-all hover:translate-x-2 inline-block"
-                  >
-                    Examples
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-black mb-4 text-purple-700 dark:text-purple-300 text-lg">
-                Company <span className="preserve-emoji">🏢</span>
-              </h4>
-              <ul className="space-y-2 text-gray-600 dark:text-gray-400 font-semibold">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-pink-600 dark:hover:text-pink-400 transition-all hover:translate-x-2 inline-block"
-                  >
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-pink-600 dark:hover:text-pink-400 transition-all hover:translate-x-2 inline-block"
-                  >
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-pink-600 dark:hover:text-pink-400 transition-all hover:translate-x-2 inline-block"
-                  >
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t-2 border-purple-300 dark:border-purple-700 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-gray-600 dark:text-gray-400 font-semibold">
-            <p>
-              © 2025 OnPrez. Made with <span className="preserve-emoji">💖</span> and{' '}
-              <span className="preserve-emoji">✨</span>
-            </p>
-            <div className="flex gap-6">
-              <a
-                href="#"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-all hover:scale-110"
-              >
-                Privacy
-              </a>
-              <a
-                href="#"
-                className="hover:text-purple-600 dark:hover:text-purple-400 transition-all hover:scale-110"
-              >
-                Terms
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
 
 const features = [
   {
-    icon: Palette,
-    title: 'Your Canvas',
+    icon: Layout,
+    title: 'Drag & Drop Builder',
     description:
-      'Create a stunning presence that screams YOU with our super-easy customization tools!',
-    gradient: 'from-pink-500 to-rose-600',
-    borderColor: 'border-pink-300 dark:border-pink-700',
+      'Rearrange sections, add content blocks, and customize layouts without touching code.',
+  },
+  {
+    icon: Image,
+    title: 'Unlimited Galleries',
+    description:
+      'Showcase your best work with photo and video galleries that load fast and look stunning.',
+  },
+  {
+    icon: Palette,
+    title: 'Brand Customization',
+    description:
+      'Match your colors, fonts, and style. Make it uniquely yours, not another template.',
   },
   {
     icon: Calendar,
-    title: 'Book Like Magic',
-    description: 'Clients book instantly right from your page - no more endless message ping-pong!',
-    gradient: 'from-purple-500 to-indigo-600',
-    borderColor: 'border-purple-300 dark:border-purple-700',
-  },
-  {
-    icon: Share2,
-    title: 'Share Everywhere',
-    description: 'One link to rule them all - Instagram, TikTok, business cards, you name it!',
-    gradient: 'from-cyan-500 to-blue-600',
-    borderColor: 'border-cyan-300 dark:border-cyan-700',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Growth Insights',
-    description: 'Watch your presence grow with beautiful analytics that actually make sense!',
-    gradient: 'from-yellow-500 to-orange-600',
-    borderColor: 'border-yellow-300 dark:border-yellow-700',
+    title: 'Smart Scheduling',
+    description:
+      'Set availability once. System prevents double-bookings and handles time zones automatically.',
   },
   {
     icon: Users,
-    title: 'Client Love',
-    description: 'Build your tribe! Automatically save client info and keep everyone happy!',
-    gradient: 'from-green-500 to-emerald-600',
-    borderColor: 'border-green-300 dark:border-green-700',
+    title: 'Customer Insights',
+    description:
+      'Automatically build your client database with booking history, preferences, and notes.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Performance Analytics',
+    description:
+      'Track profile visits, booking conversions, and popular services to grow strategically.',
+  },
+  {
+    icon: Share2,
+    title: 'Built for Sharing',
+    description: 'One clean link for Instagram, business cards, email—everywhere your clients are.',
+  },
+  {
+    icon: TrendingUp,
+    title: 'SEO Optimized',
+    description:
+      'Your presence gets found on Google. Built-in SEO so clients discover you organically.',
   },
   {
     icon: Zap,
     title: 'Lightning Fast',
-    description: "Set up in minutes, not hours. Seriously, grab a coffee and you're done!",
-    gradient: 'from-violet-500 to-purple-600',
-    borderColor: 'border-violet-300 dark:border-violet-700',
+    description: 'Optimized for speed. Your page loads instantly on any device, anywhere.',
   },
 ]
 
 const steps = [
   {
     title: 'Claim Your Handle',
-    description: 'Pick your perfect onprez.com/yourname and make it yours forever!',
-    emoji: '🎯',
-    gradient: 'from-pink-500 to-rose-600',
+    description:
+      'Choose your onprez.com/yourname handle. This becomes your online presence—permanent and memorable.',
   },
   {
-    title: 'Make It Pop',
-    description: 'Add your magic - services, photos, your story. Show the world who you are!',
-    emoji: '🎨',
-    gradient: 'from-purple-500 to-indigo-600',
+    title: 'Build Your Presence',
+    description:
+      'Customize your page with your branding, add galleries, services, testimonials, and tell your story. Make it uniquely yours.',
   },
   {
-    title: 'Share & Shine',
-    description: 'Drop that link everywhere and watch the bookings roll in like confetti!',
-    emoji: '🚀',
-    gradient: 'from-cyan-500 to-blue-600',
+    title: 'Share & Book',
+    description:
+      'Put your handle everywhere—Instagram, business cards, email. Clients discover you, explore your work, and book instantly.',
   },
 ]
 
 const testimonials = [
   {
     quote:
-      'OnPrez is literally the best thing that happened to my business! My clients are obsessed with how easy booking is now!',
-    quoteEmoji: '🎉',
-    name: 'Sarah ✨',
-    role: 'Salon Owner',
-    emoji: '💇‍♀️',
-    gradient: 'from-pink-500 to-rose-600',
-    avatarGradient: 'from-pink-500 to-rose-600',
-    borderColor: 'border-pink-300 dark:border-pink-700',
+      "My OnPrez page isn't just for booking—it's where clients fall in love with my work before they even message me. The gallery section has been a game-changer.",
+    name: 'Sarah Mitchell',
+    role: 'Hair Stylist, Los Angeles',
   },
   {
     quote:
-      'I set this up during my lunch break and already got 3 bookings that afternoon. This is WILD!',
-    quoteEmoji: '🔥',
-    name: 'Mike 💪',
-    role: 'Personal Trainer',
-    emoji: '🏋️',
-    gradient: 'from-purple-500 to-indigo-600',
-    avatarGradient: 'from-purple-500 to-indigo-600',
-    borderColor: 'border-purple-300 dark:border-purple-700',
+      'I customized everything to match my gym branding. Clients say my page looks more professional than my competitors who spend thousands on websites.',
+    name: 'Marcus Thompson',
+    role: 'Personal Trainer, Miami',
   },
   {
     quote:
-      "Finally, a tool that's actually FUN to use! My page looks like a million bucks and cost me nothing!",
-    quoteEmoji: '💎',
-    name: 'Emma 🌟',
-    role: 'Spa Therapist',
-    emoji: '💆‍♀️',
-    gradient: 'from-cyan-500 to-blue-600',
-    avatarGradient: 'from-cyan-500 to-blue-600',
-    borderColor: 'border-cyan-300 dark:border-cyan-700',
+      'Having one link that shows my services, gallery, testimonials AND lets people book has simplified everything. I put it everywhere and bookings just come in.',
+    name: 'Emma Rodriguez',
+    role: 'Massage Therapist, Austin',
   },
 ]
