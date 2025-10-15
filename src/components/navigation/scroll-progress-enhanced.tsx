@@ -29,9 +29,9 @@ export function ScrollProgressEnhanced({ interactive = true }: ScrollProgressEnh
     restDelta: 0.001,
   })
 
-  const shouldShow = scrollPosition > window.innerHeight * 0.7
-
+  
   useEffect(() => {
+    const shouldShow = scrollPosition > window.innerHeight * 0.7
     const calculateSections = () => {
       const sectionElements = [
         { id: 'hero', label: 'Home', color: '#3B82F6' },
