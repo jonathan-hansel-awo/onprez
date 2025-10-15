@@ -7,12 +7,24 @@ interface FeaturePreviewMockupProps {
   colorScheme?: string
   fontStyle?: string
   layout?: string
+  sections?: {
+    header: boolean
+    services: boolean
+    gallery: boolean
+    testimonials: boolean
+  }
 }
 
 export function FeaturePreviewMockup({
   colorScheme = 'blue',
   fontStyle = 'modern',
   layout = 'default',
+  sections = {
+    header: true,
+    services: true,
+    gallery: true,
+    testimonials: true,
+  },
 }: FeaturePreviewMockupProps) {
   const getColorScheme = () => {
     switch (colorScheme) {
@@ -77,58 +89,111 @@ export function FeaturePreviewMockup({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
       {/* Header */}
-      <motion.div className={cn('bg-gradient-to-r p-6', colors.primary)} layout="position">
-        <motion.div className="flex items-center gap-4" layout="position">
+      <AnimatePresence>
+        {sections.header && (
           <motion.div
-            className={cn(
-              'w-16 h-16 rounded-full bg-white flex items-center justify-center text-2xl shadow-lg',
-              colors.text
-            )}
-            layoutId="avatar"
+            className={cn('bg-gradient-to-r p-6', colors.primary)}
+            layout="position"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            🎨
+            <motion.div className="flex items-center gap-4" layout="position">
+              <motion.div
+                className={cn(
+                  'w-16 h-16 rounded-full bg-white flex items-center justify-center text-2xl shadow-lg',
+                  colors.text
+                )}
+                layoutId="avatar"
+              >
+                🎨
+              </motion.div>
+              <motion.div layout="position" className={fontClass}>
+                <h3 className="text-white font-bold text-lg">Your Brand</h3>
+                <p className="text-white/80 text-sm">Your tagline here</p>
+              </motion.div>
+            </motion.div>
           </motion.div>
-          <motion.div layout="position" className={fontClass}>
-            <h3 className="text-white font-bold text-lg">Your Brand</h3>
-            <p className="text-white/80 text-sm">Your tagline here</p>
-          </motion.div>
-        </motion.div>
-      </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content */}
       <div className={cn('p-4 space-y-3', fontClass)}>
         {/* Services Grid */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={layout}
-            className={cn('grid gap-2', layout === 'stacked' ? 'grid-cols-1' : 'grid-cols-2')}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
-          >
-            {[
-              { icon: '💼', label: 'Service One' },
-              { icon: '✨', label: 'Service Two' },
-            ].map((service, i) => (
-              <motion.div key={i} className={cn('rounded-lg p-3', colors.secondary)} layout>
-                <div className="text-2xl mb-1">{service.icon}</div>
-                <p className={cn('text-xs font-semibold', colors.text)}>{service.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+        <AnimatePresence>
+          {sections.services && (
+            <motion.div
+              key={layout}
+              className={cn('grid gap-2', layout === 'stacked' ? 'grid-cols-1' : 'grid-cols-2')}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {[
+                { icon: '💼', label: 'Service One' },
+                { icon: '✨', label: 'Service Two' },
+              ].map((service, i) => (
+                <motion.div key={i} className={cn('rounded-lg p-3', colors.secondary)} layout>
+                  <div className="text-2xl mb-1">{service.icon}</div>
+                  <p className={cn('text-xs font-semibold', colors.text)}>{service.label}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Gallery */}
-        <motion.div className="grid grid-cols-3 gap-1.5" layout="position">
-          {[...Array(6)].map((_, i) => (
+        <AnimatePresence>
+          {sections.gallery && (
             <motion.div
-              key={i}
-              className={cn('aspect-square rounded', colors.accent, 'opacity-20')}
-              layout
-            />
-          ))}
-        </motion.div>
+              className="grid grid-cols-3 gap-1.5"
+              layout="position"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className={cn('aspect-square rounded', colors.accent, 'opacity-20')}
+                  layout
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Testimonial */}
+        <AnimatePresence>
+          {sections.testimonials && (
+            <motion.div
+              className={cn('rounded-lg p-3', colors.secondary)}
+              layout="position"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-400 to-rose-400" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-900">Happy Client</p>
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className="text-yellow-400 text-[10px]">
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-600">&quot;Love it!&quot;</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* CTA Button */}
         <motion.button

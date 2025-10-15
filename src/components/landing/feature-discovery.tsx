@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { ClientReaction } from './client-reaction'
 import { ScrollingPresencePage } from './scrolling-presence-page'
+import { PhoneMockup } from './phone-mockup'
 import { useInView } from 'framer-motion'
 
 type Phase = {
@@ -94,10 +95,7 @@ export function FeatureDiscovery() {
   const currentPhaseData = phases[currentPhase]
 
   return (
-    <section
-      ref={ref}
-      className="py-32 bg-gradient-to-b from-gray-50 via-white to-gray-50 overflow-hidden"
-    >
+    <section ref={ref} className="py-32 bg-gradient-to-b from-gray-50 via-white to-gray-50">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -114,22 +112,30 @@ export function FeatureDiscovery() {
         </motion.div>
 
         {/* Split Screen Demo */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-          {/* Left Side - Scrolling Presence Page */}
+        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+          {/* Left Side - Phone with Scrolling Page */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="order-2 lg:order-1"
+            className="flex justify-center order-2 lg:order-1"
           >
             <div className="relative">
               {/* Label */}
-              <div className="absolute -top-8 left-0 bg-onprez-blue text-white px-4 py-1 rounded-full text-sm font-semibold">
-                Client&apos;s View
-              </div>
+              <motion.div
+                className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg whitespace-nowrap"
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+              >
+                📱 Client&apos;s View
+              </motion.div>
 
-              <ScrollingPresencePage scrollProgress={currentPhaseData.scrollProgress} />
+              <PhoneMockup>
+                <ScrollingPresencePage scrollProgress={currentPhaseData.scrollProgress} />
+              </PhoneMockup>
             </div>
           </motion.div>
 
@@ -143,11 +149,17 @@ export function FeatureDiscovery() {
           >
             <div className="relative">
               {/* Label */}
-              <div className="absolute -top-8 right-0 bg-onprez-purple text-white px-4 py-1 rounded-full text-sm font-semibold">
-                Client&apos;s Reaction
-              </div>
+              <motion.div
+                className="absolute -top-10 left-1/2 -translate-x-1/2 lg:left-auto lg:right-0 lg:translate-x-0 bg-gradient-to-r from-onprez-purple to-pink-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg whitespace-nowrap"
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5 }}
+              >
+                😊 Client&apos;s Reaction
+              </motion.div>
 
-              <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex items-center justify-center min-h-[400px] lg:min-h-[560px]">
                 <ClientReaction
                   reaction={currentPhaseData.reaction}
                   caption={currentPhaseData.caption}

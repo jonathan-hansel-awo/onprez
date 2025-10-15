@@ -9,8 +9,10 @@ import { ParallaxLayer } from '@/components/animations/parallax-layer'
 import { StaggerChildren } from '@/components/animations/stagger-children'
 import { FadeIn } from '@/components/animations/fade-in'
 import {
+  ExamplesCarousel,
   FeatureCustomizable,
   FeatureDiscovery,
+  FeatureOneLink,
   ProblemSolutionSplit,
   SocialProofStreamDual,
 } from '@/components/landing'
@@ -24,16 +26,14 @@ export default function LandingPage() {
       <main className="min-h-screen bg-white">
         {/* Hero Section */}
         <Hero />
-
         {/* Social Proof Stream */}
         <SocialProofStreamDual />
-
         {/* Problem/Solution Split */}
         <ProblemSolutionSplit />
-
         <FeatureCustomizable />
-
         <FeatureDiscovery />
+        <FeatureOneLink />
+        <ExamplesCarousel />
 
         {/* Features Section */}
         <section id="features" className="py-32 bg-white">

@@ -4,16 +4,16 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface ChaoticWindowProps {
-  type: 'instagram' | 'calendar' | 'spreadsheet' | 'website'
+  type: 'social media' | 'calendar' | 'spreadsheet' | 'website'
   delay?: number
 }
 
 export function ChaoticWindow({ type, delay = 0 }: ChaoticWindowProps) {
   const getWindowContent = () => {
     switch (type) {
-      case 'instagram':
+      case 'social media':
         return {
-          title: 'Instagram',
+          title: 'Social Media',
           color: 'from-pink-500 to-purple-500',
           icon: '📱',
           content: (
@@ -67,7 +67,7 @@ export function ChaoticWindow({ type, delay = 0 }: ChaoticWindowProps) {
         }
       case 'website':
         return {
-          title: 'Website Builder',
+          title: 'Website',
           color: 'from-orange-500 to-red-500',
           icon: '🌐',
           content: (

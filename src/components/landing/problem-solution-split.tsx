@@ -21,7 +21,7 @@ export function ProblemSolutionSplit() {
   const rightY = useTransform(scrollYProgress, [0, 1], ['0%', '15%'])
 
   return (
-    <section ref={ref} className="relative py-32 bg-white">
+    <section ref={ref} className="relative py-32 overflow-hidden bg-white">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -39,7 +39,7 @@ export function ProblemSolutionSplit() {
           </p>
         </motion.div>
 
-        {/* Split Screen Container - REMOVED overflow-hidden */}
+        {/* Split Screen Container */}
         <div className="relative grid md:grid-cols-2 gap-8 md:gap-0 min-h-[600px]">
           {/* Dividing Line with Energy Effect */}
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 z-20">
@@ -104,7 +104,7 @@ export function ProblemSolutionSplit() {
             <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl -z-10" />
 
             {/* Content */}
-            <div className="relative min-h-[500px] p-8 overflow-hidden">
+            <div className="relative min-h-[500px] p-8">
               {/* Title */}
               <motion.div
                 className="mb-8 text-center md:text-left"
@@ -120,18 +120,18 @@ export function ProblemSolutionSplit() {
               </motion.div>
 
               {/* Chaotic Windows */}
-              <div className="relative h-80 md:h-96 overflow-hidden">
+              <div className="relative h-80 md:h-96">
                 {/* Position windows in chaotic arrangement */}
                 <div className="absolute top-0 left-0">
-                  <ChaoticWindow type="instagram" delay={0.2} />
+                  <ChaoticWindow type="social media" delay={0.2} />
                 </div>
-                <div className="absolute top-16 right-0">
+                <div className="absolute top-8 right-36">
                   <ChaoticWindow type="calendar" delay={0.4} />
                 </div>
-                <div className="absolute bottom-16 left-8">
+                <div className="absolute bottom-32 left-8">
                   <ChaoticWindow type="spreadsheet" delay={0.6} />
                 </div>
-                <div className="absolute bottom-0 right-8">
+                <div className="absolute bottom-36 right-24">
                   <ChaoticWindow type="website" delay={0.8} />
                 </div>
 
@@ -173,7 +173,7 @@ export function ProblemSolutionSplit() {
                     initial={{ opacity: 0, scale: 0 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    transition={{ delay: 1.4 + i * 0.1, type: 'spring' }}
+                    // transition={{ delay: 1.4 + i * 0.1, type: "spring" }}
                     animate={
                       isHoveringLeft
                         ? {
@@ -181,7 +181,7 @@ export function ProblemSolutionSplit() {
                           }
                         : {}
                     }
-                    // transition={{ duration: 0.5, repeat: isHoveringLeft ? Infinity : 0 }}
+                    transition={{ duration: 0.5, repeat: isHoveringLeft ? Infinity : 0 }}
                   >
                     {label.text}
                   </motion.div>
@@ -212,7 +212,7 @@ export function ProblemSolutionSplit() {
 
           {/* Right Side - Solution (Clean) */}
           <motion.div
-            className="relative md:pl-8"
+            className="relative md:pl-8 ml-8"
             style={{ y: rightY }}
             onHoverStart={() => setIsHoveringRight(true)}
             onHoverEnd={() => setIsHoveringRight(false)}
@@ -297,9 +297,9 @@ export function ProblemSolutionSplit() {
           </motion.div>
         </div>
 
-        {/* Bottom CTA - ADDED padding for visibility */}
+        {/* Bottom CTA */}
         <motion.div
-          className="text-center mt-16 pt-8"
+          className="text-center mt-28"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
