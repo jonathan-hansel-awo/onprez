@@ -1,27 +1,36 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+'use client'
+
+import { ReactNode, useEffect } from 'react'
+import Lenis from 'lenis'
 import './globals.css'
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
 
-const inter = Inter({ subsets: ['latin'] })
+export default function LandingLayout({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    // Initialize Lenis smooth scrolling
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      smoothWheel: true,
+    })
 
-export const metadata: Metadata = {
-  title: 'OnPrez - Professional Website + Booking System',
-  description:
-    'Get your own shareable profile page where clients can view services and book appointments instantly.',
-}
+    // Animation frame loop for smooth scrolling
+    function raf(time: number) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+    requestAnimationFrame(raf)
+
+    // Cleanup
+    return () => {
+      lenis.destroy()
+    }
+  }, [])
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <div className="min-h-screen bg-background font-sans antialiased flex flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
-      </body>
+    <html lang="en">
+      <body className="antialiased">{children}</body>
     </html>
   )
 }

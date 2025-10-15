@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { DarkModeToggle } from '@/components/dark-mode-toggle'
+import { ThemeToggle } from '@/components/dark-mode-toggle'
 import { Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
@@ -39,7 +39,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <DarkModeToggle />
+            <ThemeToggle />
             <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
               Sign In
             </Button>

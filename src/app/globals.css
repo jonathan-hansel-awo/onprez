@@ -1,138 +1,41 @@
 @import 'tailwindcss';
-@import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
-
+/* Custom Design Tokens */
 @theme {
-  /* Color palette using Tailwind v4 syntax */
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.129 0.042 264.695);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.129 0.042 264.695);
-  --color-primary: oklch(0.608 0.209 264.376);
-  --color-primary-foreground: oklch(0.984 0.003 247.858);
-  --color-muted: oklch(0.968 0.007 247.896);
-  --color-muted-foreground: oklch(0.554 0.046 257.417);
-  --color-border: oklch(0.929 0.013 255.508);
-  --color-input: oklch(0.929 0.013 255.508);
-  --color-ring: oklch(0.608 0.209 264.376);
+  /* Colors */
+  --color-onprez-blue: #3b82f6;
+  --color-onprez-green: #10b981;
+  --color-onprez-purple: #8b5cf6;
 
-  /* Border radius */
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Custom Animations */
+  --animate-fade-up: fade-up 0.6s ease-out forwards;
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 30s linear infinite;
+
+  /* Keyframes are defined below */
 }
 
-:root {
-  --radius: 0.5rem;
-
-  /* Light mode colors using oklch */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.608 0.209 264.376);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.608 0.209 264.376);
-}
-
-.dark {
-  /* Dark mode colors using oklch */
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.608 0.209 264.376);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --border: oklch(0.279 0.041 260.031);
-  --input: oklch(0.279 0.041 260.031);
-  --ring: oklch(0.608 0.209 264.376);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings:
-      'rlig' 1,
-      'calt' 1;
-  }
-}
-
-/* Professional subtle animations */
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.6s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.4s ease-out;
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  /* Animation delays */
-  .\[animation-delay\:100ms\] {
-    animation-delay: 100ms;
-  }
-
-  .\[animation-delay\:200ms\] {
-    animation-delay: 200ms;
-  }
-
-  .\[animation-delay\:300ms\] {
-    animation-delay: 300ms;
-  }
-
-  .\[animation-delay\:1s\] {
-    animation-delay: 1s;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
+/* Keyframe Definitions */
+@keyframes fade-up {
+  0% {
     opacity: 0;
     transform: translateY(20px);
   }
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
   }
 }
 
@@ -142,17 +45,67 @@
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-20px);
+    transform: translateY(-10px);
   }
 }
 
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
-/* Selection color */
-::selection {
-  background-color: oklch(0.608 0.209 264.376 / 0.3);
-  color: inherit;
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+/* Base Styles */
+@layer base {
+  * {
+    border-color: var(--tw-border-opacity, 1) rgb(229 231 235 / var(--tw-border-opacity, 1));
+  }
+
+  body {
+    background-color: #fff;
+    color: #1f2937;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Utility Classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.6s ease-out forwards;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  .animate-marquee-reverse {
+    animation: marquee-reverse 30s linear infinite;
+  }
 }
