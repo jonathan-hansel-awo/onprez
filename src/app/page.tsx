@@ -1,19 +1,54 @@
-import { Header } from '@/components/navigation/header'
+import type { Metadata } from 'next'
+import { Footer, Header } from '@/components/navigation'
 import { ScrollProgressEnhanced } from '@/components/navigation/scroll-progress-enhanced'
-import { Hero } from '@/components/landing/hero'
-
+import { FinalCTA } from '@/components/landing/final-cta'
+import dynamic from 'next/dynamic'
 import {
-  ExamplesCarousel,
   FeatureCustomizable,
   FeatureDiscovery,
   FeatureOneLink,
-  FinalCTA,
-  PricingSection,
+  Hero,
   ProblemSolutionSplit,
   SocialProofStreamDual,
-  TestimonialsBento,
 } from '@/components/landing'
-import { Footer } from '@/components/navigation/footer'
+
+// Lazy load below-the-fold components
+const LazyExamplesCarousel = dynamic(
+  () =>
+    import('@/components/landing/examples-carousel').then(mod => ({
+      default: mod.ExamplesCarousel,
+    })),
+  {
+    loading: () => <div className="h-screen" />,
+    ssr: true,
+  }
+)
+
+const LazyTestimonialsBento = dynamic(
+  () =>
+    import('@/components/landing/testimonials-bento').then(mod => ({
+      default: mod.TestimonialsBento,
+    })),
+  {
+    loading: () => <div className="h-screen" />,
+    ssr: true,
+  }
+)
+
+const LazyPricingSection = dynamic(
+  () =>
+    import('@/components/landing/pricing-section').then(mod => ({ default: mod.PricingSection })),
+  {
+    loading: () => <div className="h-screen" />,
+    ssr: true,
+  }
+)
+
+export const metadata: Metadata = {
+  title: 'OnPrez - Your Handle, Your Brand, Your Bookings',
+  description:
+    'Create your complete online presence in 15 minutes. Customizable presence pages with integrated booking for service professionals. Start free at onprez.com/yourname',
+}
 
 export default function LandingPage() {
   return (
@@ -22,34 +57,25 @@ export default function LandingPage() {
       <ScrollProgressEnhanced interactive={true} />
 
       <main className="min-h-screen bg-white">
-        {/* Hero Section */}
+        {/* Above the fold - Critical */}
         <Hero />
 
-        {/* Social Proof Stream */}
+        {/* Early sections - High priority */}
         <SocialProofStreamDual />
-
-        {/* Problem/Solution Split */}
         <ProblemSolutionSplit />
-
-        {/* Features */}
         <FeatureCustomizable />
         <FeatureDiscovery />
         <FeatureOneLink />
 
-        {/* Examples Carousel */}
-        <ExamplesCarousel />
+        {/* Below the fold - Lazy loaded */}
+        <LazyExamplesCarousel />
+        <LazyTestimonialsBento />
+        <LazyPricingSection />
 
-        {/* Testimonials Bento */}
-        <TestimonialsBento />
-
-        {/* Pricing Section */}
-        <PricingSection />
-
-        {/* Final Call to Action */}
+        {/* Final sections */}
         <FinalCTA />
       </main>
 
-      {/* Footer */}
       <Footer />
     </>
   )

@@ -1,5 +1,5 @@
 import { render, screen } from '@/lib/test-utils'
-import { Header } from '@/components/layout/header'
+import { Header } from '../header'
 
 describe('Header Component', () => {
   it('renders the OnPrez logo', () => {
@@ -11,7 +11,7 @@ describe('Header Component', () => {
     render(<Header />)
 
     expect(screen.getByRole('link', { name: /Features/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /How it Works/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Examples/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Pricing/i })).toBeInTheDocument()
   })
 
