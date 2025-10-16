@@ -13,6 +13,7 @@ import {
   FeatureCustomizable,
   FeatureDiscovery,
   FeatureOneLink,
+  PricingSection,
   ProblemSolutionSplit,
   SocialProofStreamDual,
   TestimonialsBento,
@@ -27,15 +28,26 @@ export default function LandingPage() {
       <main className="min-h-screen bg-white">
         {/* Hero Section */}
         <Hero />
+
         {/* Social Proof Stream */}
         <SocialProofStreamDual />
+
         {/* Problem/Solution Split */}
         <ProblemSolutionSplit />
+
+        {/* Features */}
         <FeatureCustomizable />
         <FeatureDiscovery />
         <FeatureOneLink />
+
+        {/* Examples Carousel */}
         <ExamplesCarousel />
+
+        {/* Testimonials Bento */}
         <TestimonialsBento />
+
+        {/* Pricing Section */}
+        <PricingSection />
       </main>
     </>
   )
