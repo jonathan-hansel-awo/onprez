@@ -15,6 +15,7 @@ import {
   FeatureOneLink,
   ProblemSolutionSplit,
   SocialProofStreamDual,
+  TestimonialsBento,
 } from '@/components/landing'
 
 export default function LandingPage() {
@@ -34,6 +35,7 @@ export default function LandingPage() {
         <FeatureDiscovery />
         <FeatureOneLink />
         <ExamplesCarousel />
+        <TestimonialsBento />
       </main>
     </>
   )
