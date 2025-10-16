@@ -68,7 +68,7 @@ export function ExamplesCarousel() {
   const bgGradient = currentExample?.colors.primary || 'from-blue-500 to-purple-500'
 
   return (
-    <section className="py-32 relative overflow-hidden">
+    <section className="py-32 relative overflow-hidden" id="examples">
       {/* Animated Background */}
       <motion.div
         className={cn('absolute inset-0 bg-gradient-to-br opacity-10 blur-3xl', bgGradient)}

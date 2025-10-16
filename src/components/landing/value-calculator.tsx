@@ -12,7 +12,7 @@ export function ValueCalculator() {
   const onprezCost = 29
   const hoursBack = clients * 0.5 // Assume 30 min saved per booking
 
-  const paybackHours = onprezCost / (price / 2) // Assuming $50/hour rate
+  const paybackHours = onprezCost / (price / 2) // Assuming £50/hour rate
   const roi = (((monthlyRevenue - onprezCost) / onprezCost) * 100).toFixed(0)
 
   return (
@@ -49,9 +49,11 @@ export function ValueCalculator() {
         {/* Price Input */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-semibold text-gray-700">Average booking price</label>
+            <label className="text-sm font-semibold text-gray-700">
+              Average booking price per hour
+            </label>
             <div className="flex items-center gap-2">
-              <span className="text-gray-600">$</span>
+              <span className="text-gray-600">£</span>
               <input
                 type="number"
                 min="10"
@@ -77,7 +79,7 @@ export function ValueCalculator() {
           {/* Monthly Revenue */}
           <div>
             <p className="text-sm text-gray-600 mb-2">Monthly Revenue</p>
-            <p className="text-3xl font-bold text-gray-900">${monthlyRevenue.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-gray-900">£{monthlyRevenue.toLocaleString()}</p>
           </div>
 
           {/* Time Saved */}

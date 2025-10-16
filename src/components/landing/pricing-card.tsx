@@ -76,7 +76,7 @@ export function PricingCard({ plan, index }: PricingCardProps) {
       {/* Price */}
       <div className="mb-6">
         <div className="flex items-baseline gap-2">
-          <span className="text-5xl font-bold text-gray-900">${plan.price}</span>
+          <span className="text-5xl font-bold text-gray-900">£{plan.price}</span>
           <span className="text-gray-600">/mo</span>
         </div>
         <p className="text-sm text-gray-500 mt-2">{plan.period}</p>

@@ -1,23 +1,19 @@
 import { Header } from '@/components/navigation/header'
 import { ScrollProgressEnhanced } from '@/components/navigation/scroll-progress-enhanced'
 import { Hero } from '@/components/landing/hero'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { ScrollTrigger } from '@/components/animations/scroll-trigger'
-import { ParallaxLayer } from '@/components/animations/parallax-layer'
-import { StaggerChildren } from '@/components/animations/stagger-children'
-import { FadeIn } from '@/components/animations/fade-in'
+
 import {
   ExamplesCarousel,
   FeatureCustomizable,
   FeatureDiscovery,
   FeatureOneLink,
+  FinalCTA,
   PricingSection,
   ProblemSolutionSplit,
   SocialProofStreamDual,
   TestimonialsBento,
 } from '@/components/landing'
+import { Footer } from '@/components/navigation/footer'
 
 export default function LandingPage() {
   return (
@@ -48,7 +44,13 @@ export default function LandingPage() {
 
         {/* Pricing Section */}
         <PricingSection />
+
+        {/* Final Call to Action */}
+        <FinalCTA />
       </main>
+
+      {/* Footer */}
+      <Footer />
     </>
   )
 }

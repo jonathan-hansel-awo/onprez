@@ -70,7 +70,7 @@ export function FeatureCustomizable() {
   }
 
   return (
-    <section className="py-32 bg-gradient-to-b from-white via-gray-50 to-white">
+    <section className="py-32 bg-gradient-to-b from-white via-gray-50 to-white" id="features">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div

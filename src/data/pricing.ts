@@ -44,7 +44,6 @@ export const pricingPlans: PricingPlan[] = [
       'Team member accounts',
       'Priority support',
       'Remove OnPrez branding',
-      'Custom domain support',
     ],
     cta: 'Start Premium Free for 14 Days',
   },
@@ -66,7 +65,6 @@ export const featureComparison = [
       { name: 'Gallery images', free: '5 images', premium: 'Unlimited' },
       { name: 'Custom branding', free: true, premium: true },
       { name: 'Remove OnPrez branding', free: false, premium: true },
-      { name: 'Custom domain', free: false, premium: true },
     ],
   },
   {
