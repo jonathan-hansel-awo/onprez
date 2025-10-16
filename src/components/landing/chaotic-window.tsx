@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils/cn'
 
 interface ChaoticWindowProps {
@@ -9,6 +10,21 @@ interface ChaoticWindowProps {
 }
 
 export function ChaoticWindow({ type, delay = 0 }: ChaoticWindowProps) {
+  const [randomValues, setRandomValues] = useState({
+    x: 0,
+    y: 0,
+    rotate: 0,
+  })
+
+  // Generate random values only on client after hydration
+  useEffect(() => {
+    setRandomValues({
+      x: Math.random() * 100 - 50,
+      y: Math.random() * 100 - 50,
+      rotate: Math.random() * 20 - 10,
+    })
+  }, [])
+
   const getWindowContent = () => {
     switch (type) {
       case 'social media':
@@ -87,25 +103,20 @@ export function ChaoticWindow({ type, delay = 0 }: ChaoticWindowProps) {
 
   const window = getWindowContent()
 
-  // Random initial position for chaotic effect
-  const randomX = Math.random() * 100 - 50
-  const randomY = Math.random() * 100 - 50
-  const randomRotate = Math.random() * 20 - 10
-
   return (
     <motion.div
       className="absolute w-48 md:w-56"
       initial={{
-        x: randomX,
-        y: randomY,
-        rotate: randomRotate,
+        x: randomValues.x,
+        y: randomValues.y,
+        rotate: randomValues.rotate,
         opacity: 0,
         scale: 0.8,
       }}
       animate={{
         x: 0,
         y: 0,
-        rotate: randomRotate / 2,
+        rotate: randomValues.rotate / 2,
         opacity: 1,
         scale: 1,
       }}
