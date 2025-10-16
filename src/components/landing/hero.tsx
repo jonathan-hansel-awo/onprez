@@ -40,8 +40,9 @@ export function Hero() {
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-white"
     >
       {/* Gradient Mesh Background */}
-      <GradientMesh className="absolute inset-0 -z-10" />
-
+      <div className="absolute inset-0 -z-10">
+        <GradientMesh />
+      </div>
       {/* Content Container */}
       <div className="container mx-auto px-4 pt-32 pb-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
