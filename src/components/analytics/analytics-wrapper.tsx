@@ -3,8 +3,9 @@
 
 import { useEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
-export function AnalyticsWrapper() {
+function AnalyticsContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -21,4 +22,12 @@ export function AnalyticsWrapper() {
   }, [pathname, searchParams])
 
   return null
+}
+
+export function AnalyticsWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <AnalyticsContent />
+    </Suspense>
+  )
 }

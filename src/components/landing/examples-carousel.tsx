@@ -68,7 +68,7 @@ export function ExamplesCarousel() {
   const bgGradient = currentExample?.colors.primary || 'from-blue-500 to-purple-500'
 
   return (
-    <section className="py-32 relative overflow-hidden" id="examples">
+    <section className="py-32 relative overflow-hidden">
       {/* Animated Background */}
       <motion.div
         className={cn('absolute inset-0 bg-gradient-to-br opacity-10 blur-3xl', bgGradient)}
@@ -101,23 +101,30 @@ export function ExamplesCarousel() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {categories.map(category => (
-            <motion.button
-              key={category.id}
-              className={cn(
-                'px-6 py-3 rounded-full font-semibold text-sm transition-all',
-                selectedCategory === category.id
-                  ? 'bg-gradient-to-r from-onprez-blue to-onprez-purple text-white shadow-lg'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200'
-              )}
-              onClick={() => handleCategoryChange(category.id)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="mr-2">{category.icon}</span>
-              {category.label}
-            </motion.button>
-          ))}
+          {categories.map(category => {
+            // Extract id and other properties properly
+            const categoryId = typeof category === 'string' ? category : category.id
+            const categoryLabel = typeof category === 'string' ? category : category.label
+            const categoryIcon = typeof category === 'string' ? '' : category.icon
+
+            return (
+              <motion.button
+                key={categoryId}
+                className={cn(
+                  'px-6 py-3 rounded-full font-semibold text-sm transition-all',
+                  selectedCategory === categoryId
+                    ? 'bg-gradient-to-r from-onprez-blue to-onprez-purple text-white shadow-lg'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200'
+                )}
+                onClick={() => handleCategoryChange(categoryId)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {categoryIcon && <span className="mr-2">{categoryIcon}</span>}
+                {categoryLabel}
+              </motion.button>
+            )
+          })}
         </motion.div>
 
         {/* Carousel */}
