@@ -2,11 +2,15 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { SmoothScroll } from '@/components/ui/smooth-scroll'
+import { ErrorBoundary } from '@/components/error-boundary'
+import { PreloadResources } from '@/components/preload-resources'
+import { AnalyticsWrapper } from '@/components/analytics/analytics-wrapper'
 
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   preload: true,
+  variable: '--font-inter',
 })
 
 export const metadata: Metadata = {
@@ -74,14 +78,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className={`scroll-smooth ${inter.variable}`}>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
+        <PreloadResources />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <SmoothScroll>{children}</SmoothScroll>
+        <ErrorBoundary>
+          <SmoothScroll>
+            {children}
+            <AnalyticsWrapper />
+          </SmoothScroll>
+        </ErrorBoundary>
       </body>
     </html>
   )

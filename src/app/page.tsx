@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
-import { Footer, Header } from '@/components/navigation'
-import { ScrollProgressEnhanced } from '@/components/navigation/scroll-progress-enhanced'
-import { FinalCTA } from '@/components/landing/final-cta'
+import { Footer, Header, ScrollProgressEnhanced } from '@/components/navigation'
 import dynamic from 'next/dynamic'
 import {
   FeatureCustomizable,
   FeatureDiscovery,
   FeatureOneLink,
+  FinalCTA,
   Hero,
   ProblemSolutionSplit,
   SocialProofStreamDual,
@@ -53,10 +52,15 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <>
+      {/* Skip to main content for accessibility */}
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
+
       <Header />
       <ScrollProgressEnhanced interactive={true} />
 
-      <main className="min-h-screen bg-white">
+      <main id="main-content" className="min-h-screen bg-white">
         {/* Above the fold - Critical */}
         <Hero />
 
