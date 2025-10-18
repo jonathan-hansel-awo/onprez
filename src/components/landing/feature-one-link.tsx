@@ -54,9 +54,7 @@ export function FeatureOneLink() {
 
     if (currentStep < sequence.length) {
       const timer = setTimeout(() => {
-        // if (sequence[currentStep].action) {
         sequence[currentStep].action()
-        // }
         setCurrentStep(currentStep + 1)
       }, sequence[currentStep].duration)
 
@@ -67,14 +65,17 @@ export function FeatureOneLink() {
         setCurrentStep(0)
         setCurrentContext(null)
         setIsOrbiting(false)
-      }, 1000)
+      }, 10000)
 
       return () => clearTimeout(resetTimer)
     }
   }, [currentStep, isInView])
 
   return (
-    <section ref={ref} className="py-32 bg-gradient-to-b from-white via-purple-50 to-white">
+    <section
+      ref={ref}
+      className="py-20 md:py-32 bg-gradient-to-b from-white via-purple-50 to-white overflow-hidden"
+    >
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -84,8 +85,8 @@ export function FeatureOneLink() {
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">One Link Everywhere</h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">One Link Everywhere</h2>
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
             Your handle becomes your professional identity. Put it everywhere, and it works
             everywhere.
           </p>
@@ -154,7 +155,7 @@ export function FeatureOneLink() {
         </motion.div>
 
         {/* Main Demo Area */}
-        <div className="relative min-h-[600px] flex items-center justify-center">
+        <div className="relative min-h-[500px] md:min-h-[600px] flex items-center justify-center">
           {/* Central Handle */}
           <motion.div
             className="absolute bottom-8 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
@@ -163,7 +164,7 @@ export function FeatureOneLink() {
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
             <motion.div
-              className="relative bg-white rounded-2xl shadow-2xl px-6 md:px-8 py-4 md:py-6 border-2 border-gray-200"
+              className="relative bg-white rounded-2xl shadow-2xl px-4 md:px-8 py-3 md:py-6 border-2 border-gray-200"
               animate={
                 isOrbiting
                   ? {}
@@ -175,7 +176,7 @@ export function FeatureOneLink() {
                 duration: 2,
                 repeat: isOrbiting ? 0 : Infinity,
               }}
-              key={handle} // Re-animate when handle changes
+              key={handle}
             >
               {/* Glow effect */}
               <motion.div
@@ -191,12 +192,9 @@ export function FeatureOneLink() {
               />
 
               <div className="text-center">
-                <p className="text-xs md:text-sm text-gray-500 mb-1">Your Handle</p>
+                <p className="text-xs text-gray-500 mb-1">Your Handle</p>
                 <motion.p
-                  className="text-xl md:text-3xl font-bold bg-gradient-to-r from-onprez-blue to-onprez-purple bg-clip-text text-transparent break-all"
-                  //   animate={currentContext ? {
-                  //     scale: [1, 0.95, 1],
-                  //   } : {}}
+                  className="text-base md:text-3xl font-bold bg-gradient-to-r from-onprez-blue to-onprez-purple bg-clip-text text-transparent break-all"
                   transition={{ duration: 0.3 }}
                   key={`handle-${handle}`}
                   initial={{ opacity: 0, y: 10 }}
@@ -235,17 +233,23 @@ export function FeatureOneLink() {
             {currentContext && !isOrbiting && (
               <motion.div
                 key={`${currentContext}-${handle}`}
-                className="absolute top-4 z-10"
-                initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: -50 }}
+                className="absolute top-4 z-10 scale-75 md:scale-100"
+                initial={{ opacity: 0, scale: 0.6, y: 50 }}
+                animate={{ opacity: 1, scale: 0.75, y: 0 }}
+                exit={{ opacity: 0, scale: 0.6, y: -50 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  // On desktop, use full scale
+                  '@media (min-width: 768px)': {
+                    scale: 1,
+                  },
+                }}
               >
                 <ContextMockup type={currentContext} handle={handle} />
 
                 {/* Context Label */}
                 <motion.div
-                  className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap"
+                  className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
@@ -267,7 +271,8 @@ export function FeatureOneLink() {
                 if (!context) return null
 
                 const angle = (index * 360) / contexts.length
-                const radius = 280
+                const radiusMobile = 140
+                const radiusDesktop = 280
 
                 return (
                   <motion.div
@@ -287,8 +292,33 @@ export function FeatureOneLink() {
                     }}
                   >
                     <motion.div
+                      className="md:hidden"
                       style={{
-                        x: radius,
+                        x: radiusMobile,
+                      }}
+                      animate={{
+                        rotate: [0, -360],
+                      }}
+                      transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: 'linear',
+                      }}
+                    >
+                      <motion.div
+                        className="scale-[0.35] origin-center"
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <ContextMockup type={context} handle={handle} />
+                      </motion.div>
+                    </motion.div>
+
+                    <motion.div
+                      className="hidden md:block"
+                      style={{
+                        x: radiusDesktop,
                       }}
                       animate={{
                         rotate: [0, -360],
@@ -312,14 +342,14 @@ export function FeatureOneLink() {
                 )
               })}
 
-              {/* Orbital rings */}
+              {/* Orbital rings - Responsive */}
               {[...Array(2)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border border-onprez-blue/20 rounded-full"
+                  className="absolute top-1/2 left-1/2 md:w-[560px] md:h-[560px] -translate-x-1/2 -translate-y-1/2 border border-onprez-blue/20 rounded-full"
                   style={{
-                    width: (280 + i * 20) * 2,
-                    height: (280 + i * 20) * 2,
+                    width: `${(140 + i * 20) * 2}px`,
+                    height: `${(140 + i * 20) * 2}px`,
                   }}
                   animate={{
                     rotate: i % 2 === 0 ? 360 : -360,
@@ -329,6 +359,7 @@ export function FeatureOneLink() {
                     repeat: Infinity,
                     ease: 'linear',
                   }}
+                  // className=""
                 />
               ))}
             </div>
@@ -343,17 +374,17 @@ export function FeatureOneLink() {
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
         >
-          <p className="text-gray-600 mb-2">
+          <p className="text-gray-600 mb-2 text-sm md:text-base">
             <strong>One link. Your complete professional identity.</strong>
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs md:text-sm text-gray-500">
             Memorable • Shareable • Works everywhere • Easy to say
           </p>
         </motion.div>
 
         {/* Key Benefits */}
         <motion.div
-          className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto mt-12"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mt-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -367,12 +398,14 @@ export function FeatureOneLink() {
           ].map((benefit, i) => (
             <motion.div
               key={i}
-              className="text-center p-6 bg-white rounded-xl shadow-lg border border-gray-100"
+              className="text-center p-4 md:p-6 bg-white rounded-xl shadow-lg border border-gray-100"
               whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
             >
-              <div className="text-4xl mb-3">{benefit.icon}</div>
-              <h4 className="font-bold text-gray-900 mb-2">{benefit.title}</h4>
-              <p className="text-sm text-gray-600">{benefit.desc}</p>
+              <div className="text-3xl md:text-4xl mb-2 md:mb-3">{benefit.icon}</div>
+              <h4 className="font-bold text-gray-900 mb-1 md:mb-2 text-sm md:text-base">
+                {benefit.title}
+              </h4>
+              <p className="text-xs md:text-sm text-gray-600">{benefit.desc}</p>
             </motion.div>
           ))}
         </motion.div>
