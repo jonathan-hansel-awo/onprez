@@ -44,21 +44,7 @@ export function ProblemSolutionSplit() {
           {/* Dividing Line with Energy Effect */}
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 z-20">
             {/* Static line */}
-            <div className="absolute inset-0 bg-gradient-to-b from-red-500/50 via-yellow-500/50 to-green-500/50" />
-
-            {/* Animated pulse */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-b from-red-500 via-yellow-500 to-green-500"
-              animate={{
-                opacity: [0.3, 0.7, 0.3],
-                scaleY: [1, 1.02, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
+            <div className="absolute inset-0 bgabsolute inset-8 flex items-center justify-center-gradient-to-b from-red-500/50 via-yellow-500/50 to-green-500/50" />
 
             {/* Energy particles */}
             {[...Array(5)].map((_, i) => (
@@ -173,7 +159,7 @@ export function ProblemSolutionSplit() {
                     initial={{ opacity: 0, scale: 0 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    // transition={{ delay: 1.4 + i * 0.1, type: "spring" }}
+                    transition={{ delay: 1.4 + i * 0.1, type: 'spring' }}
                     animate={
                       isHoveringLeft
                         ? {
@@ -181,7 +167,7 @@ export function ProblemSolutionSplit() {
                           }
                         : {}
                     }
-                    transition={{ duration: 0.5, repeat: isHoveringLeft ? Infinity : 0 }}
+                    // transition={{ duration: 0.5, repeat: isHoveringLeft ? Infinity : 0 }}
                   >
                     {label.text}
                   </motion.div>
