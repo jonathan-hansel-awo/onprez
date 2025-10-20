@@ -124,3 +124,44 @@ The database automatically connects to the right environment based on `DATABASE_
 
 - `DATABASE_ENV=preview` → Uses `PREVIEW_DATABASE_URL`
 - `DATABASE_ENV=production` → Uses `DATABASE_URL`
+
+## Database Schema
+
+### User & Authentication Tables
+
+- **users** - User accounts with security fields
+- **sessions** - Active user sessions with device tracking
+- **auth_attempts** - Login attempt history for security monitoring
+- **password_reset_tokens** - Time-limited password reset tokens
+- **email_verification_tokens** - Email verification tokens
+- **mfa_secrets** - Multi-factor authentication TOTP secrets
+- **mfa_backup_codes** - Backup codes for MFA recovery
+- **security_logs** - Audit trail of security events
+- **rate_limits** - Rate limiting data
+
+### Business Tables (Placeholder)
+
+- **businesses** - Business profiles (will be expanded in Milestone 2.4)
+
+### Schema Features
+
+✅ **Security First:**
+
+- Account locking after failed attempts
+- Session management with device tracking
+- MFA support (TOTP + backup codes)
+- Comprehensive security logging
+- Rate limiting built-in
+
+✅ **Data Integrity:**
+
+- Foreign key constraints
+- Cascade deletes where appropriate
+- Unique constraints on critical fields
+- Indexed fields for performance
+
+✅ **Privacy:**
+
+- Passwords are never stored (only hashes)
+- Sensitive data can be encrypted
+- Audit trail for compliance.

@@ -1,7 +1,7 @@
 // lib/prisma.ts
 
 import { PrismaClient } from '@prisma/client'
-import { Pool } from '@neondatabase/serverless'
+import { Pool, PoolConfig } from '@neondatabase/serverless'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { getDatabaseUrls } from './db-config'
 
@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === 'production') {
   // Production: Use Neon serverless adapter
   const { url } = getDatabaseUrls()
   const pool = new Pool({ connectionString: url })
-  const adapter = new PrismaNeon(pool)
+  const adapter = new PrismaNeon(pool as unknown as PoolConfig)
 
   prisma = new PrismaClient({
     adapter,

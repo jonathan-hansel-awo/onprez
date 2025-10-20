@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -15,3 +9,259 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ============================================
+// USER & AUTHENTICATION MODELS
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  emailVerified Boolean @default(false)
+  passwordHash String
+  
+  // Security fields
+  mfaEnabled Boolean @default(false)
+  accountLocked Boolean @default(false)
+  failedLoginAttempts Int @default(0)
+  lastFailedLogin DateTime?
+  lockedUntil DateTime?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLoginAt DateTime?
+  
+  // Relations
+  sessions Session[]
+  authAttempts AuthAttempt[]
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  mfaSecrets MfaSecret[]
+  mfaBackupCodes MfaBackupCode[]
+  securityLogs SecurityLog[]
+  businesses Business[]
+  
+  @@index([email])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  refreshToken String? @unique
+  
+  // Device information
+  deviceInfo String?
+  ipAddress  String?
+  userAgent  String?
+  
+  // Session management
+  expiresAt DateTime
+  lastActivityAt DateTime @default(now())
+  isActive Boolean @default(true)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model AuthAttempt {
+  id        String   @id @default(cuid())
+  userId    String?  // Null if user not found
+  email     String
+  
+  // Attempt details
+  success   Boolean
+  ipAddress String
+  userAgent String?
+  attemptType String // 'login', 'mfa', 'password_reset'
+  failureReason String? // 'invalid_password', 'account_locked', 'invalid_mfa'
+  
+  // Timestamp
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@map("auth_attempts")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  
+  // Token management
+  expiresAt DateTime
+  usedAt    DateTime?
+  
+  // Timestamp
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  email     String   // Email to verify
+  
+  // Token management
+  expiresAt DateTime
+  verifiedAt DateTime?
+  
+  // Timestamp
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
+
+model MfaSecret {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  
+  // TOTP secret (encrypted)
+  secret    String
+  
+  // Status
+  isActive  Boolean  @default(true)
+  verifiedAt DateTime?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("mfa_secrets")
+}
+
+model MfaBackupCode {
+  id        String   @id @default(cuid())
+  userId    String
+  
+  // Code (hashed)
+  code      String
+  
+  // Status
+  usedAt    DateTime?
+  
+  // Timestamp
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("mfa_backup_codes")
+}
+
+model SecurityLog {
+  id        String   @id @default(cuid())
+  userId    String?  // Null for system-wide events
+  
+  // Event details
+  action    String   // 'login', 'logout', 'password_change', 'mfa_enabled', etc.
+  details   Json?    // Additional context
+  ipAddress String
+  userAgent String?
+  
+  // Status
+  severity  String   // 'info', 'warning', 'error', 'critical'
+  
+  // Timestamp
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("security_logs")
+}
+
+// ============================================
+// RATE LIMITING
+// ============================================
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  
+  // Rate limit key (IP address or user ID)
+  key       String
+  
+  // Endpoint/action being rate limited
+  endpoint  String
+  
+  // Counter
+  count     Int      @default(0)
+  
+  // Window management
+  windowStart DateTime @default(now())
+  expiresAt DateTime
+  
+  // Timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([key, endpoint])
+  @@index([key])
+  @@index([endpoint])
+  @@index([expiresAt])
+  @@map("rate_limits")
+}
+
+// ============================================
+// PLACEHOLDER FOR BUSINESS MODEL
+// (Will be added in next milestone)
+// ============================================
+
+model Business {
+  id        String   @id @default(cuid())
+  ownerId   String
+  
+  // Basic info (placeholder - will expand in Milestone 2.4)
+  name      String
+  slug      String   @unique
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  @@index([ownerId])
+  @@index([slug])
+  @@map("businesses")
+}
