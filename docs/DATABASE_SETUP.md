@@ -76,3 +76,51 @@ For preview deployments, Vercel can automatically use preview branch.
 
 - Use `DIRECT_URL` for migrations
 - Pooled connections don't support some migration operations.
+
+## Prisma Configuration
+
+### Connection Management
+
+We use Prisma with Neon's serverless adapter for optimal performance:
+
+- **Development:** Standard Prisma Client with connection reuse
+- **Production:** Neon serverless adapter with connection pooling
+
+### Useful Commands
+
+```bash
+# Generate Prisma Client (after schema changes)
+npm run db:generate
+
+# Push schema changes (development only)
+npm run db:push
+
+# Create and run migrations
+npm run db:migrate
+
+# Open Prisma Studio (visual editor)
+npm run db:studio
+
+# Test database connection
+npm run db:test
+```
+
+### Schema Location
+
+All database models are defined in `prisma/schema.prisma`
+
+### Accessing the Database
+
+```typescript
+import { prisma } from '@/lib/prisma'
+
+// Use prisma client
+const users = await prisma.user.findMany()
+```
+
+### Environment Switching
+
+The database automatically connects to the right environment based on `DATABASE_ENV`:
+
+- `DATABASE_ENV=preview` → Uses `PREVIEW_DATABASE_URL`
+- `DATABASE_ENV=production` → Uses `DATABASE_URL`
