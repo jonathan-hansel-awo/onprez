@@ -329,6 +329,7 @@ model Business {
                                                                                                                     appointments Appointment[]
                                                                                                                       customers Customer[]
                                                                                                                         businessHours BusinessHours[]
+                                                                                                                        serviceCategories ServiceCategory[] 
                                                                                                                           
                                                                                                                             @@index([ownerId])
                                                                                                                               @@index([slug])
@@ -368,35 +369,105 @@ model BusinessHours {
 }
 
 // ============================================
-// SERVICE MODELS (Placeholder - will expand in Milestone 6)
+// SERVICE MODELS
 // ============================================
 
 model Service {
-    id          String   @id @default(cuid())
-      businessId  String
-        
-          // Basic info (placeholder)
-            name        String
-              description String?  @db.Text
-                price       Decimal  @db.Decimal(10, 2)
-                  duration    Int      // minutes
-                    
-                      // Status
-                        active      Boolean  @default(true)
-                          order       Int      @default(0)
-                            
-                              // Timestamps
-                                createdAt   DateTime @default(now())
-                                  updatedAt   DateTime @updatedAt
-                                    
-                                      // Relations
-                                        business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-                                          appointments Appointment[]
-                                            
-                                              @@index([businessId])
-                                                @@index([active])
-                                                  @@map("services")
+  id          String   @id @default(cuid())
+  businessId  String
+  
+  // Basic information
+  name        String
+  description String?  @db.Text
+  tagline     String?  // Short one-liner
+  
+  // Pricing
+  price       Decimal  @db.Decimal(10, 2)
+  priceType   PriceType @default(FIXED)
+  priceRangeMin Decimal? @db.Decimal(10, 2)
+  priceRangeMax Decimal? @db.Decimal(10, 2)
+  currency    String   @default("USD")
+  
+  // Duration
+  duration    Int      // minutes
+  bufferTime  Int      @default(0) // minutes after appointment
+  
+  // Category
+  categoryId  String?
+  category    ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  
+  // Media
+  imageUrl    String?
+  galleryImages String[] // Array of image URLs
+  
+  // Booking settings
+  requiresApproval Boolean @default(false)
+  requiresDeposit  Boolean @default(false)
+  depositAmount    Decimal? @db.Decimal(10, 2)
+  maxAdvanceBookingDays Int? // Override business default
+  
+  // Display
+  featured    Boolean  @default(false)
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  
+  // SEO
+  seoTitle       String?
+  seoDescription String?
+  
+  // Additional info
+  preparationNotes String? @db.Text // What customer should know
+  aftercareNotes   String? @db.Text // Post-service instructions
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  
+  @@index([businessId])
+  @@index([categoryId])
+  @@index([active])
+  @@index([featured])
+  @@index([order])
+  @@map("services")
 }
+
+enum PriceType {
+  FIXED       // Exact price: £50
+  RANGE       // Price range: £50-£80
+  STARTING_AT // Starting at: From £50
+  FREE        // Free service
+}
+
+model ServiceCategory {
+  id          String   @id @default(cuid())
+  businessId  String
+  
+  // Category info
+  name        String
+  description String?
+  order       Int      @default(0)
+  
+  // Display
+  color       String?  // Hex color for UI
+  icon        String?  // Icon name or emoji
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  services    Service[]
+  
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@map("service_categories")
+}
+
 
 // ============================================
 // APPOINTMENT MODELS (Placeholder - will expand in Milestone 7)

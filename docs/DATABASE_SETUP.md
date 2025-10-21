@@ -188,7 +188,6 @@ The database automatically connects to the right environment based on `DATABASE_
                       ### Service & Booking Tables (Placeholders)
 
                       These will be expanded in later milestones:
-
                       - **services** - Bookable services offered by businesses
                       - **appointments** - Customer bookings
                       - **customers** - Customer database per business
@@ -210,3 +209,59 @@ The database automatically connects to the right environment based on `DATABASE_
                       - Custom meta titles and descriptions
                       - Keywords array
                       - Social sharing ready
+
+## Service Management Tables
+
+### Services
+
+- **services** - Bookable services offered by businesses
+  - Basic info (name, description, tagline)
+  - Flexible pricing (fixed, range, starting at, free)
+  - Duration and buffer time configuration
+  - Service category assignment
+  - Media (single image + gallery)
+  - Booking settings (approval, deposit)
+  - Display options (featured, active, ordering)
+  - SEO metadata
+  - Preparation and aftercare notes
+
+- **service_categories** - Custom service categories per business
+  - Category name and description
+  - Display order
+  - Color coding for UI
+  - Icon/emoji support
+
+### Service Features
+
+✅ **Flexible Pricing:**
+
+- Fixed price: $50
+- Price range: $50-$80
+- Starting at: From $50
+- Free services
+
+✅ **Time Management:**
+
+- Service duration (5 min to 8 hours)
+- Buffer time between appointments
+- Per-service advance booking limits
+
+✅ **Organization:**
+
+- Custom categories per business
+- Featured services
+- Drag-and-drop ordering
+- Active/inactive toggle
+
+✅ **Media:**
+
+- Featured image
+- Gallery support
+- Image optimization ready
+
+### Price Type Enum
+
+- `FIXED` - Exact price
+- `RANGE` - Min to max range
+- `STARTING_AT` - Base price (can go up)
+- `FREE` - No charge

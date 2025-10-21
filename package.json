@@ -21,7 +21,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset",
-    "db:test": "tsx scripts/test-db-connection.ts"
+    "db:test": "tsx scripts/test-db-connection.ts",
+    "db:test:service": "tsx scripts/test-service-data.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
