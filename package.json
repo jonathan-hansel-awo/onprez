@@ -27,13 +27,18 @@
     "db:test:appointment": "tsx scripts/test-appointment-data.ts",
     "db:test:customer": "tsx scripts/test-customer-data.ts",
     "db:test:rate-limit": "tsx scripts/test-rate-limit.ts",
-    "db:test:migrations": "tsx scripts/test-migrations.ts"
+    "db:test:migrations": "tsx scripts/test-migrations.ts",
+    "db:test:seed": "tsx scripts/test-seed-data.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-neon": "^6.17.1",
     "@prisma/client": "^6.17.1",
     "@radix-ui/react-slot": "^1.2.3",
+    "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.2",
@@ -54,6 +59,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^18.3.12",
