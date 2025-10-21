@@ -24,7 +24,8 @@
     "db:test": "tsx scripts/test-db-connection.ts",
     "db:test:service": "tsx scripts/test-service-data.ts",
     "db:test:appointment": "tsx scripts/test-appointment-data.ts",
-    "db:test:customer": "tsx scripts/test-customer-data.ts"
+    "db:test:customer": "tsx scripts/test-customer-data.ts",
+    "db:test:rate-limit": "tsx scripts/test-rate-limit.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

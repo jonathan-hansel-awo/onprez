@@ -411,3 +411,72 @@ The database automatically connects to the right environment based on `DATABASE_
 - `averageRating` - Average review rating
 - `firstBookingAt` - First appointment date
 - `lastBookingAt` - Most recent appointment date
+
+## Rate Limiting System
+
+### Tables
+
+- **rate_limits** - Active rate limit tracking
+  - Key (IP, user ID, or custom identifier)
+  - Endpoint being rate limited
+  - Request count in current window
+  - Window start and expiration times
+  - User agent and metadata
+
+- **rate_limit_configs** - Rate limit configuration (optional)
+  - Endpoint-specific configurations
+  - Max attempts and window duration
+  - Block duration on limit exceeded
+  - Active/inactive status
+  - Can be used to dynamically configure rate limits
+
+### Rate Limiting Features
+
+✅ **Flexible Rate Limiting:**
+
+- Per-IP rate limiting
+- Per-user rate limiting
+- Per-endpoint rate limiting
+- Custom key-based rate limiting
+
+✅ **Endpoint-Specific Rules:**
+
+- Auth endpoints (login, signup, password reset)
+- Booking endpoints (create, cancel, reschedule)
+- API endpoints (general, search)
+- Email/SMS endpoints
+
+✅ **Security Features:**
+
+- Automatic cleanup of expired records
+- Block duration on repeated violations
+- Bypass keys for testing/admin
+- Detailed violation tracking
+
+✅ **Pre-configured Rules:**
+
+- `auth:login` - 5 attempts / 15 minutes
+- `auth:signup` - 3 attempts / 1 hour
+- `booking:create` - 10 attempts / 1 hour
+- `api:general` - 100 attempts / 1 hour
+- And many more...
+
+### Rate Limit Headers
+
+Standard rate limit headers are used:
+
+- `X-RateLimit-Limit` - Maximum attempts allowed
+- `X-RateLimit-Remaining` - Remaining attempts
+- `X-RateLimit-Reset` - Unix timestamp when limit resets
+- `Retry-After` - Seconds until can retry (when blocked)
+
+### Cleanup
+
+Expired rate limit records should be cleaned up periodically:
+
+```typescript
+import { cleanupExpiredRateLimits } from '@/lib/services/rate-limit'
+
+// Run daily via cron job
+await cleanupExpiredRateLimits()
+```

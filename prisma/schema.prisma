@@ -217,20 +217,22 @@ model SecurityLog {
 model RateLimit {
   id        String   @id @default(cuid())
   
-  // Rate limit key (IP address or user ID)
-  key       String
+  // Rate limit identifier
+  key       String   // IP address, user ID, or custom identifier
   
   // Endpoint/action being rate limited
-  endpoint  String
+  endpoint  String   // e.g., '/api/auth/login', 'signup', 'booking'
   
-  // Counter
+  // Counter and window
   count     Int      @default(0)
-  
-  // Window management
   windowStart DateTime @default(now())
   expiresAt DateTime
   
-  // Timestamp
+  // Metadata
+  userAgent String?
+  metadata  Json?    // Additional context
+  
+  // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -239,6 +241,36 @@ model RateLimit {
   @@index([endpoint])
   @@index([expiresAt])
   @@map("rate_limits")
+}
+
+// ============================================
+// RATE LIMIT CONFIGURATION (Optional - for storing configs in DB)
+// ============================================
+
+model RateLimitConfig {
+  id        String   @id @default(cuid())
+  
+  // Configuration
+  endpoint  String   @unique
+  maxAttempts Int     // Maximum attempts allowed
+  windowMs  Int      // Time window in milliseconds
+  
+  // Action on limit exceeded
+  blockDurationMs Int? // How long to block after limit exceeded
+  
+  // Status
+  isActive  Boolean  @default(true)
+  
+  // Description
+  description String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([endpoint])
+  @@index([isActive])
+  @@map("rate_limit_configs")
 }
 
 // ============================================
