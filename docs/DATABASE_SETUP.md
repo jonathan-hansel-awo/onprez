@@ -480,3 +480,28 @@ import { cleanupExpiredRateLimits } from '@/lib/services/rate-limit'
 // Run daily via cron job
 await cleanupExpiredRateLimits()
 ```
+
+# Database Setup & Migrations
+
+## Quick Start
+
+```bash
+# Development
+npm run db:migrate        # Apply pending migrations
+npm run db:studio         # Open database GUI
+npm run db:test           # Test connection
+
+# Create new migration
+npm run db:migrate -- --name description_of_change
+```
+
+## Migration System
+
+OnPrez uses **Prisma Migrate** for all database changes. We maintain two database branches:
+
+- **preview** - Development and testing
+- **main** - Production
+
+See [MIGRATIONS.md](./MIGRATIONS.md) for complete migration workflow.
+
+---

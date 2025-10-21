@@ -18,6 +18,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset",
@@ -25,7 +26,8 @@
     "db:test:service": "tsx scripts/test-service-data.ts",
     "db:test:appointment": "tsx scripts/test-appointment-data.ts",
     "db:test:customer": "tsx scripts/test-customer-data.ts",
-    "db:test:rate-limit": "tsx scripts/test-rate-limit.ts"
+    "db:test:rate-limit": "tsx scripts/test-rate-limit.ts",
+    "db:test:migrations": "tsx scripts/test-migrations.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
