@@ -339,3 +339,75 @@ The database automatically connects to the right environment based on `DATABASE_
 - `CUSTOMER` - Cancelled by customer
 - `BUSINESS` - Cancelled by business
 - `SYSTEM` - Cancelled by system (e.g., automated)
+
+## Customer Management Tables
+
+### Customers
+
+- **customers** - Complete customer profiles and tracking
+  - Extended contact information (name, email, phone, address)
+  - Additional contacts (alternate phone)
+  - Customer profile (birthday, gender, language)
+  - Preferences (JSON) - service preferences, special requests
+  - Communication preferences (email, SMS, marketing opt-ins)
+  - Organization (tags for segmentation, custom fields)
+  - Customer notes (public and private)
+  - VIP and blocked status
+  - Statistics (bookings, spend, ratings)
+  - Engagement tracking (first/last booking, last contact)
+  - Source tracking (how they found business, referrals)
+
+### Customer Features
+
+✅ **Customer Segmentation:**
+
+- New customers (first 30 days)
+- Active customers (booked in last 90 days)
+- At-risk customers (90-180 days since last booking)
+- Inactive customers (180+ days)
+- VIP customers (high value)
+- Regular customers (frequent bookers)
+
+✅ **Communication Management:**
+
+- Email opt-in/out
+- SMS opt-in/out
+- Marketing opt-in/out
+- Preferred language support
+
+✅ **Customer Intelligence:**
+
+- Total bookings and completed bookings
+- Cancellation and no-show tracking
+- Total lifetime value (spend)
+- Average rating
+- Retention score calculation
+
+✅ **Organization:**
+
+- Custom tags for segmentation
+- Custom fields (JSON) for business-specific data
+- Public and private notes
+- VIP designation
+- Block customers with reason
+
+### Reviews
+
+- **reviews** - Customer reviews and ratings (basic placeholder)
+  - Rating (1-5 stars)
+  - Title and comment
+  - Published status
+  - Verification flag
+  - Business response capability
+  - Linked to customer and optional appointment
+
+### Statistics Tracked Per Customer
+
+- `totalBookings` - Total appointments created
+- `completedBookings` - Successfully completed appointments
+- `cancelledBookings` - Cancelled appointments
+- `noShowCount` - No-show appointments
+- `totalSpent` - Lifetime value
+- `averageRating` - Average review rating
+- `firstBookingAt` - First appointment date
+- `lastBookingAt` - Most recent appointment date

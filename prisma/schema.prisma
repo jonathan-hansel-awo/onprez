@@ -330,6 +330,7 @@ model Business {
                                                                                                                       customers Customer[]
                                                                                                                         businessHours BusinessHours[]
                                                                                                                         serviceCategories ServiceCategory[] 
+                                                                                                                        reviews Review[]
                                                                                                                           
                                                                                                                             @@index([ownerId])
                                                                                                                               @@index([slug])
@@ -579,32 +580,127 @@ enum PaymentStatus {
 }
 
 // ============================================
-// CUSTOMER MODELS (Placeholder - will expand in Milestone 11)
+// CUSTOMER MODELS
 // ============================================
 
 model Customer {
-    id          String   @id @default(cuid())
-      businessId  String
-        
-          // Contact info
-            email       String
-              name        String
-                phone       String?
-                  
-                    // Additional info
-                      notes       String?  @db.Text
-                        tags        String[]
-                          
-                            // Timestamps
-                              createdAt   DateTime @default(now())
-                                updatedAt   DateTime @updatedAt
-                                  
-                                    // Relations
-                                      business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-                                        appointments Appointment[]
-                                          
-                                            @@unique([businessId, email])
-                                              @@index([businessId])
-                                                @@index([email])
-                                                  @@map("customers")
+  id          String   @id @default(cuid())
+  businessId  String
+  
+  // Contact information
+  email       String
+  name        String
+  firstName   String?
+  lastName    String?
+  phone       String?
+  
+  // Additional contact
+  alternatePhone String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String?  @default("US")
+  
+  // Customer profile
+  birthday    DateTime? // For birthday reminders/promotions
+  gender      String?
+  preferredLanguage String? @default("en")
+  
+  // Preferences
+  preferences Json?    // Flexible preferences storage
+  
+  // Communication preferences
+  emailOptIn  Boolean  @default(true)
+  smsOptIn    Boolean  @default(false)
+  marketingOptIn Boolean @default(false)
+  
+  // Organization
+  tags        String[] // For segmentation
+  customFields Json?   // Business-specific custom fields
+  
+  // Customer notes
+  notes       String?  @db.Text
+  privateNotes String? @db.Text // Only visible to business
+  
+  // Status
+  isVip       Boolean  @default(false)
+  isBlocked   Boolean  @default(false)
+  blockReason String?
+  
+  // Statistics (calculated/cached)
+  totalBookings    Int      @default(0)
+  completedBookings Int     @default(0)
+  cancelledBookings Int     @default(0)
+  noShowCount      Int      @default(0)
+  totalSpent       Decimal  @default(0) @db.Decimal(10, 2)
+  averageRating    Decimal? @db.Decimal(3, 2)
+  
+  // Engagement tracking
+  firstBookingAt   DateTime?
+  lastBookingAt    DateTime?
+  lastContactedAt  DateTime?
+  
+  // Source tracking
+  source      String?  // How they found the business
+  referredBy  String?  // Referral source
+  
+  // Metadata
+  metadata    Json?    // Additional flexible data
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  reviews     Review[]
+  
+  @@unique([businessId, email])
+  @@index([businessId])
+  @@index([email])
+  @@index([phone])
+  @@index([tags])
+  @@index([isVip])
+  @@index([lastBookingAt])
+  @@map("customers")
+}
+
+// ============================================
+// REVIEW MODEL (Basic placeholder for future)
+// ============================================
+
+model Review {
+  id          String   @id @default(cuid())
+  businessId  String
+  customerId  String
+  appointmentId String?
+  
+  // Review content
+  rating      Int      // 1-5 stars
+  title       String?
+  comment     String?  @db.Text
+  
+  // Status
+  isPublished Boolean  @default(false)
+  isVerified  Boolean  @default(false)
+  
+  // Response
+  businessResponse String? @db.Text
+  respondedAt      DateTime?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@index([businessId])
+  @@index([customerId])
+  @@index([rating])
+  @@index([isPublished])
+  @@map("reviews")
 }
