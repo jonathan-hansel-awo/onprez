@@ -242,26 +242,235 @@ model RateLimit {
 }
 
 // ============================================
-// PLACEHOLDER FOR BUSINESS MODEL
-// (Will be added in next milestone)
+// BUSINESS/PROFILE MODELS
 // ============================================
 
+enum BusinessCategory {
+    SALON
+      BARBERSHOP
+        SPA
+          MASSAGE
+            NAILS
+              BEAUTY
+                FITNESS
+                  YOGA
+                    PERSONAL_TRAINING
+                      THERAPY
+                        COUNSELING
+                          TUTORING
+                            CONSULTING
+                              PHOTOGRAPHY
+                                VIDEOGRAPHY
+                                  EVENT_PLANNING
+                                    CATERING
+                                      CLEANING
+                                        HOME_SERVICES
+                                          PET_SERVICES
+                                            OTHER
+}
+
 model Business {
-  id        String   @id @default(cuid())
-  ownerId   String
-  
-  // Basic info (placeholder - will expand in Milestone 2.4)
-  name      String
-  slug      String   @unique
-  
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  
-  @@index([ownerId])
-  @@index([slug])
-  @@map("businesses")
+    id        String   @id @default(cuid())
+      ownerId   String
+        
+          // Basic Information
+            name      String
+              slug      String   @unique // For onprez.com/[slug]
+                category  BusinessCategory
+                  description String?  @db.Text
+                    tagline   String?
+                      
+                        // Contact Information
+                          email     String?
+                            phone     String?
+                              website   String?
+                                address   String?
+                                  city      String?
+                                    state     String?
+                                      zipCode   String?
+                                        country   String?  @default("US")
+                                          
+                                            // Location
+                                              latitude  Float?
+                                                longitude Float?
+                                                  timezone  String   @default("America/New_York")
+                                                    
+                                                      // Media
+                                                        logoUrl   String?
+                                                          coverImageUrl String?
+                                                            
+                                                              // Social Links (stored as JSON)
+                                                                socialLinks Json?  // { instagram, facebook, twitter, linkedin, tiktok }
+                                                                  
+                                                                    // Settings (stored as JSON)
+                                                                      settings  Json?    // Business configuration
+                                                                        
+                                                                          // Branding (stored as JSON)
+                                                                            branding  Json?    // { primaryColor, secondaryColor, accentColor, fontFamily }
+                                                                              
+                                                                                // Status
+                                                                                  isPublished Boolean @default(false)
+                                                                                    isPremium   Boolean @default(false)
+                                                                                      isActive    Boolean @default(true)
+                                                                                        
+                                                                                          // SEO
+                                                                                            seoTitle       String?
+                                                                                              seoDescription String?
+                                                                                                seoKeywords    String[]
+                                                                                                  
+                                                                                                    // Timestamps
+                                                                                                      createdAt DateTime @default(now())
+                                                                                                        updatedAt DateTime @updatedAt
+                                                                                                          publishedAt DateTime?
+                                                                                                            
+                                                                                                              // Relations
+                                                                                                                owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+                                                                                                                  services Service[]
+                                                                                                                    appointments Appointment[]
+                                                                                                                      customers Customer[]
+                                                                                                                        businessHours BusinessHours[]
+                                                                                                                          
+                                                                                                                            @@index([ownerId])
+                                                                                                                              @@index([slug])
+                                                                                                                                @@index([category])
+                                                                                                                                  @@index([isPublished])
+                                                                                                                                    @@index([city, state])
+                                                                                                                                      @@map("businesses")
+}
+
+model BusinessHours {
+    id         String   @id @default(cuid())
+      businessId String
+        
+          // Day of week (0 = Sunday, 6 = Saturday)
+            dayOfWeek  Int      // 0-6
+              
+                // Time slots
+                  openTime   String   // "09:00"
+                    closeTime  String   // "17:00"
+                      
+                        // Status
+                          isClosed   Boolean  @default(false)
+                            
+                              // Special notes
+                                notes      String?
+                                  
+                                    // Timestamps
+                                      createdAt DateTime @default(now())
+                                        updatedAt DateTime @updatedAt
+                                          
+                                            // Relations
+                                              business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+                                                
+                                                  @@unique([businessId, dayOfWeek])
+                                                    @@index([businessId])
+                                                      @@map("business_hours")
+}
+
+// ============================================
+// SERVICE MODELS (Placeholder - will expand in Milestone 6)
+// ============================================
+
+model Service {
+    id          String   @id @default(cuid())
+      businessId  String
+        
+          // Basic info (placeholder)
+            name        String
+              description String?  @db.Text
+                price       Decimal  @db.Decimal(10, 2)
+                  duration    Int      // minutes
+                    
+                      // Status
+                        active      Boolean  @default(true)
+                          order       Int      @default(0)
+                            
+                              // Timestamps
+                                createdAt   DateTime @default(now())
+                                  updatedAt   DateTime @updatedAt
+                                    
+                                      // Relations
+                                        business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+                                          appointments Appointment[]
+                                            
+                                              @@index([businessId])
+                                                @@index([active])
+                                                  @@map("services")
+}
+
+// ============================================
+// APPOINTMENT MODELS (Placeholder - will expand in Milestone 7)
+// ============================================
+
+enum AppointmentStatus {
+    PENDING
+      CONFIRMED
+        COMPLETED
+          CANCELLED
+            NO_SHOW
+}
+
+model Appointment {
+    id          String   @id @default(cuid())
+      businessId  String
+        serviceId   String
+          customerId  String
+            
+              // Time
+                startTime   DateTime
+                  endTime     DateTime
+                    
+                      // Status
+                        status      AppointmentStatus @default(PENDING)
+                          
+                            // Notes
+                              notes       String?  @db.Text
+                                cancellationReason String?
+                                  
+                                    // Timestamps
+                                      createdAt   DateTime @default(now())
+                                        updatedAt   DateTime @updatedAt
+                                          
+                                            // Relations
+                                              business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+                                                service     Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+                                                  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+                                                    
+                                                      @@index([businessId])
+                                                        @@index([serviceId])
+                                                          @@index([customerId])
+                                                            @@index([startTime])
+                                                              @@index([status])
+                                                                @@map("appointments")
+}
+
+// ============================================
+// CUSTOMER MODELS (Placeholder - will expand in Milestone 11)
+// ============================================
+
+model Customer {
+    id          String   @id @default(cuid())
+      businessId  String
+        
+          // Contact info
+            email       String
+              name        String
+                phone       String?
+                  
+                    // Additional info
+                      notes       String?  @db.Text
+                        tags        String[]
+                          
+                            // Timestamps
+                              createdAt   DateTime @default(now())
+                                updatedAt   DateTime @updatedAt
+                                  
+                                    // Relations
+                                      business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+                                        appointments Appointment[]
+                                          
+                                            @@unique([businessId, email])
+                                              @@index([businessId])
+                                                @@index([email])
+                                                  @@map("customers")
 }

@@ -165,3 +165,48 @@ The database automatically connects to the right environment based on `DATABASE_
 - Passwords are never stored (only hashes)
 - Sensitive data can be encrypted
 - Audit trail for compliance.
+
+## Business & Service Tables
+
+### Business Management
+
+- **businesses** - Business profiles with complete information
+  - Basic info (name, slug, category, description)
+    - Contact information (email, phone, address, location)
+      - Media (logo, cover image)
+        - Social links (Instagram, Facebook, etc.)
+          - Settings (booking rules, notifications, display options)
+            - Branding (colors, fonts)
+              - SEO metadata
+                - Status flags (published, premium, active)
+
+                - **business_hours** - Operating hours by day of week
+                  - Day-specific hours (open/close times)
+                    - Closed days support
+                      - Special notes
+
+                      ### Service & Booking Tables (Placeholders)
+
+                      These will be expanded in later milestones:
+
+                      - **services** - Bookable services offered by businesses
+                      - **appointments** - Customer bookings
+                      - **customers** - Customer database per business
+
+                      ### Business Features
+
+                      ✅ **Multi-tenancy:**
+                      - Each business isolated by businessId
+                      - Slug-based routing (onprez.com/[slug])
+                      - User can own multiple businesses
+
+                      ✅ **Flexible Configuration:**
+                      - JSONB fields for settings and branding
+                      - Business category enum
+                      - Timezone support
+                      - Location data (lat/lng)
+
+                      ✅ **SEO Optimized:**
+                      - Custom meta titles and descriptions
+                      - Keywords array
+                      - Social sharing ready
