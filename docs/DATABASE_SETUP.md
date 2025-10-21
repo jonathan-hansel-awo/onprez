@@ -265,3 +265,77 @@ The database automatically connects to the right environment based on `DATABASE_
 - `RANGE` - Min to max range
 - `STARTING_AT` - Base price (can go up)
 - `FREE` - No charge
+
+## Appointment & Booking Tables
+
+### Appointments
+
+- **appointments** - Customer bookings with complete tracking
+  - Time scheduling (start, end, duration, timezone)
+  - Status workflow (pending → confirmed → completed)
+  - Confirmation tracking (when, by whom)
+  - Cancellation tracking (source, reason, timestamp)
+  - Rescheduling support (linked appointments)
+  - Customer information (name, email, phone)
+  - Notes (customer and business private notes)
+  - Payment tracking (deposit, total, status)
+  - Reminder management (sent time, count)
+  - Booking metadata (source, IP)
+
+### Appointment Features
+
+✅ **Status Workflow:**
+
+- PENDING → Awaiting confirmation
+- CONFIRMED → Business confirmed
+- COMPLETED → Service finished
+- CANCELLED → Cancelled by customer/business
+- NO_SHOW → Customer didn't show
+- RESCHEDULED → Moved to different time
+
+✅ **Payment Tracking:**
+
+- Deposit requirements
+- Payment status (unpaid, partially paid, paid, refunded, failed)
+- Amount tracking
+
+✅ **Cancellation Management:**
+
+- Track who cancelled (customer, business, system)
+- Cancellation reason
+- Timestamp tracking
+
+✅ **Rescheduling:**
+
+- Link original and new appointments
+- Track reschedule history
+- Reschedule reason
+
+✅ **Customer Communication:**
+
+- Customer notes (visible to business)
+- Business notes (private)
+- Reminder tracking
+
+### Appointment Status Enum
+
+- `PENDING` - Awaiting confirmation
+- `CONFIRMED` - Confirmed by business
+- `COMPLETED` - Service completed
+- `CANCELLED` - Cancelled
+- `NO_SHOW` - Customer didn't show
+- `RESCHEDULED` - Moved to different time
+
+### Payment Status Enum
+
+- `UNPAID` - Not paid
+- `PARTIALLY_PAID` - Partial payment received
+- `PAID` - Fully paid
+- `REFUNDED` - Payment refunded
+- `FAILED` - Payment failed
+
+### Cancellation Source Enum
+
+- `CUSTOMER` - Cancelled by customer
+- `BUSINESS` - Cancelled by business
+- `SYSTEM` - Cancelled by system (e.g., automated)

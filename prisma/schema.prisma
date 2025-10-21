@@ -468,51 +468,114 @@ model ServiceCategory {
   @@map("service_categories")
 }
 
-
 // ============================================
-// APPOINTMENT MODELS (Placeholder - will expand in Milestone 7)
+// APPOINTMENT MODELS
 // ============================================
 
 enum AppointmentStatus {
-    PENDING
-      CONFIRMED
-        COMPLETED
-          CANCELLED
-            NO_SHOW
+  PENDING       // Awaiting confirmation
+  CONFIRMED     // Confirmed by business
+  COMPLETED     // Service completed
+  CANCELLED     // Cancelled by customer or business
+  NO_SHOW       // Customer didn't show up
+  RESCHEDULED   // Moved to different time
+}
+
+enum CancellationSource {
+  CUSTOMER
+  BUSINESS
+  SYSTEM
 }
 
 model Appointment {
-    id          String   @id @default(cuid())
-      businessId  String
-        serviceId   String
-          customerId  String
-            
-              // Time
-                startTime   DateTime
-                  endTime     DateTime
-                    
-                      // Status
-                        status      AppointmentStatus @default(PENDING)
-                          
-                            // Notes
-                              notes       String?  @db.Text
-                                cancellationReason String?
-                                  
-                                    // Timestamps
-                                      createdAt   DateTime @default(now())
-                                        updatedAt   DateTime @updatedAt
-                                          
-                                            // Relations
-                                              business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-                                                service     Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-                                                  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
-                                                    
-                                                      @@index([businessId])
-                                                        @@index([serviceId])
-                                                          @@index([customerId])
-                                                            @@index([startTime])
-                                                              @@index([status])
-                                                                @@map("appointments")
+  id          String   @id @default(cuid())
+  businessId  String
+  serviceId   String
+  customerId  String
+  
+  // Time scheduling
+  startTime   DateTime
+  endTime     DateTime
+  duration    Int      // minutes (from service)
+  timezone    String   // Customer's timezone
+  
+  // Status tracking
+  status      AppointmentStatus @default(PENDING)
+  previousStatus AppointmentStatus? // For tracking status changes
+  
+  // Confirmation
+  confirmedAt DateTime?
+  confirmedBy String?  // User ID who confirmed
+  
+  // Completion
+  completedAt DateTime?
+  
+  // Cancellation
+  cancelledAt DateTime?
+  cancellationSource CancellationSource?
+  cancellationReason String? @db.Text
+  cancelledBy String? // User ID or customer ID
+  
+  // Rescheduling
+  rescheduledFrom String? // Original appointment ID
+  rescheduledTo   String? // New appointment ID
+  rescheduledAt   DateTime?
+  rescheduleReason String? @db.Text
+  
+  // Customer information
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  
+  // Notes
+  customerNotes String? @db.Text // Notes from customer
+  businessNotes String? @db.Text // Private notes from business
+  
+  // Payment tracking (basic)
+  requiresDeposit Boolean @default(false)
+  depositAmount   Decimal? @db.Decimal(10, 2)
+  depositPaid     Boolean @default(false)
+  depositPaidAt   DateTime?
+  totalAmount     Decimal @db.Decimal(10, 2)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  paidAt          DateTime?
+  
+  // Reminders
+  reminderSentAt  DateTime?
+  reminderCount   Int @default(0)
+  
+  // Booking source
+  bookingSource   String? // 'website', 'admin', 'api', 'phone'
+  bookingIp       String? // IP address of booking
+  
+  // Metadata
+  metadata        Json? // Flexible additional data
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  service     Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  
+  @@index([businessId])
+  @@index([serviceId])
+  @@index([customerId])
+  @@index([startTime])
+  @@index([status])
+  @@index([customerEmail])
+  @@index([createdAt])
+  @@map("appointments")
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  REFUNDED
+  FAILED
 }
 
 // ============================================

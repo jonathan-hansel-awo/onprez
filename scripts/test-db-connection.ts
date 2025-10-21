@@ -1,7 +1,5 @@
-// scripts/test-db-connection.ts
-
 import { prisma } from '../lib/prisma'
-import { BusinessCategory, PriceType } from '@prisma/client'
+import { BusinessCategory, PriceType, AppointmentStatus, PaymentStatus } from '@prisma/client'
 
 async function testConnection() {
   console.log('🔍 Testing database connection...')
@@ -43,9 +41,11 @@ async function testConnection() {
     })
 
     // Test enums
-    console.log('\n🏢 Business Categories:', Object.keys(BusinessCategory).length)
-    console.log('💰 Price Types:', Object.keys(PriceType).length)
-    console.log(`   - ${Object.values(PriceType).join(', ')}`)
+    console.log('\n📊 Enums:')
+    console.log(`   🏢 Business Categories: ${Object.keys(BusinessCategory).length}`)
+    console.log(`   💰 Price Types: ${Object.keys(PriceType).length}`)
+    console.log(`   📅 Appointment Statuses: ${Object.keys(AppointmentStatus).length}`)
+    console.log(`   💳 Payment Statuses: ${Object.keys(PaymentStatus).length}`)
 
     console.log('\n🎉 Database schema verification complete!')
 
