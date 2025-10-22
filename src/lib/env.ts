@@ -10,7 +10,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
   NEXT_PUBLIC_APP_NAME: z.string().default('OnPrez'),
 
-  // Database (Supabase) - Will be configured in Area 2
+  // Database Connection
   DATABASE_URL: z.string().optional(),
   DIRECT_URL: z.string().optional(),
 
@@ -40,6 +40,11 @@ const envSchema = z.object({
     .string()
     .transform(val => val === 'true')
     .default(false),
+
+  // JWT Configuration
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  JWT_ACCESS_TOKEN_EXPIRY: z.string().default('7d'),
+  JWT_REFRESH_TOKEN_EXPIRY: z.string().default('30d'),
 })
 
 /**

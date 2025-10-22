@@ -1,31 +1,62 @@
-// Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
+import 'jest-environment-jsdom'
 
-// Mock environment variables for testing
-// Use Object.defineProperty to override read-only properties
-Object.defineProperty(process.env, 'NODE_ENV', {
-  value: 'test',
+// Set up environment variables for tests
+process.env.NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+process.env.NEXT_PUBLIC_APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'OnPrez'
+process.env.JWT_SECRET =
+  process.env.JWT_SECRET || 'test-secret-key-at-least-32-characters-long-for-testing'
+process.env.JWT_ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_TOKEN_EXPIRY || '1h'
+process.env.JWT_REFRESH_TOKEN_EXPIRY = process.env.JWT_REFRESH_TOKEN_EXPIRY || '7d'
+
+// Mock Next.js router
+jest.mock('next/router', () => ({
+  useRouter() {
+    return {
+      route: '/',
+      pathname: '/',
+      query: {},
+      asPath: '/',
+      push: jest.fn(),
+      pop: jest.fn(),
+      reload: jest.fn(),
+      back: jest.fn(),
+      prefetch: jest.fn(),
+      beforePopState: jest.fn(),
+      events: {
+        on: jest.fn(),
+        off: jest.fn(),
+        emit: jest.fn(),
+      },
+    }
+  },
+}))
+
+// Global test utilities
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}))
+
+// Mock IntersectionObserver
+global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}))
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
   writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
 })
-
-Object.defineProperty(process.env, 'NEXT_PUBLIC_APP_URL', {
-  value: 'http://localhost:3000',
-  writable: true,
-})
-
-Object.defineProperty(process.env, 'NEXT_PUBLIC_APP_NAME', {
-  value: 'OnPrez',
-  writable: true,
-})
-
-Object.defineProperty(process.env, 'NEXT_PUBLIC_ENABLE_ANALYTICS', {
-  value: 'false',
-  writable: true,
-})
-
-// Mock database and auth variables
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
-process.env.DIRECT_URL = 'postgresql://test:test@localhost:5432/test'
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost:54321'
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
