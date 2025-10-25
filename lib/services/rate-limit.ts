@@ -191,3 +191,36 @@ export async function blockKey(key: string, endpoint: string, durationMs: number
     },
   })
 }
+
+/**
+ * Calculate progressive delay based on violation count
+ * Progressive backoff: 1s, 2s, 5s, 10s, 30s, 60s, etc.
+ */
+export function calculateProgressiveDelay(violationCount: number): number {
+  const delays = [1000, 2000, 5000, 10000, 30000, 60000, 120000, 300000]
+  const index = Math.min(violationCount - 1, delays.length - 1)
+  return delays[Math.max(0, index)]
+}
+
+/**
+ * Get recommended delay before retry based on attempts
+ */
+export async function getProgressiveDelayForKey(key: string, endpoint: string): Promise<number> {
+  const rateLimit = await prisma.rateLimit.findUnique({
+    where: {
+      key_endpoint: {
+        key,
+        endpoint,
+      },
+    },
+  })
+
+  if (!rateLimit) {
+    return 0
+  }
+
+  const rule = getRateLimitRule(endpoint)
+  const violationCount = Math.max(0, rateLimit.count - rule.maxAttempts)
+
+  return calculateProgressiveDelay(violationCount + 1)
+}
