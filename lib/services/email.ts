@@ -1,10 +1,17 @@
 import { Resend } from 'resend'
+import { env } from '../config/env'
 
-let resend: Resend
+// Lazy initialization - only create Resend instance when needed
+let resendInstance: Resend | null = null
 
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY)
+function getResendInstance(): Resend {
+  if (!resendInstance) {
+    resendInstance = new Resend(env.RESEND_API_KEY)
+    console.log('Resend initialized with API Key:', env.RESEND_API_KEY, '✅')
+  }
+  return resendInstance
 }
+
 export interface SendEmailOptions {
   to: string | string[]
   subject: string
@@ -25,12 +32,11 @@ export interface EmailResult {
  */
 export async function sendEmail(options: SendEmailOptions): Promise<EmailResult> {
   try {
-    if (!resend) {
-      throw new Error('Resend client not initialized - missing API key')
-    }
+    const resend = getResendInstance()
+    const from = options.from || `${env.FROM_NAME} <${env.FROM_EMAIL}>`
 
-    const response = await resend.emails.send({
-      from: options.from || `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+    const result = await resend.emails.send({
+      from,
       to: options.to,
       subject: options.subject,
       html: options.html,
@@ -38,19 +44,31 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
       replyTo: options.replyTo,
     })
 
-    if (response.error) {
+    // Handle Resend API error response
+    if (result && result.error) {
+      console.error('Email send error:', result.error)
       return {
         success: false,
-        error: response.error.message,
+        error: result.error.message || 'Email send failed',
       }
     }
 
+    // Handle successful response
+    if (result && result.data) {
+      return {
+        success: true,
+        messageId: result.data.id,
+      }
+    }
+
+    // Fallback for unexpected response format
     return {
-      success: true,
-      messageId: response.data?.id,
+      success: false,
+      error: 'Unexpected response format from email service',
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
+    console.error('Email send exception:', error)
     return {
       success: false,
       error: error.message || 'Failed to send email',

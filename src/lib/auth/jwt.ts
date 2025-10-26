@@ -1,6 +1,6 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
-import { env } from '@/lib/env'
 import type { TokenPayload, TokenPair, VerifiedToken, TokenOptions } from './types'
+import { env } from 'lib/config/env'
 
 /**
  * JWT Configuration

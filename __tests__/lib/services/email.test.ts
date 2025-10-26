@@ -1,15 +1,21 @@
-import {
-  sendEmail,
-  sendVerificationEmail,
-  sendPasswordResetEmail,
-  sendPasswordChangedEmail,
-  sendNewDeviceLoginEmail,
-  sendAccountLockedEmail,
-} from '../../../lib/services/email'
+// Mock the env module
+jest.mock('../../../lib/config/env', () => ({
+  env: {
+    RESEND_API_KEY: 'test-api-key',
+    FROM_EMAIL: 'noreply@onprez.com',
+    FROM_NAME: 'OnPrez',
+    APP_URL: 'https://onprez.vercel.app',
+    NODE_ENV: 'test',
+  },
+  isProduction: false,
+  isDevelopment: false,
+  isTest: true,
+}))
 
-// Mock Resend module
+// Declare mockSend BEFORE the Resend mock
 const mockSend = jest.fn()
 
+// Mock Resend module - Fixed to return proper structure
 jest.mock('resend', () => {
   return {
     Resend: jest.fn().mockImplementation(() => ({
@@ -20,23 +26,32 @@ jest.mock('resend', () => {
   }
 })
 
+// Now import the functions to test
+import {
+  sendEmail,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendPasswordChangedEmail,
+  sendNewDeviceLoginEmail,
+  sendAccountLockedEmail,
+} from '../../../lib/services/email'
+
 describe('Email Service', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    process.env.RESEND_API_KEY = 'test-api-key'
-    process.env.FROM_EMAIL = 'noreply@onprez.com'
-    process.env.FROM_NAME = 'OnPrez'
-    process.env.APP_URL = 'https://onprez.vercel.app'
+    // Reset the Resend instance
+    jest.resetModules()
+
+    // Set default successful response
+    mockSend.mockResolvedValue({
+      data: { id: 'email-123' },
+      error: null,
+    })
   })
 
   describe('sendEmail', () => {
     it('should send email successfully', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       const result = await sendEmail({
         to: 'test@example.com',
         subject: 'Test Subject',
@@ -56,7 +71,7 @@ describe('Email Service', () => {
     })
 
     it('should handle email send error', async () => {
-      mockSend.mockResolvedValue({
+      mockSend.mockResolvedValueOnce({
         data: null,
         error: { message: 'Invalid email address' },
       })
@@ -72,7 +87,7 @@ describe('Email Service', () => {
     })
 
     it('should handle exception', async () => {
-      mockSend.mockRejectedValue(new Error('Network error'))
+      mockSend.mockRejectedValueOnce(new Error('Network error'))
 
       const result = await sendEmail({
         to: 'test@example.com',
@@ -85,11 +100,6 @@ describe('Email Service', () => {
     })
 
     it('should accept custom from address', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       await sendEmail({
         to: 'test@example.com',
         subject: 'Test',
@@ -105,11 +115,6 @@ describe('Email Service', () => {
     })
 
     it('should support multiple recipients', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       await sendEmail({
         to: ['test1@example.com', 'test2@example.com'],
         subject: 'Test',
@@ -126,11 +131,6 @@ describe('Email Service', () => {
 
   describe('sendVerificationEmail', () => {
     it('should send verification email', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       const result = await sendVerificationEmail(
         'user@example.com',
         'https://onprez.com/verify?token=abc123',
@@ -147,11 +147,6 @@ describe('Email Service', () => {
     })
 
     it('should include verification URL in email', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       await sendVerificationEmail('user@example.com', 'https://onprez.com/verify?token=abc123')
 
       const callArgs = mockSend.mock.calls[0][0]
@@ -162,11 +157,6 @@ describe('Email Service', () => {
 
   describe('sendPasswordResetEmail', () => {
     it('should send password reset email', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       const result = await sendPasswordResetEmail(
         'user@example.com',
         'https://onprez.com/reset?token=xyz789',
@@ -183,11 +173,6 @@ describe('Email Service', () => {
     })
 
     it('should include reset URL in email', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       await sendPasswordResetEmail('user@example.com', 'https://onprez.com/reset?token=xyz789')
 
       const callArgs = mockSend.mock.calls[0][0]
@@ -198,11 +183,6 @@ describe('Email Service', () => {
 
   describe('sendPasswordChangedEmail', () => {
     it('should send password changed notification', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       const timestamp = new Date()
       const result = await sendPasswordChangedEmail(
         'user@example.com',
@@ -221,11 +201,6 @@ describe('Email Service', () => {
     })
 
     it('should include IP and timestamp when provided', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       const timestamp = new Date('2024-01-01T12:00:00Z')
       await sendPasswordChangedEmail('user@example.com', 'John', '192.168.1.1', timestamp)
 
@@ -236,11 +211,6 @@ describe('Email Service', () => {
 
   describe('sendNewDeviceLoginEmail', () => {
     it('should send new device login alert', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       const timestamp = new Date()
       const result = await sendNewDeviceLoginEmail(
         'user@example.com',
@@ -261,11 +231,6 @@ describe('Email Service', () => {
     })
 
     it('should include device details in email', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       await sendNewDeviceLoginEmail(
         'user@example.com',
         'John',
@@ -283,11 +248,6 @@ describe('Email Service', () => {
 
   describe('sendAccountLockedEmail', () => {
     it('should send account locked notification', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       const unlockTime = new Date(Date.now() + 30 * 60 * 1000)
       const result = await sendAccountLockedEmail(
         'user@example.com',
@@ -306,11 +266,6 @@ describe('Email Service', () => {
     })
 
     it('should include unlock time when provided', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       const unlockTime = new Date('2024-01-01T13:00:00Z')
       await sendAccountLockedEmail('user@example.com', 'John', 'security', unlockTime)
 
@@ -319,11 +274,6 @@ describe('Email Service', () => {
     })
 
     it('should show support message when no unlock time', async () => {
-      mockSend.mockResolvedValue({
-        data: { id: 'email-123' },
-        error: null,
-      })
-
       await sendAccountLockedEmail('user@example.com', 'John', 'security')
 
       const callArgs = mockSend.mock.calls[0][0]

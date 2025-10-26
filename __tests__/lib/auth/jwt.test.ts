@@ -170,7 +170,7 @@ describe('JWT Utilities', () => {
       const token = generateAccessToken(mockPayload, { expiresIn: 1 }) // 1 second
 
       // Wait for token to expire
-      await new Promise(resolve => setTimeout(resolve, 1600))
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
       expect(isTokenExpired(token)).toBe(true)
     }, 5000) // Increase timeout

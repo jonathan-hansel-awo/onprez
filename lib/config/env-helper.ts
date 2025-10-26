@@ -9,7 +9,7 @@ import { env } from './env'
  * Useful for absolute URLs in emails, redirects, etc.
  */
 export function getBaseUrl(): string {
-  return env.NEXT_PUBLIC_APP_URL
+  return env.APP_URL || env.NEXT_PUBLIC_APP_URL
 }
 
 /**
@@ -59,7 +59,19 @@ export function hasStripeConfigured(): boolean {
  * Check if we have email service configured
  */
 export function hasEmailConfigured(): boolean {
-  return Boolean(env.RESEND_API_KEY)
+  return Boolean(env.RESEND_API_KEY && env.FROM_EMAIL)
+}
+
+/**
+ * Get email configuration
+ */
+export function getEmailConfig() {
+  return {
+    apiKey: env.RESEND_API_KEY,
+    fromEmail: env.FROM_EMAIL,
+    fromName: env.FROM_NAME,
+    appUrl: env.APP_URL || env.NEXT_PUBLIC_APP_URL,
+  }
 }
 
 /**

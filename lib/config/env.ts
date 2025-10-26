@@ -19,8 +19,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
 
-  // Email Service (Resend) - Will be configured later
-  RESEND_API_KEY: z.string().optional(),
+  // Email Service (Resend) - Required for auth flows
+  RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required'),
+  FROM_EMAIL: z.string().email().default('noreply@onprez.com'),
+  FROM_NAME: z.string().default('OnPrez'),
+  APP_URL: z.string().url().optional(), // Fallback to NEXT_PUBLIC_APP_URL
 
   // Payment Processing (Stripe) - Will be configured later
   STRIPE_SECRET_KEY: z.string().optional(),
@@ -55,6 +58,7 @@ function parseEnv() {
   const parsed = envSchema.safeParse(process.env)
 
   if (!parsed.success) {
+    console.log('Environment Variables:', process.env)
     console.error('❌ Invalid environment variables:', parsed.error.flatten().fieldErrors)
     throw new Error('Invalid environment variables')
   }

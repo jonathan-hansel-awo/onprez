@@ -6,7 +6,7 @@ import {
   hasEmailConfigured,
   getLogLevel,
   getAppMetadata,
-} from '@/lib/env-helper'
+} from 'lib/config/env-helper'
 
 describe('Environment Helpers', () => {
   describe('getBaseUrl', () => {
