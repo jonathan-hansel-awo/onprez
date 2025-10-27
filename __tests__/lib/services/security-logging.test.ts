@@ -1,13 +1,12 @@
-import { prisma } from 'lib/prisma'
+import { prisma } from '@/lib/prisma'
 import {
   logSecurityEvent,
   getUserSecurityLogs,
-  getSecurityLogsByAction,
   getCriticalSecurityEvents,
   cleanupOldSecurityLogs,
-} from 'lib/services/security-logging'
+} from '@/lib/services/security-logging'
 
-jest.mock('../../../lib/prisma', () => ({
+jest.mock('@/lib/prisma', () => ({
   prisma: {
     securityLog: {
       create: jest.fn(),

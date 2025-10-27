@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { prisma } from 'lib/prisma'
+import { prisma } from '@/lib/prisma'
 
 export interface SecurityLogEntry {
   userId?: string

@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { env } from '../config/env'
+import { env } from '@/lib/config/env'
 
 // Lazy initialization - only create Resend instance when needed
 let resendInstance: Resend | null = null

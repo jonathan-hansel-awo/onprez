@@ -1,5 +1,5 @@
 // Mock the env module
-jest.mock('../../../lib/config/env', () => ({
+jest.mock('@/lib/config/env', () => ({
   env: {
     RESEND_API_KEY: 'test-api-key',
     FROM_EMAIL: 'noreply@onprez.com',
@@ -34,7 +34,7 @@ import {
   sendPasswordChangedEmail,
   sendNewDeviceLoginEmail,
   sendAccountLockedEmail,
-} from '../../../lib/services/email'
+} from '@/lib/services/email'
 
 describe('Email Service', () => {
   beforeEach(() => {

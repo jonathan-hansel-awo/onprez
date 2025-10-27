@@ -1,4 +1,4 @@
-import { prisma } from 'lib/prisma'
+import { prisma } from '@/lib/prisma'
 import {
   checkRateLimit,
   resetRateLimit,
@@ -6,10 +6,10 @@ import {
   getRateLimitStats,
   blockKey,
   calculateProgressiveDelay,
-} from 'lib/services/rate-limit'
+} from '@/lib/services/rate-limit'
 
 // Mock Prisma
-jest.mock('../../../lib/prisma', () => ({
+jest.mock('@/lib/prisma', () => ({
   prisma: {
     rateLimit: {
       findUnique: jest.fn(),

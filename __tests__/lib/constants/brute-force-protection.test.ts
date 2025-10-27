@@ -4,7 +4,7 @@ import {
   calculateProgressiveLockDuration,
   PROGRESSIVE_DELAY,
   SUSPICIOUS_ACTIVITY,
-} from 'lib/constants/brute-force-protection'
+} from '@/lib/constants/brute-force-protection'
 
 describe('Brute Force Protection Constants', () => {
   describe('BRUTE_FORCE_THRESHOLDS', () => {
