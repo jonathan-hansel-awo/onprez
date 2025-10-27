@@ -1,5 +1,5 @@
-import { getRateLimitRule } from 'lib/constants/rate-limit'
-import { prisma } from 'lib/prisma'
+import { getRateLimitRule } from '@/lib/constants/rate-limit'
+import { prisma } from '@/lib/prisma'
 import {
   RateLimitCheckResult,
   isRateLimitExpired,
