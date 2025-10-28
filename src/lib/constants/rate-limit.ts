@@ -44,6 +44,14 @@ export const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
     message: 'Too many verification attempts. Please try again later.',
   },
 
+  'auth:resend-verification': {
+    endpoint: 'auth:resend-verification',
+    maxAttempts: 3,
+    windowMs: 60 * 60 * 1000, // 1 hour
+    blockDurationMs: 60 * 60 * 1000, // 1 hour
+    message: 'Too many verification email requests. Please try again later.',
+  },
+
   'auth:mfa-verify': {
     endpoint: 'auth:mfa-verify',
     maxAttempts: 5,
