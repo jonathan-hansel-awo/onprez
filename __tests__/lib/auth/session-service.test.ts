@@ -23,10 +23,10 @@ import {
   SessionError,
 } from '@/lib/auth/session-service'
 import { generateTokenPair } from '@/lib/auth/jwt'
-import { prisma } from 'lib/prisma'
+import { prisma } from '@/lib/prisma'
 
 // Mock Prisma
-jest.mock('../../../lib/prisma', () => ({
+jest.mock('@/lib/prisma', () => ({
   prisma: {
     session: {
       create: jest.fn(),

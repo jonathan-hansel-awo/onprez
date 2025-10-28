@@ -1,4 +1,4 @@
-import { prisma } from 'lib/prisma'
+import { prisma } from '@/lib/prisma'
 import {
   recordLoginAttempt,
   checkAndLockAccount,
@@ -9,9 +9,9 @@ import {
   calculateProgressiveDelay,
   shouldDelayLogin,
   getAccountLockStatus,
-} from 'lib/services/brute-force-protection'
+} from '@/lib/services/brute-force-protection'
 
-jest.mock('../../../lib/prisma', () => ({
+jest.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
       findUnique: jest.fn(),

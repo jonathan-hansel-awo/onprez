@@ -7,7 +7,6 @@ let resendInstance: Resend | null = null
 function getResendInstance(): Resend {
   if (!resendInstance) {
     resendInstance = new Resend(env.RESEND_API_KEY)
-    console.log('Resend initialized with API Key:', env.RESEND_API_KEY, '✅')
   }
   return resendInstance
 }
