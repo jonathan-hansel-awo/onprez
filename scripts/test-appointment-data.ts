@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { AppointmentStatus, PaymentStatus, CancellationSource } from '@prisma/client'
 
 async function testAppointmentData() {

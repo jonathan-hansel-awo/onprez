@@ -6,7 +6,7 @@ import { resolve } from 'path'
 config({ path: resolve(process.cwd(), '.env.local') })
 
 // Now import your modules
-import { sendVerificationEmail } from '../lib/services/email'
+import { sendVerificationEmail } from '@/lib/services/email'
 
 async function testEmail() {
   console.log('Testing email service...')

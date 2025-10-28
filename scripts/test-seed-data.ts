@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma'
+import { prisma } from '@/lib/prisma'
 
 async function testSeedData() {
   console.log('🧪 Testing seed data...\n')

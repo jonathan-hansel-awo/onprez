@@ -1,7 +1,0 @@
-console.log('=== Environment Variables Debug ===')
-console.log('NODE_ENV:', process.env.NODE_ENV)
-console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
-console.log('RESEND_API_KEY value:', process.env.RESEND_API_KEY?.substring(0, 10) + '...')
-console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET)
-console.log('FROM_EMAIL:', process.env.FROM_EMAIL)
-console.log('=================================')
