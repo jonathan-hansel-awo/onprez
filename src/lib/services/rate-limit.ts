@@ -5,7 +5,7 @@ import {
   isRateLimitExpired,
   calculateResetTime,
   calculateRetryAfter,
-} from 'types/rate-limit'
+} from '@/types/rate-limit'
 
 /**
  * Check rate limit for a key and endpoint

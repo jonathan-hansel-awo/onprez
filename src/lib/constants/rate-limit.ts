@@ -1,4 +1,4 @@
-import { RateLimitRule } from 'types/rate-limit'
+import { RateLimitRule } from '@/types/rate-limit'
 
 /**
  * Rate limit rules for different endpoints
