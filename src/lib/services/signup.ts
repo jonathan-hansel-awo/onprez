@@ -1,9 +1,10 @@
-import { prisma, hashPassword } from 'prisma/seed-utils'
-import { env } from 'process'
-import { generateVerificationToken } from '../utils/token'
-import { SignupInput } from '../validation/auth'
-import { sendVerificationEmail } from './email'
-import { logSecurityEvent } from './security-logging'
+import { prisma } from '@/lib/prisma'
+import { hashPassword } from '@/lib/auth/password'
+import { generateVerificationToken } from '@/lib/utils/token'
+import { sendVerificationEmail } from '@/lib/services/email'
+import { logSecurityEvent } from '@/lib/services/security-logging'
+import type { SignupInput } from '@/lib/validation/auth'
+import { env } from '@/lib/config/env'
 
 export interface SignupResult {
   success: boolean

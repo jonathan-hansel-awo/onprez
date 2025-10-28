@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { checkRateLimit } from 'lib/services/rate-limit'
-import { RATE_LIMIT_HEADERS } from 'lib/constants/rate-limit'
+import { checkRateLimit } from '@/lib/services/rate-limit'
+import { RATE_LIMIT_HEADERS } from '@/lib/constants/rate-limit'
 
 export interface RateLimitOptions {
   endpoint: string

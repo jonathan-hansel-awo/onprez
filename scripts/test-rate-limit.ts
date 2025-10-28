@@ -1,9 +1,5 @@
-import { prisma } from '../lib/prisma'
-import {
-  checkRateLimit,
-  resetRateLimit,
-  cleanupExpiredRateLimits,
-} from '../lib/services/rate-limit'
+import { prisma } from '@/lib/prisma'
+import { checkRateLimit, resetRateLimit, cleanupExpiredRateLimits } from '@/lib/services/rate-limit'
 
 async function testRateLimit() {
   console.log('🧪 Testing Rate Limit system...\n')

@@ -1,9 +1,9 @@
 import {
   BRUTE_FORCE_THRESHOLDS,
   calculateProgressiveLockDuration,
-} from 'lib/constants/brute-force-protection'
-import { prisma } from 'lib/prisma'
-import { logSecurityEvent } from 'lib/services/security-logging'
+} from '@/lib/constants/brute-force-protection'
+import { prisma } from '@/lib/prisma'
+import { logSecurityEvent } from '@/lib/services/security-logging'
 
 export interface LoginAttemptResult {
   success: boolean
