@@ -176,6 +176,103 @@ export async function sendAccountLockedEmail(
 }
 
 /**
+ * Send new device login alert
+ */
+export async function sendNewDeviceAlert(
+  email: string,
+  loginInfo: {
+    deviceInfo: string
+    ipAddress: string
+    timestamp: Date
+    location: string
+  }
+): Promise<EmailResult> {
+  const { deviceInfo, ipAddress, timestamp, location } = loginInfo
+
+  try {
+    const resend = getResendInstance()
+    const { data, error } = await resend.emails.send({
+      from: `${env.FROM_NAME} <${env.FROM_EMAIL}>`,
+      to: email,
+      subject: 'New Device Login Alert - OnPrez',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>New Device Login Alert</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f8f9fa; border-radius: 10px; padding: 30px; margin-bottom: 20px;">
+              <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <h2 style="margin: 0 0 10px 0; color: #856404;">⚠️ New Device Login</h2>
+                <p style="margin: 0; color: #856404;">We detected a login to your OnPrez account from a new device.</p>
+              </div>
+
+              <h3 style="margin-top: 0;">Login Details:</h3>
+              <table style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 8px; overflow: hidden;">
+                <tr style="background-color: #f8f9fa;">
+                  <td style="padding: 12px; border-bottom: 1px solid #dee2e6; font-weight: 600;">Device</td>
+                  <td style="padding: 12px; border-bottom: 1px solid #dee2e6;">${deviceInfo}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; border-bottom: 1px solid #dee2e6; font-weight: 600;">IP Address</td>
+                  <td style="padding: 12px; border-bottom: 1px solid #dee2e6;">${ipAddress}</td>
+                </tr>
+                <tr style="background-color: #f8f9fa;">
+                  <td style="padding: 12px; border-bottom: 1px solid #dee2e6; font-weight: 600;">Location</td>
+                  <td style="padding: 12px; border-bottom: 1px solid #dee2e6;">${location}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; font-weight: 600;">Time</td>
+                  <td style="padding: 12px;">${timestamp.toLocaleString()}</td>
+                </tr>
+              </table>
+
+              <div style="margin-top: 30px; padding: 20px; background-color: #e7f3ff; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #004085;">Was this you?</h3>
+                <p style="margin-bottom: 15px; color: #004085;">
+                  <strong>If this was you:</strong> No action needed. You're all set!
+                </p>
+                <p style="margin-bottom: 0; color: #004085;">
+                  <strong>If this wasn't you:</strong> Please secure your account immediately by changing your password.
+                </p>
+              </div>
+
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="${env.APP_URL}/settings/security" 
+                   style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                  Secure My Account
+                </a>
+              </div>
+            </div>
+
+            <div style="text-align: center; color: #6c757d; font-size: 14px;">
+              <p>This is an automated security alert from OnPrez.</p>
+              <p>If you have questions, contact us at ${env.SUPPORT_EMAIL}</p>
+            </div>
+          </body>
+        </html>
+      `,
+    })
+
+    if (error) {
+      console.error('Failed to send new device alert:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, messageId: data?.id }
+  } catch (error) {
+    console.error('New device alert error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to send email',
+    }
+  }
+}
+
+/**
  * Render verification email HTML
  */
 function renderVerificationEmail(verificationUrl: string, name?: string): string {
