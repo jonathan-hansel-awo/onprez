@@ -23,6 +23,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required'),
   FROM_EMAIL: z.string().email().default('noreply@onprez.com'),
   FROM_NAME: z.string().default('OnPrez'),
+  SUPPORT_EMAIIL: z.string().email().default('support@onprez.com'),
   APP_URL: z.string().url().optional(), // Fallback to NEXT_PUBLIC_APP_URL
 
   // Payment Processing (Stripe) - Will be configured later
