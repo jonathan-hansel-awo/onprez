@@ -1,4 +1,4 @@
-ailimport { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { verifyPassword } from '@/lib/auth/password'
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt'
 import { logSecurityEvent } from '@/lib/services/security-logging'
