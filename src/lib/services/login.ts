@@ -121,7 +121,7 @@ export async function loginUser(
         data: {
           failedLoginAttempts: failedAttempts,
           accountLocked: shouldLock,
-          lastFailedLoginAt: new Date(),
+          lastFailedLogin: new Date(),
         },
       })
 
@@ -158,7 +158,8 @@ export async function loginUser(
       // Generate temporary MFA token
       const mfaToken = generateAccessToken({
         userId: user.id,
-        type: 'mfa_challenge',
+        email: user.email,
+      // type: 'mfa_challenge',
       })
 
       await logSecurityEvent({
@@ -202,6 +203,7 @@ export async function loginUser(
 
     const refreshToken = generateRefreshToken({
       userId: user.id,
+      email: user.email,
     })
 
     await prisma.session.create({
