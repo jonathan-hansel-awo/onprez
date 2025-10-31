@@ -158,7 +158,7 @@ export async function loginUser(
       // Generate temporary MFA token
       const mfaToken = generateAccessToken({
         userId: user.id,
-        type: 'mfa_challenge',
+      // type: 'mfa_challenge',
       })
 
       await logSecurityEvent({
