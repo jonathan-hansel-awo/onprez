@@ -97,20 +97,91 @@ export async function sendVerificationEmail(
 /**
  * Send password reset email
  */
+/**
+ * Send password reset email
+ */
 export async function sendPasswordResetEmail(
   email: string,
   resetUrl: string,
-  name?: string
+  businessName: string
 ): Promise<EmailResult> {
-  const html = renderPasswordResetEmail(resetUrl, name)
-  const text = `Hi${name ? ` ${name}` : ''},\n\nYou recently requested to reset your password for your OnPrez account. Click the link below to reset it:\n\n${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request a password reset, you can safely ignore this email.\n\nBest regards,\nThe OnPrez Team`
+  try {
+    const resend = getResendInstance()
+    const { data, error } = await resend.emails.send({
+      from: `${env.FROM_NAME} <${env.FROM_EMAIL}>`,
+      to: email,
+      subject: 'Reset Your Password - OnPrez',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Reset Your Password</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f8f9fa; border-radius: 10px; padding: 30px; margin-bottom: 20px;">
+              <h1 style="color: #1a202c; margin-top: 0;">Reset Your Password</h1>
+              
+              <p style="font-size: 16px; color: #4a5568; margin-bottom: 20px;">
+                Hello from <strong>${businessName}</strong>,
+              </p>
+              
+              <p style="font-size: 16px; color: #4a5568; margin-bottom: 20px;">
+                We received a request to reset the password for your OnPrez account. Click the button below to create a new password:
+              </p>
 
-  return sendEmail({
-    to: email,
-    subject: 'Reset your password - OnPrez',
-    html,
-    text,
-  })
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" 
+                   style="display: inline-block; padding: 14px 40px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                  Reset Password
+                </a>
+              </div>
+
+              <p style="font-size: 14px; color: #6b7280; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                Or copy and paste this link into your browser:
+              </p>
+              <p style="font-size: 14px; color: #3b82f6; word-break: break-all;">
+                ${resetUrl}
+              </p>
+
+              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-top: 30px; border-radius: 4px;">
+                <p style="margin: 0; color: #92400e; font-size: 14px;">
+                  <strong>⚠️ Important:</strong> This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email.
+                </p>
+              </div>
+            </div>
+
+            <div style="text-align: center; color: #6c757d; font-size: 14px;">
+              <p>This email was sent to ${email}</p>
+              <p>
+                If you have questions, contact us at 
+                <a href="mailto:${env.SUPPORT_EMAIL}" style="color: #3b82f6; text-decoration: none;">
+                  ${env.SUPPORT_EMAIL}
+                </a>
+              </p>
+              <p style="margin-top: 20px; color: #9ca3af; font-size: 12px;">
+                © ${new Date().getFullYear()} OnPrez. All rights reserved.
+              </p>
+            </div>
+          </body>
+        </html>
+      `,
+    })
+
+    if (error) {
+      console.error('Failed to send password reset email:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, messageId: data?.id }
+  } catch (error) {
+    console.error('Password reset email error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to send email',
+    }
+  }
 }
 
 /**
