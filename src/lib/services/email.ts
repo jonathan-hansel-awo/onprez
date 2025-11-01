@@ -3,6 +3,7 @@ import { env } from '@/lib/config/env'
 
 // Lazy initialization - only create Resend instance when needed
 let resendInstance: Resend | null = null
+const resend = getResendInstance()
 
 function getResendInstance(): Resend {
   if (!resendInstance) {
@@ -106,7 +107,6 @@ export async function sendPasswordResetEmail(
   businessName: string
 ): Promise<EmailResult> {
   try {
-    const resend = getResendInstance()
     const { data, error } = await resend.emails.send({
       from: `${env.FROM_NAME} <${env.FROM_EMAIL}>`,
       to: email,
@@ -187,21 +187,95 @@ export async function sendPasswordResetEmail(
 /**
  * Send password changed notification
  */
+/**
+ * Send password changed confirmation email
+ */
 export async function sendPasswordChangedEmail(
   email: string,
-  name?: string,
-  ipAddress?: string,
-  timestamp?: Date
+  businessName: string
 ): Promise<EmailResult> {
-  const html = renderPasswordChangedEmail(name, ipAddress, timestamp)
-  const text = `Hi${name ? ` ${name}` : ''},\n\nYour OnPrez account password was successfully changed.\n\nIf you made this change, you can safely ignore this email.\n\nIf you didn't change your password, please contact us immediately at support@onprez.com.\n\nBest regards,\nThe OnPrez Team`
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `${env.FROM_NAME} <${env.FROM_EMAIL}>`,
+      to: email,
+      subject: 'Your Password Has Been Changed - OnPrez',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Password Changed</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f8f9fa; border-radius: 10px; padding: 30px; margin-bottom: 20px;">
+              <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <h2 style="margin: 0 0 10px 0; color: #155724;">✓ Password Changed Successfully</h2>
+                <p style="margin: 0; color: #155724;">Your OnPrez account password has been updated.</p>
+              </div>
 
-  return sendEmail({
-    to: email,
-    subject: 'Your password has been changed - OnPrez',
-    html,
-    text,
-  })
+              <p style="font-size: 16px; color: #4a5568; margin-bottom: 20px;">
+                Hello from <strong>${businessName}</strong>,
+              </p>
+              
+              <p style="font-size: 16px; color: #4a5568; margin-bottom: 20px;">
+                This email confirms that your password was successfully changed on ${new Date().toLocaleString()}.
+              </p>
+
+              <div style="background-color: white; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #1a202c;">What happened?</h3>
+                <ul style="color: #4a5568; margin: 0; padding-left: 20px;">
+                  <li style="margin-bottom: 10px;">Your password was changed</li>
+                  <li style="margin-bottom: 10px;">All active sessions were logged out for security</li>
+                  <li style="margin-bottom: 10px;">You can now log in with your new password</li>
+                </ul>
+              </div>
+
+              <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-top: 30px; border-radius: 4px;">
+                <p style="margin: 0; color: #856404; font-size: 14px;">
+                  <strong>⚠️ Didn't make this change?</strong><br>
+                  If you didn't change your password, your account may be compromised. Please contact support immediately.
+                </p>
+              </div>
+
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="${env.APP_URL}/login" 
+                   style="display: inline-block; padding: 12px 30px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                  Log In Now
+                </a>
+              </div>
+            </div>
+
+            <div style="text-align: center; color: #6c757d; font-size: 14px;">
+              <p>This email was sent to ${email}</p>
+              <p>
+                Need help? Contact us at 
+                <a href="mailto:${env.SUPPORT_EMAIL}" style="color: #3b82f6; text-decoration: none;">
+                  ${env.SUPPORT_EMAIL}
+                </a>
+              </p>
+              <p style="margin-top: 20px; color: #9ca3af; font-size: 12px;">
+                © ${new Date().getFullYear()} OnPrez. All rights reserved.
+              </p>
+            </div>
+          </body>
+        </html>
+      `,
+    })
+
+    if (error) {
+      console.error('Failed to send password changed email:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, messageId: data?.id }
+  } catch (error) {
+    console.error('Password changed email error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to send email',
+    }
+  }
 }
 
 /**
