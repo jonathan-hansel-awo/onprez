@@ -159,7 +159,7 @@ export async function loginUser(
       const mfaToken = generateAccessToken({
         userId: user.id,
         email: user.email,
-      // type: 'mfa_challenge',
+        // type: 'mfa_challenge',
       })
 
       await logSecurityEvent({
@@ -214,10 +214,10 @@ export async function loginUser(
         expiresAt,
         userAgent,
         ipAddress,
-        deviceInfo: {
+        deviceInfo: JSON.stringify({
           platform: deviceInfo.platform,
           browser: deviceInfo.browser,
-        },
+        }),
       },
     })
 
