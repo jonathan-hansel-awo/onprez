@@ -463,7 +463,7 @@ export default function SignupPage() {
                     {isLoading ? 'Creating your account...' : 'Claim Your Handle'}
                   </Button>
                   <p className="text-xs text-gray-500 text-center mt-3">
-                    Free forever • No credit card required • 2 minutes to set up
+                    Free forever • No credit card required • 10 minutes to set up
                   </p>
                 </motion.div>
 
