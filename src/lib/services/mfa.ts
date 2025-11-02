@@ -91,7 +91,7 @@ export async function setupMfa(
     // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { mfaSecret: true },
+      include: { mfaSecrets: true },
     })
 
     if (!user) {
