@@ -68,7 +68,7 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.6 }}
             >
-              Create your complete online presence in 15 minutes. No website needed.
+              Create your complete online presence in 10 minutes. No website needed.
             </motion.p>
 
             {/* CTA Buttons */}

@@ -3,7 +3,7 @@
  */
 export const BRUTE_FORCE_THRESHOLDS = {
   MAX_FAILED_ATTEMPTS: 5, // Lock after 5 failed attempts
-  RESET_WINDOW_MS: 15 * 60 * 1000, // Reset counter after 15 minutes of no attempts
+  RESET_WINDOW_MS: 15 * 60 * 1000, // Reset counter after 10 minutes of no attempts
   INITIAL_LOCK_DURATION_MS: 30 * 60 * 1000, // 30 minutes for first lock
 } as const
 

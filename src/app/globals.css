@@ -144,3 +144,109 @@ video {
 .skip-to-main:focus {
   top: 0;
 }
+
+/* Auth Page Animations */
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(100vh) translateX(-50%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(-50%);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Auth gradient mesh background */
+.auth-gradient-mesh {
+  background: linear-gradient(-45deg, #3b82f6, #8b5cf6, #6366f1, #3b82f6);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Floating particles */
+.floating-particle {
+  animation: float-up 20s linear infinite;
+}
+
+/* Auth card entrance */
+.auth-card-enter {
+  animation:
+    fadeInUp 0.6s ease-out forwards,
+    scaleIn 0.6s ease-out forwards;
+}
+
+/* Input focus glow */
+.input-glow:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button with gradient and glow */
+.btn-gradient-glow {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gradient-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-gradient-glow:hover::before {
+  left: 100%;
+}

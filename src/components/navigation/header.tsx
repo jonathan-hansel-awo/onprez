@@ -3,14 +3,13 @@
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
-import { useRouter } from 'next/router'
+import { Logo } from '@/components/navigation'
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { scrollY } = useScroll()
-  const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
@@ -38,14 +37,6 @@ export function Header() {
     { href: '#examples', label: 'Examples' },
   ]
 
-  const handleSignInClick = () => {
-    router.push('login')
-  }
-
-  const handleGetStartedClick = () => {
-    router.push('signup')
-  }
-
   return (
     <>
       <motion.header
@@ -59,14 +50,7 @@ export function Header() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <motion.a
-              href="/"
-              className="text-2xl font-bold bg-gradient-to-r from-onprez-blue to-onprez-purple bg-clip-text text-transparent"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              OnPrez
-            </motion.a>
+            <Logo />
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
@@ -83,20 +67,20 @@ export function Header() {
 
             {/* Desktop CTA Buttons */}
             <div className="hidden md:flex items-center gap-4">
-              <button
+              <a
                 className="text-gray-700 hover:text-onprez-blue font-medium transition-colors"
-                onClick={handleSignInClick}
+                href="login"
               >
                 Sign In
-              </button>
-              <motion.button
+              </a>
+              <motion.a
                 className="bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-6 py-2 rounded-lg font-semibold shadow-lg"
+                href="signup"
                 whileHover={{ scale: 1.05, boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)' }}
                 whileTap={{ scale: 0.95 }}
-                onClick={handleGetStartedClick}
               >
                 Get Started
-              </motion.button>
+              </motion.a>
             </div>
 
             {/* Mobile Menu Button */}

@@ -48,7 +48,7 @@ export const BUFFER_TIME_OPTIONS = [
   { value: 0, label: 'No buffer' },
   { value: 5, label: '5 minutes' },
   { value: 10, label: '10 minutes' },
-  { value: 15, label: '15 minutes' },
+  { value: 15, label: '10 minutes' },
   { value: 20, label: '20 minutes' },
   { value: 30, label: '30 minutes' },
 ] as const

@@ -8,7 +8,7 @@ export const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
   'auth:login': {
     endpoint: 'auth:login',
     maxAttempts: 5,
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000, // 10 minutes
     blockDurationMs: 30 * 60 * 1000, // 30 minutes
     message: 'Too many login attempts. Please try again later.',
   },
@@ -32,7 +32,7 @@ export const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
   'auth:password-reset-complete': {
     endpoint: 'auth:password-reset-complete',
     maxAttempts: 5,
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000, // 10 minutes
     blockDurationMs: 30 * 60 * 1000, // 30 minutes
     message: 'Too many password reset attempts. Please try again later.',
   },
@@ -52,10 +52,17 @@ export const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
     message: 'Too many verification email requests. Please try again later.',
   },
 
+  'auth:mfa-setup': {
+    endpoint: 'auth:mfa-setup',
+    maxAttempts: 3,
+    windowMs: 60 * 60 * 1000, // 1 hour
+    message: 'Too many MFA setup attempts. Please try again later.',
+  },
+
   'auth:mfa-verify': {
     endpoint: 'auth:mfa-verify',
     maxAttempts: 5,
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000, // 10 minutes
     blockDurationMs: 30 * 60 * 1000, // 30 minutes
     message: 'Too many MFA verification attempts. Please try again later.',
   },

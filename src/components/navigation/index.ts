@@ -1,4 +1,5 @@
 export { Header } from './header'
 export { Footer } from './footer'
+export { Logo } from './logo'
 export { ScrollProgress } from './scroll-progress'
 export { ScrollProgressEnhanced } from './scroll-progress-enhanced'

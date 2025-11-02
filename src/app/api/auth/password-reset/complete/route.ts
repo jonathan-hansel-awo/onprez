@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     const userAgent = request.headers.get('user-agent') || undefined
 
-    // Check rate limit (5 attempts per 15 minutes per IP)
+    // Check rate limit (5 attempts per 10 minutes per IP)
     const rateLimitKey = `password-reset-complete:${ipAddress}`
     const rateLimit = await checkRateLimit(rateLimitKey, 'auth:password-reset-complete')
 

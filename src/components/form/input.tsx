@@ -8,10 +8,26 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
   helperText?: string
+  leftIcon?: React.ReactNode
+  rightIcon?: React.ReactNode
+  onRightIconClick?: () => void
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, type = 'text', ...props }, ref) => {
+  (
+    {
+      className,
+      label,
+      error,
+      helperText,
+      leftIcon,
+      rightIcon,
+      onRightIconClick,
+      type = 'text',
+      ...props
+    },
+    ref
+  ) => {
     const [isFocused, setIsFocused] = useState(false)
     const [hasValue, setHasValue] = useState(false)
 
@@ -25,6 +41,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative w-full">
         <div className="relative">
+          {/* Left Icon */}
+          {leftIcon && (
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
+              {leftIcon}
+            </div>
+          )}
+
           <input
             ref={ref}
             type={type}
@@ -35,6 +58,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 ? 'border-red-500 focus:border-red-500'
                 : 'border-gray-300 focus:border-onprez-blue',
               label && 'pt-6 pb-2',
+              leftIcon && 'pl-11',
+              rightIcon && 'pr-11',
               className
             )}
             onFocus={() => setIsFocused(true)}
@@ -47,7 +72,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {label && (
             <motion.label
               className={cn(
-                'absolute left-4 pointer-events-none transition-all duration-200',
+                'absolute pointer-events-none transition-all duration-200',
+                leftIcon ? 'left-11' : 'left-4',
                 isFocused || hasValue || props.value
                   ? 'top-2 text-xs text-onprez-blue'
                   : 'top-1/2 -translate-y-1/2 text-base text-gray-500'
@@ -60,6 +86,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             >
               {label}
             </motion.label>
+          )}
+
+          {/* Right Icon */}
+          {rightIcon && (
+            <button
+              type="button"
+              onClick={onRightIconClick}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              tabIndex={-1}
+            >
+              {rightIcon}
+            </button>
           )}
         </div>
 

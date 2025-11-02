@@ -46,7 +46,7 @@ const LazyPricingSection = dynamic(
 export const metadata: Metadata = {
   title: 'OnPrez - Your Handle, Your Brand, Your Bookings',
   description:
-    'Create your complete online presence in 15 minutes. Customizable presence pages with integrated booking for service professionals. Start free at onprez.com/yourname',
+    'Create your complete online presence in 10 minutes. Customizable presence pages with integrated booking for service professionals. Start free at onprez.com/yourname',
 }
 
 export default function LandingPage() {

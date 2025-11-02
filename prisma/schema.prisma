@@ -14,34 +14,37 @@ datasource db {
 // ============================================
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  emailVerified Boolean @default(false)
-  passwordHash String
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  passwordHash          String
+  emailVerified         Boolean  @default(false)
   
   // Security fields
-  mfaEnabled Boolean @default(false)
-  accountLocked Boolean @default(false)
-  failedLoginAttempts Int @default(0)
-  lastFailedLogin DateTime?
-  lockedUntil DateTime?
+  accountLocked         Boolean  @default(false)
+  failedLoginAttempts   Int      @default(0)
+  lastFailedLogin       DateTime?
+  lockedUntil           DateTime?
+  lastLoginAt           DateTime?
+  
+  // MFA
+  mfaEnabled            Boolean  @default(false)
   
   // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lastLoginAt DateTime?
-  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
   // Relations
-  sessions Session[]
-  authAttempts AuthAttempt[]
-  passwordResetTokens PasswordResetToken[]
+  sessions              Session[]
+  businesses            Business[]
+  passwordResetTokens   PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
-  mfaSecrets MfaSecret[]
-  mfaBackupCodes MfaBackupCode[]
-  securityLogs SecurityLog[]
-  businesses Business[]
+  authAttempts          AuthAttempt[]
+  securityLogs          SecurityLog[]
   
-  @@index([email])
+  // MFA Relations (ADD THESE)
+  mfaSecret             MfaSecret?
+  mfaBackupCodes        MfaBackupCode[]
+
   @@map("users")
 }
 
@@ -143,43 +146,28 @@ model EmailVerificationToken {
 }
 
 model MfaSecret {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  
-  // TOTP secret (encrypted)
-  secret    String
-  
-  // Status
-  isActive  Boolean  @default(true)
-  verifiedAt DateTime?
-  
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  encryptedSecret String   @db.Text
+  iv              String   // Initialization vector for encryption
+  verified        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
+
   @@map("mfa_secrets")
 }
 
 model MfaBackupCode {
-  id        String   @id @default(cuid())
-  userId    String
-  
-  // Code (hashed)
-  code      String
-  
-  // Status
-  usedAt    DateTime?
-  
-  // Timestamp
-  createdAt DateTime @default(now())
-  
-  // Relations
+  id         String    @id @default(cuid())
+  userId     String
+  hashedCode String    @db.Text
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@map("mfa_backup_codes")
 }
