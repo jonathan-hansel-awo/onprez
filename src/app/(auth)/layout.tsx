@@ -1,8 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Logo } from '@/components/navigation'
 import { GradientMesh } from '@/components/landing'
+import { Logo } from '@/components/navigation'
+import { motion } from 'framer-motion'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,13 +19,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="absolute top-8 left-8"
+          className="absolute top-4 sm:top-8 left-4 sm:left-8"
         >
           <Logo variant="white" />
         </motion.div>
 
-        {/* Main content */}
-        <div className="min-h-screen flex items-center justify-center px-4 py-24">{children}</div>
+        {/* Main content with proper mobile spacing */}
+        <div className="min-h-screen flex items-center justify-center px-4 py-20 sm:py-24">
+          <div className="w-full max-w-6xl">{children}</div>
+        </div>
       </div>
     </div>
   )
