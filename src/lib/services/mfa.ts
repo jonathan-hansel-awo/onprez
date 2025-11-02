@@ -91,7 +91,7 @@ export async function setupMfa(
     // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { mfaSecrets: true },
+      include: { mfaSecret: true },
     })
 
     if (!user) {
@@ -404,7 +404,7 @@ export async function verifyBackupCode(
     const hashedCode = hashBackupCode(code)
 
     // Find unused backup code
-    const backupCode = user.mfaBackupCodes.find(bc => bc.code === hashedCode && !bc.usedAt)
+    const backupCode = user.mfaBackupCodes.find(bc => bc.hashedCode === hashedCode && !bc.usedAt)
 
     if (!backupCode) {
       await logSecurityEvent({
