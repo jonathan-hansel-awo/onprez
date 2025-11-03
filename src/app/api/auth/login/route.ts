@@ -62,34 +62,37 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse device info
-    const deviceInfo = parseUserAgent(userAgent)
+    const deviceParsed = parseUserAgent(userAgent)
 
-    // Attempt login
+    // Attempt login - using the correct signature
     const result = await loginUser(
-      { email, password, rememberMe },
+      {
+        email,
+        password,
+        rememberMe,
+      },
       {
         userAgent,
         ipAddress,
-        ...deviceInfo,
+        platform: deviceParsed.platform,
+        browser: deviceParsed.browser,
       }
     )
 
     if (!result.success) {
       return NextResponse.json(
-        {
-          success: false,
-          message: result.error,
-        },
+        { success: false, message: result.error || 'Login failed' },
         { status: 401 }
       )
     }
 
     // If MFA is required
-    if (result.requiresMfa) {
+    if (result.requiresMfa && result.mfaToken && result.userId) {
       return NextResponse.json({
         success: true,
         requiresMfa: true,
         mfaToken: result.mfaToken,
+        userId: result.userId,
       })
     }
 

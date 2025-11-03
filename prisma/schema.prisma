@@ -44,6 +44,8 @@ model User {
   // MFA Relations (ADD THESE)
   mfaSecret             MfaSecret?
   mfaBackupCodes        MfaBackupCode[]
+  mfaTempTokens         MfaTempToken[]
+  trustedDevices        TrustedDevice[]
 
   @@map("users")
 }
@@ -170,6 +172,21 @@ model MfaBackupCode {
 
   @@index([userId])
   @@map("mfa_backup_codes")
+}
+
+model MfaTempToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("mfa_temp_tokens")
 }
 
 model SecurityLog {
@@ -723,4 +740,22 @@ model Review {
   @@index([rating])
   @@index([isPublished])
   @@map("reviews")
+}
+
+model TrustedDevice {
+  id                String    @id @default(cuid())
+  userId            String
+  deviceFingerprint String
+  deviceName        String
+  ipAddress         String
+  userAgent         String
+  lastUsedAt        DateTime  @default(now())
+  revokedAt         DateTime?
+  createdAt         DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceFingerprint])
+  @@index([userId])
+  @@map("trusted_devices")
 }

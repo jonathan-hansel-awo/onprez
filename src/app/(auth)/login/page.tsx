@@ -126,8 +126,11 @@ function LoginForm() {
         return
       }
 
-      if (result.requiresMfa) {
-        router.push(`/auth/mfa?token=${result.mfaToken}`)
+      if (result.requiresMfa && result.tempToken) {
+        // Redirect to MFA challenge
+        router.push(
+          `/mfa/challenge?token=${result.tempToken}&redirect=${encodeURIComponent(redirectTo)}`
+        )
         return
       }
 

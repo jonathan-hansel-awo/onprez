@@ -2,17 +2,18 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/form'
-import { Shield, Copy, Check, Download, AlertTriangle } from 'lucide-react'
+import { Input, FormError } from '@/components/form'
+import { Shield, Copy, Check, Download, AlertTriangle, ArrowLeft } from 'lucide-react'
 
 function MfaSetupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [step, setStep] = useState<'loading' | 'scan' | 'verify' | 'backup' | 'complete'>('loading')
+  const [step, setStep] = useState<'loading' | 'scan' | 'verify' | 'backup'>('loading')
   const [qrCodeUrl, setQrCodeUrl] = useState('')
   const [secret, setSecret] = useState('')
   const [backupCodes, setBackupCodes] = useState<string[]>([])
@@ -133,18 +134,20 @@ function MfaSetupContent() {
   if (step === 'loading') {
     return (
       <div className="w-full max-w-md mx-auto">
-        <Card className="backdrop-blur-xl bg-white/95 border-white/20">
-          <CardContent className="p-8 text-center">
-            <div className="w-12 h-12 border-4 border-onprez-blue border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Setting up MFA...</p>
-          </CardContent>
-        </Card>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+          <Card className="backdrop-blur-xl bg-white/95 border-white/20">
+            <CardContent className="p-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-onprez-blue mx-auto mb-4" />
+              <p className="text-gray-600">Setting up MFA...</p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-lg mx-auto">
+    <div className="w-full max-w-2xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -153,7 +156,7 @@ function MfaSetupContent() {
         <div className="inline-flex p-4 rounded-full bg-white/20 backdrop-blur-sm mb-4">
           <Shield className="w-8 h-8 text-white" />
         </div>
-        <h1 className="text-4xl font-bold text-white mb-2">Enable two-factor authentication</h1>
+        <h1 className="text-4xl font-bold text-white mb-2">Two-Factor Authentication</h1>
         <p className="text-white/80">Add an extra layer of security to your account</p>
       </motion.div>
 
@@ -164,42 +167,73 @@ function MfaSetupContent() {
       >
         <Card className="backdrop-blur-xl bg-white/95 border-white/20">
           <CardContent className="p-8">
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            )}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6"
+                >
+                  <FormError errors={error} dismissible onDismiss={() => setError('')} />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Step 1: Scan QR Code */}
             {step === 'scan' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="font-semibold text-lg mb-2">Step 1: Scan QR code</h2>
-                  <p className="text-sm text-gray-600">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-onprez-blue text-white font-semibold text-sm">
+                      1
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Scan QR Code</h2>
+                  </div>
+                  <p className="text-gray-600 text-sm ml-11">
                     Use an authenticator app like Google Authenticator, Authy, or 1Password to scan
                     this QR code.
                   </p>
                 </div>
 
-                <div className="flex justify-center p-6 bg-white rounded-lg border">
+                <div className="flex justify-center p-6 bg-gray-50 rounded-xl">
                   {qrCodeUrl && (
-                    <Image src={qrCodeUrl} alt="MFA QR Code" width={200} height={200} priority />
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 200 }}
+                    >
+                      <Image
+                        src={qrCodeUrl}
+                        alt="MFA QR Code"
+                        width={200}
+                        height={200}
+                        priority
+                        className="rounded-lg"
+                      />
+                    </motion.div>
                   )}
                 </div>
 
-                <div>
-                  <p className="text-sm font-medium mb-2">Or enter this code manually:</p>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-700">Or enter this code manually:</p>
                   <div className="flex items-center gap-2">
-                    <Input value={secret} readOnly className="font-mono text-sm" />
+                    <div className="flex-1 px-4 py-3 bg-gray-50 rounded-lg font-mono text-sm text-gray-900 border border-gray-200">
+                      {secret}
+                    </div>
                     <Button
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       onClick={copySecret}
                       className="flex-shrink-0"
                     >
                       {copied ? (
-                        <Check className="w-4 h-4 text-green-500" />
+                        <Check className="w-4 h-4 text-green-600" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
@@ -208,77 +242,111 @@ function MfaSetupContent() {
                 </div>
 
                 <Button onClick={() => setStep('verify')} variant="primary" className="w-full">
-                  Continue to verification
+                  Continue to Verification
                 </Button>
-              </div>
+              </motion.div>
             )}
 
             {/* Step 2: Verify Code */}
             {step === 'verify' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="font-semibold text-lg mb-2">Step 2: Enter verification code</h2>
-                  <p className="text-sm text-gray-600">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-onprez-blue text-white font-semibold text-sm">
+                      2
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Enter Verification Code</h2>
+                  </div>
+                  <p className="text-gray-600 text-sm ml-11">
                     Enter the 6-digit code from your authenticator app to verify the setup.
                   </p>
                 </div>
 
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={verificationCode}
-                  onChange={e => {
-                    const value = e.target.value.replace(/\D/g, '')
-                    setVerificationCode(value)
-                    setError('')
-                  }}
-                  placeholder="000000"
-                  className="text-center text-2xl tracking-widest font-mono"
-                />
+                <div className="space-y-4">
+                  <Input
+                    id="verification-code"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    value={verificationCode}
+                    onChange={e => {
+                      const value = e.target.value.replace(/\D/g, '')
+                      setVerificationCode(value)
+                      setError('')
+                    }}
+                    placeholder="000000"
+                    disabled={loading}
+                    className="text-center text-2xl tracking-[0.5em] font-mono"
+                    autoFocus
+                  />
 
-                <div className="space-y-3">
                   <Button
                     onClick={verifySetup}
                     disabled={loading || verificationCode.length !== 6}
                     variant="primary"
                     className="w-full"
                   >
-                    {loading ? 'Verifying...' : 'Verify and enable MFA'}
-                  </Button>
-
-                  <Button variant="secondary" onClick={() => setStep('scan')} className="w-full">
-                    Back to QR code
+                    {loading ? 'Verifying...' : 'Verify and Enable MFA'}
                   </Button>
                 </div>
-              </div>
+
+                <button
+                  onClick={() => setStep('scan')}
+                  className="w-full text-sm text-onprez-blue hover:text-blue-700 font-medium inline-flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to QR Code
+                </button>
+              </motion.div>
             )}
 
             {/* Step 3: Backup Codes */}
             {step === 'backup' && (
-              <div className="space-y-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3 mb-4">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-onprez-blue text-white font-semibold text-sm">
+                      3
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Save Your Backup Codes</h2>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h2 className="font-semibold text-amber-900 mb-1">Save your backup codes</h2>
+                      <p className="text-sm font-semibold text-amber-900 mb-1">
+                        Important: Save these codes securely
+                      </p>
                       <p className="text-sm text-amber-800">
-                        Store these codes securely. Each code can only be used once if you lose
-                        access to your authenticator app.
+                        Each code can only be used once if you lose access to your authenticator
+                        app.
                       </p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="bg-white rounded-lg p-4 space-y-2">
-                    {backupCodes.map((code, index) => (
-                      <div
-                        key={index}
-                        className="font-mono text-sm text-center py-2 px-4 bg-gray-50 rounded"
-                      >
-                        {code}
-                      </div>
-                    ))}
-                  </div>
+                <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                  {backupCodes.map((code, index) => (
+                    <div
+                      key={index}
+                      className="font-mono text-sm text-center py-2.5 px-4 bg-white rounded-lg border border-gray-200 text-gray-900"
+                    >
+                      {code}
+                    </div>
+                  ))}
                 </div>
 
                 <Button
@@ -289,12 +357,12 @@ function MfaSetupContent() {
                   {downloaded ? (
                     <>
                       <Check className="w-4 h-4 mr-2" />
-                      Codes downloaded
+                      Codes Downloaded
                     </>
                   ) : (
                     <>
                       <Download className="w-4 h-4 mr-2" />
-                      Download backup codes
+                      Download Backup Codes
                     </>
                   )}
                 </Button>
@@ -305,20 +373,26 @@ function MfaSetupContent() {
                   variant="primary"
                   className="w-full"
                 >
-                  {downloaded ? 'Complete setup' : 'Download codes to continue'}
+                  {downloaded ? 'Complete Setup' : 'Download codes to continue'}
                 </Button>
-              </div>
+              </motion.div>
             )}
           </CardContent>
         </Card>
+      </motion.div>
 
-        <div className="mt-6 text-center text-sm text-white/80">
-          <p>
-            Two-factor authentication adds an extra layer of security to your account.
-            <br />
-            You&apos;ll need your authenticator app to log in from now on.
-          </p>
-        </div>
+      {/* Security Notice */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="mt-6 text-center text-sm text-white/80"
+      >
+        <p>
+          Two-factor authentication adds an extra layer of security to your account.
+          <br />
+          You&apos;ll need your authenticator app to log in from now on.
+        </p>
       </motion.div>
     </div>
   )
@@ -326,7 +400,18 @@ function MfaSetupContent() {
 
 export default function MfaSetupPage() {
   return (
-    <Suspense fallback={<div className="text-center text-white">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="w-full max-w-md mx-auto">
+          <Card className="backdrop-blur-xl bg-white/95 border-white/20">
+            <CardContent className="p-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-onprez-blue mx-auto mb-4" />
+              <p className="text-gray-600">Loading...</p>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
       <MfaSetupContent />
     </Suspense>
   )

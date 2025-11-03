@@ -3,6 +3,7 @@ import { verifyPassword } from '@/lib/auth/password'
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt'
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import { sendNewDeviceAlert } from '@/lib/services/email'
+import { generateToken } from '../utils/token'
 
 export interface LoginInput {
   email: string
@@ -14,6 +15,7 @@ export interface LoginResult {
   success: boolean
   requiresMfa?: boolean
   mfaToken?: string
+  userId?: string
   accessToken?: string
   refreshToken?: string
   user?: {
@@ -155,17 +157,22 @@ export async function loginUser(
 
     // Check if MFA is enabled
     if (user.mfaEnabled) {
-      // Generate temporary MFA token
-      const mfaToken = generateAccessToken({
-        userId: user.id,
-        email: user.email,
-        // type: 'mfa_challenge',
+      // Generate temporary token for MFA challenge
+      const tempToken = generateToken(32)
+
+      // Store temp token in database with short expiry (5 minutes)
+      await prisma.mfaTempToken.create({
+        data: {
+          userId: user.id,
+          token: tempToken,
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+        },
       })
 
       await logSecurityEvent({
         userId: user.id,
         action: 'mfa_challenge_initiated',
-        details: { email },
+        details: { email: user.email },
         ipAddress,
         userAgent,
         severity: 'info',
@@ -174,7 +181,8 @@ export async function loginUser(
       return {
         success: true,
         requiresMfa: true,
-        mfaToken,
+        mfaToken: tempToken,
+        userId: user.id,
       }
     }
 
