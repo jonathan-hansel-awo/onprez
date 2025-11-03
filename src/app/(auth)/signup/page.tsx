@@ -16,6 +16,7 @@ import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 import { usePasswordVisibility } from '@/lib/hooks/use-password-visibility'
 import { LockIcon, EyeIcon, EyeOffIcon, Check, Copy } from 'lucide-react'
 import { useClipboard } from '@/lib/hooks/use-clipboard'
+import { sessionStorage } from '@/lib/utils/session-storage'
 
 const BUSINESS_CATEGORIES: SelectOption[] = [
   { value: 'SALON', label: 'Hair Salon' },
