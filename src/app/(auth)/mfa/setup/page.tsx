@@ -3,11 +3,13 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
+import { motion } from 'framer-motion'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/form/input'
+import { Input } from '@/components/form'
 import { Shield, Copy, Check, Download, AlertTriangle } from 'lucide-react'
 
-function MfaSetup() {
+function MfaSetupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [step, setStep] = useState<'loading' | 'scan' | 'verify' | 'backup' | 'complete'>('loading')
@@ -130,53 +132,64 @@ function MfaSetup() {
 
   if (step === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Setting up MFA...</p>
-        </div>
+      <div className="w-full max-w-md mx-auto">
+        <Card className="backdrop-blur-xl bg-white/95 border-white/20">
+          <CardContent className="p-8 text-center">
+            <div className="w-12 h-12 border-4 border-onprez-blue border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Setting up MFA...</p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <div className="w-full max-w-2xl">
-        <div className="bg-card rounded-2xl border border-border p-8 shadow-lg">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex p-4 rounded-full bg-primary/10 mb-4">
-              <Shield className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="text-3xl font-bold mb-2">Enable Two-Factor Authentication</h1>
-            <p className="text-muted-foreground">Add an extra layer of security to your account</p>
-          </div>
+    <div className="w-full max-w-lg mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-8"
+      >
+        <div className="inline-flex p-4 rounded-full bg-white/20 backdrop-blur-sm mb-4">
+          <Shield className="w-8 h-8 text-white" />
+        </div>
+        <h1 className="text-4xl font-bold text-white mb-2">Enable two-factor authentication</h1>
+        <p className="text-white/80">Add an extra layer of security to your account</p>
+      </motion.div>
 
-          {error && (
-            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="backdrop-blur-xl bg-white/95 border-white/20">
+          <CardContent className="p-8">
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
 
-          {/* Step 1: Scan QR Code */}
-          {step === 'scan' && (
-            <div className="space-y-6">
-              <div className="bg-muted/50 rounded-lg p-6 space-y-4">
-                <h2 className="font-semibold text-lg">Step 1: Scan QR Code</h2>
-                <p className="text-sm text-muted-foreground">
-                  Use an authenticator app like Google Authenticator, Authy, or 1Password to scan
-                  this QR code.
-                </p>
+            {/* Step 1: Scan QR Code */}
+            {step === 'scan' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="font-semibold text-lg mb-2">Step 1: Scan QR code</h2>
+                  <p className="text-sm text-gray-600">
+                    Use an authenticator app like Google Authenticator, Authy, or 1Password to scan
+                    this QR code.
+                  </p>
+                </div>
 
-                <div className="flex justify-center p-4 bg-white rounded-lg">
+                <div className="flex justify-center p-6 bg-white rounded-lg border">
                   {qrCodeUrl && (
                     <Image src={qrCodeUrl} alt="MFA QR Code" width={200} height={200} priority />
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Or enter this code manually:</p>
+                <div>
+                  <p className="text-sm font-medium mb-2">Or enter this code manually:</p>
                   <div className="flex items-center gap-2">
                     <Input value={secret} readOnly className="font-mono text-sm" />
                     <Button
@@ -193,130 +206,128 @@ function MfaSetup() {
                     </Button>
                   </div>
                 </div>
+
+                <Button onClick={() => setStep('verify')} variant="primary" className="w-full">
+                  Continue to verification
+                </Button>
               </div>
+            )}
 
-              <Button onClick={() => setStep('verify')} className="w-full" size="lg">
-                Continue to Verification
-              </Button>
-            </div>
-          )}
+            {/* Step 2: Verify Code */}
+            {step === 'verify' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="font-semibold text-lg mb-2">Step 2: Enter verification code</h2>
+                  <p className="text-sm text-gray-600">
+                    Enter the 6-digit code from your authenticator app to verify the setup.
+                  </p>
+                </div>
 
-          {/* Step 2: Verify Code */}
-          {step === 'verify' && (
-            <div className="space-y-6">
-              <div className="bg-muted/50 rounded-lg p-6 space-y-4">
-                <h2 className="font-semibold text-lg">Step 2: Enter Verification Code</h2>
-                <p className="text-sm text-muted-foreground">
-                  Enter the 6-digit code from your authenticator app to verify the setup.
-                </p>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChange={e => {
+                    const value = e.target.value.replace(/\D/g, '')
+                    setVerificationCode(value)
+                    setError('')
+                  }}
+                  placeholder="000000"
+                  className="text-center text-2xl tracking-widest font-mono"
+                />
 
-                <div className="space-y-4">
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={6}
-                    value={verificationCode}
-                    onChange={e => {
-                      const value = e.target.value.replace(/\D/g, '')
-                      setVerificationCode(value)
-                      setError('')
-                    }}
-                    placeholder="000000"
-                    className="text-center text-2xl tracking-widest font-mono"
-                  />
-
+                <div className="space-y-3">
                   <Button
                     onClick={verifySetup}
                     disabled={loading || verificationCode.length !== 6}
+                    variant="primary"
                     className="w-full"
-                    size="lg"
                   >
-                    {loading ? 'Verifying...' : 'Verify and Enable MFA'}
+                    {loading ? 'Verifying...' : 'Verify and enable MFA'}
+                  </Button>
+
+                  <Button variant="secondary" onClick={() => setStep('scan')} className="w-full">
+                    Back to QR code
                   </Button>
                 </div>
               </div>
+            )}
 
-              <Button variant="secondary" onClick={() => setStep('scan')} className="w-full">
-                Back to QR Code
-              </Button>
-            </div>
-          )}
-
-          {/* Step 3: Backup Codes */}
-          {step === 'backup' && (
-            <div className="space-y-6">
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-6 space-y-4">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h2 className="font-semibold text-lg text-amber-900 dark:text-amber-100 mb-2">
-                      Save Your Backup Codes
-                    </h2>
-                    <p className="text-sm text-amber-800 dark:text-amber-200">
-                      Store these codes securely. Each code can only be used once if you lose access
-                      to your authenticator app.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-card rounded-lg p-4 space-y-2">
-                  {backupCodes.map((code, index) => (
-                    <div
-                      key={index}
-                      className="font-mono text-sm text-center py-2 px-4 bg-muted rounded"
-                    >
-                      {code}
+            {/* Step 3: Backup Codes */}
+            {step === 'backup' && (
+              <div className="space-y-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3 mb-4">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h2 className="font-semibold text-amber-900 mb-1">Save your backup codes</h2>
+                      <p className="text-sm text-amber-800">
+                        Store these codes securely. Each code can only be used once if you lose
+                        access to your authenticator app.
+                      </p>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 space-y-2">
+                    {backupCodes.map((code, index) => (
+                      <div
+                        key={index}
+                        className="font-mono text-sm text-center py-2 px-4 bg-gray-50 rounded"
+                      >
+                        {code}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <Button
                   onClick={downloadBackupCodes}
                   variant={downloaded ? 'secondary' : 'primary'}
                   className="w-full"
-                  size="lg"
                 >
                   {downloaded ? (
                     <>
                       <Check className="w-4 h-4 mr-2" />
-                      Codes Downloaded
+                      Codes downloaded
                     </>
                   ) : (
                     <>
                       <Download className="w-4 h-4 mr-2" />
-                      Download Backup Codes
+                      Download backup codes
                     </>
                   )}
                 </Button>
+
+                <Button
+                  onClick={finishSetup}
+                  disabled={!downloaded}
+                  variant="primary"
+                  className="w-full"
+                >
+                  {downloaded ? 'Complete setup' : 'Download codes to continue'}
+                </Button>
               </div>
+            )}
+          </CardContent>
+        </Card>
 
-              <Button onClick={finishSetup} disabled={!downloaded} className="w-full" size="lg">
-                {downloaded ? 'Complete Setup' : 'Download codes to continue'}
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Security Notice */}
-        <div className="mt-6 text-center text-sm text-muted-foreground">
+        <div className="mt-6 text-center text-sm text-white/80">
           <p>
             Two-factor authentication adds an extra layer of security to your account.
             <br />
             You&apos;ll need your authenticator app to log in from now on.
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
 
 export default function MfaSetupPage() {
   return (
-    <Suspense
-      fallback={<div className="min-h-screen flex items-center justify-center bg-muted/30" />}
-    >
-      <MfaSetup />
+    <Suspense fallback={<div className="text-center text-white">Loading...</div>}>
+      <MfaSetupContent />
     </Suspense>
   )
 }
