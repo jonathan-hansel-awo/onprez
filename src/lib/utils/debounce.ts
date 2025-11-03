@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -14,7 +14,21 @@ export function debounce<T extends (...args: any[]) => any>(
     if (timeout) {
       clearTimeout(timeout)
     }
-
     timeout = setTimeout(later, wait)
+  }
+}
+
+export function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
+  let inThrottle: boolean = false
+
+  return function executedFunction(...args: Parameters<T>) {
+    if (!inThrottle) {
+      func(...args)
+      inThrottle = true
+      setTimeout(() => (inThrottle = false), limit)
+    }
   }
 }

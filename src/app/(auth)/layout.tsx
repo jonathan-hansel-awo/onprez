@@ -1,5 +1,6 @@
 'use client'
 
+import { OfflineBanner } from '@/components/auth/offline-banner'
 import { GradientMesh } from '@/components/landing'
 import { Logo } from '@/components/navigation'
 import { motion } from 'framer-motion'
@@ -26,7 +27,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Main content with proper mobile spacing */}
         <div className="min-h-screen flex items-center justify-center px-4 py-20 sm:py-24">
-          <div className="w-full max-w-6xl">{children}</div>
+          <div className="w-full max-w-6xl">
+            <OfflineBanner />
+            {children}
+          </div>
         </div>
       </div>
     </div>

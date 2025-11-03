@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -11,6 +11,11 @@ import { PasswordStrength } from '@/components/auth/PasswordStrength'
 import { Confetti } from '@/components/effects/confetti'
 import { validateWithZod } from '@/lib/validation/form-validation'
 import { signupSchema } from '@/lib/validation/auth'
+import { useAnnounce } from '@/lib/hooks/use-announce'
+import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
+import { usePasswordVisibility } from '@/lib/hooks/use-password-visibility'
+import { LockIcon, EyeIcon, EyeOffIcon, Check, Copy } from 'lucide-react'
+import { useClipboard } from '@/lib/hooks/use-clipboard'
 
 const BUSINESS_CATEGORIES: SelectOption[] = [
   { value: 'SALON', label: 'Hair Salon' },
@@ -56,6 +61,29 @@ export default function SignupPage() {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [shouldShake, setShouldShake] = useState(false)
+  const { isCopied, copy } = useClipboard()
+  const announce = useAnnounce()
+  const formRef = useFocusTrap<HTMLFormElement>(true)
+  const { showPassword, toggleVisibility } = usePasswordVisibility(3000)
+  const [rateLimitInfo, setRateLimitInfo] = useState<{
+    message: string
+    retryAfter?: number
+    resetAt?: Date
+  } | null>(null)
+
+  useEffect(() => {
+    // Load saved session on mount
+    const saved = sessionStorage.get()
+    if (saved) {
+      setFormData(prev => ({
+        ...prev,
+        email: saved.email || prev.email,
+        handle: saved.handle || prev.handle,
+        businessName: saved.businessName || prev.businessName,
+        businessCategory: saved.businessCategory || prev.businessCategory,
+      }))
+    }
+  }, [])
 
   const checkHandleAvailability = async (handle: string) => {
     if (handle.length < 3) {
@@ -64,23 +92,40 @@ export default function SignupPage() {
     }
 
     setIsChecking(true)
+    announce('Checking handle availability')
+
     try {
       const response = await fetch(`/api/auth/check-handle?handle=${handle}`)
       const data = await response.json()
+
+      // Handle rate limiting
+      if (response.status === 429) {
+        announce('Too many handle checks. Please wait a moment.')
+        setIsChecking(false)
+        return
+      }
+
       setIsAvailable(data.available)
 
-      // Celebrate if available
       if (data.available) {
-        // Trigger micro-celebration
+        announce(`Handle ${handle} is available`)
+      } else {
+        announce(`Handle ${handle} is already taken. Please try another.`)
       }
     } catch (error) {
       console.error('Failed to check handle availability:', error)
+      announce('Error checking handle availability')
     } finally {
       setIsChecking(false)
     }
   }
 
   const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+
+    if (field !== 'password') {
+      sessionStorage.save({ [field]: value })
+    }
     setFormData(prev => ({ ...prev, [field]: value }))
 
     if (errors[field]) {
@@ -120,6 +165,7 @@ export default function SignupPage() {
     }
 
     setErrors({})
+    setRateLimitInfo(null)
     setIsLoading(true)
     setLoadingStage('creating')
 
@@ -131,6 +177,27 @@ export default function SignupPage() {
       })
 
       const result = await response.json()
+
+      // Handle rate limiting from server
+      if (response.status === 429) {
+        const retryAfter = result.retryAfter || 60
+        const resetAt = result.resetAt ? new Date(result.resetAt) : undefined
+        const minutesLeft = Math.ceil(retryAfter / 60)
+
+        setRateLimitInfo({
+          message:
+            result.message ||
+            `Too many signup attempts. Please try again in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}.`,
+          retryAfter,
+          resetAt,
+        })
+
+        setShouldShake(true)
+        setTimeout(() => setShouldShake(false), 500)
+        setLoadingStage('idle')
+        setIsLoading(false)
+        return
+      }
 
       if (!response.ok) {
         if (result.errors) {
@@ -145,16 +212,18 @@ export default function SignupPage() {
         setShouldShake(true)
         setTimeout(() => setShouldShake(false), 500)
         setLoadingStage('idle')
+        setIsLoading(false)
         return
       }
 
       setLoadingStage('success')
+      sessionStorage.clear()
       setShowSuccess(true)
       setTimeout(() => {
         router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
       }, 3000)
-    } catch (err) {
-      setErrors({ form: 'An unexpected error occurred. Please try again.' })
+    } catch (error) {
+      setErrors({ form: `An unexpected error occurred. Please try again. ${error}` })
       setShouldShake(true)
       setTimeout(() => setShouldShake(false), 500)
       setLoadingStage('idle')
@@ -225,10 +294,21 @@ export default function SignupPage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
               >
-                <div className="inline-block bg-blue-50 px-4 py-2 rounded-lg mb-4">
+                <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg mb-4">
                   <p className="text-lg font-mono text-onprez-blue">
                     onprez.com/<strong>{formData.handle}</strong>
                   </p>
+                  <button
+                    onClick={() => copy(`onprez.com/${formData.handle}`)}
+                    className="p-1 hover:bg-blue-100 rounded transition-colors"
+                    aria-label="Copy handle to clipboard"
+                  >
+                    {isCopied ? (
+                      <Check className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-onprez-blue" />
+                    )}
+                  </button>
                 </div>
 
                 <p className="text-gray-600 mb-2">We&apos;ve sent a verification email to</p>
@@ -260,45 +340,40 @@ export default function SignupPage() {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="hidden lg:block space-y-6"
+          className="hidden lg:block space-y-8"
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="lg:hidden text-center mb-6"
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Join{' '}
-              <span className="bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                2,500+
-              </span>{' '}
-              professionals
+            <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
+              Three steps to go live
             </h1>
-            <p className="text-white/80">Create your presence in 10 minutes</p>
           </motion.div>
 
+          {/* Steps */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="space-y-4 mt-12"
+            className="space-y-6"
           >
             {[
               {
-                icon: '🎨',
-                title: 'Fully Customizable',
-                desc: 'Your brand, your colors, your style',
+                step: '1',
+                title: 'Claim your handle',
+                desc: 'onprez.com/yourname',
               },
               {
-                icon: '📅',
-                title: 'Seamless Booking',
-                desc: 'Clients book directly from your page',
+                step: '2',
+                title: 'Add your services and photos',
+                desc: 'Customize your page',
               },
               {
-                icon: '🚀',
-                title: 'Go Live in Minutes',
-                desc: 'No coding or design skills needed',
+                step: '3',
+                title: 'Share your link and start booking',
+                desc: 'Go live instantly',
               },
             ].map((item, index) => (
               <motion.div
@@ -306,37 +381,19 @@ export default function SignupPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
-                className="flex items-start gap-4 text-white/90"
+                className="flex items-start gap-4"
               >
-                <span className="flex-shrink-0 text-3xl">{item.icon}</span>
-                <div>
-                  <h3 className="font-semibold text-white mb-1">{item.title}</h3>
+                <div className="flex-shrink-0 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold border border-white/30">
+                  {item.step}
+                </div>
+                <div className="pt-1">
+                  <h3 className="font-semibold text-white text-lg mb-1">{item.title}</h3>
                   <p className="text-sm text-white/70">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex items-center gap-2 mt-8"
-          >
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div
-                  key={i}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-onprez-blue to-onprez-purple border-2 border-white/20"
-                />
-              ))}
-            </div>
-            <p className="text-white/80 text-sm ml-2">
-              <strong className="text-white">2,500+</strong> professionals already joined
-            </p>
-          </motion.div>
         </motion.div>
-
         {/* Right: Form Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -354,7 +411,7 @@ export default function SignupPage() {
             }
           >
             <Card className="backdrop-blur-xl bg-white/95 border-white/20 hover:shadow-2xl transition-all duration-300 group relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-onprez-blue via-onprez-purple to-onprez-blue opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl" />
+              {/* <div className="absolute inset-0 bg-gradient-to-r from-onprez-blue via-onprez-purple to-onprez-blue opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl" /> */}
 
               <CardContent className="p-6 sm:p-8">
                 <motion.div
@@ -371,10 +428,36 @@ export default function SignupPage() {
                   </p>
                 </motion.div>
 
-                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+                <form
+                  ref={formRef}
+                  onSubmit={handleSubmit}
+                  className="space-y-4 sm:space-y-5"
+                  aria-label="Create account form"
+                  noValidate
+                >
+                  {' '}
                   {/* Global Error */}
                   <AnimatePresence>
-                    {errors.form && (
+                    {rateLimitInfo && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                      >
+                        <FormError
+                          title="Rate Limit Exceeded"
+                          errors={rateLimitInfo.message}
+                          dismissible
+                          onDismiss={() => setRateLimitInfo(null)}
+                        />
+                        {rateLimitInfo.resetAt && (
+                          <p className="text-xs text-gray-500 mt-2 text-center">
+                            Try again after {new Date(rateLimitInfo.resetAt).toLocaleTimeString()}
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                    {errors.form && !rateLimitInfo && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -393,7 +476,6 @@ export default function SignupPage() {
                       </motion.div>
                     )}
                   </AnimatePresence>
-
                   {/* Handle - Featured with spotlight */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -439,7 +521,36 @@ export default function SignupPage() {
                           autoComplete="off"
                           autoCapitalize="off"
                           autoCorrect="off"
+                          aria-label="Choose your handle"
+                          aria-required="true"
+                          aria-invalid={!!errors.handle || isAvailable === false}
+                          aria-describedby={
+                            isChecking
+                              ? 'handle-checking'
+                              : isAvailable === true
+                                ? 'handle-available'
+                                : isAvailable === false
+                                  ? 'handle-taken'
+                                  : errors.handle
+                                    ? 'handle-error'
+                                    : undefined
+                          }
                         />
+                        {isChecking && (
+                          <span id="handle-checking" className="sr-only">
+                            Checking handle availability
+                          </span>
+                        )}
+                        {!isChecking && isAvailable === true && (
+                          <span id="handle-available" className="sr-only">
+                            Handle is available
+                          </span>
+                        )}
+                        {!isChecking && isAvailable === false && (
+                          <span id="handle-taken" className="sr-only">
+                            This handle is already taken
+                          </span>
+                        )}
                         {isChecking && (
                           <div className="flex items-center px-4">
                             <div className="w-4 h-4 border-2 border-onprez-blue border-t-transparent rounded-full animate-spin" />
@@ -501,7 +612,6 @@ export default function SignupPage() {
                     </AnimatePresence>
                     {errors.handle && <p className="mt-2 text-sm text-red-600">{errors.handle}</p>}
                   </motion.div>
-
                   {/* Email */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -518,7 +628,6 @@ export default function SignupPage() {
                       disabled={isLoading}
                     />
                   </motion.div>
-
                   {/* Password */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -527,16 +636,18 @@ export default function SignupPage() {
                   >
                     <Input
                       id="password"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       label="Password"
                       value={formData.password}
                       onChange={e => handleChange('password', e.target.value)}
                       error={errors.password}
                       disabled={isLoading}
+                      leftIcon={<LockIcon />}
+                      rightIcon={showPassword ? <EyeIcon /> : <EyeOffIcon />}
+                      onRightIconClick={toggleVisibility}
                     />
                     <PasswordStrength password={formData.password} />
                   </motion.div>
-
                   {/* Business Name */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -553,7 +664,6 @@ export default function SignupPage() {
                       disabled={isLoading}
                     />
                   </motion.div>
-
                   {/* Business Category */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -570,7 +680,6 @@ export default function SignupPage() {
                       disabled={isLoading}
                     />
                   </motion.div>
-
                   {/* Submit */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -631,11 +740,7 @@ export default function SignupPage() {
                         </span>
                       )}
                     </Button>
-                    <p className="text-xs text-gray-500 text-center mt-3">
-                      Free forever • No credit card required • 2 minutes to set up
-                    </p>
                   </motion.div>
-
                   {/* Divider */}
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -650,7 +755,6 @@ export default function SignupPage() {
                       <span className="px-4 bg-white text-gray-500">Already have an account?</span>
                     </div>
                   </motion.div>
-
                   {/* Sign In Link */}
                   <motion.div
                     initial={{ opacity: 0 }}

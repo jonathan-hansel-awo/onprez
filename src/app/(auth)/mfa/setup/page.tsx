@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/form/input'
 import { Shield, Copy, Check, Download, AlertTriangle } from 'lucide-react'
 
-export default function MfaSetupPage() {
+function MfaSetup() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [step, setStep] = useState<'loading' | 'scan' | 'verify' | 'backup' | 'complete'>('loading')
@@ -308,5 +308,15 @@ export default function MfaSetupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function MfaSetupPage() {
+  return (
+    <Suspense
+      fallback={<div className="min-h-screen flex items-center justify-center bg-muted/30" />}
+    >
+      <MfaSetup />
+    </Suspense>
   )
 }

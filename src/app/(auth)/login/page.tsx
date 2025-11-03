@@ -8,6 +8,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Checkbox, FormError } from '@/components/form'
 import { validateForm, commonRules } from '@/lib/validation/form-validation'
+import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
+import { useAnnounce } from '@/lib/hooks/use-announce'
+import { usePasswordVisibility } from '@/lib/hooks/use-password-visibility'
+import { EyeIcon, EyeOffIcon, LockIcon } from 'lucide-react'
 
 function LoginForm() {
   const router = useRouter()
@@ -25,9 +29,17 @@ function LoginForm() {
     'idle' | 'validating' | 'authenticating' | 'success'
   >('idle')
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [showPassword, setShowPassword] = useState(false)
   const [shouldShake, setShouldShake] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const announce = useAnnounce()
+  const formRef = useFocusTrap<HTMLFormElement>(true)
+  const { showPassword, toggleVisibility } = usePasswordVisibility(3000)
+
+  const [rateLimitInfo, setRateLimitInfo] = useState<{
+    message: string
+    retryAfter?: number
+    resetAt?: Date
+  } | null>(null)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -55,10 +67,14 @@ function LoginForm() {
       setShouldShake(true)
       setTimeout(() => setShouldShake(false), 500)
       setLoadingStage('idle')
+
+      const errorMessages = Object.values(validationErrors).join('. ')
+      announce(`Form has errors: ${errorMessages}`)
       return
     }
 
     setErrors({})
+    setRateLimitInfo(null)
     setIsLoading(true)
     setLoadingStage('authenticating')
 
@@ -70,6 +86,28 @@ function LoginForm() {
       })
 
       const result = await response.json()
+
+      // Handle rate limiting from server
+      if (response.status === 429) {
+        const retryAfter = result.retryAfter || 60
+        const resetAt = result.resetAt ? new Date(result.resetAt) : undefined
+        const minutesLeft = Math.ceil(retryAfter / 60)
+
+        setRateLimitInfo({
+          message:
+            result.message ||
+            `Too many login attempts. Please try again in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}.`,
+          retryAfter,
+          resetAt,
+        })
+
+        setShouldShake(true)
+        setTimeout(() => setShouldShake(false), 500)
+        announce(`Rate limit exceeded. Try again in ${minutesLeft} minutes.`)
+        setLoadingStage('idle')
+        setIsLoading(false)
+        return
+      }
 
       if (!response.ok) {
         if (result.errors) {
@@ -84,6 +122,7 @@ function LoginForm() {
         setShouldShake(true)
         setTimeout(() => setShouldShake(false), 500)
         setLoadingStage('idle')
+        setIsLoading(false)
         return
       }
 
@@ -93,6 +132,7 @@ function LoginForm() {
       }
 
       setLoadingStage('success')
+      announce('Login successful. Redirecting to dashboard.')
       setTimeout(() => {
         router.push(redirectTo)
         router.refresh()
@@ -106,7 +146,6 @@ function LoginForm() {
       setIsLoading(false)
     }
   }
-
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     if (errors[field]) {
@@ -138,48 +177,16 @@ function LoginForm() {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="hidden lg:block space-y-6"
+          className="hidden lg:block"
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
+            className="space-y-4"
           >
-            <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
-              Welcome back to{' '}
-              <span className="bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                OnPrez
-              </span>
-            </h1>
-            <p className="text-xl text-white/80 leading-relaxed">
-              Manage your online presence, handle bookings, and grow your business—all in one place.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="space-y-4 mt-12"
-          >
-            {[
-              { icon: '✓', text: '2,500+ professionals trust OnPrez' },
-              { icon: '✓', text: '45K+ monthly bookings processed' },
-              { icon: '✓', text: 'Your handle, your brand, your success' },
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
-                className="flex items-center gap-3 text-white/90"
-              >
-                <span className="flex-shrink-0 w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm">
-                  {item.icon}
-                </span>
-                <span>{item.text}</span>
-              </motion.div>
-            ))}
+            <h1 className="text-5xl font-bold text-white leading-tight">Welcome back</h1>
+            <p className="text-xl text-white/90">Sign in to continue</p>
           </motion.div>
         </motion.div>
 
@@ -251,10 +258,36 @@ function LoginForm() {
                   <p className="text-sm sm:text-base text-gray-600">Access your OnPrez dashboard</p>
                 </motion.div>
 
-                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <form
+                  ref={formRef}
+                  onSubmit={handleSubmit}
+                  className="space-y-4 sm:space-y-6"
+                  aria-label="Sign in form"
+                  noValidate
+                >
+                  {' '}
                   {/* Global Error */}
                   <AnimatePresence>
-                    {errors.form && (
+                    {rateLimitInfo && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                      >
+                        <FormError
+                          title="Rate Limit Exceeded"
+                          errors={rateLimitInfo.message}
+                          dismissible
+                          onDismiss={() => setRateLimitInfo(null)}
+                        />
+                        {rateLimitInfo.resetAt && (
+                          <p className="text-xs text-gray-500 mt-2 text-center">
+                            Try again after {new Date(rateLimitInfo.resetAt).toLocaleTimeString()}
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                    {errors.form && !rateLimitInfo && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -273,7 +306,6 @@ function LoginForm() {
                       </motion.div>
                     )}
                   </AnimatePresence>
-
                   {/* Email */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -288,12 +320,16 @@ function LoginForm() {
                       onChange={e => handleChange('email', e.target.value)}
                       error={errors.email}
                       disabled={isLoading}
+                      aria-invalid={!!errors.email}
+                      aria-describedby={errors.email ? 'email-error' : undefined}
+                      aria-required="true"
                       leftIcon={
                         <svg
                           className="w-5 h-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
+                          aria-hidden="true"
                         >
                           <path
                             strokeLinecap="round"
@@ -305,7 +341,6 @@ function LoginForm() {
                       }
                     />
                   </motion.div>
-
                   {/* Password */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -320,62 +355,11 @@ function LoginForm() {
                       onChange={e => handleChange('password', e.target.value)}
                       error={errors.password}
                       disabled={isLoading}
-                      leftIcon={
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                          />
-                        </svg>
-                      }
-                      rightIcon={
-                        showPassword ? (
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                        )
-                      }
-                      onRightIconClick={() => setShowPassword(!showPassword)}
+                      leftIcon={<LockIcon />}
+                      rightIcon={showPassword ? <EyeIcon /> : <EyeOffIcon />}
+                      onRightIconClick={toggleVisibility}
                     />
                   </motion.div>
-
                   {/* Remember Me & Forgot Password */}
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -398,7 +382,6 @@ function LoginForm() {
                       <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-700 group-hover:w-full transition-all duration-300" />
                     </Link>
                   </motion.div>
-
                   {/* Submit Button */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -410,6 +393,12 @@ function LoginForm() {
                       variant="primary"
                       disabled={isLoading}
                       className="w-full h-12 sm:h-auto text-base"
+                      aria-label={
+                        loadingStage === 'idle'
+                          ? 'Sign in to your account'
+                          : loadingMessages[loadingStage]
+                      }
+                      aria-busy={isLoading}
                     >
                       <span className={loadingStage !== 'idle' ? 'invisible' : ''}>
                         {loadingMessages.idle}
@@ -460,7 +449,6 @@ function LoginForm() {
                       )}
                     </Button>
                   </motion.div>
-
                   {/* Social Login (Optional) */}
                   {/* <motion.div
                     initial={{ opacity: 0 }}
@@ -496,7 +484,6 @@ function LoginForm() {
                       ))}
                     </div>
                   </motion.div> */}
-
                   {/* Divider */}
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -511,7 +498,6 @@ function LoginForm() {
                       <span className="px-4 bg-white text-gray-500">New to OnPrez?</span>
                     </div>
                   </motion.div>
-
                   {/* Sign Up Link */}
                   <motion.div
                     initial={{ opacity: 0 }}
