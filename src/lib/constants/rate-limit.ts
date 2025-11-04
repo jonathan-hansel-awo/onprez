@@ -74,6 +74,20 @@ export const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
     message: 'Too many MFA verification attempts. Please wait before trying again.',
   },
 
+  'auth:mfa-disable': {
+    endpoint: 'auth:mfa-disable',
+    maxAttempts: 3,
+    windowMs: 60 * 60 * 1000, // 1 hour
+    message: 'Too many MFA disable attempts.',
+  },
+
+  'auth:mfa-regenerate': {
+    endpoint: 'auth:mfa-regenerate',
+    maxAttempts: 5,
+    windowMs: 60 * 60 * 1000, // 1 hour
+    message: 'Too many backup code regeneration attempts.',
+  },
+
   // Booking endpoints
   'booking:create': {
     endpoint: 'booking:create',
