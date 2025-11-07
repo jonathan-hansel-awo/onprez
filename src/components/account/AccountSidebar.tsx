@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Shield, User, CreditCard, Bell, LogOut } from 'lucide-react'
+import { Shield, User, CreditCard, Bell, LogOut, Monitor } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -11,12 +11,18 @@ const navigation = [
     name: 'Profile',
     href: '/account/profile',
     icon: User,
-    badge: null,
+    badge: 'Soon',
   },
   {
     name: 'Security',
     href: '/account/security',
     icon: Shield,
+    badge: null,
+  },
+  {
+    name: 'Sessions',
+    href: '/account/sessions',
+    icon: Monitor,
     badge: null,
   },
   {
