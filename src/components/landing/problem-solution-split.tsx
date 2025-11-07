@@ -223,7 +223,7 @@ export function ProblemSolutionSplit() {
               </motion.div>
 
               {/* Clean Mockup */}
-              <div className="flex items-center justify-center h-80 md:h-96">
+              <div className="flex items-center justify-center h-96 md:h-96">
                 <CleanPresenceMockup />
               </div>
 
@@ -237,7 +237,7 @@ export function ProblemSolutionSplit() {
               >
                 {[
                   { value: '1', label: 'Simple tool' },
-                  { value: '15min', label: 'To set up' },
+                  { value: '10min', label: 'To set up' },
                   { value: 'More', label: 'Bookings' },
                 ].map((stat, i) => (
                   <div key={i} className="text-center">

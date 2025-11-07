@@ -85,7 +85,7 @@ export function CleanPresenceMockup() {
             transition={{ delay: 0.5 }}
           >
             <div className="grid grid-cols-3 gap-1.5">
-              {[...Array(6)].map((_, i) => (
+              {[...Array(3)].map((_, i) => (
                 <motion.div
                   key={i}
                   className="aspect-square rounded-lg overflow-hidden"

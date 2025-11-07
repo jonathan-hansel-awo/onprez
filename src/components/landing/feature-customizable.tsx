@@ -92,187 +92,184 @@ export function FeatureCustomizable() {
           <div className="hidden lg:grid lg:grid-cols-12 gap-8 items-center">
             {/* Left Column - Control Panels (narrower - 4 columns) */}
             <div className="col-span-4 space-y-5">
-              <AnimatePresence>
-                {showPanels && (
-                  <>
-                    {/* Color Panel */}
+              {/* <AnimatePresence> */}
+              {showPanels && (
+                <>
+                  {/* Color Panel */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                  >
                     <motion.div
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -30 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                      className={`bg-white rounded-xl shadow-lg border-2 p-5 transition-all ${
+                        currentStep === 1 || currentStep === 4 || currentStep === 7
+                          ? 'border-onprez-blue ring-4 ring-onprez-blue/20'
+                          : 'border-gray-200'
+                      }`}
+                      whileHover={{
+                        scale: 1.02,
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                      }}
                     >
-                      <motion.div
-                        className={`bg-white rounded-xl shadow-lg border-2 p-5 transition-all ${
-                          currentStep === 1 || currentStep === 4 || currentStep === 7
-                            ? 'border-onprez-blue ring-4 ring-onprez-blue/20'
-                            : 'border-gray-200'
-                        }`}
-                        whileHover={{
-                          scale: 1.02,
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                        }}
-                      >
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-onprez-blue to-onprez-purple rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                            <Palette className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900">Brand Colors</h4>
-                            <p className="text-xs text-gray-500">Choose palette</p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-onprez-blue to-onprez-purple rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                          <Palette className="w-5 h-5 text-white" />
                         </div>
-                        <ColorPickerPanel
-                          selectedColor={colorScheme}
-                          onColorChange={color => {
-                            setColorScheme(color)
-                            setIsAutoPlaying(false)
-                          }}
-                        />
-                      </motion.div>
+                        <div>
+                          <h4 className="font-bold text-gray-900">Brand Colors</h4>
+                          <p className="text-xs text-gray-500">Choose palette</p>
+                        </div>
+                      </div>
+                      <ColorPickerPanel
+                        selectedColor={colorScheme}
+                        onColorChange={color => {
+                          setColorScheme(color)
+                          setIsAutoPlaying(false)
+                        }}
+                      />
                     </motion.div>
+                  </motion.div>
 
-                    {/* Font Panel */}
+                  {/* Font Panel */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.1 }}
+                  >
                     <motion.div
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -30 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.1 }}
+                      className={`bg-white rounded-xl shadow-lg border-2 p-5 transition-all ${
+                        currentStep === 2 || currentStep === 5
+                          ? 'border-onprez-blue ring-4 ring-onprez-blue/20'
+                          : 'border-gray-200'
+                      }`}
+                      whileHover={{
+                        scale: 1.02,
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                      }}
                     >
-                      <motion.div
-                        className={`bg-white rounded-xl shadow-lg border-2 p-5 transition-all ${
-                          currentStep === 2 || currentStep === 5
-                            ? 'border-onprez-blue ring-4 ring-onprez-blue/20'
-                            : 'border-gray-200'
-                        }`}
-                        whileHover={{
-                          scale: 1.02,
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                        }}
-                      >
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-onprez-purple to-pink-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                            <Type className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900">Typography</h4>
-                            <p className="text-xs text-gray-500">Select fonts</p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-onprez-purple to-pink-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                          <Type className="w-5 h-5 text-white" />
                         </div>
-                        <FontSelectorPanel
-                          selectedFont={fontStyle}
-                          onFontChange={font => {
-                            setFontStyle(font)
-                            setIsAutoPlaying(false)
-                          }}
-                        />
-                      </motion.div>
+                        <div>
+                          <h4 className="font-bold text-gray-900">Typography</h4>
+                          <p className="text-xs text-gray-500">Select fonts</p>
+                        </div>
+                      </div>
+                      <FontSelectorPanel
+                        selectedFont={fontStyle}
+                        onFontChange={font => {
+                          setFontStyle(font)
+                          setIsAutoPlaying(false)
+                        }}
+                      />
                     </motion.div>
+                  </motion.div>
 
-                    {/* Layout Panel */}
+                  {/* Layout Panel */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.2 }}
+                  >
                     <motion.div
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -30 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.2 }}
+                      className={`bg-white rounded-xl shadow-lg border-2 p-5 transition-all ${
+                        currentStep === 3 || currentStep === 6
+                          ? 'border-onprez-blue ring-4 ring-onprez-blue/20'
+                          : 'border-gray-200'
+                      }`}
+                      whileHover={{
+                        scale: 1.02,
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                      }}
                     >
-                      <motion.div
-                        className={`bg-white rounded-xl shadow-lg border-2 p-5 transition-all ${
-                          currentStep === 3 || currentStep === 6
-                            ? 'border-onprez-blue ring-4 ring-onprez-blue/20'
-                            : 'border-gray-200'
-                        }`}
-                        whileHover={{
-                          scale: 1.02,
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                        }}
-                      >
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-onprez-green to-emerald-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                            <LayoutGrid className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900">Layout Style</h4>
-                            <p className="text-xs text-gray-500">Arrange content</p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-onprez-green to-emerald-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                          <LayoutGrid className="w-5 h-5 text-white" />
                         </div>
-                        <LayoutOptionsPanel
-                          selectedLayout={layout}
-                          onLayoutChange={newLayout => {
-                            setLayout(newLayout)
-                            setIsAutoPlaying(false)
-                          }}
-                        />
-                      </motion.div>
+                        <div>
+                          <h4 className="font-bold text-gray-900">Layout Style</h4>
+                          <p className="text-xs text-gray-500">Arrange content</p>
+                        </div>
+                      </div>
+                      <LayoutOptionsPanel
+                        selectedLayout={layout}
+                        onLayoutChange={newLayout => {
+                          setLayout(newLayout)
+                          setIsAutoPlaying(false)
+                        }}
+                      />
                     </motion.div>
+                  </motion.div>
 
-                    {/* Sections Panel */}
+                  {/* Sections Panel */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.3 }}
+                  >
                     <motion.div
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -30 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.3 }}
+                      className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-5"
+                      whileHover={{
+                        scale: 1.02,
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                      }}
                     >
-                      <motion.div
-                        className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-5"
-                        whileHover={{
-                          scale: 1.02,
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                        }}
-                      >
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                            <Sparkles className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900">Page Sections</h4>
-                            <p className="text-xs text-gray-500">Toggle visibility</p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                          <Sparkles className="w-5 h-5 text-white" />
                         </div>
-                        <div className="space-y-3">
-                          {[
-                            { name: 'Header', icon: '🎨', key: 'header' as const },
-                            { name: 'Services', icon: '💼', key: 'services' as const },
-                            { name: 'Gallery', icon: '🖼️', key: 'gallery' as const },
-                            { name: 'Testimonials', icon: '⭐', key: 'testimonials' as const },
-                          ].map(section => (
-                            <div
-                              key={section.key}
-                              className="flex items-center justify-between py-2"
+                        <div>
+                          <h4 className="font-bold text-gray-900">Page Sections</h4>
+                          <p className="text-xs text-gray-500">Toggle visibility</p>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        {[
+                          { name: 'Header', icon: '🎨', key: 'header' as const },
+                          { name: 'Services', icon: '💼', key: 'services' as const },
+                          { name: 'Gallery', icon: '🖼️', key: 'gallery' as const },
+                          { name: 'Testimonials', icon: '⭐', key: 'testimonials' as const },
+                        ].map(section => (
+                          <div key={section.key} className="flex items-center justify-between py-2">
+                            <span className="text-gray-700 flex items-center gap-2 font-medium text-sm">
+                              <span className="text-lg">{section.icon}</span>
+                              <span>{section.name}</span>
+                            </span>
+                            <button
+                              onClick={() => toggleSection(section.key)}
+                              className={`w-11 h-6 rounded-full relative transition-all shadow-inner ${
+                                sections[section.key] ? 'bg-onprez-blue' : 'bg-gray-300'
+                              }`}
                             >
-                              <span className="text-gray-700 flex items-center gap-2 font-medium text-sm">
-                                <span className="text-lg">{section.icon}</span>
-                                <span>{section.name}</span>
-                              </span>
-                              <button
-                                onClick={() => toggleSection(section.key)}
-                                className={`w-11 h-6 rounded-full relative transition-all shadow-inner ${
-                                  sections[section.key] ? 'bg-onprez-blue' : 'bg-gray-300'
-                                }`}
-                              >
-                                <motion.div
-                                  className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md"
-                                  animate={{
-                                    x: sections[section.key] ? 22 : 2,
-                                  }}
-                                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                                />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
+                              <motion.div
+                                className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md"
+                                animate={{
+                                  x: sections[section.key] ? 22 : 2,
+                                }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                              />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
+                  </motion.div>
+                </>
+              )}
+              {/* </AnimatePresence> */}
             </div>
 
             {/* Right Column - Mockup (wider - 8 columns) */}
             <div className="col-span-8 flex items-center justify-center">
               <motion.div
                 className="relative w-full max-w-lg"
-                animate={showFinale ? { rotateY: [0, 360] } : {}}
+                // animate={showFinale ? { rotateY: [0, 360] } : {}}
                 transition={showFinale ? { duration: 3, ease: 'easeInOut' } : {}}
                 style={{ perspective: 1000 }}
                 onHoverStart={() => setIsAutoPlaying(false)}
