@@ -63,9 +63,9 @@ export default function LandingPage() {
       <main id="main-content" className="min-h-screen bg-white">
         {/* Above the fold - Critical */}
         <Hero />
-
         {/* Early sections - High priority */}
-        {/* <SocialProofStreamDual /> */}
+        <SocialProofStreamDual />
+
         <ProblemSolutionSplit />
         <FeatureCustomizable />
         <FeatureDiscovery />

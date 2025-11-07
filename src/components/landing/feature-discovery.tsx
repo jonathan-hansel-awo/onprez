@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { ClientReaction } from './client-reaction'
 import { ScrollingPresencePage } from './scrolling-presence-page'
 import { PhoneMockup } from './phone-mockup'
@@ -23,50 +23,53 @@ export function FeatureDiscovery() {
     triggerOnce: false,
   })
 
-  const phases: Phase[] = [
-    {
-      scrollProgress: 0,
-      reaction: 'neutral',
-      caption: 'Looking for a massage therapist...',
-      duration: 1500,
-    },
-    {
-      scrollProgress: 0.15,
-      reaction: 'interested',
-      caption: 'First impression matters',
-      duration: 2000,
-    },
-    {
-      scrollProgress: 0.35,
-      reaction: 'impressed',
-      caption: 'They explore your work',
-      duration: 2000,
-    },
-    {
-      scrollProgress: 0.5,
-      reaction: 'nodding',
-      caption: 'They understand your value',
-      duration: 2000,
-    },
-    {
-      scrollProgress: 0.7,
-      reaction: 'excited',
-      caption: 'They trust you',
-      duration: 2000,
-    },
-    {
-      scrollProgress: 0.85,
-      reaction: 'excited',
-      caption: 'Then they book',
-      duration: 1500,
-    },
-    {
-      scrollProgress: 1,
-      reaction: 'celebrating',
-      caption: 'Discovery first. Booking second.',
-      duration: 2500,
-    },
-  ]
+  const phases = useMemo<Phase[]>(
+    () => [
+      {
+        scrollProgress: 0,
+        reaction: 'neutral',
+        caption: 'Looking for a massage therapist...',
+        duration: 1500,
+      },
+      {
+        scrollProgress: 0.15,
+        reaction: 'interested',
+        caption: 'First impression matters',
+        duration: 2000,
+      },
+      {
+        scrollProgress: 0.35,
+        reaction: 'impressed',
+        caption: 'They explore your work',
+        duration: 2000,
+      },
+      {
+        scrollProgress: 0.5,
+        reaction: 'nodding',
+        caption: 'They understand your value',
+        duration: 2000,
+      },
+      {
+        scrollProgress: 0.7,
+        reaction: 'excited',
+        caption: 'They trust you',
+        duration: 2000,
+      },
+      {
+        scrollProgress: 0.85,
+        reaction: 'excited',
+        caption: 'Then they book',
+        duration: 1500,
+      },
+      {
+        scrollProgress: 1,
+        reaction: 'celebrating',
+        caption: 'Discovery first. Booking second.',
+        duration: 2500,
+      },
+    ],
+    []
+  )
 
   useEffect(() => {
     setMounted(true)
@@ -156,8 +159,8 @@ export function FeatureDiscovery() {
 
           {/* Right Side - Client Reaction */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
+            initial={{ opacity: 0, x: 0 }}
+            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="order-1 lg:order-2"
           >
@@ -224,7 +227,7 @@ export function FeatureDiscovery() {
 
         {/* Key Takeaway */}
         <motion.div
-          className="max-w-2xl mx-auto mt-8 md:mt-12 bg-gradient-to-r from-onprez-blue/10 to-onprez-purple/10 rounded-xl md:rounded-2xl p-6 md:p-8 border border-onprez-blue/20 mx-4"
+          className="max-w-2xl mx-auto mt-8 md:mt-12 bg-gradient-to-r from-onprez-blue/10 to-onprez-purple/10 rounded-xl md:rounded-2xl p-6 md:p-8 border border-onprez-blue/20"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
           transition={{ delay: 0.9 }}

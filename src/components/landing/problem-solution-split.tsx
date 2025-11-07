@@ -44,7 +44,7 @@ export function ProblemSolutionSplit() {
           {/* Dividing Line with Energy Effect */}
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 z-20">
             {/* Static line */}
-            <div className="absolute inset-0 bgabsolute inset-8 flex items-center justify-center-gradient-to-b from-red-500/50 via-yellow-500/50 to-green-500/50" />
+            <div className="absolute inset-8 flex items-center justify-center bgabsolute gradient-to-b from-red-500/50 via-yellow-500/50 to-green-500/50" />
 
             {/* Energy particles */}
             {[...Array(5)].map((_, i) => (

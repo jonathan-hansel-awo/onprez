@@ -125,7 +125,7 @@ export function ClientReaction({ reaction, caption }: ClientReactionProps) {
         {caption && (
           <motion.div
             key={caption}
-            className="bg-white px-6 py-3 rounded-full shadow-lg border border-gray-200"
+            className="bg-white px-4 py-3 rounded-full shadow-lg border border-gray-200"
             initial={{ opacity: 0, y: 10, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.9 }}
