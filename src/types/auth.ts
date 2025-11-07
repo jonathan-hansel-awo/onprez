@@ -82,3 +82,20 @@ export interface RateLimitConfig {
   maxAttempts: number
   windowMs: number
 }
+
+export type UserRole = 'USER' | 'ADMIN' | 'STAFF'
+
+export interface AuthUser {
+  id: string
+  email: string
+  emailVerified: boolean
+  mfaEnabled: boolean
+  role: UserRole
+}
+
+export interface AuthRequirement {
+  requireAuth?: boolean
+  requireEmailVerified?: boolean
+  requireMfa?: boolean
+  allowedRoles?: UserRole[]
+}

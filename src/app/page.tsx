@@ -65,7 +65,7 @@ export default function LandingPage() {
         <Hero />
 
         {/* Early sections - High priority */}
-        <SocialProofStreamDual />
+        {/* <SocialProofStreamDual /> */}
         <ProblemSolutionSplit />
         <FeatureCustomizable />
         <FeatureDiscovery />

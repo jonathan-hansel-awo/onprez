@@ -41,11 +41,15 @@ model User {
   authAttempts          AuthAttempt[]
   securityLogs          SecurityLog[]
   
-  // MFA Relations (ADD THESE)
+  // MFA Relations 
   mfaSecret             MfaSecret?
   mfaBackupCodes        MfaBackupCode[]
   mfaTempTokens         MfaTempToken[]
   trustedDevices        TrustedDevice[]
+
+  //Role
+  role                String    @default("USER") // USER, ADMIN, STAFF
+
 
   @@map("users")
 }

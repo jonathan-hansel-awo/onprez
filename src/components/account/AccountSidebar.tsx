@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Shield, User, CreditCard, Bell, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
   {
@@ -34,6 +35,7 @@ const navigation = [
 
 export function AccountSidebar() {
   const pathname = usePathname()
+  const { logout } = useAuth()
 
   return (
     <nav className="space-y-1">
@@ -74,12 +76,7 @@ export function AccountSidebar() {
 
       <div className="pt-4 mt-4 border-t border-gray-200">
         <button
-          onClick={() => {
-            // Handle logout
-            localStorage.removeItem('accessToken')
-            localStorage.removeItem('refreshToken')
-            window.location.href = '/login'
-          }}
+          onClick={logout}
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full transition-colors"
         >
           <LogOut className="w-5 h-5" />

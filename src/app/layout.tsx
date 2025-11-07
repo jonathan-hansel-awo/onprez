@@ -5,6 +5,7 @@ import { SmoothScroll } from '@/components/ui/smooth-scroll'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { PreloadResources } from '@/components/preload-resources'
 import { AnalyticsWrapper } from '@/components/analytics/analytics-wrapper'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -83,12 +84,14 @@ export default function RootLayout({
         <PreloadResources />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <ErrorBoundary>
-          <SmoothScroll>
-            {children}
-            <AnalyticsWrapper />
-          </SmoothScroll>
-        </ErrorBoundary>
+        <AuthProvider>
+          <ErrorBoundary>
+            <SmoothScroll>
+              {children}
+              <AnalyticsWrapper />
+            </SmoothScroll>
+          </ErrorBoundary>
+        </AuthProvider>
       </body>
     </html>
   )
