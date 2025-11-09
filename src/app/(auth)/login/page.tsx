@@ -41,12 +41,17 @@ function LoginForm() {
     resetAt?: Date
   } | null>(null)
 
+  const expired = searchParams.get('expired')
+
   useEffect(() => {
+    if (expired === 'true') {
+      setErrors({ form: 'Your session has expired. Please sign in again.' })
+    }
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  }, [expired])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

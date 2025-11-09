@@ -4,12 +4,16 @@ import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 import { Logo } from '@/components/navigation'
+import { UserMenu } from '@/components/navigation/UserMenu'
+import { useAuth } from '@/contexts/AuthContext'
+import Link from 'next/link'
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { scrollY } = useScroll()
+  const { user, loading } = useAuth()
 
   useEffect(() => {
     setMounted(true)
@@ -65,22 +69,35 @@ export function Header() {
               ))}
             </nav>
 
-            {/* Desktop CTA Buttons */}
+            {/* Desktop CTA Buttons / User Menu */}
             <div className="hidden md:flex items-center gap-4">
-              <a
-                className="text-gray-700 hover:text-onprez-blue font-medium transition-colors"
-                href="login"
-              >
-                Sign In
-              </a>
-              <motion.a
-                className="bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-6 py-2 rounded-lg font-semibold shadow-lg"
-                href="signup"
-                whileHover={{ scale: 1.05, boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)' }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Get Started
-              </motion.a>
+              {!loading && (
+                <>
+                  {user ? (
+                    <UserMenu />
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="text-gray-700 hover:text-onprez-blue font-medium transition-colors"
+                      >
+                        Sign In
+                      </Link>
+                      <motion.a
+                        className="bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-6 py-2 rounded-lg font-semibold shadow-lg"
+                        href="/signup"
+                        whileHover={{
+                          scale: 1.05,
+                          boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)',
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Get Started
+                      </motion.a>
+                    </>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -131,18 +148,44 @@ export function Header() {
               ))}
 
               <div className="pt-6 border-t border-gray-200 space-y-4">
-                <button
-                  className="w-full text-gray-700 hover:text-onprez-blue font-medium text-lg text-left"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign In
-                </button>
-                <button
-                  className="w-full bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-6 py-3 rounded-lg font-semibold shadow-lg"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Get Started
-                </button>
+                {user ? (
+                  <>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
+                    </div>
+                    <Link
+                      href="/account/security"
+                      className="block w-full text-gray-700 hover:text-onprez-blue font-medium text-lg text-left"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Account
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      className="block w-full text-gray-700 hover:text-onprez-blue font-medium text-lg text-left"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="block w-full text-gray-700 hover:text-onprez-blue font-medium text-lg text-left"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="block w-full bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-6 py-3 rounded-lg font-semibold shadow-lg text-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>
