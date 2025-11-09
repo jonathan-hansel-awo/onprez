@@ -41,6 +41,7 @@ model User {
   authAttempts          AuthAttempt[]
   securityLogs          SecurityLog[]
   inquiryReplies InquiryReply[]
+  invitationsSent   TeamInvitation[] @relation("InvitedInvitations")
   
   // MFA Relations 
   mfaSecret             MfaSecret?
@@ -53,6 +54,36 @@ model User {
 
 
   @@map("users")
+}
+
+model TeamInvitation {
+  id          String   @id @default(cuid())
+  businessId  String
+  email       String
+  role        String   // STAFF, ADMIN
+  token       String   @unique
+  
+  // Status
+  status      String   @default("PENDING") // PENDING, ACCEPTED, CANCELLED, EXPIRED
+  
+  // Inviter
+  invitedBy   String
+  invitedByUser User @relation("InvitedInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  @@unique([businessId, email])
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@map("team_invitations")
 }
 
 model Session {
@@ -375,6 +406,7 @@ model Business {
                                                                                                                         reviews Review[]
                                                                                                                           faqs          FAQ[]
   inquiries     Inquiry[]
+  teamInvitations   TeamInvitation[]
                                                                                                                           
                                                                                                                             @@index([ownerId])
                                                                                                                               @@index([slug])
