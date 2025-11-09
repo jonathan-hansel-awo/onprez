@@ -199,3 +199,218 @@ export function formatSlug(input: string): string {
     .replace(/^-+|-+$/g, '')
     .substring(0, 30)
 }
+
+// Add these timezones (replace existing TIMEZONES)
+export interface TimezoneOption {
+  value: string
+  label: string
+  offset: string
+  region: string
+}
+
+export const TIMEZONES: TimezoneOption[] = [
+  // UK & Ireland
+  { value: 'Europe/London', label: 'London (GMT/BST)', offset: '+00:00', region: 'UK & Ireland' },
+  { value: 'Europe/Dublin', label: 'Dublin (GMT/IST)', offset: '+00:00', region: 'UK & Ireland' },
+
+  // Western Europe
+  { value: 'Europe/Paris', label: 'Paris (CET/CEST)', offset: '+01:00', region: 'Western Europe' },
+  {
+    value: 'Europe/Berlin',
+    label: 'Berlin (CET/CEST)',
+    offset: '+01:00',
+    region: 'Western Europe',
+  },
+  {
+    value: 'Europe/Amsterdam',
+    label: 'Amsterdam (CET/CEST)',
+    offset: '+01:00',
+    region: 'Western Europe',
+  },
+  {
+    value: 'Europe/Brussels',
+    label: 'Brussels (CET/CEST)',
+    offset: '+01:00',
+    region: 'Western Europe',
+  },
+  {
+    value: 'Europe/Madrid',
+    label: 'Madrid (CET/CEST)',
+    offset: '+01:00',
+    region: 'Western Europe',
+  },
+  { value: 'Europe/Rome', label: 'Rome (CET/CEST)', offset: '+01:00', region: 'Western Europe' },
+  {
+    value: 'Europe/Zurich',
+    label: 'Zurich (CET/CEST)',
+    offset: '+01:00',
+    region: 'Western Europe',
+  },
+
+  // Northern Europe
+  { value: 'Europe/Oslo', label: 'Oslo (CET/CEST)', offset: '+01:00', region: 'Northern Europe' },
+  {
+    value: 'Europe/Stockholm',
+    label: 'Stockholm (CET/CEST)',
+    offset: '+01:00',
+    region: 'Northern Europe',
+  },
+  {
+    value: 'Europe/Copenhagen',
+    label: 'Copenhagen (CET/CEST)',
+    offset: '+01:00',
+    region: 'Northern Europe',
+  },
+  {
+    value: 'Europe/Helsinki',
+    label: 'Helsinki (EET/EEST)',
+    offset: '+02:00',
+    region: 'Northern Europe',
+  },
+
+  // Eastern Europe
+  {
+    value: 'Europe/Athens',
+    label: 'Athens (EET/EEST)',
+    offset: '+02:00',
+    region: 'Eastern Europe',
+  },
+  {
+    value: 'Europe/Warsaw',
+    label: 'Warsaw (CET/CEST)',
+    offset: '+01:00',
+    region: 'Eastern Europe',
+  },
+  {
+    value: 'Europe/Prague',
+    label: 'Prague (CET/CEST)',
+    offset: '+01:00',
+    region: 'Eastern Europe',
+  },
+  {
+    value: 'Europe/Budapest',
+    label: 'Budapest (CET/CEST)',
+    offset: '+01:00',
+    region: 'Eastern Europe',
+  },
+  { value: 'Europe/Moscow', label: 'Moscow (MSK)', offset: '+03:00', region: 'Eastern Europe' },
+
+  // North America
+  { value: 'America/New_York', label: 'New York (ET)', offset: '-05:00', region: 'North America' },
+  { value: 'America/Chicago', label: 'Chicago (CT)', offset: '-06:00', region: 'North America' },
+  { value: 'America/Denver', label: 'Denver (MT)', offset: '-07:00', region: 'North America' },
+  {
+    value: 'America/Los_Angeles',
+    label: 'Los Angeles (PT)',
+    offset: '-08:00',
+    region: 'North America',
+  },
+  { value: 'America/Toronto', label: 'Toronto (ET)', offset: '-05:00', region: 'North America' },
+
+  // Asia-Pacific
+  { value: 'Asia/Dubai', label: 'Dubai (GST)', offset: '+04:00', region: 'Middle East' },
+  { value: 'Asia/Singapore', label: 'Singapore (SGT)', offset: '+08:00', region: 'Southeast Asia' },
+  { value: 'Asia/Tokyo', label: 'Tokyo (JST)', offset: '+09:00', region: 'East Asia' },
+  {
+    value: 'Australia/Sydney',
+    label: 'Sydney (AEST/AEDT)',
+    offset: '+10:00',
+    region: 'Australia & NZ',
+  },
+  {
+    value: 'Australia/Melbourne',
+    label: 'Melbourne (AEST/AEDT)',
+    offset: '+10:00',
+    region: 'Australia & NZ',
+  },
+  {
+    value: 'Pacific/Auckland',
+    label: 'Auckland (NZST/NZDT)',
+    offset: '+12:00',
+    region: 'Australia & NZ',
+  },
+]
+
+export function getTimezonesByRegion(): Record<string, TimezoneOption[]> {
+  const grouped: Record<string, TimezoneOption[]> = {}
+  TIMEZONES.forEach(tz => {
+    if (!grouped[tz.region]) grouped[tz.region] = []
+    grouped[tz.region].push(tz)
+  })
+  return grouped
+}
+
+// Update BusinessSettings interface (merge with existing)
+export interface BusinessSettings {
+  // Feature Toggles
+  faqEnabled?: boolean
+  inquiriesEnabled?: boolean
+  bookingEnabled?: boolean
+
+  // Booking Settings
+  bufferTime?: number
+  advanceBookingDays?: number
+  sameDayBooking?: boolean
+  cancellationPolicy?: string
+  requireDeposit?: boolean
+  depositAmount?: number
+
+  // Notifications
+  emailNotifications?: boolean
+  smsNotifications?: boolean
+  bookingConfirmation?: boolean
+  reminderEnabled?: boolean
+  reminderHours?: number
+  notifyOnNewInquiry?: boolean
+  notifyOnNewBooking?: boolean
+
+  // Contact Preferences
+  preferredContactMethod?: 'email' | 'phone' | 'sms'
+  emergencyPhone?: string
+  afterHoursMessage?: string
+  autoReplyEnabled?: boolean
+  autoReplyMessage?: string
+
+  // Display Settings
+  showPrices?: boolean
+  showDuration?: boolean
+  requireApproval?: boolean
+  allowWaitlist?: boolean
+  showTeamMembers?: boolean
+
+  // Business Info
+  about?: string
+  specialties?: string[]
+  languages?: string[]
+  paymentMethods?: string[]
+
+  // Timezone
+  displayTimezone?: string
+  acceptInternationalBookings?: boolean
+}
+
+// Update DEFAULT_BUSINESS_SETTINGS (merge with existing)
+export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
+  faqEnabled: false,
+  inquiriesEnabled: true,
+  bookingEnabled: true,
+  bufferTime: 15,
+  advanceBookingDays: 30,
+  sameDayBooking: true,
+  requireDeposit: false,
+  emailNotifications: true,
+  smsNotifications: false,
+  bookingConfirmation: true,
+  reminderEnabled: true,
+  reminderHours: 24,
+  notifyOnNewInquiry: true,
+  notifyOnNewBooking: true,
+  preferredContactMethod: 'email',
+  autoReplyEnabled: false,
+  showPrices: true,
+  showDuration: true,
+  requireApproval: false,
+  allowWaitlist: false,
+  showTeamMembers: true,
+  acceptInternationalBookings: false,
+}
