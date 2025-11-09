@@ -40,6 +40,7 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   authAttempts          AuthAttempt[]
   securityLogs          SecurityLog[]
+  inquiryReplies InquiryReply[]
   
   // MFA Relations 
   mfaSecret             MfaSecret?
@@ -344,7 +345,7 @@ model Business {
                                                                 socialLinks Json?  // { instagram, facebook, twitter, linkedin, tiktok }
                                                                   
                                                                     // Settings (stored as JSON)
-                                                                      settings  Json?    // Business configuration
+  settings      Json?  // Will include: { inquiriesEnabled: boolean, faqEnabled: boolean }
                                                                         
                                                                           // Branding (stored as JSON)
                                                                             branding  Json?    // { primaryColor, secondaryColor, accentColor, fontFamily }
@@ -372,6 +373,8 @@ model Business {
                                                                                                                         businessHours BusinessHours[]
                                                                                                                         serviceCategories ServiceCategory[] 
                                                                                                                         reviews Review[]
+                                                                                                                          faqs          FAQ[]
+  inquiries     Inquiry[]
                                                                                                                           
                                                                                                                             @@index([ownerId])
                                                                                                                               @@index([slug])
@@ -697,6 +700,7 @@ model Customer {
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   appointments Appointment[]
   reviews     Review[]
+  inquiries Inquiry[]
   
   @@unique([businessId, email])
   @@index([businessId])
@@ -762,4 +766,110 @@ model TrustedDevice {
   @@unique([userId, deviceFingerprint])
   @@index([userId])
   @@map("trusted_devices")
+}
+
+// ============================================
+// FAQ SECTION FEATURE
+// ============================================
+
+model FAQ {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  // Content
+  question   String   @db.Text
+  answer     String   @db.Text
+  
+  // Display
+  order      Int      @default(0)
+  isActive   Boolean  @default(true)
+  
+  // Metadata
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@index([businessId, order])
+  @@index([businessId, isActive])
+  @@map("faqs")
+}
+
+// ============================================
+// INQUIRY SYSTEM FEATURE
+// ============================================
+
+model Inquiry {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  // Customer Info (may or may not be registered)
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerEmail String
+  customerName  String
+  customerPhone String?
+  
+  // Inquiry Content
+  subject    String
+  message    String   @db.Text
+  
+  // Status Management
+  status     InquiryStatus @default(PENDING)
+  priority   InquiryPriority @default(NORMAL)
+  isRead     Boolean  @default(false)
+  
+  // Replies
+  replies    InquiryReply[]
+  
+  // Metadata
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@index([businessId, status])
+  @@index([businessId, createdAt])
+  @@index([customerEmail])
+  @@map("inquiries")
+}
+
+model InquiryReply {
+  id        String   @id @default(cuid())
+  inquiryId String
+  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  
+  // Reply Content
+  message   String   @db.Text
+  
+  // Author (always a business user)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Email Status
+  emailSent Boolean  @default(false)
+  emailSentAt DateTime?
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([inquiryId, createdAt])
+  @@map("inquiry_replies")
+}
+
+// Enums for Inquiry System
+enum InquiryStatus {
+  PENDING    // New inquiry, not yet viewed
+  OPEN       // Viewed, being handled
+  REPLIED    // Business has replied
+  RESOLVED   // Inquiry resolved/closed
+  ARCHIVED   // Archived for record-keeping
+}
+
+enum InquiryPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
