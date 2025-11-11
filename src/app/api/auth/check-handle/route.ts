@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const handle = searchParams.get('handle')
 
+    console.log('🔍 Checking handle:', handle)
+
     if (!handle) {
       return NextResponse.json(
         {
@@ -20,6 +22,8 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    console.log('📊 Querying database...')
 
     // Rate limiting
     const forwarded = request.headers.get('x-forwarded-for')

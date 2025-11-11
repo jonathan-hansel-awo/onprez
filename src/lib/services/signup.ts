@@ -160,6 +160,8 @@ export async function checkHandleAvailability(handle: string): Promise<{
     where: { slug: normalizedHandle },
   })
 
+  console.log('✅ Query result:', existing)
+
   if (existing) {
     return {
       available: false,

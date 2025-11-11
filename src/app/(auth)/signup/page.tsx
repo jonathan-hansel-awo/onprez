@@ -518,7 +518,7 @@ export default function SignupPage() {
                           value={formData.handle}
                           onChange={e => handleChange('handle', e.target.value.toLowerCase())}
                           className="flex-1 px-3 sm:px-4 py-3 focus:outline-none bg-white text-base"
-                          placeholder="your-name"
+                          placeholder="your-handle"
                           disabled={isLoading}
                           autoComplete="off"
                           autoCapitalize="off"
