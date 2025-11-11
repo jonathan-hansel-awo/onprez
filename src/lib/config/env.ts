@@ -13,6 +13,10 @@ const envSchema = z.object({
   // Database Connection
   DATABASE_URL: z.string().optional(),
   DIRECT_URL: z.string().optional(),
+  PRODUCTION_DATABASE_URL: z.string().optional(),
+  PRODUCTION_DIRECT_URL: z.string().optional(),
+  PREVIEW_DATABASE_URL: z.string().optional(),
+  PREVIEW_DIRECT_URL: z.string().optional(),
 
   // Supabase Auth - Will be configured in Area 3
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
