@@ -1,18 +1,20 @@
-/**
- * Database Configuration
- * Simplified to work with single DATABASE_URL
- */
-
+// src/lib/db-config.ts
 export function getDatabaseUrls() {
-  // Always use DATABASE_URL in production (Vercel)
+  // FIX: In production (Vercel), NODE_ENV is 'production', so use DATABASE_URL
   if (process.env.NODE_ENV === 'production') {
+    const url = process.env.DATABASE_URL
+
+    if (!url) {
+      throw new Error('DATABASE_URL is not set in production environment')
+    }
+
     return {
-      url: process.env.DATABASE_URL!,
-      directUrl: process.env.DATABASE_URL!, // Same URL for now
+      url,
+      directUrl: url, // Use same URL for both
     }
   }
 
-  // In development, check for DATABASE_ENV
+  // Development: Use DATABASE_ENV to choose between preview/production
   const env = process.env.DATABASE_ENV || 'preview'
 
   if (env === 'production') {
@@ -22,7 +24,7 @@ export function getDatabaseUrls() {
     }
   }
 
-  // Default to preview/development
+  // Preview/development
   return {
     url: process.env.PREVIEW_DATABASE_URL || process.env.DATABASE_URL!,
     directUrl: process.env.PREVIEW_DIRECT_URL || process.env.DATABASE_URL!,
