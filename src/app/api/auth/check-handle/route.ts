@@ -79,6 +79,9 @@ export async function GET(request: NextRequest) {
       {
         available: false,
         reason: 'Failed to check handle availability',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack?.split('\n')[0] : undefined,
+        type: error?.constructor?.name,
       },
       { status: 500 }
     )
