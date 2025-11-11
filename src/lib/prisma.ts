@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/lib/prisma.ts
 import { PrismaClient } from '@prisma/client'
 import { Pool } from '@neondatabase/serverless'
@@ -13,16 +12,21 @@ let prisma: PrismaClient
 
 if (process.env.NODE_ENV === 'production') {
   // Production: Use Neon serverless adapter
+  console.log('🔍 NODE_ENV:', process.env.NODE_ENV)
+  console.log('🔍 DATABASE_URL exists:', !!process.env.DATABASE_URL)
+  console.log('🔍 DATABASE_URL prefix:', process.env.DATABASE_URL?.substring(0, 30))
+
   const { url } = getDatabaseUrls()
 
+  console.log('🔍 getDatabaseUrls returned url:', url?.substring(0, 30))
+
   if (!url) {
-    throw new Error('Database URL is not defined')
+    throw new Error('Database URL is not defined after getDatabaseUrls()')
   }
 
-  console.log('Creating Neon pool with URL prefix:', url.substring(0, 30))
-
   const pool = new Pool({ connectionString: url })
-  const adapter = new PrismaNeon(pool as any) // FIX: Type assertion
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adapter = new PrismaNeon(pool as any)
 
   prisma = new PrismaClient({
     adapter,
@@ -48,7 +52,6 @@ if (process.env.NODE_ENV === 'production') {
 
 export { prisma }
 
-// Graceful shutdown
 if (process.env.NODE_ENV !== 'production') {
   process.on('beforeExit', async () => {
     await prisma.$disconnect()
