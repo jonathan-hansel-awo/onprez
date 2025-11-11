@@ -9,8 +9,8 @@ export function getDatabaseUrls() {
 
   if (env === 'production') {
     return {
-      url: process.env.DATABASE_URL!,
-      directUrl: process.env.DIRECT_URL!,
+      url: process.env.PRODUCTION_DATABASE_URL!,
+      directUrl: process.env.PRODUCTION_DIRECT_URL!,
     }
   }
 
