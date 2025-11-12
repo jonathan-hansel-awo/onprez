@@ -9,6 +9,12 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+  STAFF
+}
+
 // ============================================
 // USER & AUTHENTICATION MODELS
 // ============================================
