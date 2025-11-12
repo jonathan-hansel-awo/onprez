@@ -56,7 +56,7 @@ model User {
   trustedDevices        TrustedDevice[]
 
   //Role
-  role                String    @default("USER") // USER, ADMIN, STAFF
+  role                Role    @default(USER) // USER, ADMIN, STAFF
 
 
   @@map("users")
