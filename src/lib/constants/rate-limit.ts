@@ -13,9 +13,11 @@ export const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
     message: 'Too many login attempts. Please try again later.',
   },
 
+  // src/lib/constants/rate-limit.ts (the third file you shared)
+
   'auth:signup': {
     endpoint: 'auth:signup',
-    maxAttempts: 3,
+    maxAttempts: 10, // ← Change from 3 to 10
     windowMs: 60 * 60 * 1000, // 1 hour
     blockDurationMs: 60 * 60 * 1000, // 1 hour
     message: 'Too many signup attempts. Please try again later.',
