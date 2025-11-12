@@ -140,7 +140,7 @@ export async function signupUser(
     return {
       success: false,
       requiresVerification: false,
-      error: 'Failed to create account. Please try again.',
+      error: `Failed to create account. Please try again. ${error.message}`,
     }
   }
 }
