@@ -9,11 +9,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-  STAFF
-}
 
 // ============================================
 // USER & AUTHENTICATION MODELS
@@ -56,7 +51,7 @@ model User {
   trustedDevices        TrustedDevice[]
 
   //Role
-  role                Role    @default(USER) // USER, ADMIN, STAFF
+  role                String    @default(USER) // USER, ADMIN, STAFF
 
 
   @@map("users")
