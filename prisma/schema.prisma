@@ -21,7 +21,7 @@ model User {
   mfaEnabled              Boolean                  @default(false)
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
-  role                    UserRole                 @default(OWNER)
+  role                    UserRole                 @default(USER)
   authAttempts            AuthAttempt[]
   businesses              Business[]
   emailVerificationTokens EmailVerificationToken[]
@@ -34,6 +34,7 @@ model User {
   sessions                Session[]
   invitationsSent         TeamInvitation[]         @relation("InvitedInvitations")
   trustedDevices          TrustedDevice[]
+  businessMemberships     BusinessMember[]
 
   @@map("users")
 }
@@ -58,6 +59,27 @@ model TeamInvitation {
   @@index([token])
   @@index([status])
   @@map("team_invitations")
+}
+
+model BusinessMember {
+  id         String   @id @default(cuid())
+  businessId String
+  userId     String
+  role       BusinessRole @default(STAFF)
+  
+  // Timestamps
+  joinedAt   DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Relations
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([businessId, userId])
+  @@index([businessId])
+  @@index([userId])
+  @@map("business_members")
 }
 
 model Session {
@@ -238,10 +260,10 @@ model Business {
   city              String?
   state             String?
   zipCode           String?
-  country           String?           @default("US")
+  country           String?           @default("UK")
   latitude          Float?
   longitude         Float?
-  timezone          String            @default("America/New_York")
+  timezone          String            @default("BST/LONDON")
   logoUrl           String?
   coverImageUrl     String?
   socialLinks       Json?
@@ -266,6 +288,7 @@ model Business {
   serviceCategories ServiceCategory[]
   services          Service[]
   teamInvitations   TeamInvitation[]
+  members           BusinessMember[]
 
   @@index([ownerId])
   @@index([slug])
@@ -302,7 +325,7 @@ model Service {
   priceType             PriceType        @default(FIXED)
   priceRangeMin         Decimal?         @db.Decimal(10, 2)
   priceRangeMax         Decimal?         @db.Decimal(10, 2)
-  currency              String           @default("USD")
+  currency              String           @default("GBP")
   duration              Int
   bufferTime            Int              @default(0)
   categoryId            String?
@@ -419,7 +442,7 @@ model Customer {
   city              String?
   state             String?
   zipCode           String?
-  country           String?       @default("US")
+  country           String?       @default("UK")
   birthday          DateTime?
   gender            String?
   preferredLanguage String?       @default("en")
@@ -563,9 +586,16 @@ model InquiryReply {
 }
 
 enum UserRole {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+enum BusinessRole {
   OWNER
   ADMIN
   STAFF
+  VIEWER
 }
 
 enum BusinessCategory {

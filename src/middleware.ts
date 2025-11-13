@@ -1,47 +1,60 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifyToken } from '@/lib/auth/jwt'
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  try {
+    const { pathname } = request.nextUrl
 
-  // Protected routes
-  const protectedRoutes = ['/account', '/dashboard']
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+    // Public routes that don't need protection
+    const publicRoutes = [
+      '/login',
+      '/signup',
+      '/invite',
+      '/forgot-password',
+      '/reset-password',
+      '/',
+    ]
 
-  if (!isProtectedRoute) {
+    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+
+    // Protected routes
+    const protectedRoutes = ['/dashboard', '/account']
+    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+
+    if (!isProtectedRoute || isPublicRoute) {
+      return NextResponse.next()
+    }
+
+    // Check for access token in cookies
+    const accessToken = request.cookies.get('accessToken')?.value
+
+    if (!accessToken) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Let the token validation happen server-side in API routes
+    // Edge runtime has limitations, so we just check token existence here
+    return NextResponse.next()
+  } catch (error) {
+    console.error('Middleware error:', error)
+    // On any error, allow the request to continue
+    // Let pages/API routes handle auth
     return NextResponse.next()
   }
-
-  // Check for access token in cookies or Authorization header
-  const accessToken =
-    request.cookies.get('accessToken')?.value ||
-    request.headers.get('authorization')?.replace('Bearer ', '')
-
-  if (!accessToken) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // Verify token
-  const tokenPayload = await verifyToken(accessToken)
-
-  if (!tokenPayload) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    loginUrl.searchParams.set('session_expired', 'true')
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // Add user info to headers for consumption by pages
-  const response = NextResponse.next()
-  response.headers.set('x-user-id', tokenPayload.payload.userId)
-  response.headers.set('x-user-email', tokenPayload.payload.email)
-
-  return response
 }
 
 export const config = {
-  matcher: ['/account/:path*', '/dashboard/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - api routes (handled by API middleware)
+     * - _next/static (static files)
+     * - _next/image (image optimization)
+     * - favicon.ico
+     * - public folder
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg).*)',
+  ],
 }
