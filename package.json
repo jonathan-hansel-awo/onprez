@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
@@ -21,7 +21,6 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:status": "prisma migrate status",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset",
     "db:test": "tsx scripts/test-db-connection.ts",
     "db:test:service": "tsx scripts/test-service-data.ts",
@@ -30,9 +29,6 @@
     "db:test:rate-limit": "tsx scripts/test-rate-limit.ts",
     "db:test:migrations": "tsx scripts/test-migrations.ts",
     "db:test:seed": "tsx scripts/test-seed-data.ts"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

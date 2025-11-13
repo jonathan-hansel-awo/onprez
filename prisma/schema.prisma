@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -9,77 +8,51 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-
-// ============================================
-// USER & AUTHENTICATION MODELS
-// ============================================
-
 model User {
-  id                    String   @id @default(cuid())
-  email                 String   @unique
-  passwordHash          String
-  emailVerified         Boolean  @default(false)
-  
-  // Security fields
-  accountLocked         Boolean  @default(false)
-  failedLoginAttempts   Int      @default(0)
-  lastFailedLogin       DateTime?
-  lockedUntil           DateTime?
-  lastLoginAt           DateTime?
-  
-  // MFA
-  mfaEnabled            Boolean  @default(false)
-  
-  // Timestamps
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  // Relations
-  sessions              Session[]
-  businesses            Business[]
-  passwordResetTokens   PasswordResetToken[]
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  passwordHash            String
+  emailVerified           Boolean                  @default(false)
+  accountLocked           Boolean                  @default(false)
+  failedLoginAttempts     Int                      @default(0)
+  lastFailedLogin         DateTime?
+  lockedUntil             DateTime?
+  lastLoginAt             DateTime?
+  mfaEnabled              Boolean                  @default(false)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  role                    UserRole                 @default(OWNER)
+  authAttempts            AuthAttempt[]
+  businesses              Business[]
   emailVerificationTokens EmailVerificationToken[]
-  authAttempts          AuthAttempt[]
-  securityLogs          SecurityLog[]
-  inquiryReplies InquiryReply[]
-  invitationsSent   TeamInvitation[] @relation("InvitedInvitations")
-  
-  // MFA Relations 
-  mfaSecret             MfaSecret?
-  mfaBackupCodes        MfaBackupCode[]
-  mfaTempTokens         MfaTempToken[]
-  trustedDevices        TrustedDevice[]
-
-  //Role
-  role                String    @default("USER") // USER, ADMIN, STAFF
-
+  inquiryReplies          InquiryReply[]
+  mfaBackupCodes          MfaBackupCode[]
+  mfaSecret               MfaSecret?
+  mfaTempTokens           MfaTempToken[]
+  passwordResetTokens     PasswordResetToken[]
+  securityLogs            SecurityLog[]
+  sessions                Session[]
+  invitationsSent         TeamInvitation[]         @relation("InvitedInvitations")
+  trustedDevices          TrustedDevice[]
 
   @@map("users")
 }
 
 model TeamInvitation {
-  id          String   @id @default(cuid())
-  businessId  String
-  email       String
-  role        String   // STAFF, ADMIN
-  token       String   @unique
-  
-  // Status
-  status      String   @default("PENDING") // PENDING, ACCEPTED, CANCELLED, EXPIRED
-  
-  // Inviter
-  invitedBy   String
-  invitedByUser User @relation("InvitedInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
-  
-  // Timestamps
-  expiresAt   DateTime
-  acceptedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  
+  id            String    @id @default(cuid())
+  businessId    String
+  email         String
+  role          String
+  token         String    @unique
+  status        String    @default("PENDING")
+  invitedBy     String
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invitedByUser User      @relation("InvitedInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
+
   @@unique([businessId, email])
   @@index([email])
   @@index([token])
@@ -88,28 +61,20 @@ model TeamInvitation {
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  refreshToken String? @unique
-  
-  // Device information
-  deviceInfo String?
-  ipAddress  String?
-  userAgent  String?
-  
-  // Session management
-  expiresAt DateTime
+  id             String   @id @default(cuid())
+  userId         String
+  token          String   @unique
+  refreshToken   String?  @unique
+  deviceInfo     String?
+  ipAddress      String?
+  userAgent      String?
+  expiresAt      DateTime
   lastActivityAt DateTime @default(now())
-  isActive Boolean @default(true)
-  
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
@@ -117,23 +82,17 @@ model Session {
 }
 
 model AuthAttempt {
-  id        String   @id @default(cuid())
-  userId    String?  // Null if user not found
-  email     String
-  
-  // Attempt details
-  success   Boolean
-  ipAddress String
-  userAgent String?
-  attemptType String // 'login', 'mfa', 'password_reset'
-  failureReason String? // 'invalid_password', 'account_locked', 'invalid_mfa'
-  
-  // Timestamp
-  createdAt DateTime @default(now())
-  
-  // Relations
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id            String   @id @default(cuid())
+  userId        String?
+  email         String
+  success       Boolean
+  ipAddress     String
+  userAgent     String?
+  attemptType   String
+  failureReason String?
+  createdAt     DateTime @default(now())
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([email])
   @@index([ipAddress])
@@ -142,20 +101,14 @@ model AuthAttempt {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  token     String   @unique
-  
-  // Token management
+  token     String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  
-  // Timestamp
-  createdAt DateTime @default(now())
-  
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
@@ -163,21 +116,15 @@ model PasswordResetToken {
 }
 
 model EmailVerificationToken {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  email     String   // Email to verify
-  
-  // Token management
-  expiresAt DateTime
+  id         String    @id @default(cuid())
+  userId     String
+  token      String    @unique
+  email      String
+  expiresAt  DateTime
   verifiedAt DateTime?
-  
-  // Timestamp
-  createdAt DateTime @default(now())
-  
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
@@ -187,13 +134,12 @@ model EmailVerificationToken {
 model MfaSecret {
   id              String   @id @default(cuid())
   userId          String   @unique
-  encryptedSecret String   @db.Text
-  iv              String   // Initialization vector for encryption
+  encryptedSecret String
+  iv              String
   verified        Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("mfa_secrets")
 }
@@ -201,25 +147,23 @@ model MfaSecret {
 model MfaBackupCode {
   id         String    @id @default(cuid())
   userId     String
-  hashedCode String    @db.Text
+  hashedCode String
   usedAt     DateTime?
   createdAt  DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("mfa_backup_codes")
 }
 
 model MfaTempToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  token     String   @unique
+  token     String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -228,23 +172,15 @@ model MfaTempToken {
 
 model SecurityLog {
   id        String   @id @default(cuid())
-  userId    String?  // Null for system-wide events
-  
-  // Event details
-  action    String   // 'login', 'logout', 'password_change', 'mfa_enabled', etc.
-  details   Json?    // Additional context
+  userId    String?
+  action    String
+  details   Json?
   ipAddress String
   userAgent String?
-  
-  // Status
-  severity  String   // 'info', 'warning', 'error', 'critical'
-  
-  // Timestamp
+  severity  String
   createdAt DateTime @default(now())
-  
-  // Relations
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+  user      User?    @relation(fields: [userId], references: [id])
+
   @@index([userId])
   @@index([action])
   @@index([severity])
@@ -252,32 +188,18 @@ model SecurityLog {
   @@map("security_logs")
 }
 
-// ============================================
-// RATE LIMITING
-// ============================================
-
 model RateLimit {
-  id        String   @id @default(cuid())
-  
-  // Rate limit identifier
-  key       String   // IP address, user ID, or custom identifier
-  
-  // Endpoint/action being rate limited
-  endpoint  String   // e.g., '/api/auth/login', 'signup', 'booking'
-  
-  // Counter and window
-  count     Int      @default(0)
+  id          String   @id @default(cuid())
+  key         String
+  endpoint    String
+  count       Int      @default(0)
   windowStart DateTime @default(now())
-  expiresAt DateTime
-  
-  // Metadata
-  userAgent String?
-  metadata  Json?    // Additional context
-  
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  expiresAt   DateTime
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   @@unique([key, endpoint])
   @@index([key])
   @@index([endpoint])
@@ -285,226 +207,124 @@ model RateLimit {
   @@map("rate_limits")
 }
 
-// ============================================
-// RATE LIMIT CONFIGURATION (Optional - for storing configs in DB)
-// ============================================
-
 model RateLimitConfig {
-  id        String   @id @default(cuid())
-  
-  // Configuration
-  endpoint  String   @unique
-  maxAttempts Int     // Maximum attempts allowed
-  windowMs  Int      // Time window in milliseconds
-  
-  // Action on limit exceeded
-  blockDurationMs Int? // How long to block after limit exceeded
-  
-  // Status
-  isActive  Boolean  @default(true)
-  
-  // Description
-  description String?
-  
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  id              String   @id @default(cuid())
+  endpoint        String   @unique
+  maxAttempts     Int
+  windowMs        Int
+  blockDurationMs Int?
+  isActive        Boolean  @default(true)
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   @@index([endpoint])
   @@index([isActive])
   @@map("rate_limit_configs")
 }
 
-// ============================================
-// BUSINESS/PROFILE MODELS
-// ============================================
-
-enum BusinessCategory {
-    SALON
-      BARBERSHOP
-        SPA
-          MASSAGE
-            NAILS
-              BEAUTY
-                FITNESS
-                  YOGA
-                    PERSONAL_TRAINING
-                      THERAPY
-                        COUNSELING
-                          TUTORING
-                            CONSULTING
-                              PHOTOGRAPHY
-                                VIDEOGRAPHY
-                                  EVENT_PLANNING
-                                    CATERING
-                                      CLEANING
-                                        HOME_SERVICES
-                                          PET_SERVICES
-                                            OTHER
-}
-
 model Business {
-    id        String   @id @default(cuid())
-      ownerId   String
-        
-          // Basic Information
-            name      String
-              slug      String   @unique // For onprez.com/[slug]
-                category  BusinessCategory
-                  description String?  @db.Text
-                    tagline   String?
-                      
-                        // Contact Information
-                          email     String?
-                            phone     String?
-                              website   String?
-                                address   String?
-                                  city      String?
-                                    state     String?
-                                      zipCode   String?
-                                        country   String?  @default("US")
-                                          
-                                            // Location
-                                              latitude  Float?
-                                                longitude Float?
-                                                  timezone  String   @default("America/New_York")
-                                                    
-                                                      // Media
-                                                        logoUrl   String?
-                                                          coverImageUrl String?
-                                                            
-                                                              // Social Links (stored as JSON)
-                                                                socialLinks Json?  // { instagram, facebook, twitter, linkedin, tiktok }
-                                                                  
-                                                                    // Settings (stored as JSON)
-  settings      Json?  // Will include: { inquiriesEnabled: boolean, faqEnabled: boolean }
-                                                                        
-                                                                          // Branding (stored as JSON)
-                                                                            branding  Json?    // { primaryColor, secondaryColor, accentColor, fontFamily }
-                                                                              
-                                                                                // Status
-                                                                                  isPublished Boolean @default(false)
-                                                                                    isPremium   Boolean @default(false)
-                                                                                      isActive    Boolean @default(true)
-                                                                                        
-                                                                                          // SEO
-                                                                                            seoTitle       String?
-                                                                                              seoDescription String?
-                                                                                                seoKeywords    String[]
-                                                                                                  
-                                                                                                    // Timestamps
-                                                                                                      createdAt DateTime @default(now())
-                                                                                                        updatedAt DateTime @updatedAt
-                                                                                                          publishedAt DateTime?
-                                                                                                            
-                                                                                                              // Relations
-                                                                                                                owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-                                                                                                                  services Service[]
-                                                                                                                    appointments Appointment[]
-                                                                                                                      customers Customer[]
-                                                                                                                        businessHours BusinessHours[]
-                                                                                                                        serviceCategories ServiceCategory[] 
-                                                                                                                        reviews Review[]
-                                                                                                                          faqs          FAQ[]
-  inquiries     Inquiry[]
+  id                String            @id @default(cuid())
+  ownerId           String
+  name              String
+  slug              String            @unique
+  category          BusinessCategory
+  description       String?
+  tagline           String?
+  email             String?
+  phone             String?
+  website           String?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  country           String?           @default("US")
+  latitude          Float?
+  longitude         Float?
+  timezone          String            @default("America/New_York")
+  logoUrl           String?
+  coverImageUrl     String?
+  socialLinks       Json?
+  settings          Json?
+  branding          Json?
+  isPublished       Boolean           @default(false)
+  isPremium         Boolean           @default(false)
+  isActive          Boolean           @default(true)
+  seoTitle          String?
+  seoDescription    String?
+  seoKeywords       String[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  publishedAt       DateTime?
+  appointments      Appointment[]
+  businessHours     BusinessHours[]
+  owner             User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  customers         Customer[]
+  faqs              FAQ[]
+  inquiries         Inquiry[]
+  reviews           Review[]
+  serviceCategories ServiceCategory[]
+  services          Service[]
   teamInvitations   TeamInvitation[]
-                                                                                                                          
-                                                                                                                            @@index([ownerId])
-                                                                                                                              @@index([slug])
-                                                                                                                                @@index([category])
-                                                                                                                                  @@index([isPublished])
-                                                                                                                                    @@index([city, state])
-                                                                                                                                      @@map("businesses")
+
+  @@index([ownerId])
+  @@index([slug])
+  @@index([category])
+  @@index([isPublished])
+  @@index([city, state])
+  @@map("businesses")
 }
 
 model BusinessHours {
-    id         String   @id @default(cuid())
-      businessId String
-        
-          // Day of week (0 = Sunday, 6 = Saturday)
-            dayOfWeek  Int      // 0-6
-              
-                // Time slots
-                  openTime   String   // "09:00"
-                    closeTime  String   // "17:00"
-                      
-                        // Status
-                          isClosed   Boolean  @default(false)
-                            
-                              // Special notes
-                                notes      String?
-                                  
-                                    // Timestamps
-                                      createdAt DateTime @default(now())
-                                        updatedAt DateTime @updatedAt
-                                          
-                                            // Relations
-                                              business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-                                                
-                                                  @@unique([businessId, dayOfWeek])
-                                                    @@index([businessId])
-                                                      @@map("business_hours")
+  id         String   @id @default(cuid())
+  businessId String
+  dayOfWeek  Int
+  openTime   String
+  closeTime  String
+  isClosed   Boolean  @default(false)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, dayOfWeek])
+  @@index([businessId])
+  @@map("business_hours")
 }
 
-// ============================================
-// SERVICE MODELS
-// ============================================
-
 model Service {
-  id          String   @id @default(cuid())
-  businessId  String
-  
-  // Basic information
-  name        String
-  description String?  @db.Text
-  tagline     String?  // Short one-liner
-  
-  // Pricing
-  price       Decimal  @db.Decimal(10, 2)
-  priceType   PriceType @default(FIXED)
-  priceRangeMin Decimal? @db.Decimal(10, 2)
-  priceRangeMax Decimal? @db.Decimal(10, 2)
-  currency    String   @default("USD")
-  
-  // Duration
-  duration    Int      // minutes
-  bufferTime  Int      @default(0) // minutes after appointment
-  
-  // Category
-  categoryId  String?
-  category    ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  
-  // Media
-  imageUrl    String?
-  galleryImages String[] // Array of image URLs
-  
-  // Booking settings
-  requiresApproval Boolean @default(false)
-  requiresDeposit  Boolean @default(false)
-  depositAmount    Decimal? @db.Decimal(10, 2)
-  maxAdvanceBookingDays Int? // Override business default
-  
-  // Display
-  featured    Boolean  @default(false)
-  active      Boolean  @default(true)
-  order       Int      @default(0)
-  
-  // SEO
-  seoTitle       String?
-  seoDescription String?
-  
-  // Additional info
-  preparationNotes String? @db.Text // What customer should know
-  aftercareNotes   String? @db.Text // Post-service instructions
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
-  
+  id                    String           @id @default(cuid())
+  businessId            String
+  name                  String
+  description           String?
+  tagline               String?
+  price                 Decimal          @db.Decimal(10, 2)
+  priceType             PriceType        @default(FIXED)
+  priceRangeMin         Decimal?         @db.Decimal(10, 2)
+  priceRangeMax         Decimal?         @db.Decimal(10, 2)
+  currency              String           @default("USD")
+  duration              Int
+  bufferTime            Int              @default(0)
+  categoryId            String?
+  imageUrl              String?
+  galleryImages         String[]
+  requiresApproval      Boolean          @default(false)
+  requiresDeposit       Boolean          @default(false)
+  depositAmount         Decimal?         @db.Decimal(10, 2)
+  maxAdvanceBookingDays Int?
+  featured              Boolean          @default(false)
+  active                Boolean          @default(true)
+  order                 Int              @default(0)
+  seoTitle              String?
+  seoDescription        String?
+  preparationNotes      String?
+  aftercareNotes        String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  appointments          Appointment[]
+  business              Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category              ServiceCategory? @relation(fields: [categoryId], references: [id])
+
   @@index([businessId])
   @@index([categoryId])
   @@index([active])
@@ -513,131 +333,69 @@ model Service {
   @@map("services")
 }
 
-enum PriceType {
-  FIXED       // Exact price: £50
-  RANGE       // Price range: £50-£80
-  STARTING_AT // Starting at: From £50
-  FREE        // Free service
-}
-
 model ServiceCategory {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   businessId  String
-  
-  // Category info
   name        String
   description String?
-  order       Int      @default(0)
-  
-  // Display
-  color       String?  // Hex color for UI
-  icon        String?  // Icon name or emoji
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  order       Int       @default(0)
+  color       String?
+  icon        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   services    Service[]
-  
+
   @@unique([businessId, name])
   @@index([businessId])
   @@map("service_categories")
 }
 
-// ============================================
-// APPOINTMENT MODELS
-// ============================================
-
-enum AppointmentStatus {
-  PENDING       // Awaiting confirmation
-  CONFIRMED     // Confirmed by business
-  COMPLETED     // Service completed
-  CANCELLED     // Cancelled by customer or business
-  NO_SHOW       // Customer didn't show up
-  RESCHEDULED   // Moved to different time
-}
-
-enum CancellationSource {
-  CUSTOMER
-  BUSINESS
-  SYSTEM
-}
-
 model Appointment {
-  id          String   @id @default(cuid())
-  businessId  String
-  serviceId   String
-  customerId  String
-  
-  // Time scheduling
-  startTime   DateTime
-  endTime     DateTime
-  duration    Int      // minutes (from service)
-  timezone    String   // Customer's timezone
-  
-  // Status tracking
-  status      AppointmentStatus @default(PENDING)
-  previousStatus AppointmentStatus? // For tracking status changes
-  
-  // Confirmation
-  confirmedAt DateTime?
-  confirmedBy String?  // User ID who confirmed
-  
-  // Completion
-  completedAt DateTime?
-  
-  // Cancellation
-  cancelledAt DateTime?
+  id                 String              @id @default(cuid())
+  businessId         String
+  serviceId          String
+  customerId         String
+  startTime          DateTime
+  endTime            DateTime
+  duration           Int
+  timezone           String
+  status             AppointmentStatus   @default(PENDING)
+  previousStatus     AppointmentStatus?
+  confirmedAt        DateTime?
+  confirmedBy        String?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
   cancellationSource CancellationSource?
-  cancellationReason String? @db.Text
-  cancelledBy String? // User ID or customer ID
-  
-  // Rescheduling
-  rescheduledFrom String? // Original appointment ID
-  rescheduledTo   String? // New appointment ID
-  rescheduledAt   DateTime?
-  rescheduleReason String? @db.Text
-  
-  // Customer information
-  customerName  String
-  customerEmail String
-  customerPhone String?
-  
-  // Notes
-  customerNotes String? @db.Text // Notes from customer
-  businessNotes String? @db.Text // Private notes from business
-  
-  // Payment tracking (basic)
-  requiresDeposit Boolean @default(false)
-  depositAmount   Decimal? @db.Decimal(10, 2)
-  depositPaid     Boolean @default(false)
-  depositPaidAt   DateTime?
-  totalAmount     Decimal @db.Decimal(10, 2)
-  paymentStatus   PaymentStatus @default(UNPAID)
-  paidAt          DateTime?
-  
-  // Reminders
-  reminderSentAt  DateTime?
-  reminderCount   Int @default(0)
-  
-  // Booking source
-  bookingSource   String? // 'website', 'admin', 'api', 'phone'
-  bookingIp       String? // IP address of booking
-  
-  // Metadata
-  metadata        Json? // Flexible additional data
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  service     Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  
+  cancellationReason String?
+  cancelledBy        String?
+  rescheduledFrom    String?
+  rescheduledTo      String?
+  rescheduledAt      DateTime?
+  rescheduleReason   String?
+  customerName       String
+  customerEmail      String
+  customerPhone      String?
+  customerNotes      String?
+  businessNotes      String?
+  requiresDeposit    Boolean             @default(false)
+  depositAmount      Decimal?            @db.Decimal(10, 2)
+  depositPaid        Boolean             @default(false)
+  depositPaidAt      DateTime?
+  totalAmount        Decimal             @db.Decimal(10, 2)
+  paymentStatus      PaymentStatus       @default(UNPAID)
+  paidAt             DateTime?
+  reminderSentAt     DateTime?
+  reminderCount      Int                 @default(0)
+  bookingSource      String?
+  bookingIp          String?
+  metadata           Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  business           Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer           Customer            @relation(fields: [customerId], references: [id])
+  service            Service             @relation(fields: [serviceId], references: [id])
+
   @@index([businessId])
   @@index([serviceId])
   @@index([customerId])
@@ -648,93 +406,53 @@ model Appointment {
   @@map("appointments")
 }
 
-enum PaymentStatus {
-  UNPAID
-  PARTIALLY_PAID
-  PAID
-  REFUNDED
-  FAILED
-}
-
-// ============================================
-// CUSTOMER MODELS
-// ============================================
-
 model Customer {
-  id          String   @id @default(cuid())
-  businessId  String
-  
-  // Contact information
-  email       String
-  name        String
-  firstName   String?
-  lastName    String?
-  phone       String?
-  
-  // Additional contact
-  alternatePhone String?
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
-  country     String?  @default("US")
-  
-  // Customer profile
-  birthday    DateTime? // For birthday reminders/promotions
-  gender      String?
-  preferredLanguage String? @default("en")
-  
-  // Preferences
-  preferences Json?    // Flexible preferences storage
-  
-  // Communication preferences
-  emailOptIn  Boolean  @default(true)
-  smsOptIn    Boolean  @default(false)
-  marketingOptIn Boolean @default(false)
-  
-  // Organization
-  tags        String[] // For segmentation
-  customFields Json?   // Business-specific custom fields
-  
-  // Customer notes
-  notes       String?  @db.Text
-  privateNotes String? @db.Text // Only visible to business
-  
-  // Status
-  isVip       Boolean  @default(false)
-  isBlocked   Boolean  @default(false)
-  blockReason String?
-  
-  // Statistics (calculated/cached)
-  totalBookings    Int      @default(0)
-  completedBookings Int     @default(0)
-  cancelledBookings Int     @default(0)
-  noShowCount      Int      @default(0)
-  totalSpent       Decimal  @default(0) @db.Decimal(10, 2)
-  averageRating    Decimal? @db.Decimal(3, 2)
-  
-  // Engagement tracking
-  firstBookingAt   DateTime?
-  lastBookingAt    DateTime?
-  lastContactedAt  DateTime?
-  
-  // Source tracking
-  source      String?  // How they found the business
-  referredBy  String?  // Referral source
-  
-  // Metadata
-  metadata    Json?    // Additional flexible data
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
-  reviews     Review[]
-  inquiries Inquiry[]
-  
+  id                String        @id @default(cuid())
+  businessId        String
+  email             String
+  name              String
+  firstName         String?
+  lastName          String?
+  phone             String?
+  alternatePhone    String?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  country           String?       @default("US")
+  birthday          DateTime?
+  gender            String?
+  preferredLanguage String?       @default("en")
+  preferences       Json?
+  emailOptIn        Boolean       @default(true)
+  smsOptIn          Boolean       @default(false)
+  marketingOptIn    Boolean       @default(false)
+  tags              String[]
+  customFields      Json?
+  notes             String?
+  privateNotes      String?
+  isVip             Boolean       @default(false)
+  isBlocked         Boolean       @default(false)
+  blockReason       String?
+  totalBookings     Int           @default(0)
+  completedBookings Int           @default(0)
+  cancelledBookings Int           @default(0)
+  noShowCount       Int           @default(0)
+  totalSpent        Decimal       @default(0) @db.Decimal(10, 2)
+  averageRating     Decimal?      @db.Decimal(3, 2)
+  firstBookingAt    DateTime?
+  lastBookingAt     DateTime?
+  lastContactedAt   DateTime?
+  source            String?
+  referredBy        String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  appointments      Appointment[]
+  business          Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  inquiries         Inquiry[]
+  reviews           Review[]
+
   @@unique([businessId, email])
   @@index([businessId])
   @@index([email])
@@ -745,37 +463,23 @@ model Customer {
   @@map("customers")
 }
 
-// ============================================
-// REVIEW MODEL (Basic placeholder for future)
-// ============================================
-
 model Review {
-  id          String   @id @default(cuid())
-  businessId  String
-  customerId  String
-  appointmentId String?
-  
-  // Review content
-  rating      Int      // 1-5 stars
-  title       String?
-  comment     String?  @db.Text
-  
-  // Status
-  isPublished Boolean  @default(false)
-  isVerified  Boolean  @default(false)
-  
-  // Response
-  businessResponse String? @db.Text
+  id               String    @id @default(cuid())
+  businessId       String
+  customerId       String
+  appointmentId    String?
+  rating           Int
+  title            String?
+  comment          String?
+  isPublished      Boolean   @default(false)
+  isVerified       Boolean   @default(false)
+  businessResponse String?
   respondedAt      DateTime?
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  business         Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer         Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
   @@index([businessId])
   @@index([customerId])
   @@index([rating])
@@ -793,74 +497,49 @@ model TrustedDevice {
   lastUsedAt        DateTime  @default(now())
   revokedAt         DateTime?
   createdAt         DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, deviceFingerprint])
   @@index([userId])
   @@map("trusted_devices")
 }
 
-// ============================================
-// FAQ SECTION FEATURE
-// ============================================
-
 model FAQ {
   id         String   @id @default(cuid())
   businessId String
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  
-  // Content
-  question   String   @db.Text
-  answer     String   @db.Text
-  
-  // Display
+  question   String
+  answer     String
   order      Int      @default(0)
   isActive   Boolean  @default(true)
-  
-  // Metadata
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
   @@index([businessId, order])
   @@index([businessId, isActive])
   @@map("faqs")
 }
 
-// ============================================
-// INQUIRY SYSTEM FEATURE
-// ============================================
-
 model Inquiry {
-  id         String   @id @default(cuid())
-  businessId String
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  
-  // Customer Info (may or may not be registered)
+  id            String          @id @default(cuid())
+  businessId    String
   customerId    String?
-  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerEmail String
   customerName  String
   customerPhone String?
-  
-  // Inquiry Content
-  subject    String
-  message    String   @db.Text
-  
-  // Status Management
-  status     InquiryStatus @default(PENDING)
-  priority   InquiryPriority @default(NORMAL)
-  isRead     Boolean  @default(false)
-  
-  // Replies
-  replies    InquiryReply[]
-  
-  // Metadata
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
+  subject       String
+  message       String
+  status        InquiryStatus   @default(PENDING)
+  priority      InquiryPriority @default(NORMAL)
+  isRead        Boolean         @default(false)
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  business      Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer      Customer?       @relation(fields: [customerId], references: [id])
+  replies       InquiryReply[]
+
   @@index([businessId, status])
   @@index([businessId, createdAt])
   @@index([customerEmail])
@@ -868,36 +547,87 @@ model Inquiry {
 }
 
 model InquiryReply {
-  id        String   @id @default(cuid())
-  inquiryId String
-  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  
-  // Reply Content
-  message   String   @db.Text
-  
-  // Author (always a business user)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Email Status
-  emailSent Boolean  @default(false)
+  id          String    @id @default(cuid())
+  inquiryId   String
+  message     String
+  userId      String
+  emailSent   Boolean   @default(false)
   emailSentAt DateTime?
-  
-  // Metadata
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  inquiry     Inquiry   @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([inquiryId, createdAt])
   @@map("inquiry_replies")
 }
 
-// Enums for Inquiry System
+enum UserRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum BusinessCategory {
+  SALON
+  BARBERSHOP
+  SPA
+  MASSAGE
+  NAILS
+  BEAUTY
+  FITNESS
+  YOGA
+  PERSONAL_TRAINING
+  THERAPY
+  COUNSELING
+  TUTORING
+  CONSULTING
+  PHOTOGRAPHY
+  VIDEOGRAPHY
+  EVENT_PLANNING
+  CATERING
+  CLEANING
+  HOME_SERVICES
+  PET_SERVICES
+  OTHER
+}
+
+enum PriceType {
+  FIXED
+  RANGE
+  STARTING_AT
+  FREE
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum CancellationSource {
+  CUSTOMER
+  BUSINESS
+  SYSTEM
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  REFUNDED
+  FAILED
+}
+
 enum InquiryStatus {
-  PENDING    // New inquiry, not yet viewed
-  OPEN       // Viewed, being handled
-  REPLIED    // Business has replied
-  RESOLVED   // Inquiry resolved/closed
-  ARCHIVED   // Archived for record-keeping
+  PENDING
+  OPEN
+  REPLIED
+  RESOLVED
+  ARCHIVED
 }
 
 enum InquiryPriority {

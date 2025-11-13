@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('OWNER', 'ADMIN', 'STAFF');
+
+-- CreateEnum
 CREATE TYPE "BusinessCategory" AS ENUM ('SALON', 'BARBERSHOP', 'SPA', 'MASSAGE', 'NAILS', 'BEAUTY', 'FITNESS', 'YOGA', 'PERSONAL_TRAINING', 'THERAPY', 'COUNSELING', 'TUTORING', 'CONSULTING', 'PHOTOGRAPHY', 'VIDEOGRAPHY', 'EVENT_PLANNING', 'CATERING', 'CLEANING', 'HOME_SERVICES', 'PET_SERVICES', 'OTHER');
 
 -- CreateEnum
@@ -13,22 +16,46 @@ CREATE TYPE "CancellationSource" AS ENUM ('CUSTOMER', 'BUSINESS', 'SYSTEM');
 -- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('UNPAID', 'PARTIALLY_PAID', 'PAID', 'REFUNDED', 'FAILED');
 
+-- CreateEnum
+CREATE TYPE "InquiryStatus" AS ENUM ('PENDING', 'OPEN', 'REPLIED', 'RESOLVED', 'ARCHIVED');
+
+-- CreateEnum
+CREATE TYPE "InquiryPriority" AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "passwordHash" TEXT NOT NULL,
-    "mfaEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "accountLocked" BOOLEAN NOT NULL DEFAULT false,
     "failedLoginAttempts" INTEGER NOT NULL DEFAULT 0,
     "lastFailedLogin" TIMESTAMP(3),
     "lockedUntil" TIMESTAMP(3),
+    "lastLoginAt" TIMESTAMP(3),
+    "mfaEnabled" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "lastLoginAt" TIMESTAMP(3),
+    "role" "UserRole" NOT NULL DEFAULT 'OWNER',
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "team_invitations" (
+    "id" TEXT NOT NULL,
+    "businessId" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "invitedBy" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "acceptedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "team_invitations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -93,9 +120,9 @@ CREATE TABLE "email_verification_tokens" (
 CREATE TABLE "mfa_secrets" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "secret" TEXT NOT NULL,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "verifiedAt" TIMESTAMP(3),
+    "encryptedSecret" TEXT NOT NULL,
+    "iv" TEXT NOT NULL,
+    "verified" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -106,11 +133,23 @@ CREATE TABLE "mfa_secrets" (
 CREATE TABLE "mfa_backup_codes" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "code" TEXT NOT NULL,
+    "hashedCode" TEXT NOT NULL,
     "usedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "mfa_backup_codes_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "mfa_temp_tokens" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "usedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "mfa_temp_tokens_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -372,11 +411,87 @@ CREATE TABLE "reviews" (
     CONSTRAINT "reviews_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "trusted_devices" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "deviceFingerprint" TEXT NOT NULL,
+    "deviceName" TEXT NOT NULL,
+    "ipAddress" TEXT NOT NULL,
+    "userAgent" TEXT NOT NULL,
+    "lastUsedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "revokedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "trusted_devices_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "faqs" (
+    "id" TEXT NOT NULL,
+    "businessId" TEXT NOT NULL,
+    "question" TEXT NOT NULL,
+    "answer" TEXT NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "faqs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "inquiries" (
+    "id" TEXT NOT NULL,
+    "businessId" TEXT NOT NULL,
+    "customerId" TEXT,
+    "customerEmail" TEXT NOT NULL,
+    "customerName" TEXT NOT NULL,
+    "customerPhone" TEXT,
+    "subject" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "status" "InquiryStatus" NOT NULL DEFAULT 'PENDING',
+    "priority" "InquiryPriority" NOT NULL DEFAULT 'NORMAL',
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "inquiries_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "inquiry_replies" (
+    "id" TEXT NOT NULL,
+    "inquiryId" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "emailSent" BOOLEAN NOT NULL DEFAULT false,
+    "emailSentAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "inquiry_replies_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE INDEX "users_email_idx" ON "users"("email");
+CREATE UNIQUE INDEX "team_invitations_token_key" ON "team_invitations"("token");
+
+-- CreateIndex
+CREATE INDEX "team_invitations_email_idx" ON "team_invitations"("email");
+
+-- CreateIndex
+CREATE INDEX "team_invitations_token_idx" ON "team_invitations"("token");
+
+-- CreateIndex
+CREATE INDEX "team_invitations_status_idx" ON "team_invitations"("status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "team_invitations_businessId_email_key" ON "team_invitations"("businessId", "email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "sessions_token_key" ON "sessions"("token");
@@ -433,10 +548,16 @@ CREATE INDEX "email_verification_tokens_expiresAt_idx" ON "email_verification_to
 CREATE UNIQUE INDEX "mfa_secrets_userId_key" ON "mfa_secrets"("userId");
 
 -- CreateIndex
-CREATE INDEX "mfa_secrets_userId_idx" ON "mfa_secrets"("userId");
+CREATE INDEX "mfa_backup_codes_userId_idx" ON "mfa_backup_codes"("userId");
 
 -- CreateIndex
-CREATE INDEX "mfa_backup_codes_userId_idx" ON "mfa_backup_codes"("userId");
+CREATE UNIQUE INDEX "mfa_temp_tokens_token_key" ON "mfa_temp_tokens"("token");
+
+-- CreateIndex
+CREATE INDEX "mfa_temp_tokens_userId_idx" ON "mfa_temp_tokens"("userId");
+
+-- CreateIndex
+CREATE INDEX "mfa_temp_tokens_token_idx" ON "mfa_temp_tokens"("token");
 
 -- CreateIndex
 CREATE INDEX "security_logs_userId_idx" ON "security_logs"("userId");
@@ -570,6 +691,36 @@ CREATE INDEX "reviews_rating_idx" ON "reviews"("rating");
 -- CreateIndex
 CREATE INDEX "reviews_isPublished_idx" ON "reviews"("isPublished");
 
+-- CreateIndex
+CREATE INDEX "trusted_devices_userId_idx" ON "trusted_devices"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "trusted_devices_userId_deviceFingerprint_key" ON "trusted_devices"("userId", "deviceFingerprint");
+
+-- CreateIndex
+CREATE INDEX "faqs_businessId_order_idx" ON "faqs"("businessId", "order");
+
+-- CreateIndex
+CREATE INDEX "faqs_businessId_isActive_idx" ON "faqs"("businessId", "isActive");
+
+-- CreateIndex
+CREATE INDEX "inquiries_businessId_status_idx" ON "inquiries"("businessId", "status");
+
+-- CreateIndex
+CREATE INDEX "inquiries_businessId_createdAt_idx" ON "inquiries"("businessId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "inquiries_customerEmail_idx" ON "inquiries"("customerEmail");
+
+-- CreateIndex
+CREATE INDEX "inquiry_replies_inquiryId_createdAt_idx" ON "inquiry_replies"("inquiryId", "createdAt");
+
+-- AddForeignKey
+ALTER TABLE "team_invitations" ADD CONSTRAINT "team_invitations_invitedBy_fkey" FOREIGN KEY ("invitedBy") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "team_invitations" ADD CONSTRAINT "team_invitations_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "businesses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -587,6 +738,9 @@ ALTER TABLE "mfa_secrets" ADD CONSTRAINT "mfa_secrets_userId_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "mfa_backup_codes" ADD CONSTRAINT "mfa_backup_codes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "mfa_temp_tokens" ADD CONSTRAINT "mfa_temp_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "security_logs" ADD CONSTRAINT "security_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -623,3 +777,21 @@ ALTER TABLE "reviews" ADD CONSTRAINT "reviews_businessId_fkey" FOREIGN KEY ("bus
 
 -- AddForeignKey
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "customers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "trusted_devices" ADD CONSTRAINT "trusted_devices_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "faqs" ADD CONSTRAINT "faqs_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "businesses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "inquiries" ADD CONSTRAINT "inquiries_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "businesses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "inquiries" ADD CONSTRAINT "inquiries_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "customers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "inquiry_replies" ADD CONSTRAINT "inquiry_replies_inquiryId_fkey" FOREIGN KEY ("inquiryId") REFERENCES "inquiries"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "inquiry_replies" ADD CONSTRAINT "inquiry_replies_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
