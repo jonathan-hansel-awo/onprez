@@ -1,11 +1,23 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input, FormError, Select } from '@/components/form'
-import { UserPlus, Loader2, Mail, X, Clock, Check } from 'lucide-react'
+import { FormError, Input, Select } from '@/components/form'
+import {
+  UserPlus,
+  Loader2,
+  Mail,
+  X,
+  Clock,
+  Check,
+  Users,
+  Crown,
+  Shield,
+  Trash2,
+  Edit2,
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Invitation {
@@ -18,12 +30,26 @@ interface Invitation {
   invitedByUser: { email: string }
 }
 
+interface TeamMember {
+  id: string
+  userId: string
+  role: string
+  joinedAt: string
+  user: {
+    email: string
+    createdAt: string
+  }
+}
+
 export default function TeamManagementPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [members, setMembers] = useState<TeamMember[]>([])
+  const [editingMember, setEditingMember] = useState<string | null>(null)
+  const [newRole, setNewRole] = useState<string>('')
 
   const [formData, setFormData] = useState({
     email: '',
@@ -31,19 +57,29 @@ export default function TeamManagementPage() {
   })
 
   useEffect(() => {
-    fetchInvitations()
+    fetchData()
   }, [])
 
-  async function fetchInvitations() {
+  async function fetchData() {
+    setLoading(true)
     try {
-      const response = await fetch('/api/team/invitations')
-      const data = await response.json()
+      const [invitationsRes, membersRes] = await Promise.all([
+        fetch('/api/team/invitations'),
+        fetch('/api/team/members'),
+      ])
 
-      if (data.success) {
-        setInvitations(data.data.invitations)
+      const invitationsData = await invitationsRes.json()
+      const membersData = await membersRes.json()
+
+      if (invitationsData.success) {
+        setInvitations(invitationsData.data.invitations)
+      }
+
+      if (membersData.success) {
+        setMembers(membersData.data.members)
       }
     } catch (err) {
-      setError('Failed to load invitations')
+      setError('Failed to load team data')
     } finally {
       setLoading(false)
     }
@@ -67,7 +103,7 @@ export default function TeamManagementPage() {
       if (data.success) {
         setSuccess('Invitation sent successfully!')
         setFormData({ email: '', role: 'STAFF' })
-        fetchInvitations()
+        fetchData()
         setTimeout(() => setSuccess(''), 3000)
       } else {
         setError(data.error || 'Failed to send invitation')
@@ -79,7 +115,7 @@ export default function TeamManagementPage() {
     }
   }
 
-  async function handleCancel(id: string) {
+  async function handleCancelInvitation(id: string) {
     try {
       const response = await fetch(`/api/team/invitations/${id}`, {
         method: 'DELETE',
@@ -88,12 +124,81 @@ export default function TeamManagementPage() {
       const data = await response.json()
 
       if (data.success) {
-        fetchInvitations()
+        fetchData()
       } else {
         setError(data.error || 'Failed to cancel invitation')
       }
     } catch (err) {
       setError('Failed to cancel invitation')
+    }
+  }
+
+  async function handleUpdateRole(memberId: string) {
+    try {
+      const response = await fetch(`/api/team/members/${memberId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess('Role updated successfully!')
+        setEditingMember(null)
+        fetchData()
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        setError(data.error || 'Failed to update role')
+      }
+    } catch (err) {
+      setError('Failed to update role')
+    }
+  }
+
+  async function handleRemoveMember(memberId: string) {
+    if (!confirm('Are you sure you want to remove this team member?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/team/members/${memberId}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccess('Team member removed successfully!')
+        fetchData()
+        setTimeout(() => setSuccess(''), 3000)
+      } else {
+        setError(data.error || 'Failed to remove member')
+      }
+    } catch (err) {
+      setError('Failed to remove member')
+    }
+  }
+
+  function getRoleIcon(role: string) {
+    switch (role) {
+      case 'OWNER':
+        return <Crown className="w-4 h-4" />
+      case 'ADMIN':
+        return <Shield className="w-4 h-4" />
+      default:
+        return <Users className="w-4 h-4" />
+    }
+  }
+
+  function getRoleBadgeVariant(role: string) {
+    switch (role) {
+      case 'OWNER':
+        return 'default' as const
+      case 'ADMIN':
+        return 'purple' as const
+      default:
+        return 'success' as const
     }
   }
 
@@ -114,7 +219,7 @@ export default function TeamManagementPage() {
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Team Management</h1>
-        <p className="text-gray-600 mt-2">Invite team members to help manage your business</p>
+        <p className="text-gray-600 mt-2">Manage your team members and invitations</p>
       </div>
 
       {error && <FormError errors={error} dismissible onDismiss={() => setError('')} />}
@@ -124,6 +229,86 @@ export default function TeamManagementPage() {
           ✓ {success}
         </div>
       )}
+
+      {/* Current Team Members */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Members ({members.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {members.map(member => (
+              <motion.div
+                key={member.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-gray-400" />
+                    <span className="font-medium text-gray-900">{member.user.email}</span>
+                    <Badge variant={getRoleBadgeVariant(member.role)} size="sm">
+                      {getRoleIcon(member.role)}
+                      <span className="ml-1">{member.role}</span>
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Joined {new Date(member.joinedAt).toLocaleDateString()}
+                  </p>
+                </div>
+
+                {member.role !== 'OWNER' && (
+                  <div className="flex items-center gap-2">
+                    {editingMember === member.id ? (
+                      <>
+                        <Select
+                          value={newRole}
+                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                            setNewRole(e.target.value)
+                          }
+                          options={roleOptions}
+                          className="w-40"
+                        />
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleUpdateRole(member.id)}
+                        >
+                          Save
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingMember(null)}>
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditingMember(member.id)
+                            setNewRole(member.role)
+                          }}
+                          className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                          title="Edit role"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Remove member"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Invite Form */}
       <Card>
@@ -170,7 +355,7 @@ export default function TeamManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Invitations List */}
+      {/* Pending Invitations */}
       <Card>
         <CardHeader>
           <CardTitle>Pending Invitations</CardTitle>
@@ -217,7 +402,7 @@ export default function TeamManagementPage() {
 
                     {invitation.status === 'PENDING' && (
                       <button
-                        onClick={() => handleCancel(invitation.id)}
+                        onClick={() => handleCancelInvitation(invitation.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Cancel invitation"
                       >
