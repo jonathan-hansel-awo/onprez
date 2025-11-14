@@ -43,7 +43,7 @@ model TeamInvitation {
   id            String    @id @default(cuid())
   businessId    String
   email         String
-  role          String
+  role          BusinessRole @default(STAFF)
   token         String    @unique
   status        String    @default("PENDING")
   invitedBy     String
