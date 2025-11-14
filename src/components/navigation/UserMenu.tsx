@@ -89,11 +89,11 @@ export function UserMenu() {
 
               {/* Menu Items */}
               <div className="py-2">
-                {menuItems.map(item => {
+                {menuItems.map((item, index) => {
                   const Icon = item.icon
                   return (
                     <Link
-                      key={item.href}
+                      key={index}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700 hover:text-onprez-blue"

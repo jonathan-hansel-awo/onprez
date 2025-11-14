@@ -1,162 +1,295 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Users, Eye, TrendingUp, Plus, ArrowRight, ExternalLink } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { StatCard } from '@/components/dashboard/stat-card'
+import {
+  Calendar,
+  DollarSign,
+  Users,
+  Clock,
+  Loader2,
+  Plus,
+  ExternalLink,
+  ArrowRight,
+} from 'lucide-react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+
+interface Stats {
+  totalBookings: number
+  totalRevenue: number
+  totalCustomers: number
+  pendingBookings: number
+  bookingsTrend: number
+  revenueTrend: number
+}
+
+interface Booking {
+  id: string
+  startTime: string
+  status: string
+  service: { name: string }
+  customer: { name: string; email: string }
+}
 
 export default function DashboardPage() {
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([])
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Booking[]>([])
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
+
+  async function fetchDashboardData() {
+    try {
+      const [statsRes, recentRes, upcomingRes] = await Promise.all([
+        fetch('/api/dashboard/stats'),
+        fetch('/api/dashboard/recent-bookings?limit=5'),
+        fetch('/api/dashboard/upcoming-appointments?limit=5'),
+      ])
+
+      const [statsData, recentData, upcomingData] = await Promise.all([
+        statsRes.json(),
+        recentRes.json(),
+        upcomingRes.json(),
+      ])
+
+      if (statsData.success) setStats(statsData.data.stats)
+      if (recentData.success) setRecentBookings(recentData.data.bookings)
+      if (upcomingData.success) setUpcomingAppointments(upcomingData.data.appointments)
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function getStatusColor(status: string) {
+    switch (status) {
+      case 'CONFIRMED':
+        return 'bg-green-100 text-green-800'
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800'
+      case 'COMPLETED':
+        return 'bg-blue-100 text-blue-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
   return (
     <div className="space-y-8">
-      {/* Page header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back! Here&apos;s what&apos;s happening today.</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-2">
+            Welcome back! Here&apos;s what&apos;s happening today.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button variant="ghost" size="sm">
+            <Link href="/dashboard/presence">
+              <ExternalLink className="w-4 h-4 mr-2" />
+              View Presence
+            </Link>
+          </Button>
+          <Button variant="primary" size="sm">
+            <Link href="/dashboard/bookings/new">
+              <Plus className="w-4 h-4 mr-2" />
+              New Booking
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* Stats grid */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Bookings" value="24" change="+12%" icon={Calendar} trend="up" />
-        <StatCard title="Total Customers" value="156" change="+8%" icon={Users} trend="up" />
-        <StatCard title="Profile Views" value="1,234" change="+23%" icon={Eye} trend="up" />
         <StatCard
-          title="Conversion Rate"
-          value="18.5%"
-          change="+2.3%"
-          icon={TrendingUp}
-          trend="up"
+          title="Total Bookings"
+          value={stats?.totalBookings || 0}
+          icon={Calendar}
+          trend={stats?.bookingsTrend}
+          trendLabel="vs last month"
+          loading={loading}
+        />
+        <StatCard
+          title="Revenue"
+          value={`£${Number(stats?.totalRevenue || 0).toFixed(2)}`}
+          icon={DollarSign}
+          trend={stats?.revenueTrend}
+          trendLabel="vs last month"
+          loading={loading}
+        />
+        <StatCard
+          title="Total Customers"
+          value={stats?.totalCustomers || 0}
+          icon={Users}
+          loading={loading}
+        />
+        <StatCard
+          title="Pending Bookings"
+          value={stats?.pendingBookings || 0}
+          icon={Clock}
+          loading={loading}
         />
       </div>
 
-      {/* Quick actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Upcoming Appointments */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Upcoming Appointments</CardTitle>
+            <Button variant="ghost" size="sm">
+              <Link href="/dashboard/bookings">
+                View All
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : upcomingAppointments.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No upcoming appointments</p>
+                <Button variant="primary" size="sm" className="mt-4">
+                  <Link href="/dashboard/bookings/new">Create Booking</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingAppointments.map(appointment => (
+                  <motion.div
+                    key={appointment.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-gray-900">{appointment.customer.name}</span>
+                      <Badge className={getStatusColor(appointment.status)} size="sm">
+                        {appointment.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">{appointment.service.name}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {new Date(appointment.startTime).toLocaleString('en-GB', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Bookings */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Recent Bookings</CardTitle>
+            <Button variant="ghost" size="sm">
+              <Link href="/dashboard/bookings">
+                View All
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : recentBookings.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No recent bookings</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentBookings.map(booking => (
+                  <motion.div
+                    key={booking.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-gray-900">{booking.customer.name}</span>
+                      <Badge className={getStatusColor(booking.status)} size="sm">
+                        {booking.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">{booking.service.name}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {new Date(booking.startTime).toLocaleString('en-GB', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/dashboard/bookings/new">
-              <Button variant="primary" className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button variant="ghost" className="h-24 flex-col">
+              <Link href="/dashboard/bookings/new">
+                <Plus className="w-6 h-6 mb-2" />
                 New Booking
-              </Button>
-            </Link>
-            <Link href="/dashboard/services/new">
-              <Button variant="secondary" className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Service
-              </Button>
-            </Link>
-            <Link href="/dashboard/presence">
-              <Button variant="ghost" className="w-full">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Edit Presence
-              </Button>
-            </Link>
-            <Link href="/dashboard/analytics">
-              <Button variant="ghost" className="w-full">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                View Analytics
-              </Button>
-            </Link>
+              </Link>
+            </Button>
+            <Button variant="ghost" className="h-24 flex-col">
+              <Link href="/dashboard/customers">
+                <Users className="w-6 h-6 mb-2" />
+                Customers
+              </Link>
+            </Button>
+            <Button variant="ghost" className="h-24 flex-col">
+              <Link href="/dashboard/services">
+                <Calendar className="w-6 h-6 mb-2" />
+                Services
+              </Link>
+            </Button>
+            <Button variant="ghost" className="h-24 flex-col">
+              <Link href="/dashboard/settings">
+                <ExternalLink className="w-6 h-6 mb-2" />
+                Settings
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* Recent activity */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Upcoming Bookings</CardTitle>
-              <Link href="/dashboard/bookings" className="text-sm text-onprez-blue hover:underline">
-                View all
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">Hair Cut & Styling</p>
-                    <p className="text-sm text-gray-600">John Doe • Today at 2:00 PM</p>
-                  </div>
-                  <Badge variant="success">Confirmed</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Inquiries</CardTitle>
-              <Link
-                href="/dashboard/inquiries"
-                className="text-sm text-onprez-blue hover:underline"
-              >
-                View all
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">Price inquiry</p>
-                    <p className="text-sm text-gray-600">Jane Smith • 2 hours ago</p>
-                  </div>
-                  <Badge variant="warning">Pending</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
-  )
-}
-
-function StatCard({
-  title,
-  value,
-  change,
-  icon: Icon,
-  trend,
-}: {
-  title: string
-  value: string
-  change: string
-  icon: any
-  trend: 'up' | 'down'
-}) {
-  return (
-    <Card hover={false}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-            <p className={`text-sm mt-2 ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-              {change} from last month
-            </p>
-          </div>
-          <div className="p-3 bg-gradient-to-br from-onprez-blue to-onprez-purple rounded-lg">
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   )
 }
