@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 import { HeroSectionEditor } from './sections/HeroSectionEditor'
 import { AboutSectionEditor } from './sections/AboutSectionEditor'
 import { ServicesSectionEditor } from './sections/ServicesSectionEditor'
+import { GallerySectionEditor } from './sections/GallerySectionEditor'
 import { Button } from '@/components/ui/button'
 
 interface SectionEditorPanelProps {
@@ -33,8 +34,10 @@ export function SectionEditorPanel({
           <ServicesSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
         )
 
-      // Rest remain the same
       case 'GALLERY':
+        return <GallerySectionEditor section={section} onUpdate={onUpdate} />
+
+      // Rest remain the same
       case 'CONTACT':
       case 'FAQ':
       case 'TESTIMONIALS':

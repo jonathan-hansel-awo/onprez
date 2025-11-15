@@ -12,6 +12,7 @@ export interface ImageUploadProps {
   onRemove?: () => void
   aspect?: 'square' | 'landscape' | 'portrait'
   maxSize?: number // MB
+  showRemoveButton?: boolean
 }
 
 export function ImageUpload({
@@ -21,6 +22,7 @@ export function ImageUpload({
   onRemove,
   aspect = 'landscape',
   maxSize = 5,
+  showRemoveButton = true,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -94,13 +96,12 @@ export function ImageUpload({
               >
                 Change
               </button>
-              {onRemove && (
+              {showRemoveButton && value && (
                 <button
-                  type="button"
                   onClick={onRemove}
-                  className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
