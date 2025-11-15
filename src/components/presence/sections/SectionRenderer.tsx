@@ -9,10 +9,13 @@ import { ContactSection } from './ContactSection'
 import { FAQSection } from './FAQSection'
 import { TestimonialsSection } from './TestimonialsSection'
 import { CustomHTMLSection } from './CustomHTMLSection'
+import { InquirySection } from './InquirySection'
 
 interface SectionRendererProps {
   sections: PageSection[]
   businessHandle: string
+  businessId: string
+  businessName: string
   businessData: {
     phone?: string
     email?: string
@@ -24,9 +27,17 @@ interface SectionRendererProps {
       linkedin?: string
     }
   }
+  showInquiryForm?: boolean
 }
 
-export function SectionRenderer({ sections, businessHandle, businessData }: SectionRendererProps) {
+export function SectionRenderer({
+  sections,
+  businessHandle,
+  businessData,
+  businessId,
+  businessName,
+  showInquiryForm = true,
+}: SectionRendererProps) {
   // Filter only visible sections and sort by order
   const visibleSections = sections
     .filter(section => section.isVisible)
@@ -66,6 +77,15 @@ export function SectionRenderer({ sections, businessHandle, businessData }: Sect
             return null
         }
       })}
+
+      {showInquiryForm && (
+        <InquirySection
+          businessId={businessId}
+          businessName={businessName}
+          title="Have Questions?"
+          description="We're here to help. Send us a message and we'll get back to you soon."
+        />
+      )}
     </>
   )
 }

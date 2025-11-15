@@ -24,11 +24,14 @@ export function PresencePreview({ sections, previewMode, businessId }: PresenceP
         <SectionRenderer
           sections={sections}
           businessHandle="preview"
+          businessId={businessId}
+          businessName="Your Business"
           businessData={{
             phone: '+44 20 1234 5678',
             email: 'hello@business.com',
             address: '123 Business St, London',
           }}
+          showInquiryForm={true}
         />
       )}
 
