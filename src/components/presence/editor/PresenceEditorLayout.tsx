@@ -142,7 +142,7 @@ export function PresenceEditorLayout({
       {/* Main Editor Area */}
       <div className="flex h-[calc(100vh-8rem)]">
         {/* Section List Sidebar */}
-        <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
+        <div className="w-96 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
           <SectionList
             sections={sections}
             selectedSectionId={selectedSectionId}
