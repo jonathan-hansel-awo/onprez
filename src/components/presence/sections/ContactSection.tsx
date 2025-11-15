@@ -2,7 +2,7 @@
 
 import { ContactSection as ContactSectionType } from '@/types/page-sections'
 import { motion } from 'framer-motion'
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react'
+import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Globe } from 'lucide-react'
 
 interface ContactSectionProps {
   section: ContactSectionType
@@ -10,11 +10,14 @@ interface ContactSectionProps {
     phone?: string
     email?: string
     address?: string
-    socialMedia?: {
+    city?: string
+    zipCode?: string
+    socialLinks?: {
       facebook?: string
       instagram?: string
       twitter?: string
       linkedin?: string
+      website?: string
     }
   }
 }
@@ -23,11 +26,16 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
   const { title, showPhone, showEmail, showAddress, showMap, showSocialMedia, mapEmbedUrl } =
     section.data
 
+  const fullAddress = [businessData.address, businessData.city, businessData.zipCode]
+    .filter(Boolean)
+    .join(', ')
+
   const socialIcons = {
     facebook: Facebook,
     instagram: Instagram,
     twitter: Twitter,
     linkedin: Linkedin,
+    website: Globe,
   }
 
   return (
@@ -60,7 +68,7 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
                   <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
                   <a
                     href={`tel:${businessData.phone}`}
-                    className="text-gray-600 hover:text-onprez-blue"
+                    className="text-gray-600 hover:text-onprez-blue transition-colors"
                   >
                     {businessData.phone}
                   </a>
@@ -77,7 +85,7 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
                   <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
                   <a
                     href={`mailto:${businessData.email}`}
-                    className="text-gray-600 hover:text-onprez-blue"
+                    className="text-gray-600 hover:text-onprez-blue transition-colors break-all"
                   >
                     {businessData.email}
                   </a>
@@ -85,33 +93,36 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
               </div>
             )}
 
-            {showAddress && businessData.address && (
+            {showAddress && fullAddress && (
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-full bg-onprez-blue/10 flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-5 h-5 text-onprez-blue" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Address</h3>
-                  <p className="text-gray-600">{businessData.address}</p>
+                  <p className="text-gray-600">{fullAddress}</p>
                 </div>
               </div>
             )}
 
             {/* Social Media */}
-            {showSocialMedia && businessData.socialMedia && (
+            {showSocialMedia && businessData.socialLinks && (
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-4">Follow Us</h3>
                 <div className="flex gap-3">
-                  {Object.entries(businessData.socialMedia).map(([platform, url]) => {
+                  {Object.entries(businessData.socialLinks).map(([platform, url]) => {
                     if (!url) return null
                     const Icon = socialIcons[platform as keyof typeof socialIcons]
+                    if (!Icon) return null
+
                     return (
                       <a
                         key={platform}
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 rounded-full bg-onprez-blue/10 flex items-center justify-center hover:bg-onprez-blue hover:text-white transition-colors"
+                        className="w-10 h-10 rounded-full bg-onprez-blue/10 flex items-center justify-center hover:bg-onprez-blue hover:text-white transition-colors text-onprez-blue"
+                        title={platform}
                       >
                         <Icon className="w-5 h-5" />
                       </a>
