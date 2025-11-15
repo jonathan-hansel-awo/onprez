@@ -28,6 +28,7 @@ interface SectionListProps {
   onSectionDelete: (id: string) => void
   onSectionReorder: (sections: PageSection[]) => void
   onSectionAdd: (section: PageSection) => void
+  businessId: string | null
 }
 
 const SECTION_ICONS = {
@@ -49,6 +50,7 @@ export function SectionList({
   onSectionDelete,
   onSectionReorder,
   onSectionAdd,
+  businessId,
 }: SectionListProps) {
   const [showAddMenu, setShowAddMenu] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
@@ -205,6 +207,7 @@ export function SectionList({
             section={sections.find(s => s.id === selectedSectionId)!}
             onUpdate={onSectionUpdate}
             onClose={() => onSectionSelect(null)}
+            businessId={businessId}
           />
         </div>
       )}

@@ -151,6 +151,7 @@ export function PresenceEditorLayout({
             onSectionDelete={handleSectionDelete}
             onSectionReorder={handleSectionReorder}
             onSectionAdd={handleSectionAdd}
+            businessId={businessId}
           />
         </div>
 

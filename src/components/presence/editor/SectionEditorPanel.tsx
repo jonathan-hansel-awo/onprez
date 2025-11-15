@@ -3,16 +3,23 @@
 import { PageSection } from '@/types/page-sections'
 import { X } from 'lucide-react'
 import { HeroSectionEditor } from './sections/HeroSectionEditor'
-import { Button } from '@/components/ui/button'
 import { AboutSectionEditor } from './sections/AboutSectionEditor'
+import { ServicesSectionEditor } from './sections/ServicesSectionEditor'
+import { Button } from '@/components/ui/button'
 
 interface SectionEditorPanelProps {
   section: PageSection
   onUpdate: (section: PageSection) => void
   onClose: () => void
+  businessId: string | null
 }
 
-export function SectionEditorPanel({ section, onUpdate, onClose }: SectionEditorPanelProps) {
+export function SectionEditorPanel({
+  section,
+  onUpdate,
+  onClose,
+  businessId,
+}: SectionEditorPanelProps) {
   function renderEditor() {
     switch (section.type) {
       case 'HERO':
@@ -21,8 +28,12 @@ export function SectionEditorPanel({ section, onUpdate, onClose }: SectionEditor
       case 'ABOUT':
         return <AboutSectionEditor section={section} onUpdate={onUpdate} />
 
-      // Rest remain the same
       case 'SERVICES':
+        return (
+          <ServicesSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
+        )
+
+      // Rest remain the same
       case 'GALLERY':
       case 'CONTACT':
       case 'FAQ':
