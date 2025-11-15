@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { Prisma } from '@prisma/client'
+import { syncFAQsFromPage } from '@/lib/utils/sync-faqs'
 
 // GET - Fetch pages for a business
 export async function GET(request: NextRequest) {
@@ -100,6 +101,9 @@ export async function PUT(request: NextRequest) {
       where: { id: pageId },
       data: { content: contentJson },
     })
+
+    // Sync FAQs from page content to FAQ table
+    await syncFAQsFromPage(businessId, content)
 
     return NextResponse.json({
       success: true,
