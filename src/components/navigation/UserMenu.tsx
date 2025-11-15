@@ -35,12 +35,7 @@ export function UserMenu() {
 
   if (!user) return null
 
-  const menuItems = [
-    { icon: Settings, label: 'Account Settings', href: '/account/security' },
-    { icon: Shield, label: 'Security', href: '/account/security' },
-    { icon: Monitor, label: 'Sessions', href: '/account/sessions' },
-    { icon: Activity, label: 'Activity Log', href: '/account/activity' },
-  ]
+  const menuItems = [{ icon: Settings, label: 'Account Settings', href: '/account/security' }]
 
   return (
     <>
@@ -89,11 +84,11 @@ export function UserMenu() {
 
               {/* Menu Items */}
               <div className="py-2">
-                {menuItems.map((item, index) => {
+                {menuItems.map(item => {
                   const Icon = item.icon
                   return (
                     <Link
-                      key={index}
+                      key={item.href}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700 hover:text-onprez-blue"
