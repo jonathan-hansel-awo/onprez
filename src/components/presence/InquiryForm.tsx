@@ -227,10 +227,10 @@ export function InquiryForm({ businessId, businessName, className }: InquiryForm
                 Sending...
               </>
             ) : (
-              <>
+              <div className="flex flex-row items-center justify-center">
                 <Mail className="w-5 h-5 mr-2" />
                 Send Inquiry
-              </>
+              </div>
             )}
           </Button>
         </div>

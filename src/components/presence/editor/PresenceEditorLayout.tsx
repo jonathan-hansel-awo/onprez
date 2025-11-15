@@ -8,6 +8,7 @@ import { SectionList } from './SectionList'
 import { PresencePreview } from './PresencePreview'
 import { Save, Eye, EyeOff, Monitor, Smartphone } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { ThemeCustomizer } from './ThemeCustomizer'
 
 interface PresenceEditorLayoutProps {
   sections: PageSection[]
@@ -29,6 +30,7 @@ export function PresenceEditorLayout({
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'sections' | 'theme'>('sections')
 
   async function handleSave() {
     setSaving(true)
@@ -79,6 +81,11 @@ export function PresenceEditorLayout({
 
   function handleSectionAdd(newSection: PageSection) {
     setSections(prev => [...prev, newSection])
+  }
+
+  function handleThemeUpdate(theme: any) {
+    // Theme changes are applied in real-time to the preview
+    // The ThemeCustomizer component handles saving to the database
   }
 
   return (
@@ -143,16 +150,49 @@ export function PresenceEditorLayout({
       <div className="flex h-[calc(100vh-8rem)]">
         {/* Section List Sidebar */}
         <div className="w-96 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
-          <SectionList
-            sections={sections}
-            selectedSectionId={selectedSectionId}
-            onSectionSelect={setSelectedSectionId}
-            onSectionUpdate={handleSectionUpdate}
-            onSectionDelete={handleSectionDelete}
-            onSectionReorder={handleSectionReorder}
-            onSectionAdd={handleSectionAdd}
-            businessId={businessId}
-          />
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab('sections')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'sections'
+                  ? 'text-onprez-blue border-b-2 border-onprez-blue'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Sections
+            </button>
+            <button
+              onClick={() => setActiveTab('theme')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'theme'
+                  ? 'text-onprez-blue border-b-2 border-onprez-blue'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Theme
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto">
+            {activeTab === 'sections' ? (
+              <SectionList
+                sections={sections}
+                selectedSectionId={selectedSectionId}
+                onSectionSelect={setSelectedSectionId}
+                onSectionUpdate={handleSectionUpdate}
+                onSectionDelete={handleSectionDelete}
+                onSectionReorder={handleSectionReorder}
+                onSectionAdd={handleSectionAdd}
+                businessId={businessId}
+              />
+            ) : (
+              <div className="p-4">
+                <ThemeCustomizer businessId={businessId || ''} onUpdate={handleThemeUpdate} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Preview Area */}
