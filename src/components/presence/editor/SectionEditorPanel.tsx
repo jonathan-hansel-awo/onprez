@@ -4,6 +4,7 @@ import { PageSection } from '@/types/page-sections'
 import { X } from 'lucide-react'
 import { HeroSectionEditor } from './sections/HeroSectionEditor'
 import { Button } from '@/components/ui/button'
+import { AboutSectionEditor } from './sections/AboutSectionEditor'
 
 interface SectionEditorPanelProps {
   section: PageSection
@@ -17,8 +18,10 @@ export function SectionEditorPanel({ section, onUpdate, onClose }: SectionEditor
       case 'HERO':
         return <HeroSectionEditor section={section} onUpdate={onUpdate} />
 
-      // We'll add more editors in the next milestones
       case 'ABOUT':
+        return <AboutSectionEditor section={section} onUpdate={onUpdate} />
+
+      // Rest remain the same
       case 'SERVICES':
       case 'GALLERY':
       case 'CONTACT':
