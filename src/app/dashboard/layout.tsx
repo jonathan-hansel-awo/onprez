@@ -41,24 +41,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Desktop collapse
   const pathname = usePathname()
 
+  // Check if we're in the presence editor
+  const isPresenceEditor = pathname.includes('/dashboard/presence/editor')
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile sidebar backdrop */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-gray-900/50 z-40 lg:hidden"
-          />
-        )}
-      </AnimatePresence>
+      {!isPresenceEditor && (
+        <>
+          {/* Mobile sidebar backdrop */}
+          <AnimatePresence>
+            {sidebarOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSidebarOpen(false)}
+                className="fixed inset-0 bg-gray-900/50 z-40 lg:hidden"
+              />
+            )}
+          </AnimatePresence>
 
-      {/* Sidebar */}
-      <aside
-        className={`
+          {/* Sidebar */}
+          <aside
+            className={`
           fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200
           transform transition-all duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -66,46 +71,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}
           w-64
         `}
-      >
-        <div className="flex flex-col h-full">
-          {/* Logo & Collapse Button */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-            {!sidebarCollapsed && <Logo />}
+          >
+            <div className="flex flex-col h-full">
+              {/* Logo & Collapse Button */}
+              <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+                {!sidebarCollapsed && <Logo />}
 
-            {/* Desktop collapse button */}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden lg:block p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {sidebarCollapsed ? (
-                <PanelLeft className="w-5 h-5 text-gray-600" />
-              ) : (
-                <PanelLeftClose className="w-5 h-5 text-gray-600" />
-              )}
-            </button>
+                {/* Desktop collapse button */}
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="hidden lg:block p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  {sidebarCollapsed ? (
+                    <PanelLeft className="w-5 h-5 text-gray-600" />
+                  ) : (
+                    <PanelLeftClose className="w-5 h-5 text-gray-600" />
+                  )}
+                </button>
 
-            {/* Mobile close button */}
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            {navigation.map(item => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              const Icon = item.icon
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
+                {/* Mobile close button */}
+                <button
                   onClick={() => setSidebarOpen(false)}
-                  className={`
+                  className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Navigation */}
+              <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                {navigation.map(item => {
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                  const Icon = item.icon
+
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`
                     flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative
                     ${
                       isActive
@@ -114,32 +119,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     }
                     ${sidebarCollapsed ? 'lg:justify-center' : ''}
                   `}
-                  title={sidebarCollapsed ? item.name : undefined}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!sidebarCollapsed && <span className="lg:inline">{item.name}</span>}
-                </Link>
-              )
-            })}
-          </nav>
+                      title={sidebarCollapsed ? item.name : undefined}
+                    >
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      {!sidebarCollapsed && <span className="lg:inline">{item.name}</span>}
+                    </Link>
+                  )
+                })}
+              </nav>
 
-          {/* Help link */}
-          <div className="p-4 border-t border-gray-200">
-            <Link
-              href="/help"
-              className={`
+              {/* Help link */}
+              <div className="p-4 border-t border-gray-200">
+                <Link
+                  href="/help"
+                  className={`
                 flex items-center gap-3 px-3 py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors
                 ${sidebarCollapsed ? 'lg:justify-center' : ''}
               `}
-              title={sidebarCollapsed ? 'Help & Support' : undefined}
-            >
-              <HelpCircle className="w-5 h-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="lg:inline">Help & Support</span>}
-            </Link>
-          </div>
-        </div>
-      </aside>
-
+                  title={sidebarCollapsed ? 'Help & Support' : undefined}
+                >
+                  <HelpCircle className="w-5 h-5 flex-shrink-0" />
+                  {!sidebarCollapsed && <span className="lg:inline">Help & Support</span>}
+                </Link>
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
       {/* Main content */}
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         {/* Top bar */}

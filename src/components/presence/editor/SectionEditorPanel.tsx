@@ -7,6 +7,7 @@ import { AboutSectionEditor } from './sections/AboutSectionEditor'
 import { ServicesSectionEditor } from './sections/ServicesSectionEditor'
 import { GallerySectionEditor } from './sections/GallerySectionEditor'
 import { ContactSectionEditor } from './sections/ContactSectionEditor'
+import { FAQSectionEditor } from './sections/FAQSectionEditor'
 import { Button } from '@/components/ui/button'
 
 interface SectionEditorPanelProps {
@@ -43,8 +44,10 @@ export function SectionEditorPanel({
           <ContactSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
         )
 
-      // Rest remain the same
       case 'FAQ':
+        return <FAQSectionEditor section={section} onUpdate={onUpdate} />
+
+      // Rest remain the same
       case 'TESTIMONIALS':
       case 'CUSTOM_HTML':
         return (
