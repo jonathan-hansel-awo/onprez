@@ -1,4 +1,4 @@
-import { Skeleton } from './skeleton'
+import { ImageUpload } from './image-upload'
 export { Button } from './button'
 export type { ButtonProps } from './button'
 
@@ -16,3 +16,6 @@ export type { AvatarStackProps, Avatar } from './avatar-stack'
 
 export { Skeleton } from './skeleton'
 export type { SkeletonProps } from './skeleton'
+
+export { ImageUpload } from './image-upload'
+export type { ImageUploadProps } from './image-upload'
