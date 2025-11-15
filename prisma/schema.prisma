@@ -289,6 +289,7 @@ model Business {
   services          Service[]
   teamInvitations   TeamInvitation[]
   members           BusinessMember[]
+  pages       Page[]
 
   @@index([ownerId])
   @@index([slug])
@@ -296,6 +297,42 @@ model Business {
   @@index([isPublished])
   @@index([city, state])
   @@map("businesses")
+}
+
+model Page {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  slug        String   // e.g., "home", "about", "services"
+  title       String
+  isPublished Boolean  @default(false)
+  order       Int      @default(0)
+  
+  // Flexible content structure stored as JSONB
+  content     Json     @default("[]") // Array of section objects
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([businessId, slug])
+  @@index([businessId])
+  @@index([businessId, isPublished])
+}
+
+enum SectionType {
+  HERO
+  ABOUT
+  SERVICES
+  GALLERY
+  CONTACT
+  FAQ
+  TESTIMONIALS
+  CUSTOM_HTML
 }
 
 model BusinessHours {
