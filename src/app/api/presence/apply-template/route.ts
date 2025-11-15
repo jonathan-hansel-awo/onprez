@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { getTemplateById } from '@/lib/templates/presence-templates'
+import { Prisma } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const business = await prisma.business.findFirst({
       where: {
         id: businessId,
-        ownerId: user.id, // Changed from userId to ownerId
+        ownerId: user.id,
       },
     })
 
@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    // Convert sections to plain JSON for Prisma
+    const contentJson = JSON.parse(JSON.stringify(template.content.sections)) as Prisma.JsonArray
 
     // Create or update the main page with template content
     const page = await prisma.page.upsert({
@@ -55,22 +58,30 @@ export async function POST(request: NextRequest) {
         businessId: businessId,
         slug: 'home',
         title: business.name,
-        content: template.content.sections,
+        content: contentJson,
         isPublished: false,
       },
       update: {
-        content: template.content.sections,
+        content: contentJson,
       },
     })
 
+    // Convert theme to plain JSON for Prisma
+    const themeJson = template.content.theme
+      ? JSON.parse(JSON.stringify(template.content.theme))
+      : null
+
     // Update business theme settings
+    const currentSettings = (business.settings as Prisma.JsonObject) || {}
+    const updatedSettings = {
+      ...currentSettings,
+      theme: themeJson,
+    }
+
     await prisma.business.update({
       where: { id: businessId },
       data: {
-        settings: {
-          ...((business.settings as any) || {}),
-          theme: template.content.theme,
-        },
+        settings: updatedSettings,
       },
     })
 
