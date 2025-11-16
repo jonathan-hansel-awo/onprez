@@ -3,7 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { Prisma } from '@prisma/client'
 
-export async function PUT(request: NextRequest, { params }: { params: { businessId: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ businessId: string }> } // Changed to Promise
+) {
   try {
     const user = await getCurrentUser()
 
@@ -11,7 +14,7 @@ export async function PUT(request: NextRequest, { params }: { params: { business
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { businessId } = params
+    const { businessId } = await params // Add await here
     const { theme } = await request.json()
 
     if (!theme) {

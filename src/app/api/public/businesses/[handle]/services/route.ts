@@ -2,9 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(request: NextRequest, { params }: { params: { handle: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ handle: string }> } // Changed to Promise
+) {
   try {
-    const { handle } = params
+    const { handle } = await params // Add await here
     const searchParams = request.nextUrl.searchParams
     const idsParam = searchParams.get('ids')
 

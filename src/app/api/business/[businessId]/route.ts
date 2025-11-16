@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 
-export async function GET(request: NextRequest, { params }: { params: { businessId: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ businessId: string }> } // Changed to Promise
+) {
   try {
     const user = await getCurrentUser()
 
@@ -10,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: { business
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { businessId } = params
+    const { businessId } = await params // Add await here
 
     // Fetch business and verify ownership
     const business = await prisma.business.findFirst({
