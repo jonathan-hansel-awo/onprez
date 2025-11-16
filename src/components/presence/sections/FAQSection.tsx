@@ -16,7 +16,7 @@ export function FAQSection({ section }: FAQSectionProps) {
   if (items.length === 0) return null
 
   return (
-    <section className="py-16 md:py-24 bg-white">
+    <section className=" theme-section-spacing py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -25,7 +25,12 @@ export function FAQSection({ section }: FAQSectionProps) {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">{title}</h2>
+          <h2
+            className="text-3xl md:text-4xl font-bold mb-4 theme-heading"
+            style={{ fontFamily: 'var(--theme-font-heading)' }}
+          >
+            {title}
+          </h2>
         </motion.div>
 
         {/* FAQ Items */}
@@ -44,7 +49,7 @@ export function FAQSection({ section }: FAQSectionProps) {
               >
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-gray-100 transition-colors"
+                  className="w-full theme-button-primary px-6 py-5 flex items-center justify-between text-left hover:bg-gray-100 transition-colors"
                 >
                   <span className="font-semibold text-gray-900 pr-8">{item.question}</span>
                   <ChevronDown

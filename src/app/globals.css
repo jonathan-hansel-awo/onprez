@@ -435,3 +435,29 @@ body {
 .theme-accent-text {
   color: var(--theme-accent);
 }
+
+/* ============================================
+   UPLOADTHING STYLES
+   ============================================ */
+
+@import '@uploadthing/react/styles.css';
+
+/* Custom UploadThing overrides */
+.ut-button {
+  background-color: var(--theme-primary, #3b82f6) !important;
+  font-family: var(--theme-font-body, 'Inter') !important;
+  border-radius: var(--theme-radius, 0.5rem) !important;
+}
+
+.ut-button:hover {
+  opacity: 0.9 !important;
+}
+
+.ut-allowed-content {
+  color: #9ca3af !important;
+}
+
+.ut-uploading .ut-button {
+  background-color: #9ca3af !important;
+  cursor: not-allowed !important;
+}

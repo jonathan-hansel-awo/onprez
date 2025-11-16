@@ -40,6 +40,7 @@ export function PresenceEditorLayout({
   } | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [activeTab, setActiveTab] = useState<'sections' | 'theme'>('sections')
+  const [themeVersion, setThemeVersion] = useState(0)
 
   // Track changes
   useEffect(() => {
@@ -137,8 +138,7 @@ export function PresenceEditorLayout({
   }
 
   function handleThemeUpdate(theme: any) {
-    // Theme changes trigger a re-render of the preview
-    // The preview component will fetch the updated theme
+    setThemeVersion(prev => prev + 1)
   }
 
   return (
@@ -301,6 +301,7 @@ export function PresenceEditorLayout({
               previewMode={previewMode}
               businessId={businessId}
               businessSlug={businessSlug}
+              themeVersion={themeVersion}
             />
           </div>
         )}

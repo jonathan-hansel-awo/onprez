@@ -20,7 +20,7 @@ export function HeroSection({ section }: HeroSectionProps) {
   }
 
   return (
-    <section className="relative min-h-[500px] md:min-h-[600px] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[500px] md:min-h-[600px] flex items-center justify-center overflow-hidden theme-section-spacing">
       {/* Background Image */}
       {backgroundImage && (
         <div className="absolute inset-0 z-0">
@@ -45,18 +45,24 @@ export function HeroSection({ section }: HeroSectionProps) {
           className={`flex flex-col gap-6 max-w-4xl mx-auto ${alignmentClasses[alignment || 'center']}`}
         >
           <h1
-            className={`text-4xl md:text-5xl lg:text-6xl font-bold ${
-              backgroundImage ? 'text-white' : 'text-gray-900'
+            className={`text-4xl md:text-5xl lg:text-6xl font-bold theme-heading ${
+              backgroundImage ? 'text-white' : ''
             }`}
+            style={{
+              fontFamily: backgroundImage ? undefined : 'var(--theme-font-heading)',
+            }}
           >
             {title}
           </h1>
 
           {subtitle && (
             <p
-              className={`text-lg md:text-xl lg:text-2xl ${
-                backgroundImage ? 'text-white/90' : 'text-gray-700'
+              className={`text-lg md:text-xl lg:text-2xl theme-body-text ${
+                backgroundImage ? 'text-white/90' : ''
               }`}
+              style={{
+                fontFamily: backgroundImage ? undefined : 'var(--theme-font-body)',
+              }}
             >
               {subtitle}
             </p>
@@ -64,9 +70,16 @@ export function HeroSection({ section }: HeroSectionProps) {
 
           {ctaText && ctaLink && (
             <div className="mt-4">
-              <Button size="lg">
-                <Link href={ctaLink}>{ctaText}</Link>
-              </Button>
+              <Link href={ctaLink}>
+                <button
+                  className="theme-button-primary px-6 py-3 font-semibold text-lg"
+                  style={{
+                    fontFamily: 'var(--theme-font-body)',
+                  }}
+                >
+                  {ctaText}
+                </button>
+              </Link>
             </div>
           )}
         </motion.div>

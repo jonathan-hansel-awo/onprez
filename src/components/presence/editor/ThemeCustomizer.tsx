@@ -164,6 +164,7 @@ export function ThemeCustomizer({ businessId, onUpdate, className }: ThemeCustom
 
       if (data.success) {
         setSaveMessage('Theme saved successfully!')
+        onUpdate(theme)
         setTimeout(() => setSaveMessage(null), 3000)
       } else {
         setSaveMessage(data.error || 'Failed to save theme')

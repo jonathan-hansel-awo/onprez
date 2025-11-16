@@ -35,8 +35,11 @@ export function GallerySection({ section }: GallerySectionProps) {
   // Carousel Layout
   if (layout === 'carousel') {
     return (
-      <section className="py-16 md:py-24 bg-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="theme-section-spacing py-16 md:py-24 bg-white">
+        <div
+          className="container mx-auto px-4 sm:px-6 lg:px-8 theme-card"
+          style={{ borderRadius: 'var(--theme-radius)' }}
+        >
           {title && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -44,7 +47,12 @@ export function GallerySection({ section }: GallerySectionProps) {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">{title}</h2>
+              <h2
+                className="text-3xl md:text-4xl font-bold mb-4 theme-heading"
+                style={{ fontFamily: 'var(--theme-font-heading)' }}
+              >
+                {title}
+              </h2>
             </motion.div>
           )}
 
@@ -60,7 +68,12 @@ export function GallerySection({ section }: GallerySectionProps) {
 
               {images[currentIndex].caption && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-4">
-                  <p className="text-center">{images[currentIndex].caption}</p>
+                  <p
+                    className="text-center theme-body-text"
+                    style={{ fontFamily: 'var(--theme-font-body)' }}
+                  >
+                    {images[currentIndex].caption}
+                  </p>
                 </div>
               )}
             </div>
@@ -72,14 +85,14 @@ export function GallerySection({ section }: GallerySectionProps) {
                   onClick={() =>
                     setCurrentIndex((currentIndex - 1 + images.length) % images.length)
                   }
-                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 rounded-full shadow-lg hover:bg-white transition-colors"
+                  className="absolute theme-button-primary left-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 rounded-full shadow-lg hover:bg-white transition-colors"
                 >
                   <ChevronLeft className="w-6 h-6 text-gray-900" />
                 </button>
 
                 <button
                   onClick={() => setCurrentIndex((currentIndex + 1) % images.length)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 rounded-full shadow-lg hover:bg-white transition-colors"
+                  className="absolute theme-button-primary right-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 rounded-full shadow-lg hover:bg-white transition-colors"
                 >
                   <ChevronRight className="w-6 h-6 text-gray-900" />
                 </button>
@@ -94,7 +107,7 @@ export function GallerySection({ section }: GallerySectionProps) {
                     key={index}
                     onClick={() => setCurrentIndex(index)}
                     className={`w-3 h-3 rounded-full transition-all ${
-                      index === currentIndex ? 'bg-onprez-blue w-8' : 'bg-gray-300'
+                      index === currentIndex ? 'bg-theme-button-primary w-8' : 'bg-gray-300'
                     }`}
                   />
                 ))}
@@ -108,7 +121,7 @@ export function GallerySection({ section }: GallerySectionProps) {
 
   // Grid or Masonry Layout
   return (
-    <section className="py-16 md:py-24 bg-white">
+    <section className="theme-section-spacing py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {title && (
           <motion.div
@@ -117,7 +130,12 @@ export function GallerySection({ section }: GallerySectionProps) {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">{title}</h2>
+            <h2
+              className="text-3xl md:text-4xl font-bold mb-4 theme-heading"
+              style={{ fontFamily: 'var(--theme-font-heading)' }}
+            >
+              {title}
+            </h2>
           </motion.div>
         )}
 
@@ -143,7 +161,12 @@ export function GallerySection({ section }: GallerySectionProps) {
               />
               {image.caption && (
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                  <p className="text-white text-sm">{image.caption}</p>
+                  <p
+                    className="text-white text-sm theme-body-text"
+                    style={{ fontFamily: 'var(--theme-font-body)' }}
+                  >
+                    {image.caption}
+                  </p>
                 </div>
               )}
             </motion.div>
@@ -159,7 +182,7 @@ export function GallerySection({ section }: GallerySectionProps) {
             {/* Close Button */}
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
+              className="absolute theme-button-primary top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
             >
               <X className="w-8 h-8" />
             </button>
@@ -172,7 +195,7 @@ export function GallerySection({ section }: GallerySectionProps) {
                     e.stopPropagation()
                     prevImage()
                   }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+                  className="absolute theme-button-primary left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
                 >
                   <ChevronLeft className="w-6 h-6 text-white" />
                 </button>
@@ -182,7 +205,7 @@ export function GallerySection({ section }: GallerySectionProps) {
                     e.stopPropagation()
                     nextImage()
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+                  className="absolute theme-button-primary right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
                 >
                   <ChevronRight className="w-6 h-6 text-white" />
                 </button>
@@ -209,7 +232,8 @@ export function GallerySection({ section }: GallerySectionProps) {
 
             {/* Image Counter */}
             <div className="absolute top-4 left-4 bg-black/70 text-white px-4 py-2 rounded-lg">
-              <p className="text-sm">
+              <p className="theme-body-text" style={{ fontFamily: 'var(--theme-font-body)' }}>
+                {' '}
                 {selectedImage + 1} / {images.length}
               </p>
             </div>

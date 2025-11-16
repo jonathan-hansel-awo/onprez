@@ -19,7 +19,7 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
   const isCarousel = layout === 'carousel'
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-br from-onprez-blue/5 to-onprez-purple/5">
+    <section className="theme-section-spacing py-16 md:py-24 bg-gradient-to-br from-onprez-blue/5 to-onprez-purple/5">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -28,7 +28,12 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{title}</h2>
+          <h2
+            className="text-3xl md:text-4xl font-bold mb-4 theme-heading"
+            style={{ fontFamily: 'var(--theme-font-heading)' }}
+          >
+            {title}
+          </h2>
         </motion.div>
 
         {/* Testimonials */}
@@ -45,7 +50,10 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
               >
                 <Quote className="w-12 h-12 text-onprez-blue/20 mb-6" />
 
-                <p className="text-lg md:text-xl text-gray-700 mb-8 italic">
+                <p
+                  className="text-lg md:text-xl text-gray-700 mb-8 italic theme-body-text"
+                  style={{ fontFamily: 'var(--theme-font-body)' }}
+                >
                   &ldquo;{testimonials[activeIndex].content}&rdquo;
                 </p>
 
@@ -62,9 +70,19 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                   )}
 
                   <div>
-                    <p className="font-semibold text-gray-900">{testimonials[activeIndex].name}</p>
+                    <p
+                      className="font-semibold text-gray-900"
+                      style={{ fontFamily: 'var(--theme-font-body)' }}
+                    >
+                      {testimonials[activeIndex].name}
+                    </p>
                     {testimonials[activeIndex].role && (
-                      <p className="text-sm text-gray-600">{testimonials[activeIndex].role}</p>
+                      <p
+                        className="text-sm text-gray-600"
+                        style={{ fontFamily: 'var(--theme-font-body)' }}
+                      >
+                        {testimonials[activeIndex].role}
+                      </p>
                     )}
 
                     {testimonials[activeIndex].rating && (
@@ -92,7 +110,7 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                     key={index}
                     onClick={() => setActiveIndex(index)}
                     className={`w-3 h-3 rounded-full transition-all ${
-                      index === activeIndex ? 'bg-onprez-blue w-8' : 'bg-gray-300'
+                      index === activeIndex ? 'theme-button-primary  w-8' : 'bg-gray-300'
                     }`}
                   />
                 ))}
@@ -112,7 +130,12 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
               >
                 <Quote className="w-8 h-8 text-onprez-blue/20 mb-4" />
 
-                <p className="text-gray-700 mb-6 italic">&ldquo;{testimonial.content}&rdquo;</p>
+                <p
+                  className="text-gray-700 mb-6 italic theme-body-text"
+                  style={{ fontFamily: 'var(--theme-font-body)' }}
+                >
+                  &ldquo;{testimonial.content}&rdquo;
+                </p>
 
                 <div className="flex items-center gap-3">
                   {testimonial.image && (
@@ -127,9 +150,19 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                   )}
 
                   <div>
-                    <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                    <p
+                      className="font-semibold text-gray-900"
+                      style={{ fontFamily: 'var(--theme-font-body)' }}
+                    >
+                      {testimonial.name}
+                    </p>
                     {testimonial.role && (
-                      <p className="text-sm text-gray-600">{testimonial.role}</p>
+                      <p
+                        className="text-sm text-gray-600"
+                        style={{ fontFamily: 'var(--theme-font-body)' }}
+                      >
+                        {testimonial.role}
+                      </p>
                     )}
 
                     {testimonial.rating && (

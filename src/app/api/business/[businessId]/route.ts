@@ -34,6 +34,8 @@ export async function GET(
         country: true,
         website: true,
         socialLinks: true,
+        settings: true,
+        branding: true,
       },
     })
 

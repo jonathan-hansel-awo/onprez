@@ -39,7 +39,7 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
   }
 
   return (
-    <section className="py-16 md:py-24 bg-gray-50">
+    <section className="theme-section-spacing py-16 md:py-24 bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -48,7 +48,12 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{title}</h2>
+          <h2
+            className="text-3xl md:text-4xl font-bold mb-4 theme-heading"
+            style={{ fontFamily: 'var(--theme-font-heading)' }}
+          >
+            {title}
+          </h2>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
@@ -100,7 +105,10 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Address</h3>
-                  <p className="text-gray-600">{fullAddress}</p>
+                  <p className="theme-body-text" style={{ fontFamily: 'var(--theme-font-body)' }}>
+                    {' '}
+                    {fullAddress}
+                  </p>
                 </div>
               </div>
             )}

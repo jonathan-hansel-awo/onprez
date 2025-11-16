@@ -17,7 +17,7 @@ export function InquirySection({
   description = "We're here to help. Send us a message and we'll get back to you soon.",
 }: InquirySectionProps) {
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 to-white">
+    <section className="theme-section-spacing" style={{ backgroundColor: 'var(--theme-bg)' }}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -26,8 +26,24 @@ export function InquirySection({
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{title}</h2>
-          {description && <p className="text-lg text-gray-600 max-w-2xl mx-auto">{description}</p>}
+          <h2
+            className="text-3xl md:text-4xl font-bold mb-4 theme-heading"
+            style={{ fontFamily: 'var(--theme-font-heading)' }}
+          >
+            {title}
+          </h2>
+          {description && (
+            <p
+              className="text-lg max-w-2xl mx-auto theme-body-text"
+              style={{
+                fontFamily: 'var(--theme-font-body)',
+                color: 'var(--theme-text)',
+                opacity: 0.8,
+              }}
+            >
+              {description}
+            </p>
+          )}
         </motion.div>
 
         {/* Form */}

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { SetStateAction, useState } from 'react'
+import { X, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { UploadButton, UploadDropzone } from '@/lib/utils/uploadthing'
+import Image from 'next/image'
 
 export interface ImageUploadProps {
   label?: string
@@ -11,8 +12,8 @@ export interface ImageUploadProps {
   onChange: (url: string) => void
   onRemove?: () => void
   aspect?: 'square' | 'landscape' | 'portrait'
-  maxSize?: number // MB
   showRemoveButton?: boolean
+  endpoint?: 'imageUploader' | 'galleryUploader'
 }
 
 export function ImageUpload({
@@ -21,63 +22,16 @@ export function ImageUpload({
   onChange,
   onRemove,
   aspect = 'landscape',
-  maxSize = 5,
   showRemoveButton = true,
+  endpoint = 'imageUploader',
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState('')
-  const [dragActive, setDragActive] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const aspectClasses = {
     square: 'aspect-square',
     landscape: 'aspect-video',
     portrait: 'aspect-[3/4]',
-  }
-
-  const handleFile = async (file: File) => {
-    setError('')
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file')
-      return
-    }
-
-    // Validate file size
-    if (file.size > maxSize * 1024 * 1024) {
-      setError(`File size must be less than ${maxSize}MB`)
-      return
-    }
-
-    setUploading(true)
-
-    try {
-      // TODO: Implement actual upload to storage (e.g., Cloudflare R2, AWS S3)
-      // For now, create a local preview URL
-      const url = URL.createObjectURL(file)
-      onChange(url)
-
-      // Simulated upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-    } catch (err) {
-      setError('Failed to upload image')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragActive(false)
-
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleFile(file)
   }
 
   return (
@@ -86,65 +40,108 @@ export function ImageUpload({
 
       <div className={cn('relative w-full', aspectClasses[aspect])}>
         {value ? (
-          <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-200">
-            <img src={value} alt="Upload preview" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                className="px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                Change
-              </button>
-              {showRemoveButton && value && (
+          // Preview existing image
+          <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-200 group">
+            <Image src={value} alt="Upload preview" fill className="object-cover" />
+
+            {/* Overlay with actions */}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <UploadButton
+                endpoint={endpoint}
+                onClientUploadComplete={(res: { url: string }[]) => {
+                  if (res?.[0]?.url) {
+                    onChange(res[0].url)
+                    setUploading(false)
+                  }
+                }}
+                onUploadError={(error: Error) => {
+                  console.error('Upload error:', error)
+                  alert(`Upload failed: ${error.message}`)
+                  setUploading(false)
+                }}
+                onUploadBegin={() => {
+                  setUploading(true)
+                }}
+                appearance={{
+                  button:
+                    'px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium cursor-pointer',
+                  allowedContent: 'hidden',
+                }}
+                content={{
+                  button: uploading ? 'Uploading...' : 'Change Image',
+                }}
+              />
+
+              {showRemoveButton && (
                 <button
                   onClick={onRemove}
-                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                  disabled={uploading}
                 >
-                  <X className="w-4 h-4" />
+                  Remove
                 </button>
               )}
             </div>
+
+            {/* Upload Progress Indicator */}
+            {uploading && (
+              <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 text-white animate-spin mx-auto mb-2" />
+                  <p className="text-white text-sm">
+                    {uploadProgress > 0 ? `${uploadProgress}%` : 'Uploading...'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          <div
-            onDragOver={e => {
-              e.preventDefault()
-              setDragActive(true)
-            }}
-            onDragLeave={() => setDragActive(false)}
-            onDrop={handleDrop}
-            onClick={() => inputRef.current?.click()}
-            className={cn(
-              'w-full h-full border-2 border-dashed rounded-lg cursor-pointer transition-colors',
-              'flex flex-col items-center justify-center gap-2',
-              dragActive
-                ? 'border-onprez-blue bg-onprez-blue/5'
-                : 'border-gray-300 hover:border-onprez-blue'
-            )}
-          >
-            {uploading ? (
-              <Loader2 className="w-8 h-8 text-onprez-blue animate-spin" />
-            ) : (
-              <>
-                <Upload className="w-8 h-8 text-gray-400" />
-                <p className="text-sm text-gray-600">Drop image or click to upload</p>
-                <p className="text-xs text-gray-400">Max {maxSize}MB</p>
-              </>
-            )}
+          // Upload dropzone
+          <div className="w-full h-full">
+            <UploadDropzone
+              endpoint={endpoint}
+              onClientUploadComplete={(res: { url: string }[]) => {
+                if (res?.[0]?.url) {
+                  onChange(res[0].url)
+                  setUploading(false)
+                  setUploadProgress(0)
+                }
+              }}
+              onUploadError={(error: Error) => {
+                console.error('Upload error:', error)
+                alert(`Upload failed: ${error.message}`)
+                setUploading(false)
+                setUploadProgress(0)
+              }}
+              onUploadBegin={() => {
+                setUploading(true)
+                setUploadProgress(0)
+              }}
+              onUploadProgress={(progress: SetStateAction<number>) => {
+                setUploadProgress(progress)
+              }}
+              appearance={{
+                container:
+                  'w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:border-onprez-blue transition-colors cursor-pointer ut-uploading:border-onprez-blue ut-uploading:bg-onprez-blue/5',
+                uploadIcon: 'text-gray-400 w-10 h-10',
+                label: 'text-sm text-gray-600 font-medium',
+                allowedContent: 'text-xs text-gray-400 mt-1',
+                button:
+                  'bg-onprez-blue text-white px-4 py-2 rounded-lg hover:bg-onprez-blue/90 transition-colors text-sm font-medium cursor-pointer ut-ready:bg-onprez-blue ut-uploading:cursor-not-allowed ut-uploading:bg-gray-400 ut-uploading:text-gray-200',
+              }}
+              content={{
+                label: uploading
+                  ? uploadProgress > 0
+                    ? `Uploading... ${uploadProgress}%`
+                    : 'Uploading...'
+                  : 'Click or drag and drop',
+                allowedContent: 'PNG, JPG, WebP (max 4MB)',
+                button: uploading ? `${uploadProgress}%` : 'Choose File',
+              }}
+            />
           </div>
         )}
       </div>
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleChange}
-        className="hidden"
-      />
-
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   )
 }

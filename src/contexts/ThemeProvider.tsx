@@ -26,7 +26,7 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ theme, children }: ThemeProviderProps) {
-  // Apply theme to CSS variables
+  // Apply theme to CSS variables whenever theme changes
   useEffect(() => {
     const root = document.documentElement
 
@@ -50,7 +50,7 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
     const spacing =
       theme.spacing === 'compact' ? '3rem' : theme.spacing === 'relaxed' ? '6rem' : '4rem'
     root.style.setProperty('--theme-spacing', spacing)
-  }, [theme])
+  }, [theme]) // This effect runs whenever theme changes
 
   return (
     <ThemeContext.Provider value={theme}>

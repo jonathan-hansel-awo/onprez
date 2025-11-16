@@ -50,7 +50,7 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
   const isGrid = layout === 'grid'
 
   return (
-    <section className="py-16 md:py-24 bg-gray-50">
+    <section className="theme-section-spacing py-16 md:py-24 bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -59,7 +59,12 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{title}</h2>
+          <h2
+            className="text-3xl md:text-4xl font-bold mb-4 theme-heading"
+            style={{ fontFamily: 'var(--theme-font-heading)' }}
+          >
+            {title}
+          </h2>
           {description && <p className="text-lg text-gray-600 max-w-2xl mx-auto">{description}</p>}
         </motion.div>
 
@@ -72,7 +77,9 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
           </div>
         ) : services.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">No services available at the moment.</p>
+            <p className="theme-body-text" style={{ fontFamily: 'var(--theme-font-body)' }}>
+              No services available at the moment.
+            </p>
           </div>
         ) : (
           <div
@@ -108,7 +115,12 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
 
                   <h3 className="text-xl font-bold text-gray-900 mt-2 mb-3">{service.name}</h3>
 
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">{service.description}</p>
+                  <p
+                    className="text-gray-600 text-sm mb-4 line-clamp-3 theme-body-text"
+                    style={{ fontFamily: 'var(--theme-font-body)' }}
+                  >
+                    {service.description}
+                  </p>
 
                   {/* Service Meta */}
                   <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">

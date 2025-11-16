@@ -4,7 +4,7 @@
 import { PageSection } from '@/types/page-sections'
 import { SectionRenderer } from '../sections/SectionRenderer'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ExternalLink, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -25,6 +25,7 @@ interface PresencePreviewProps {
   previewMode: 'desktop' | 'mobile'
   businessId: string | null
   businessSlug?: string | null
+  themeVersion?: number
 }
 
 export function PresencePreview({
@@ -32,16 +33,56 @@ export function PresencePreview({
   previewMode,
   businessId,
   businessSlug,
+  themeVersion = 0,
 }: PresencePreviewProps) {
   const [theme, setTheme] = useState<ThemeSettings>({})
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  useEffect(() => {
-    if (businessId) {
-      loadTheme()
+  const loadTheme = useCallback(async () => {
+    if (!businessId) return
+
+    console.log('🎨 Loading theme, version:', themeVersion) // DEBUG
+    setLoading(true)
+
+    try {
+      const response = await fetch(`/api/business/${businessId}?t=${Date.now()}`) // Cache bust
+      const data = await response.json()
+
+      console.log('📥 API Response:', data) // DEBUG
+      if (data.success) {
+        const settings = data.data.business.settings as any
+        console.log('🔍 Full business data:', data.data.business) // DEBUG - see everything
+        console.log('🔍 Settings object:', settings) // DEBUG - see settings
+        console.log('🔍 Theme in settings:', settings?.theme) // DEBUG - see theme
+
+        if (settings?.theme) {
+          console.log('✅ Theme loaded:', settings.theme)
+          setTheme(settings.theme)
+        } else {
+          console.log('⚠️ No theme in settings')
+        }
+      }
+
+      if (data.success) {
+        const settings = data.data.business.settings as any
+        if (settings?.theme) {
+          console.log('✅ Theme loaded:', settings.theme) // DEBUG
+          setTheme(settings.theme)
+        } else {
+          console.log('⚠️ No theme in settings') // DEBUG
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to load theme:', error)
+    } finally {
+      setLoading(false)
     }
-  }, [businessId])
+  }, [businessId, themeVersion])
+
+  useEffect(() => {
+    loadTheme()
+  }, [loadTheme])
 
   // Show refresh indicator when sections change
   useEffect(() => {
@@ -49,24 +90,6 @@ export function PresencePreview({
     const timer = setTimeout(() => setIsRefreshing(false), 300)
     return () => clearTimeout(timer)
   }, [sections])
-
-  async function loadTheme() {
-    try {
-      const response = await fetch(`/api/business/${businessId}`)
-      const data = await response.json()
-
-      if (data.success) {
-        const settings = data.data.business.settings as any
-        if (settings?.theme) {
-          setTheme(settings.theme)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load theme:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const previewUrl = businessSlug ? `/${businessSlug}` : null
 
@@ -139,7 +162,7 @@ export function PresencePreview({
               </div>
             </div>
           ) : businessId ? (
-            <ThemeProvider theme={theme}>
+            <ThemeProvider theme={theme} key={`theme-${themeVersion}-${JSON.stringify(theme)}`}>
               <div className="relative">
                 {/* Theme indicator overlay (subtle) */}
                 {Object.keys(theme).length > 0 && (
@@ -154,6 +177,13 @@ export function PresencePreview({
                         )}
                         <span className="text-xs text-gray-600">Themed</span>
                       </div>
+                    </div>
+
+                    {/* DEBUG: Show theme values */}
+                    <div className="mt-2 p-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg text-xs">
+                      <div>Primary: {theme.primaryColor}</div>
+                      <div>Secondary: {theme.secondaryColor}</div>
+                      <div>Font: {theme.fontFamily}</div>
                     </div>
                   </div>
                 )}
