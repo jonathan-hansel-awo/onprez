@@ -2,9 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(request: NextRequest, { params }: { params: { handle: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ handle: string }> }  // Changed to Promise
+) {
   try {
-    const { handle } = params
+    const { handle } = await params  // Add await here
     const searchParams = request.nextUrl.searchParams
     const idsParam = searchParams.get('ids')
 
@@ -14,7 +17,10 @@ export async function GET(request: NextRequest, { params }: { params: { handle: 
     })
 
     if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Business not found' },
+        { status: 404 }
+      )
     }
 
     // Build query
@@ -54,6 +60,9 @@ export async function GET(request: NextRequest, { params }: { params: { handle: 
     })
   } catch (error) {
     console.error('Fetch public services error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to fetch services' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch services' },
+      { status: 500 }
+    )
   }
 }
