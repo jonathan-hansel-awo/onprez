@@ -5,13 +5,13 @@ import { SectionRenderer } from '@/components/presence/sections/SectionRenderer'
 import { PageSection } from '@/types/page-sections'
 
 interface PresencePageProps {
-  params: {
+  params: Promise<{
     handle: string
-  }
+  }>
 }
 
 export default async function PresencePage({ params }: PresencePageProps) {
-  const { handle } = params
+  const { handle } = await params  // Add await here
 
   // Fetch business
   const business = await prisma.business.findUnique({
@@ -75,7 +75,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PresencePageProps) {
-  const { handle } = params
+  const { handle } = await params  // Add await here too
 
   const business = await prisma.business.findUnique({
     where: { slug: handle },
@@ -95,7 +95,6 @@ export async function generateMetadata({ params }: PresencePageProps) {
 
   return {
     title: business.seoTitle || `${business.name} - OnPrez`,
-    description:
-      business.seoDescription || business.description || `Visit ${business.name} on OnPrez`,
+    description: business.seoDescription || business.description || `Visit ${business.name} on OnPrez`,
   }
 }
