@@ -332,3 +332,106 @@ body {
     scrollbar-width: none;
   }
 }
+
+/* ============================================
+   THEME CUSTOMIZATION SYSTEM
+   ============================================ */
+
+/* Default theme variables (fallbacks) */
+:root {
+  --theme-primary: #3b82f6;
+  --theme-secondary: #8b5cf6;
+  --theme-accent: #10b981;
+  --theme-bg: #ffffff;
+  --theme-text: #111827;
+  --theme-font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --theme-font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --theme-radius: 0.5rem;
+  --theme-spacing: 4rem;
+}
+
+/* Apply theme to common elements */
+.theme-button-primary {
+  background-color: var(--theme-primary);
+  color: white;
+  border-radius: var(--theme-radius);
+  transition: all 0.2s;
+}
+
+.theme-button-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.theme-button-outline {
+  border: 2px solid var(--theme-primary);
+  color: var(--theme-primary);
+  background-color: transparent;
+  border-radius: var(--theme-radius);
+  transition: all 0.2s;
+}
+
+.theme-button-outline:hover {
+  background-color: var(--theme-primary);
+  color: white;
+}
+
+.theme-gradient {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+}
+
+.theme-badge {
+  background-color: var(--theme-accent);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: calc(var(--theme-radius) * 2);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.theme-section-spacing {
+  padding-top: var(--theme-spacing);
+  padding-bottom: var(--theme-spacing);
+}
+
+.theme-card {
+  border-radius: var(--theme-radius);
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+}
+
+.theme-heading {
+  font-family: var(--theme-font-heading);
+  color: var(--theme-text);
+}
+
+.theme-body-text {
+  font-family: var(--theme-font-body);
+  color: var(--theme-text);
+}
+
+/* Link styling with theme */
+.theme-link {
+  color: var(--theme-primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.theme-link:hover {
+  color: var(--theme-secondary);
+  text-decoration: underline;
+}
+
+/* Accent elements */
+.theme-accent-border {
+  border-color: var(--theme-accent);
+}
+
+.theme-accent-bg {
+  background-color: var(--theme-accent);
+}
+
+.theme-accent-text {
+  color: var(--theme-accent);
+}

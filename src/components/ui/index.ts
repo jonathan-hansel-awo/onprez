@@ -18,3 +18,6 @@ export type { SkeletonProps } from './skeleton'
 
 export { ImageUpload } from './image-upload'
 export type { ImageUploadProps } from './image-upload'
+
+export { ColorPicker } from './color-picker'
+export type { ColorPickerProps } from './color-picker'

@@ -1,20 +1,23 @@
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { PageSection } from '@/types/page-sections'
 import { Button } from '@/components/ui/button'
 import { SectionList } from './SectionList'
 import { PresencePreview } from './PresencePreview'
-import { Save, Eye, EyeOff, Monitor, Smartphone } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Save, Eye, EyeOff, Monitor, Smartphone, CheckCircle2, AlertCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ThemeCustomizer } from './ThemeCustomizer'
+import { debounce } from '@/lib/utils/debounce'
 
 interface PresenceEditorLayoutProps {
   sections: PageSection[]
   onSave: (sections: PageSection[]) => Promise<{ success: boolean; error?: string }>
   onPublish: (isPublished: boolean) => Promise<any>
   businessId: string | null
+  businessSlug?: string | null
 }
 
 export function PresenceEditorLayout({
@@ -22,15 +25,58 @@ export function PresenceEditorLayout({
   onSave,
   onPublish,
   businessId,
+  businessSlug,
 }: PresenceEditorLayoutProps) {
   const [sections, setSections] = useState<PageSection[]>(initialSections)
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null)
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
   const [showPreview, setShowPreview] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [autoSaving, setAutoSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
-  const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [saveMessage, setSaveMessage] = useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [activeTab, setActiveTab] = useState<'sections' | 'theme'>('sections')
+
+  // Track changes
+  useEffect(() => {
+    if (JSON.stringify(sections) !== JSON.stringify(initialSections)) {
+      setHasUnsavedChanges(true)
+    }
+  }, [sections, initialSections])
+
+  // Debounced auto-save function
+  const debouncedAutoSave = useCallback(
+    debounce(async (sectionsToSave: PageSection[]) => {
+      setAutoSaving(true)
+      const result = await onSave(sectionsToSave)
+
+      if (result.success) {
+        setHasUnsavedChanges(false)
+        showSaveMessage('success', 'Auto-saved')
+      } else {
+        showSaveMessage('error', 'Auto-save failed')
+      }
+
+      setAutoSaving(false)
+    }, 2000), // 2 second debounce
+    [onSave]
+  )
+
+  // Auto-save when sections change
+  useEffect(() => {
+    if (hasUnsavedChanges && businessId) {
+      debouncedAutoSave(sections)
+    }
+  }, [sections, hasUnsavedChanges, businessId, debouncedAutoSave])
+
+  function showSaveMessage(type: 'success' | 'error', text: string) {
+    setSaveMessage({ type, text })
+    setTimeout(() => setSaveMessage(null), 3000)
+  }
 
   async function handleSave() {
     setSaving(true)
@@ -39,24 +85,31 @@ export function PresenceEditorLayout({
     const result = await onSave(sections)
 
     if (result.success) {
-      setSaveMessage('Saved successfully!')
-      setTimeout(() => setSaveMessage(null), 3000)
+      setHasUnsavedChanges(false)
+      showSaveMessage('success', 'Saved successfully!')
     } else {
-      setSaveMessage(result.error || 'Failed to save')
+      showSaveMessage('error', result.error || 'Failed to save')
     }
 
     setSaving(false)
   }
 
   async function handlePublish() {
+    if (hasUnsavedChanges) {
+      if (!confirm('You have unsaved changes. Save before publishing?')) {
+        return
+      }
+      await handleSave()
+    }
+
     setPublishing(true)
 
     const result = await onPublish(true)
 
     if (result.success) {
-      alert('Page published successfully!')
+      showSaveMessage('success', 'Page published successfully!')
     } else {
-      alert(result.error || 'Failed to publish')
+      showSaveMessage('error', result.error || 'Failed to publish')
     }
 
     setPublishing(false)
@@ -84,8 +137,8 @@ export function PresenceEditorLayout({
   }
 
   function handleThemeUpdate(theme: any) {
-    // Theme changes are applied in real-time to the preview
-    // The ThemeCustomizer component handles saving to the database
+    // Theme changes trigger a re-render of the preview
+    // The preview component will fetch the updated theme
   }
 
   return (
@@ -94,15 +147,54 @@ export function PresenceEditorLayout({
       <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <h2 className="text-lg font-semibold text-gray-900">Edit Presence</h2>
-          {saveMessage && (
-            <motion.span
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-sm text-green-600"
-            >
-              {saveMessage}
-            </motion.span>
-          )}
+
+          {/* Status Indicators */}
+          <div className="flex items-center gap-3">
+            {/* Unsaved Changes */}
+            {hasUnsavedChanges && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full"
+              >
+                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                <span>Unsaved changes</span>
+              </motion.div>
+            )}
+
+            {/* Auto-saving */}
+            {autoSaving && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full"
+              >
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                <span>Saving...</span>
+              </motion.div>
+            )}
+
+            {/* Save Message */}
+            <AnimatePresence>
+              {saveMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className={`flex items-center gap-2 text-sm ${
+                    saveMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {saveMessage.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4" />
+                  )}
+                  <span>{saveMessage.text}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -117,17 +209,23 @@ export function PresenceEditorLayout({
             <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
               <button
                 onClick={() => setPreviewMode('desktop')}
-                className={`p-2 rounded ${
-                  previewMode === 'desktop' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                className={`p-2 rounded transition-all ${
+                  previewMode === 'desktop'
+                    ? 'bg-white shadow-sm text-onprez-blue'
+                    : 'hover:bg-gray-200 text-gray-600'
                 }`}
+                title="Desktop preview"
               >
                 <Monitor className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setPreviewMode('mobile')}
-                className={`p-2 rounded ${
-                  previewMode === 'mobile' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                className={`p-2 rounded transition-all ${
+                  previewMode === 'mobile'
+                    ? 'bg-white shadow-sm text-onprez-blue'
+                    : 'hover:bg-gray-200 text-gray-600'
                 }`}
+                title="Mobile preview"
               >
                 <Smartphone className="w-4 h-4" />
               </button>
@@ -135,7 +233,7 @@ export function PresenceEditorLayout({
           )}
 
           {/* Save & Publish */}
-          <Button variant="ghost" onClick={handleSave} disabled={saving}>
+          <Button variant="ghost" onClick={handleSave} disabled={saving || autoSaving}>
             <Save className="w-4 h-4 mr-2" />
             {saving ? 'Saving...' : 'Save'}
           </Button>
@@ -175,7 +273,7 @@ export function PresenceEditorLayout({
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
             {activeTab === 'sections' ? (
               <SectionList
                 sections={sections}
@@ -197,12 +295,24 @@ export function PresenceEditorLayout({
 
         {/* Preview Area */}
         {showPreview && (
-          <div className="flex-1 overflow-y-auto bg-gray-100 p-8">
+          <div className="flex-1 overflow-hidden">
             <PresencePreview
               sections={sections}
               previewMode={previewMode}
               businessId={businessId}
+              businessSlug={businessSlug}
             />
+          </div>
+        )}
+
+        {/* Full Width Editor (when preview hidden) */}
+        {!showPreview && (
+          <div className="flex-1 flex items-center justify-center bg-gray-100">
+            <div className="text-center text-gray-500">
+              <Eye className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <p className="text-lg font-medium">Preview Hidden</p>
+              <p className="text-sm mt-2">Click "Show Preview" to see your changes</p>
+            </div>
           </div>
         )}
       </div>

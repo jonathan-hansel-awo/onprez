@@ -9,6 +9,7 @@ export default function PresenceEditorPage() {
   const [sections, setSections] = useState<PageSection[]>([])
   const [businessId, setBusinessId] = useState<string | null>(null)
   const [pageId, setPageId] = useState<string | null>(null)
+  const [businessSlug, setBusinessSlug] = useState<string | null>(null)
 
   useEffect(() => {
     loadPresencePage()
@@ -16,13 +17,13 @@ export default function PresenceEditorPage() {
 
   async function loadPresencePage() {
     try {
-      // Get current business
       const businessRes = await fetch('/api/business/current')
       const businessData = await businessRes.json()
 
       if (businessData.success && businessData.data.business) {
         const business = businessData.data.business
         setBusinessId(business.id)
+        setBusinessSlug(business.slug)
 
         // Load presence page
         const pageRes = await fetch(`/api/presence/pages?businessId=${business.id}&slug=home`)
@@ -105,6 +106,7 @@ export default function PresenceEditorPage() {
       onSave={handleSave}
       onPublish={handlePublish}
       businessId={businessId}
+      businessSlug={businessSlug}
     />
   )
 }
