@@ -40,8 +40,22 @@ const envSchema = z.object({
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_PHONE_NUMBER: z.string().optional(),
 
+  //MFA Encryption Key - Optional
+  MFA_ENCRYPTION_KEY: z
+    .string()
+    .min(32, 'MFA_ENCRYPTION_KEY must be at least 32 characters')
+    .optional(),
+
+  // Uploadthing Configuration
+  UPLOADTHING_SECRET: z.string().optional(),
+  UPLOADTHING_TOKEN: z.string().optional(),
   // Analytics - Optional
   NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: z.string().optional(),
+
+  // Cloudinary Configuration
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
+  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
+  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
 
   // Feature Flags
   NEXT_PUBLIC_ENABLE_ANALYTICS: z
