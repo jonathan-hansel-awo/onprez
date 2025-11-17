@@ -11,6 +11,7 @@ export interface ImageUploadProps {
   onChange: (url: string) => void
   onRemove?: () => void
   aspect?: 'square' | 'landscape' | 'portrait'
+  maxSize?: number // MB
   showRemoveButton?: boolean
 }
 
@@ -20,6 +21,7 @@ export function ImageUpload({
   onChange,
   onRemove,
   aspect = 'landscape',
+  maxSize = 4,
   showRemoveButton = true,
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
@@ -41,8 +43,8 @@ export function ImageUpload({
       return
     }
 
-    if (file.size > 4 * 1024 * 1024) {
-      setError('File size must be less than 4MB')
+    if (file.size > maxSize * 1024 * 1024) {
+      setError(`File size must be less than ${maxSize}MB`)
       return
     }
 
@@ -80,10 +82,11 @@ export function ImageUpload({
       <div className={cn('relative w-full', aspectClasses[aspect])}>
         {value ? (
           <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-200 group">
-            <Image src={value} alt="Upload preview" fill className="object-cover" />
+            <Image src={value} alt="Upload preview" fill className="object-cover" unoptimized />
 
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <button
+                type="button"
                 onClick={() => inputRef.current?.click()}
                 className="px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
                 disabled={uploading}
@@ -93,6 +96,7 @@ export function ImageUpload({
 
               {showRemoveButton && (
                 <button
+                  type="button"
                   onClick={onRemove}
                   className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
                   disabled={uploading}
@@ -128,7 +132,7 @@ export function ImageUpload({
               <>
                 <Upload className="w-8 h-8 text-gray-400" />
                 <p className="text-sm text-gray-600">Click to upload</p>
-                <p className="text-xs text-gray-400">PNG, JPG, WebP (max 4MB)</p>
+                <p className="text-xs text-gray-400">PNG, JPG, WebP (max {maxSize}MB)</p>
               </>
             )}
           </div>
