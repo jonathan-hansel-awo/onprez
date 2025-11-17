@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -31,10 +32,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get current page
+    const currentPage = await prisma.page.findUnique({
+      where: { id: pageId },
+    })
+
+    if (!currentPage) {
+      return NextResponse.json({ success: false, error: 'Page not found' }, { status: 404 })
+    }
+
     // Update page publish status
+    const updateData: any = { isPublished }
+
+    if (isPublished) {
+      // Publishing: Save current content as published version
+      updateData.publishedContent = currentPage.content
+      updateData.publishedAt = new Date()
+      updateData.lastPublishedBy = user.id
+      updateData.version = { increment: 1 }
+    } else {
+      // Unpublishing: Keep draft content, clear published version
+      updateData.publishedAt = null
+      updateData.lastPublishedBy = null
+    }
+
     const page = await prisma.page.update({
       where: { id: pageId },
-      data: { isPublished },
+      data: updateData,
     })
 
     // Update business publish status
@@ -49,7 +73,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { page },
-      message: isPublished ? 'Page published successfully' : 'Page unpublished',
+      message: isPublished
+        ? `Page published successfully! (Version ${page.version})`
+        : 'Page unpublished',
     })
   } catch (error) {
     console.error('Publish page error:', error)

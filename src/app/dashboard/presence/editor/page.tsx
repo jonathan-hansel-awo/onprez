@@ -10,6 +10,7 @@ export default function PresenceEditorPage() {
   const [businessId, setBusinessId] = useState<string | null>(null)
   const [pageId, setPageId] = useState<string | null>(null)
   const [businessSlug, setBusinessSlug] = useState<string | null>(null)
+  const [isPublished, setIsPublished] = useState(false)
 
   useEffect(() => {
     loadPresencePage()
@@ -33,6 +34,7 @@ export default function PresenceEditorPage() {
           const page = pageData.data.pages[0]
           setPageId(page.id)
           setSections((page.content as PageSection[]) || [])
+          setIsPublished(page.isPublished)
         }
       }
     } catch (error) {
@@ -107,6 +109,7 @@ export default function PresenceEditorPage() {
       onPublish={handlePublish}
       businessId={businessId}
       businessSlug={businessSlug}
+      initialPublishStatus={isPublished}
     />
   )
 }

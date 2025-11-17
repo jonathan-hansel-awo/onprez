@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
@@ -7,10 +9,23 @@ import { PageSection } from '@/types/page-sections'
 import { Button } from '@/components/ui/button'
 import { SectionList } from './SectionList'
 import { PresencePreview } from './PresencePreview'
-import { Save, Eye, EyeOff, Monitor, Smartphone, CheckCircle2, AlertCircle } from 'lucide-react'
+import {
+  Save,
+  Eye,
+  EyeOff,
+  Monitor,
+  Smartphone,
+  CheckCircle2,
+  AlertCircle,
+  Globe,
+  GlobeIcon,
+  FileText,
+  Sparkles,
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ThemeCustomizer } from './ThemeCustomizer'
 import { debounce } from '@/lib/utils/debounce'
+import { Confetti } from '@/components/effects/confetti'
 
 interface PresenceEditorLayoutProps {
   sections: PageSection[]
@@ -18,6 +33,7 @@ interface PresenceEditorLayoutProps {
   onPublish: (isPublished: boolean) => Promise<any>
   businessId: string | null
   businessSlug?: string | null
+  initialPublishStatus?: boolean
 }
 
 export function PresenceEditorLayout({
@@ -26,6 +42,7 @@ export function PresenceEditorLayout({
   onPublish,
   businessId,
   businessSlug,
+  initialPublishStatus = false,
 }: PresenceEditorLayoutProps) {
   const [sections, setSections] = useState<PageSection[]>(initialSections)
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null)
@@ -34,6 +51,7 @@ export function PresenceEditorLayout({
   const [saving, setSaving] = useState(false)
   const [autoSaving, setAutoSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  const [isPublished, setIsPublished] = useState(initialPublishStatus)
   const [saveMessage, setSaveMessage] = useState<{
     type: 'success' | 'error'
     text: string
@@ -41,6 +59,7 @@ export function PresenceEditorLayout({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [activeTab, setActiveTab] = useState<'sections' | 'theme'>('sections')
   const [themeVersion, setThemeVersion] = useState(0)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   // Track changes
   useEffect(() => {
@@ -57,13 +76,13 @@ export function PresenceEditorLayout({
 
       if (result.success) {
         setHasUnsavedChanges(false)
-        showSaveMessage('success', 'Auto-saved')
+        showSaveMessage('success', 'Draft saved')
       } else {
         showSaveMessage('error', 'Auto-save failed')
       }
 
       setAutoSaving(false)
-    }, 2000), // 2 second debounce
+    }, 2000),
     [onSave]
   )
 
@@ -87,7 +106,7 @@ export function PresenceEditorLayout({
 
     if (result.success) {
       setHasUnsavedChanges(false)
-      showSaveMessage('success', 'Saved successfully!')
+      showSaveMessage('success', 'Draft saved successfully!')
     } else {
       showSaveMessage('error', result.error || 'Failed to save')
     }
@@ -108,9 +127,37 @@ export function PresenceEditorLayout({
     const result = await onPublish(true)
 
     if (result.success) {
-      showSaveMessage('success', 'Page published successfully!')
+      setIsPublished(true)
+      setShowConfetti(true)
+      showSaveMessage('success', 'Page published successfully! 🎉')
+
+      // Hide confetti after 3 seconds
+      setTimeout(() => setShowConfetti(false), 3000)
     } else {
       showSaveMessage('error', result.error || 'Failed to publish')
+    }
+
+    setPublishing(false)
+  }
+
+  async function handleUnpublish() {
+    if (
+      !confirm(
+        'Are you sure you want to unpublish this page? It will no longer be visible to visitors.'
+      )
+    ) {
+      return
+    }
+
+    setPublishing(true)
+
+    const result = await onPublish(false)
+
+    if (result.success) {
+      setIsPublished(false)
+      showSaveMessage('success', 'Page unpublished')
+    } else {
+      showSaveMessage('error', result.error || 'Failed to unpublish')
     }
 
     setPublishing(false)
@@ -143,19 +190,43 @@ export function PresenceEditorLayout({
 
   return (
     <div className="fixed inset-0 top-16 bg-gray-50">
+      {/* Confetti Effect */}
+      <Confetti active={showConfetti} />
+
       {/* Top Toolbar */}
-      <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+      <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 relative z-10">
         <div className="flex items-center gap-4">
           <h2 className="text-lg font-semibold text-gray-900">Edit Presence</h2>
 
           {/* Status Indicators */}
           <div className="flex items-center gap-3">
+            {/* Publish Status Badge */}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                isPublished
+                  ? 'bg-green-100 text-green-700 border border-green-300'
+                  : 'bg-gray-100 text-gray-600 border border-gray-300'
+              }`}
+            >
+              {isPublished ? (
+                <>
+                  <Globe className="w-3 h-3" />
+                  <span>Published</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-3 h-3" />
+                  <span>Draft</span>
+                </>
+              )}
+            </div>
+
             {/* Unsaved Changes */}
             {hasUnsavedChanges && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full"
+                className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-300"
               >
                 <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
                 <span>Unsaved changes</span>
@@ -232,15 +303,29 @@ export function PresenceEditorLayout({
             </div>
           )}
 
-          {/* Save & Publish */}
+          {/* Save Draft */}
           <Button variant="ghost" onClick={handleSave} disabled={saving || autoSaving}>
             <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? 'Saving...' : 'Save Draft'}
           </Button>
 
-          <Button variant="primary" onClick={handlePublish} disabled={publishing}>
-            {publishing ? 'Publishing...' : 'Publish'}
-          </Button>
+          {/* Publish/Unpublish */}
+          {isPublished ? (
+            <Button
+              variant="outline"
+              onClick={handleUnpublish}
+              disabled={publishing}
+              className="border-red-300 text-red-600 hover:bg-red-50"
+            >
+              <GlobeIcon className="w-4 h-4 mr-2" />
+              {publishing ? 'Unpublishing...' : 'Unpublish'}
+            </Button>
+          ) : (
+            <Button variant="primary" onClick={handlePublish} disabled={publishing}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              {publishing ? 'Publishing...' : 'Publish'}
+            </Button>
+          )}
         </div>
       </div>
 

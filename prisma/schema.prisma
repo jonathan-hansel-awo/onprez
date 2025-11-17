@@ -315,6 +315,13 @@ model Page {
   // SEO
   metaTitle       String?
   metaDescription String?
+
+    // NEW FIELDS - Add these
+  publishedContent Json?    // Last published version
+  publishedAt      DateTime?
+  lastPublishedBy  String?   // User ID who published
+  version          Int      @default(1) // Auto-increment on publish
+  
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
