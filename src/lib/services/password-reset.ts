@@ -3,6 +3,7 @@ import { sendPasswordChangedEmail, sendPasswordResetEmail } from '@/lib/services
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import { generatePasswordResetToken } from '@/lib/utils/token'
 import { hashPassword } from '@/lib/auth/password'
+import { getAppUrl } from '../utils/get-app-url'
 
 export interface CompletePasswordResetInput {
   token: string
@@ -245,7 +246,7 @@ export async function requestPasswordReset(
     })
 
     // Send password reset email
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
+    const resetUrl = `${getAppUrl()}/reset-password?token=${resetToken}`
     const businessName = user.businesses[0]?.name || 'Your Business'
 
     await sendPasswordResetEmail(user.email, resetUrl, businessName)
