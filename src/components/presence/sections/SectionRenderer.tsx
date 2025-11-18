@@ -65,7 +65,7 @@ export function SectionRenderer({
             return <ContactSection key={section.id} section={section} businessData={businessData} />
 
           case 'FAQ':
-            return <FAQSection key={section.id} section={section} />
+            return <FAQSection key={section.id} section={section} businessName={businessName} />
 
           case 'TESTIMONIALS':
             return <TestimonialsSection key={section.id} section={section} />

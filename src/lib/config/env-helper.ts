@@ -1,4 +1,6 @@
+import { get } from 'http'
 import { env } from './env'
+import { getAppUrl } from '../utils/get-app-url'
 
 /**
  * Helper functions for environment-specific behavior
@@ -9,7 +11,7 @@ import { env } from './env'
  * Useful for absolute URLs in emails, redirects, etc.
  */
 export function getBaseUrl(): string {
-  return env.APP_URL || env.NEXT_PUBLIC_APP_URL
+  return getAppUrl() || env.NEXT_PUBLIC_APP_URL!
 }
 
 /**
