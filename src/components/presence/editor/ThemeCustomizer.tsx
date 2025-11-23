@@ -8,7 +8,7 @@ import { Label } from '@/components/form/label'
 import { Select } from '@/components/form/select'
 import { Button } from '@/components/ui/button'
 import { ColorPicker } from '@/components/ui/color-picker'
-import { Palette, Type, Layout, RotateCcw, Sparkles, Check } from 'lucide-react'
+import { Palette, Type, Layout, RotateCcw, Sparkles, Check, Layers } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface ThemeSettings {
@@ -21,6 +21,19 @@ interface ThemeSettings {
   headingFont?: string
   buttonStyle?: 'rounded' | 'square' | 'pill'
   spacing?: 'compact' | 'normal' | 'relaxed'
+  // Background options
+  backgroundType?: 'solid' | 'gradient' | 'pattern'
+  backgroundGradient?: {
+    type: 'linear' | 'radial'
+    angle?: number
+    colors: string[]
+  }
+  backgroundPattern?: {
+    type: 'dots' | 'grid' | 'diagonal' | 'waves' | 'none'
+    color?: string
+    opacity?: number
+    size?: 'small' | 'medium' | 'large'
+  }
 }
 
 interface ThemeCustomizerProps {
@@ -52,6 +65,18 @@ const DEFAULT_THEME: ThemeSettings = {
   headingFont: 'Inter',
   buttonStyle: 'rounded',
   spacing: 'normal',
+  backgroundType: 'solid',
+  backgroundGradient: {
+    type: 'linear',
+    angle: 180,
+    colors: ['#FFFFFF', '#F3F4F6'],
+  },
+  backgroundPattern: {
+    type: 'none',
+    color: '#000000',
+    opacity: 10,
+    size: 'medium',
+  },
 }
 
 // Pre-made color palettes
@@ -340,6 +365,270 @@ export function ThemeCustomizer({ businessId, onUpdate, className }: ThemeCustom
         </div>
       </Card>
 
+      {/* Page Background */}
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Layers className="w-5 h-5 text-gray-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Page Background</h3>
+        </div>
+
+        <div className="space-y-4">
+          {/* Background Type */}
+          <div>
+            <Label htmlFor="background-type">Background Type</Label>
+            <p className="text-xs text-gray-500 mb-2">Choose how the page background appears</p>
+            <Select
+              id="background-type"
+              value={theme.backgroundType || 'solid'}
+              onChange={e =>
+                updateTheme('backgroundType', e.target.value as 'solid' | 'gradient' | 'pattern')
+              }
+              className="mt-1"
+              options={[
+                { value: 'solid', label: 'Solid Color' },
+                { value: 'gradient', label: 'Gradient' },
+                { value: 'pattern', label: 'Pattern' },
+              ]}
+            />
+          </div>
+
+          {/* Solid Color Options */}
+          {theme.backgroundType === 'solid' && (
+            <div>
+              <Label>Background Color</Label>
+              <p className="text-xs text-gray-500 mb-2">Main page background color</p>
+              <ColorPicker
+                value={theme.backgroundColor || DEFAULT_THEME.backgroundColor!}
+                onChange={color => updateTheme('backgroundColor', color)}
+              />
+            </div>
+          )}
+
+          {/* Gradient Options */}
+          {theme.backgroundType === 'gradient' && (
+            <div className="space-y-4">
+              {/* Gradient Type */}
+              <div>
+                <Label htmlFor="gradient-type">Gradient Type</Label>
+                <Select
+                  id="gradient-type"
+                  value={theme.backgroundGradient?.type || 'linear'}
+                  onChange={e =>
+                    updateTheme('backgroundGradient', {
+                      ...theme.backgroundGradient,
+                      type: e.target.value as 'linear' | 'radial',
+                      colors: theme.backgroundGradient?.colors || ['#FFFFFF', '#F3F4F6'],
+                    })
+                  }
+                  className="mt-1"
+                  options={[
+                    { value: 'linear', label: 'Linear (Directional)' },
+                    { value: 'radial', label: 'Radial (Circular)' },
+                  ]}
+                />
+              </div>
+
+              {/* Gradient Angle (only for linear) */}
+              {theme.backgroundGradient?.type === 'linear' && (
+                <div>
+                  <Label htmlFor="gradient-angle">
+                    Gradient Angle: {theme.backgroundGradient?.angle ?? 180}°
+                  </Label>
+                  <input
+                    id="gradient-angle"
+                    type="range"
+                    min="0"
+                    max="360"
+                    value={theme.backgroundGradient?.angle ?? 180}
+                    onChange={e =>
+                      updateTheme('backgroundGradient', {
+                        ...theme.backgroundGradient,
+                        type: theme.backgroundGradient?.type || 'linear',
+                        angle: parseInt(e.target.value),
+                        colors: theme.backgroundGradient?.colors || ['#FFFFFF', '#F3F4F6'],
+                      })
+                    }
+                    className="w-full mt-2"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0° (Top)</span>
+                    <span>90° (Right)</span>
+                    <span>180° (Bottom)</span>
+                    <span>270° (Left)</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Gradient Colors */}
+              <div>
+                <Label>Start Color</Label>
+                <ColorPicker
+                  value={theme.backgroundGradient?.colors?.[0] || '#FFFFFF'}
+                  onChange={color =>
+                    updateTheme('backgroundGradient', {
+                      ...theme.backgroundGradient,
+                      type: theme.backgroundGradient?.type || 'linear',
+                      colors: [color, theme.backgroundGradient?.colors?.[1] || '#F3F4F6'],
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>End Color</Label>
+                <ColorPicker
+                  value={theme.backgroundGradient?.colors?.[1] || '#F3F4F6'}
+                  onChange={color =>
+                    updateTheme('backgroundGradient', {
+                      ...theme.backgroundGradient,
+                      type: theme.backgroundGradient?.type || 'linear',
+                      colors: [theme.backgroundGradient?.colors?.[0] || '#FFFFFF', color],
+                    })
+                  }
+                />
+              </div>
+
+              {/* Gradient Preview */}
+              <div className="pt-2">
+                <Label className="mb-2 block">Gradient Preview</Label>
+                <div
+                  className="h-24 rounded-lg border border-gray-200"
+                  style={{
+                    background:
+                      theme.backgroundGradient?.type === 'radial'
+                        ? `radial-gradient(circle, ${theme.backgroundGradient?.colors?.[0] || '#FFFFFF'}, ${theme.backgroundGradient?.colors?.[1] || '#F3F4F6'})`
+                        : `linear-gradient(${theme.backgroundGradient?.angle ?? 180}deg, ${theme.backgroundGradient?.colors?.[0] || '#FFFFFF'}, ${theme.backgroundGradient?.colors?.[1] || '#F3F4F6'})`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Pattern Options */}
+          {theme.backgroundType === 'pattern' && (
+            <div className="space-y-4">
+              {/* Base Color */}
+              <div>
+                <Label>Base Background Color</Label>
+                <p className="text-xs text-gray-500 mb-2">The solid color behind the pattern</p>
+                <ColorPicker
+                  value={theme.backgroundColor || DEFAULT_THEME.backgroundColor!}
+                  onChange={color => updateTheme('backgroundColor', color)}
+                />
+              </div>
+
+              {/* Pattern Type */}
+              <div>
+                <Label htmlFor="pattern-type">Pattern Style</Label>
+                <Select
+                  id="pattern-type"
+                  value={theme.backgroundPattern?.type || 'none'}
+                  onChange={e =>
+                    updateTheme('backgroundPattern', {
+                      ...theme.backgroundPattern,
+                      type: e.target.value as 'dots' | 'grid' | 'diagonal' | 'waves' | 'none',
+                      color: theme.backgroundPattern?.color || '#000000',
+                      opacity: theme.backgroundPattern?.opacity ?? 10,
+                      size: theme.backgroundPattern?.size || 'medium',
+                    })
+                  }
+                  className="mt-1"
+                  options={[
+                    { value: 'none', label: 'No Pattern' },
+                    { value: 'dots', label: 'Dots' },
+                    { value: 'grid', label: 'Grid Lines' },
+                    { value: 'diagonal', label: 'Diagonal Lines' },
+                    { value: 'waves', label: 'Waves' },
+                  ]}
+                />
+              </div>
+
+              {theme.backgroundPattern?.type && theme.backgroundPattern.type !== 'none' && (
+                <>
+                  {/* Pattern Color */}
+                  <div>
+                    <Label>Pattern Color</Label>
+                    <ColorPicker
+                      value={theme.backgroundPattern?.color || '#000000'}
+                      onChange={color =>
+                        updateTheme('backgroundPattern', {
+                          ...theme.backgroundPattern,
+                          type: theme.backgroundPattern?.type || 'dots',
+                          color,
+                          opacity: theme.backgroundPattern?.opacity ?? 10,
+                          size: theme.backgroundPattern?.size || 'medium',
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Pattern Opacity */}
+                  <div>
+                    <Label htmlFor="pattern-opacity">
+                      Pattern Opacity: {theme.backgroundPattern?.opacity ?? 10}%
+                    </Label>
+                    <input
+                      id="pattern-opacity"
+                      type="range"
+                      min="5"
+                      max="50"
+                      value={theme.backgroundPattern?.opacity ?? 10}
+                      onChange={e =>
+                        updateTheme('backgroundPattern', {
+                          ...theme.backgroundPattern,
+                          type: theme.backgroundPattern?.type || 'dots',
+                          color: theme.backgroundPattern?.color || '#000000',
+                          opacity: parseInt(e.target.value),
+                          size: theme.backgroundPattern?.size || 'medium',
+                        })
+                      }
+                      className="w-full mt-2"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>Subtle</span>
+                      <span>Visible</span>
+                    </div>
+                  </div>
+
+                  {/* Pattern Size */}
+                  <div>
+                    <Label htmlFor="pattern-size">Pattern Size</Label>
+                    <Select
+                      id="pattern-size"
+                      value={theme.backgroundPattern?.size || 'medium'}
+                      onChange={e =>
+                        updateTheme('backgroundPattern', {
+                          ...theme.backgroundPattern,
+                          type: theme.backgroundPattern?.type || 'dots',
+                          color: theme.backgroundPattern?.color || '#000000',
+                          opacity: theme.backgroundPattern?.opacity ?? 10,
+                          size: e.target.value as 'small' | 'medium' | 'large',
+                        })
+                      }
+                      className="mt-1"
+                      options={[
+                        { value: 'small', label: 'Small' },
+                        { value: 'medium', label: 'Medium' },
+                        { value: 'large', label: 'Large' },
+                      ]}
+                    />
+                  </div>
+
+                  {/* Pattern Preview */}
+                  <div className="pt-2">
+                    <Label className="mb-2 block">Pattern Preview</Label>
+                    <BackgroundPreview
+                      backgroundColor={theme.backgroundColor || '#FFFFFF'}
+                      pattern={theme.backgroundPattern}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
+
       {/* Typography */}
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -518,4 +807,59 @@ export function ThemeCustomizer({ businessId, onUpdate, className }: ThemeCustom
       </div>
     </div>
   )
+}
+
+// Background Preview Component
+function BackgroundPreview({
+  backgroundColor,
+  pattern,
+}: {
+  backgroundColor: string
+  pattern?: ThemeSettings['backgroundPattern']
+}) {
+  const getPatternStyle = (): React.CSSProperties => {
+    if (!pattern || pattern.type === 'none') {
+      return { backgroundColor }
+    }
+
+    const patternColor = pattern.color || '#000000'
+    const opacity = (pattern.opacity ?? 10) / 100
+    const patternColorWithOpacity = `${patternColor}${Math.round(opacity * 255)
+      .toString(16)
+      .padStart(2, '0')}`
+
+    const sizeMap = {
+      small: { dots: '20px 20px', grid: '20px 20px', diagonal: '10px 10px', waves: '40px 20px' },
+      medium: { dots: '40px 40px', grid: '40px 40px', diagonal: '20px 20px', waves: '80px 40px' },
+      large: { dots: '60px 60px', grid: '60px 60px', diagonal: '30px 30px', waves: '120px 60px' },
+    }
+
+    const size = sizeMap[pattern.size || 'medium'][pattern.type]
+
+    switch (pattern.type) {
+      case 'dots':
+        return {
+          background: `radial-gradient(circle, ${patternColorWithOpacity} 1px, transparent 1px), ${backgroundColor}`,
+          backgroundSize: size,
+        }
+      case 'grid':
+        return {
+          background: `linear-gradient(${patternColorWithOpacity} 1px, transparent 1px), linear-gradient(90deg, ${patternColorWithOpacity} 1px, transparent 1px), ${backgroundColor}`,
+          backgroundSize: size,
+        }
+      case 'diagonal':
+        return {
+          background: `repeating-linear-gradient(45deg, transparent, transparent 10px, ${patternColorWithOpacity} 10px, ${patternColorWithOpacity} 11px), ${backgroundColor}`,
+        }
+      case 'waves':
+        return {
+          background: `radial-gradient(ellipse 100% 100% at 50% 0%, transparent 50%, ${patternColorWithOpacity} 50%, ${patternColorWithOpacity} 51%, transparent 51%), ${backgroundColor}`,
+          backgroundSize: size,
+        }
+      default:
+        return { backgroundColor }
+    }
+  }
+
+  return <div className="h-24 rounded-lg border border-gray-200" style={getPatternStyle()} />
 }
