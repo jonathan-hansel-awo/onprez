@@ -5,6 +5,8 @@ import { sendVerificationEmail } from '@/lib/services/email'
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import type { SignupInput } from '@/lib/validation/auth'
 import { env } from '@/lib/config/env'
+import { createDefaultPresencePageContent } from '@/lib/utils/default-presence-page'
+import { Prisma } from '@prisma/client'
 
 export interface SignupResult {
   success: boolean
@@ -88,6 +90,25 @@ export async function signupUser(
           category: data.businessCategory,
           description: '',
           isActive: true,
+        },
+      })
+
+      // Create default presence page
+      const defaultContent = createDefaultPresencePageContent(
+        data.businessName,
+        data.businessCategory
+      )
+
+      await tx.page.create({
+        data: {
+          businessId: business.id,
+          slug: 'home',
+          title: `${data.businessName} - Home`,
+          isPublished: false,
+          order: 0,
+          content: defaultContent as unknown as Prisma.InputJsonValue,
+          metaTitle: `${data.businessName} | OnPrez`,
+          metaDescription: `Welcome to ${data.businessName}. Book your appointment online today.`,
         },
       })
 
