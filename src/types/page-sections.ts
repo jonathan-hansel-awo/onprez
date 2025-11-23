@@ -28,6 +28,12 @@ export interface HeroSection extends BaseSection {
     ctaLink?: string
     overlay?: boolean
     alignment?: 'left' | 'center' | 'right'
+    overlayColor?: string
+    overlayOpacity?: number // 0-100
+    overlayStyle?: 'solid' | 'gradient-vertical' | 'gradient-diagonal'
+    textColor?: 'light' | 'dark' | 'custom'
+    customTextColor?: string
+    textShadow?: boolean
   }
 }
 
@@ -158,12 +164,19 @@ export function createSection(type: SectionType, order: number): PageSection {
         ...baseSection,
         type: 'HERO',
         data: {
-          title: 'Welcome',
-          subtitle: '',
+          title: 'Welcome to Our Business',
+          subtitle: 'Providing exceptional service to our community',
+          ctaText: 'Get Started',
+          ctaLink: '#contact',
           alignment: 'center',
           overlay: true,
+          overlayColor: '#000000',
+          overlayOpacity: 50,
+          overlayStyle: 'solid',
+          textColor: 'light',
+          textShadow: true,
         },
-      }
+      } as HeroSection
 
     case 'ABOUT':
       return {

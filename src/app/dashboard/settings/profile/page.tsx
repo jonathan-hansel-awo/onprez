@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Save, Loader2, ExternalLink, Globe, MapPin, Mail, Phone } from 'lucide-react'
 import { BUSINESS_CATEGORY_LABELS, getTimezonesByRegion } from '@/types/business'
 import { Input, FormError, Select, TextArea } from '@/components/form'
+import Loading from '@/app/[handle]/loading'
 
 export default function ProfileSettingsPage() {
   const [loading, setLoading] = useState(true)
@@ -93,11 +94,7 @@ export default function ProfileSettingsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-onprez-blue" />
-      </div>
-    )
+    return <Loading />
   }
 
   const timezonesByRegion = getTimezonesByRegion()

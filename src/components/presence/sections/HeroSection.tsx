@@ -1,94 +1,158 @@
 'use client'
 
 import { HeroSection as HeroSectionType } from '@/types/page-sections'
-import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
-import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+import { cn } from '@/lib/utils/cn'
 
 interface HeroSectionProps {
   section: HeroSectionType
 }
 
 export function HeroSection({ section }: HeroSectionProps) {
-  const { title, subtitle, backgroundImage, ctaText, ctaLink, overlay, alignment } = section.data
+  const {
+    title,
+    subtitle,
+    ctaText,
+    ctaLink,
+    backgroundImage,
+    alignment = 'center',
+    overlay = true,
+    overlayColor = '#000000',
+    overlayOpacity = 50,
+    overlayStyle = 'solid',
+    textColor = 'light',
+    customTextColor,
+    textShadow = true,
+  } = section.data
 
+  // Alignment classes
   const alignmentClasses = {
     left: 'text-left items-start',
     center: 'text-center items-center',
     right: 'text-right items-end',
   }
 
+  // Text color classes
+  const textColorClass =
+    textColor === 'light'
+      ? 'text-white'
+      : textColor === 'dark'
+        ? 'text-gray-900'
+        : customTextColor
+          ? ''
+          : 'text-white'
+
+  // Text shadow
+  const textShadowStyle = textShadow
+    ? { textShadow: '0 2px 4px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.1)' }
+    : {}
+
+  // Overlay gradient styles
+  const getOverlayStyle = () => {
+    const opacityHex = Math.round((overlayOpacity / 100) * 255)
+      .toString(16)
+      .padStart(2, '0')
+    const colorWithOpacity = `${overlayColor}${opacityHex}`
+
+    switch (overlayStyle) {
+      case 'gradient-vertical':
+        return {
+          background: `linear-gradient(to bottom, ${colorWithOpacity} 0%, transparent 100%)`,
+        }
+      case 'gradient-diagonal':
+        return {
+          background: `linear-gradient(135deg, ${colorWithOpacity} 0%, transparent 100%)`,
+        }
+      case 'solid':
+      default:
+        return {
+          backgroundColor: colorWithOpacity,
+        }
+    }
+  }
+
   return (
-    <section className="relative min-h-[500px] md:min-h-[600px] flex items-center justify-center overflow-hidden theme-section-spacing">
+    <section
+      id={section.id}
+      className="relative min-h-[600px] flex items-center justify-center overflow-hidden"
+    >
       {/* Background Image */}
       {backgroundImage && (
         <div className="absolute inset-0 z-0">
-          <Image
+          <img
             src={backgroundImage}
-            alt={title}
-            fill
-            className="object-cover"
-            priority
-            quality={90}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="eager"
           />
-          {overlay && <div className="absolute inset-0 bg-black/50" />}
         </div>
       )}
 
+      {/* Overlay */}
+      {overlay && <div className="absolute inset-0 z-10" style={getOverlayStyle()} />}
+
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className={`flex flex-col gap-6 max-w-4xl mx-auto ${alignmentClasses[alignment || 'center']}`}
+          transition={{ duration: 0.8 }}
+          className={cn('flex flex-col gap-6 max-w-4xl mx-auto', alignmentClasses[alignment])}
         >
+          {/* Title */}
           <h1
-            className={`text-4xl md:text-5xl lg:text-6xl font-bold theme-heading ${
-              backgroundImage ? 'text-white' : ''
-            }`}
+            className={cn(
+              'text-4xl sm:text-5xl md:text-6xl font-bold leading-tight',
+              textColorClass
+            )}
             style={{
-              fontFamily: backgroundImage ? undefined : 'var(--theme-font-heading)',
+              ...textShadowStyle,
+              ...(textColor === 'custom' && customTextColor ? { color: customTextColor } : {}),
             }}
           >
             {title}
           </h1>
 
+          {/* Subtitle */}
           {subtitle && (
             <p
-              className={`text-lg md:text-xl lg:text-2xl theme-body-text ${
-                backgroundImage ? 'text-white/90' : ''
-              }`}
+              className={cn(
+                'text-lg sm:text-xl md:text-2xl max-w-2xl',
+                textColorClass,
+                textColor === 'light' ? 'text-white/90' : 'text-gray-600'
+              )}
               style={{
-                fontFamily: backgroundImage ? undefined : 'var(--theme-font-body)',
+                ...textShadowStyle,
+                ...(textColor === 'custom' && customTextColor
+                  ? { color: customTextColor, opacity: 0.9 }
+                  : {}),
               }}
             >
               {subtitle}
             </p>
           )}
 
+          {/* CTA Button */}
           {ctaText && ctaLink && (
-            <div className="mt-4">
-              <Link href={ctaLink}>
-                <button
-                  className="theme-button-primary px-6 py-3 font-semibold text-lg"
-                  style={{
-                    fontFamily: 'var(--theme-font-body)',
-                  }}
-                >
-                  {ctaText}
-                </button>
-              </Link>
-            </div>
+            <motion.a
+              href={ctaLink}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={cn(
+                'inline-flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-lg transition-all shadow-lg hover:shadow-xl',
+                alignment === 'center' ? 'mx-auto' : '',
+                textColor === 'light'
+                  ? 'bg-white text-gray-900 hover:bg-gray-100'
+                  : 'bg-onprez-blue text-white hover:bg-onprez-blue/90'
+              )}
+            >
+              {ctaText}
+              <ArrowRight className="w-5 h-5" />
+            </motion.a>
           )}
         </motion.div>
       </div>
-
-      {/* Gradient overlay at bottom */}
-      {backgroundImage && (
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent z-5" />
-      )}
     </section>
   )
 }
