@@ -1,15 +1,72 @@
 'use client'
 
 import { PageSection } from '@/types/page-sections'
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
+
+// Static imports for above-the-fold sections
 import { HeroSection } from './HeroSection'
 import { AboutSection } from './AboutSection'
-import { ServicesSection } from './ServicesSection'
-import { GallerySection } from './GallerySection'
-import { ContactSection } from './ContactSection'
-import { FAQSection } from './FAQSection'
-import { TestimonialsSection } from './TestimonialsSection'
-import { CustomHTMLSection } from './CustomHTMLSection'
-import { InquirySection } from './InquirySection'
+
+// Dynamic imports for below-the-fold sections (lazy loaded)
+const ServicesSection = dynamic(
+  () => import('./ServicesSection').then(mod => ({ default: mod.ServicesSection })),
+  {
+    loading: () => <SectionSkeleton />,
+  }
+)
+
+const GallerySection = dynamic(
+  () => import('./GallerySection').then(mod => ({ default: mod.GallerySection })),
+  {
+    loading: () => <SectionSkeleton />,
+  }
+)
+
+const ContactSection = dynamic(
+  () => import('./ContactSection').then(mod => ({ default: mod.ContactSection })),
+  {
+    loading: () => <SectionSkeleton />,
+  }
+)
+
+const FAQSection = dynamic(
+  () => import('./FAQSection').then(mod => ({ default: mod.FAQSection })),
+  {
+    loading: () => <SectionSkeleton />,
+  }
+)
+
+const TestimonialsSection = dynamic(
+  () => import('./TestimonialsSection').then(mod => ({ default: mod.TestimonialsSection })),
+  {
+    loading: () => <SectionSkeleton />,
+  }
+)
+
+const CustomHTMLSection = dynamic(
+  () => import('./CustomHTMLSection').then(mod => ({ default: mod.CustomHTMLSection })),
+  {
+    loading: () => <SectionSkeleton />,
+  }
+)
+
+const InquirySection = dynamic(
+  () => import('./InquirySection').then(mod => ({ default: mod.InquirySection })),
+  {
+    loading: () => <SectionSkeleton />,
+  }
+)
+
+function SectionSkeleton() {
+  return (
+    <div className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="h-64 bg-gray-200 animate-pulse rounded-xl" />
+      </div>
+    </div>
+  )
+}
 
 interface SectionRendererProps {
   sections: PageSection[]
@@ -20,6 +77,7 @@ interface SectionRendererProps {
     phone?: string
     email?: string
     address?: string
+    website?: string
     socialMedia?: {
       facebook?: string
       instagram?: string
@@ -38,53 +96,74 @@ export function SectionRenderer({
   businessName,
   showInquiryForm = true,
 }: SectionRendererProps) {
-  // Filter only visible sections and sort by order
   const visibleSections = sections
     .filter(section => section.isVisible)
     .sort((a, b) => a.order - b.order)
 
   return (
     <>
-      {visibleSections.map(section => {
-        switch (section.type) {
-          case 'HERO':
-            return <HeroSection key={section.id} section={section} />
+      {visibleSections.map((section, index) => {
+        // First 2 sections load immediately (above fold)
+        const isAboveFold = index < 2
 
-          case 'ABOUT':
-            return <AboutSection key={section.id} section={section} />
+        const sectionComponent = (() => {
+          switch (section.type) {
+            case 'HERO':
+              return <HeroSection key={section.id} section={section} />
 
-          case 'SERVICES':
-            return (
-              <ServicesSection key={section.id} section={section} businessHandle={businessHandle} />
-            )
+            case 'ABOUT':
+              return <AboutSection key={section.id} section={section} />
 
-          case 'GALLERY':
-            return <GallerySection key={section.id} section={section} />
+            case 'SERVICES':
+              return (
+                <ServicesSection
+                  key={section.id}
+                  section={section}
+                  businessHandle={businessHandle}
+                />
+              )
 
-          case 'CONTACT':
-            return <ContactSection key={section.id} section={section} businessData={businessData} />
+            case 'GALLERY':
+              return <GallerySection key={section.id} section={section} />
 
-          case 'FAQ':
-            return <FAQSection key={section.id} section={section} businessName={businessName} />
+            case 'CONTACT':
+              return (
+                <ContactSection key={section.id} section={section} businessData={businessData} />
+              )
 
-          case 'TESTIMONIALS':
-            return <TestimonialsSection key={section.id} section={section} />
+            case 'FAQ':
+              return <FAQSection key={section.id} section={section} businessName={businessName} />
 
-          case 'CUSTOM_HTML':
-            return <CustomHTMLSection key={section.id} section={section} />
+            case 'TESTIMONIALS':
+              return <TestimonialsSection key={section.id} section={section} />
 
-          default:
-            return null
-        }
+            case 'CUSTOM_HTML':
+              return <CustomHTMLSection key={section.id} section={section} />
+
+            default:
+              return null
+          }
+        })()
+
+        // Wrap below-fold sections in Suspense
+        return isAboveFold ? (
+          sectionComponent
+        ) : (
+          <Suspense key={section.id} fallback={<SectionSkeleton />}>
+            {sectionComponent}
+          </Suspense>
+        )
       })}
 
       {showInquiryForm && (
-        <InquirySection
-          businessId={businessId}
-          businessName={businessName}
-          title="Have Questions?"
-          description="We're here to help. Send us a message and we'll get back to you soon."
-        />
+        <Suspense fallback={<SectionSkeleton />}>
+          <InquirySection
+            businessId={businessId}
+            businessName={businessName}
+            title="Have Questions?"
+            description="We're here to help. Send us a message and we'll get back to you soon."
+          />
+        </Suspense>
       )}
     </>
   )
