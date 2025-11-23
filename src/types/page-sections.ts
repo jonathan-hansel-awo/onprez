@@ -1,5 +1,6 @@
 // Section type definitions
 export type SectionType =
+  | 'NAVBAR'
   | 'HERO'
   | 'ABOUT'
   | 'SERVICES'
@@ -15,6 +16,30 @@ export interface BaseSection {
   type: SectionType
   order: number
   isVisible: boolean
+}
+
+// Navbar section
+export interface NavbarSection extends BaseSection {
+  type: 'NAVBAR'
+  data: {
+    logo?: string
+    logoText?: string
+    showLogo?: boolean
+    showLogoText?: boolean
+    links: Array<{
+      id: string
+      label: string
+      href: string
+      isExternal?: boolean
+    }>
+    ctaText?: string
+    ctaLink?: string
+    showCta?: boolean
+    style?: 'transparent' | 'solid' | 'gradient'
+    position?: 'fixed' | 'sticky' | 'static'
+    backgroundColor?: string
+    textColor?: 'light' | 'dark' | 'auto'
+  }
 }
 
 // Hero section
@@ -130,6 +155,7 @@ export interface CustomHTMLSection extends BaseSection {
 
 // Union type of all sections
 export type PageSection =
+  | NavbarSection
   | HeroSection
   | AboutSection
   | ServicesSection
@@ -159,6 +185,28 @@ export function createSection(type: SectionType, order: number): PageSection {
   }
 
   switch (type) {
+    case 'NAVBAR':
+      return {
+        ...baseSection,
+        type: 'NAVBAR',
+        data: {
+          showLogo: true,
+          showLogoText: true,
+          logoText: 'Your Business',
+          links: [
+            { id: 'link-1', label: 'About', href: '#about' },
+            { id: 'link-2', label: 'Services', href: '#services' },
+            { id: 'link-3', label: 'Contact', href: '#contact' },
+          ],
+          showCta: true,
+          ctaText: 'Book Now',
+          ctaLink: '#contact',
+          style: 'solid',
+          position: 'sticky',
+          textColor: 'dark',
+        },
+      } as NavbarSection
+
     case 'HERO':
       return {
         ...baseSection,

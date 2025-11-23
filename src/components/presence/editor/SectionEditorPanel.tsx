@@ -8,7 +8,7 @@ import { ServicesSectionEditor } from './sections/ServicesSectionEditor'
 import { GallerySectionEditor } from './sections/GallerySectionEditor'
 import { ContactSectionEditor } from './sections/ContactSectionEditor'
 import { FAQSectionEditor } from './sections/FAQSectionEditor'
-import { Button } from '@/components/ui/button'
+import { NavbarSectionEditor } from './sections/NavbarSectionEditor'
 
 interface SectionEditorPanelProps {
   section: PageSection
@@ -25,6 +25,9 @@ export function SectionEditorPanel({
 }: SectionEditorPanelProps) {
   function renderEditor() {
     switch (section.type) {
+      case 'NAVBAR':
+        return <NavbarSectionEditor section={section} onUpdate={onUpdate} />
+
       case 'HERO':
         return <HeroSectionEditor section={section} onUpdate={onUpdate} />
 

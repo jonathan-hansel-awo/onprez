@@ -9,7 +9,7 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  ChevronDown,
+  Navigation,
   Image as ImageIcon,
   Type,
   Package,
@@ -32,6 +32,7 @@ interface SectionListProps {
 }
 
 const SECTION_ICONS = {
+  NAVBAR: Navigation,
   HERO: Type,
   ABOUT: Type,
   SERVICES: Package,

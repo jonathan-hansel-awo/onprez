@@ -7,6 +7,7 @@ import { Suspense } from 'react'
 // Static imports for above-the-fold sections
 import { HeroSection } from './HeroSection'
 import { AboutSection } from './AboutSection'
+import { NavbarSection } from './NavbarSection'
 
 // Dynamic imports for below-the-fold sections (lazy loaded)
 const ServicesSection = dynamic(
@@ -108,6 +109,11 @@ export function SectionRenderer({
 
         const sectionComponent = (() => {
           switch (section.type) {
+            case 'NAVBAR':
+              return (
+                <NavbarSection key={section.id} section={section} businessName={businessName} />
+              )
+
             case 'HERO':
               return <HeroSection key={section.id} section={section} />
 
