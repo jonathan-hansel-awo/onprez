@@ -106,7 +106,7 @@ export function PresenceEditorLayout({
 
     if (result.success) {
       setHasUnsavedChanges(false)
-      showSaveMessage('success', 'Draft saved successfully!')
+      showSaveMessage('success', 'Saved successfully!')
     } else {
       showSaveMessage('error', result.error || 'Failed to save')
     }
@@ -306,7 +306,7 @@ export function PresenceEditorLayout({
           {/* Save Draft */}
           <Button variant="ghost" onClick={handleSave} disabled={saving || autoSaving}>
             <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Draft'}
+            {saving ? 'Saving...' : 'Save'}
           </Button>
 
           {/* Publish/Unpublish */}

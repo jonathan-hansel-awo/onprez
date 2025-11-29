@@ -4,6 +4,7 @@ import { HeroSection as HeroSectionType } from '@/types/page-sections'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import Image from 'next/image'
 
 interface HeroSectionProps {
   section: HeroSectionType
@@ -80,12 +81,7 @@ export function HeroSection({ section }: HeroSectionProps) {
       {/* Background Image */}
       {backgroundImage && (
         <div className="absolute inset-0 z-0">
-          <img
-            src={backgroundImage}
-            alt=""
-            className="w-full h-full object-cover"
-            loading="eager"
-          />
+          <Image src={backgroundImage} alt="" fill className="w-full h-full object-cover" />
         </div>
       )}
 
@@ -135,20 +131,15 @@ export function HeroSection({ section }: HeroSectionProps) {
 
           {/* CTA Button */}
           {ctaText && ctaLink && (
-            <motion.a
-              href={ctaLink}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                'inline-flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-lg transition-all shadow-lg hover:shadow-xl',
-                alignment === 'center' ? 'mx-auto' : '',
-                textColor === 'light'
-                  ? 'bg-white text-gray-900 hover:bg-gray-100'
-                  : 'bg-onprez-blue text-white hover:bg-onprez-blue/90'
-              )}
-            >
-              {ctaText}
-              <ArrowRight className="w-5 h-5" />
+            <motion.a href={ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <button
+                className="theme-button-primary inline-flex items-center gap-2 px-6 py-3 font-semibold text-lg"
+                style={{
+                  fontFamily: 'var(--theme-font-body)',
+                }}
+              >
+                {ctaText} <ArrowRight className="w-5 h-5" />
+              </button>
             </motion.a>
           )}
         </motion.div>

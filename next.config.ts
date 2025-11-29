@@ -2,15 +2,15 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   /* config options here */
-  iimages: {
+  images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'res.cloudinary.com',
+        hostname: 'res.cloudinary.com*',
       },
       {
         protocol: 'https',
-        hostname: '*.cloudinary.com',
+        hostname: '*.cloudinary.com*',
       },
     ],
     formats: ['image/avif', 'image/webp'],

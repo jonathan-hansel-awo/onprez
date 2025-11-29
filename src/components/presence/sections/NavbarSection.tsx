@@ -128,12 +128,7 @@ export function NavbarSection({ section, businessName }: NavbarSectionProps) {
             {showCta && ctaText && ctaLink && (
               <a
                 href={ctaLink}
-                className={cn(
-                  'px-5 py-2.5 rounded-lg font-semibold text-sm transition-all hover:scale-105',
-                  textColor === 'light' || style === 'gradient'
-                    ? 'bg-white text-gray-900 hover:bg-gray-100'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                )}
+                className="px-5 py-2.5 rounded-lg theme-button-primary font-semibold text-sm transition-all hover:scale-105"
                 style={{
                   borderRadius: 'var(--theme-radius, 0.5rem)',
                   fontFamily: 'var(--theme-font-body, inherit)',
@@ -147,8 +142,11 @@ export function NavbarSection({ section, businessName }: NavbarSectionProps) {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={cn('md:hidden p-2 rounded-lg transition-colors', getTextColorClass())}
+            className={cn('md:hidden p-2 rounded-lg theme-button-primary', getTextColorClass())}
             aria-label="Toggle menu"
+            style={{
+              fontFamily: 'var(--theme-font-body)',
+            }}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>

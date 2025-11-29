@@ -87,9 +87,15 @@ export function InquiryForm({ businessId, businessName, className }: InquiryForm
           <p className="text-gray-600 mb-6">
             Thank you for reaching out. We&apos;ll get back to you as soon as possible.
           </p>
-          <Button variant="ghost" onClick={() => setSubmitted(false)}>
+          <button
+            onClick={() => setSubmitted(false)}
+            className="theme-button-primary inline-flex items-center gap-2 px-6 py-3 font-semibold text-lg"
+            style={{
+              fontFamily: 'var(--theme-font-body)',
+            }}
+          >
             Send Another Inquiry
-          </Button>
+          </button>
         </div>
       </Card>
     )
@@ -220,19 +226,26 @@ export function InquiryForm({ businessId, businessName, className }: InquiryForm
 
         {/* Submit Button */}
         <div className="pt-2">
-          <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full theme-button-primary px-6 py-3 font-semibold text-lg"
+            style={{
+              fontFamily: 'var(--theme-font-body)',
+            }}
+          >
             {loading ? (
               <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Sending...
               </>
             ) : (
-              <div className="flex flex-row items-center justify-center">
-                <Mail className="w-5 h-5 mr-2" />
+              <div className="flex flex-row items-center gap-2 justify-center">
+                <Mail className="w-5 h-5 " />
                 Send Inquiry
               </div>
             )}
-          </Button>
+          </button>
         </div>
 
         {/* Privacy Notice */}
