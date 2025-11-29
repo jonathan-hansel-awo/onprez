@@ -1,7 +1,7 @@
 // Mock env
 jest.mock('@/lib/config/env', () => ({
   env: {
-    APP_URL: 'https://onprez.vercel.app',
+    APP_URL: 'https://onprez.com',
     SUPPORT_EMAIL: 'support@onprez.com',
   },
 }))

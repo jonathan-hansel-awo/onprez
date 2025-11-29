@@ -2,7 +2,7 @@ export function getAppUrl() {
   // Check if we're on Vercel
   if (process.env.VERCEL_ENV === 'production') {
     // Use your production domain
-    return 'https://onprez.vercel.app'
+    return 'https://onprez.com'
   }
 
   if (process.env.VERCEL_URL) {

@@ -4,7 +4,7 @@ jest.mock('@/lib/config/env', () => ({
     RESEND_API_KEY: 'test-api-key',
     FROM_EMAIL: 'noreply@onprez.com',
     FROM_NAME: 'OnPrez',
-    APP_URL: 'https://onprez.vercel.app',
+    APP_URL: 'https://onprez.com',
     NODE_ENV: 'test',
   },
   isProduction: false,

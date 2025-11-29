@@ -1,0 +1,26 @@
+<!-- public/favicon.svg -->
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle for better visibility -->
+  <circle cx="50" cy="50" r="50" fill="white"/>
+  
+  <!-- Text logo centered -->
+  <text
+    x="50"
+    y="58"
+    dominant-baseline="middle"
+    text-anchor="middle"
+    fill="url(#logo-gradient)"
+    font-size="28"
+    font-weight="700"
+    font-family="Inter, system-ui, sans-serif"
+  >
+    OP
+  </text>
+</svg>

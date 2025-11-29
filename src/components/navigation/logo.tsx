@@ -49,3 +49,39 @@ export function Logo({ variant = 'gradient', className = '', ...props }: LogoPro
     </motion.a>
   )
 }
+
+export function LogoSVG({
+  className = '',
+  variant = 'gradient',
+}: {
+  className?: string
+  variant?: 'gradient' | 'white'
+}) {
+  return (
+    <svg
+      viewBox="0 0 200 60"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="OnPrez"
+    >
+      <defs>
+        <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#3B82F6" />
+          <stop offset="100%" stopColor="#8B5CF6" />
+        </linearGradient>
+      </defs>
+      <text
+        x="50%"
+        y="50%"
+        dominantBaseline="middle"
+        textAnchor="middle"
+        fill={variant === 'white' ? 'white' : 'url(#logo-gradient)'}
+        fontSize="32"
+        fontWeight="700"
+        fontFamily="Inter, sans-serif"
+      >
+        OnPrez
+      </text>
+    </svg>
+  )
+}

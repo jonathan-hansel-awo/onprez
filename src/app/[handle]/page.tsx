@@ -84,7 +84,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
         business={{
           name: business.name,
           description: business.description || undefined,
-          url: `https://onprez.vercel.app/${handle}`,
+          url: `https://onprez.com/${handle}`,
           logo: business.logoUrl || undefined,
           address: fullAddress || undefined,
           phone: business.phone || undefined,
@@ -160,7 +160,7 @@ export async function generateMetadata({ params }: PresencePageProps): Promise<M
     openGraph: {
       title,
       description,
-      url: `https://onprez.vercel.app/${handle}`,
+      url: `https://onprez.com/${handle}`,
       siteName: 'OnPrez',
       images: [
         {
@@ -180,7 +180,7 @@ export async function generateMetadata({ params }: PresencePageProps): Promise<M
       images: [imageUrl],
     },
     alternates: {
-      canonical: `https://onprez.vercel.app/${handle}`,
+      canonical: `https://onprez.com/${handle}`,
     },
     robots: {
       index: true,

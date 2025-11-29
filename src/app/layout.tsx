@@ -25,10 +25,13 @@ export const metadata: Metadata = {
     'custom handle',
     'business page',
   ],
+  icons: {
+    icon: '/favicon.svg',
+  },
   authors: [{ name: 'OnPrez' }],
   creator: 'OnPrez',
   publisher: 'OnPrez',
-  metadataBase: new URL('https://onprez.vercel.app'),
+  metadataBase: new URL('https://onprez.com'),
   alternates: {
     canonical: '/',
   },
@@ -36,7 +39,7 @@ export const metadata: Metadata = {
     title: 'OnPrez - Your Complete Online Presence',
     description:
       'Create your customizable presence page with integrated booking. Perfect for service professionals.',
-    url: 'https://onprez.vercel.app',
+    url: 'https://onprez.com',
     siteName: 'OnPrez',
     images: [
       {

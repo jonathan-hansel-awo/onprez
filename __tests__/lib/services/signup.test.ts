@@ -2,7 +2,7 @@
 jest.mock('@/lib/config/env', () => ({
   env: {
     NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
-    APP_URL: 'https://onprez.vercel.app',
+    APP_URL: 'https://onprez.com',
     NODE_ENV: 'test',
   },
 }))
