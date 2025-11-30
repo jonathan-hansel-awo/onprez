@@ -123,6 +123,11 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     console.error('Login API error:', error)
+    console.log('Login attempt:', {
+      nodeEnv: process.env.NODE_ENV,
+      appUrl: process.env.NEXT_PUBLIC_APP_URL,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+    })
     return NextResponse.json(
       {
         success: false,
