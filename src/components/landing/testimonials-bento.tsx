@@ -3,8 +3,10 @@
 import { motion } from 'framer-motion'
 import { testimonials } from '@/data/testimonials'
 import { TestimonialTile } from './testimonial-tiles'
+import { useRouter } from 'next/navigation'
 
 export function TestimonialsBento() {
+  const router = useRouter()
   return (
     <section className="py-32 bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto px-4">
@@ -56,6 +58,7 @@ export function TestimonialsBento() {
             className="bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-xl"
             whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(59, 130, 246, 0.3)' }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => router.push('signup')}
           >
             Start Your Free Presence
           </motion.button>

@@ -240,13 +240,13 @@ export default function SessionsPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {sessions.map(session => {
+          {sessions.map((session, index) => {
             const isCurrentSession = session.id === currentSessionId
             const deviceName = getDeviceDisplayName(session.userAgent)
 
             return (
               <motion.div
-                key={session.id}
+                key={index}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="relative"

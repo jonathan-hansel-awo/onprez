@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { PricingPlan } from '@/data/pricing'
 import { Check, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { useRouter } from 'next/navigation'
 
 interface PricingCardProps {
   plan: PricingPlan
@@ -12,6 +13,7 @@ interface PricingCardProps {
 
 export function PricingCard({ plan, index }: PricingCardProps) {
   const isPopular = plan.popular
+  const router = useRouter()
 
   return (
     <motion.div
@@ -92,6 +94,7 @@ export function PricingCard({ plan, index }: PricingCardProps) {
         )}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        onClick={() => router.push('/signup')}
       >
         {plan.cta}
       </motion.button>

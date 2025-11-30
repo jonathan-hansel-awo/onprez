@@ -101,13 +101,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               {/* Navigation */}
               <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-                {navigation.map(item => {
+                {navigation.map((item, index) => {
                   const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                   const Icon = item.icon
 
                   return (
                     <Link
-                      key={item.name}
+                      key={index}
                       href={item.href}
                       onClick={() => setSidebarOpen(false)}
                       className={`
@@ -194,7 +194,7 @@ function Breadcrumbs() {
         const label = segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
 
         return (
-          <div key={segment} className="flex items-center gap-2">
+          <div key={index} className="flex items-center gap-2">
             {index > 0 && <ChevronRight className="w-4 h-4 text-gray-400" />}
             {isLast ? (
               <span className="font-medium text-gray-900">{label}</span>

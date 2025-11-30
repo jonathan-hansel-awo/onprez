@@ -10,6 +10,8 @@ import { BrowserMockup } from './browser-mockup'
 import { heroAvatars } from '@/data/avatars'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { HeroMobile } from './hero-mobile'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // Add this after the desktop mockup div and before the closing of the grid
 {
@@ -18,6 +20,7 @@ import { HeroMobile } from './hero-mobile'
 
 export function Hero() {
   const ref = useRef(null)
+  const router = useRouter()
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start'],
@@ -78,7 +81,12 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.0, duration: 0.6 }}
             >
-              <Button variant="primary" size="lg" className="group relative overflow-hidden">
+              <Button
+                variant="primary"
+                size="lg"
+                className="group relative overflow-hidden"
+                onClick={() => router.push('signup')}
+              >
                 <span className="relative z-10 flex items-center gap-2">
                   Claim Your Handle Free
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -97,8 +105,12 @@ export function Hero() {
                   }}
                 />
               </Button>
-
-              <Button variant="ghost" size="lg" className="group">
+              <Button
+                variant="ghost"
+                size="lg"
+                className="group"
+                onClick={() => router.push('examples')}
+              >
                 See Live Examples
                 <Sparkles className="w-4 h-4 ml-2 group-hover:rotate-12 transition-transform" />
               </Button>

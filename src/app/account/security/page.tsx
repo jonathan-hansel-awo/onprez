@@ -446,7 +446,7 @@ export default function SecurityPage() {
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {backupCodesInfo.map((code, index) => (
                     <div
-                      key={code.id}
+                      key={index}
                       className={`flex items-center justify-between p-3 rounded-lg ${
                         code.used ? 'bg-gray-100' : 'bg-green-50'
                       }`}

@@ -5,12 +5,15 @@ import { useState, useRef } from 'react'
 import { Check, X, Loader2, Sparkles } from 'lucide-react'
 import { useHandleValidation } from '@/lib/hooks/use-handle-validation'
 import { Confetti } from '@/components/effects/confetti'
+import { useRouter } from 'next/navigation'
 
 export function FinalCTA() {
   const [input, setInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const ref = useRef(null)
+  const router = useRouter()
 
   const { status, sanitized, suggestions } = useHandleValidation(input)
 
@@ -22,22 +25,62 @@ export function FinalCTA() {
   const y = useTransform(scrollYProgress, [0, 0.5, 1], [100, 0, -100])
   const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const checkHandleAvailability = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (status !== 'available') return
+
+    if (status !== 'available') {
+      setError('Please choose an available handle')
+      return
+    }
+
+    if (!sanitized) {
+      setError('Invalid handle format')
+      return
+    }
 
     setIsSubmitting(true)
+    setError(null)
 
-    // Simulate submission
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    try {
+      // Check availability one final time
+      const checkResponse = await fetch(`/api/handles/check?handle=${sanitized}`)
+      const checkData = await checkResponse.json()
 
-    setIsSubmitting(false)
-    setShowSuccess(true)
+      if (!checkData.available) {
+        setError('This handle was just taken. Please try another.')
+        setIsSubmitting(false)
+        return
+      }
 
-    // Auto-redirect after success
-    setTimeout(() => {
-      // window.location.href = '/signup';
-    }, 3000)
+      // Reserve the handle
+      const reserveResponse = await fetch('/api/handles/reserve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ handle: sanitized }),
+      })
+
+      const reserveData = await reserveResponse.json()
+
+      if (!reserveResponse.ok) {
+        throw new Error(reserveData.error || 'Failed to reserve handle')
+      }
+
+      // Show success state
+      setShowSuccess(true)
+
+      // Wait for celebration animation
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // Redirect to signup with the reserved handle
+      router.push(`/signup?handle=${sanitized}&token=${reserveData.reservationToken}`)
+    } catch (err) {
+      console.error('Handle reservation error:', err)
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setIsSubmitting(false)
+      setShowSuccess(false)
+    }
   }
 
   return (
@@ -156,7 +199,7 @@ export function FinalCTA() {
 
           {/* Handle Input Form */}
           <motion.form
-            onSubmit={handleSubmit}
+            onSubmit={checkHandleAvailability}
             className="relative"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -170,7 +213,10 @@ export function FinalCTA() {
                 <input
                   type="text"
                   value={input}
-                  onChange={e => setInput(e.target.value)}
+                  onChange={e => {
+                    setInput(e.target.value)
+                    setError(null)
+                  }}
                   placeholder="your-name"
                   className="flex-1 py-5 pr-6 text-lg font-semibold text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent"
                   disabled={isSubmitting || showSuccess}
@@ -218,8 +264,20 @@ export function FinalCTA() {
               />
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                className="text-red-300 text-sm mb-4 flex items-center justify-center gap-2 bg-red-500/20 py-2 px-4 rounded-lg"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <X className="w-4 h-4" />
+                {error}
+              </motion.div>
+            )}
+
             {/* Status Messages */}
-            {status === 'available' && sanitized && (
+            {status === 'available' && sanitized && !error && (
               <motion.div
                 className="text-white/90 text-sm mb-4 flex items-center justify-center gap-2"
                 initial={{ opacity: 0, y: -10 }}
@@ -242,7 +300,10 @@ export function FinalCTA() {
                     <button
                       key={suggestion}
                       type="button"
-                      onClick={() => setInput(suggestion)}
+                      onClick={() => {
+                        setInput(suggestion)
+                        setError(null)
+                      }}
                       className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-sm font-semibold transition-colors"
                     >
                       {suggestion}

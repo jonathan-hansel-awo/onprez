@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { examples, categories, Example } from '@/data/examples'
 import { ExampleCard } from './example-card'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Link } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export function ExamplesCarousel() {
@@ -225,13 +225,15 @@ export function ExamplesCarousel() {
                 <strong>{currentExample.stats.bookings}+ bookings</strong> and{' '}
                 <strong>{currentExample.stats.views}+ profile views</strong> monthly.
               </p>
-              <motion.button
-                className="bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Start Your Own Presence
-              </motion.button>
+              <Link href="/signup">
+                <motion.button
+                  className="bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Start Your Own Presence
+                </motion.button>
+              </Link>
             </motion.div>
           )}
         </AnimatePresence>

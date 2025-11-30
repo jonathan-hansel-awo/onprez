@@ -171,9 +171,9 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {upcomingAppointments.map(appointment => (
+                {upcomingAppointments.map((appointment, index) => (
                   <motion.div
-                    key={appointment.id}
+                    key={index}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
@@ -226,9 +226,9 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {recentBookings.map(booking => (
+                {recentBookings.map((booking, index) => (
                   <motion.div
-                    key={booking.id}
+                    key={index}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"

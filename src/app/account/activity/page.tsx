@@ -202,8 +202,8 @@ export default function ActivityLogPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-onprez-blue focus:border-transparent"
               >
                 <option value="all">All Actions</option>
-                {availableActions.map(action => (
-                  <option key={action} value={action}>
+                {availableActions.map((action, index) => (
+                  <option key={index} value={action}>
                     {getActivityConfig(action).label}
                   </option>
                 ))}
@@ -218,8 +218,8 @@ export default function ActivityLogPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-onprez-blue focus:border-transparent"
               >
                 <option value="all">All Severities</option>
-                {availableSeverities.map(severity => (
-                  <option key={severity} value={severity}>
+                {availableSeverities.map((severity, index) => (
+                  <option key={index} value={severity}>
                     {severity.charAt(0).toUpperCase() + severity.slice(1)}
                   </option>
                 ))}
@@ -383,7 +383,7 @@ export default function ActivityLogPage() {
                   )
                 })
                 .map((p, index, array) => (
-                  <div key={p} className="flex items-center">
+                  <div key={index} className="flex items-center">
                     {index > 0 && array[index - 1] !== p - 1 && (
                       <span className="text-gray-400 px-2">...</span>
                     )}
