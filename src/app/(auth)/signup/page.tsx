@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
@@ -44,6 +44,7 @@ const BUSINESS_CATEGORIES: SelectOption[] = [
 
 export default function SignupPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [formData, setFormData] = useState({
     email: '',
@@ -62,6 +63,7 @@ export default function SignupPage() {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [shouldShake, setShouldShake] = useState(false)
+  const [suggestions, setSuggestions] = useState<string[]>([])
   const { isCopied, copy } = useClipboard()
   const announce = useAnnounce()
   const formRef = useFocusTrap<HTMLFormElement>(true)
@@ -73,22 +75,35 @@ export default function SignupPage() {
   } | null>(null)
 
   useEffect(() => {
-    // Load saved session on mount
+    const handleFromUrl = searchParams.get('handle')
     const saved = sessionStorage.get()
-    if (saved) {
-      setFormData(prev => ({
-        ...prev,
-        email: saved.email || prev.email,
-        handle: saved.handle || prev.handle,
-        businessName: saved.businessName || prev.businessName,
-        businessCategory: saved.businessCategory || prev.businessCategory,
-      }))
+
+    setFormData(prev => ({
+      ...prev,
+      handle: handleFromUrl || saved?.handle || prev.handle,
+      email: saved?.email || prev.email,
+      businessName: saved?.businessName || prev.businessName,
+      businessCategory: saved?.businessCategory || prev.businessCategory,
+    }))
+
+    if (handleFromUrl) {
+      checkHandleAvailability(handleFromUrl)
     }
-  }, [])
+  }, [searchParams])
+
+  const generateSuggestions = (handle: string) => {
+    const sanitized = handle.toLowerCase().replace(/[^a-z0-9-]/g, '')
+    return [
+      `${sanitized}-pro`,
+      `${sanitized}-studio`,
+      `${sanitized}${Math.floor(Math.random() * 100)}`,
+    ]
+  }
 
   const checkHandleAvailability = async (handle: string) => {
     if (handle.length < 3) {
       setIsAvailable(null)
+      setSuggestions([])
       return
     }
 
@@ -110,8 +125,10 @@ export default function SignupPage() {
 
       if (data.available) {
         announce(`Handle ${handle} is available`)
+        setSuggestions([])
       } else {
         announce(`Handle ${handle} is already taken. Please try another.`)
+        setSuggestions(generateSuggestions(handle))
       }
     } catch (error) {
       console.error('Failed to check handle availability:', error)
@@ -595,21 +612,35 @@ export default function SignupPage() {
                         </motion.div>
                       )}
                       {!isChecking && isAvailable === false && (
-                        <motion.p
+                        <motion.div
                           initial={{ opacity: 0, y: -5 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -5 }}
-                          className="mt-2 text-sm text-red-600 flex items-center gap-2"
+                          className="mt-2 space-y-2"
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          This handle is already taken. Try another one!
-                        </motion.p>
+                          <p className="text-sm text-red-600 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            This handle is already taken. Try one of these:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {suggestions.map(suggestion => (
+                              <button
+                                key={suggestion}
+                                type="button"
+                                onClick={() => handleChange('handle', suggestion)}
+                                className="px-3 py-1.5 text-sm font-medium bg-blue-50 text-onprez-blue rounded-lg hover:bg-blue-100 transition-colors"
+                              >
+                                {suggestion}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
                       )}
                     </AnimatePresence>
                     {errors.handle && <p className="mt-2 text-sm text-red-600">{errors.handle}</p>}

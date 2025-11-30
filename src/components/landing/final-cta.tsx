@@ -1,9 +1,8 @@
 'use client'
 
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Check, X, Loader2, Sparkles } from 'lucide-react'
-import { useHandleValidation } from '@/lib/hooks/use-handle-validation'
 import { Confetti } from '@/components/effects/confetti'
 import { useRouter } from 'next/navigation'
 
@@ -11,11 +10,24 @@ export function FinalCTA() {
   const [input, setInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isChecking, setIsChecking] = useState(false)
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
   const ref = useRef(null)
   const router = useRouter()
 
-  const { status, sanitized, suggestions } = useHandleValidation(input)
+  // Sanitize handle input
+  const sanitized = input.toLowerCase().replace(/[^a-z0-9-]/g, '')
+
+  // Generate suggestions if handle is taken
+  const suggestions =
+    isAvailable === false
+      ? [
+          `${sanitized}-pro`,
+          `${sanitized}-studio`,
+          `${sanitized}${Math.floor(Math.random() * 100)}`,
+        ]
+      : []
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -25,16 +37,47 @@ export function FinalCTA() {
   const y = useTransform(scrollYProgress, [0, 0.5, 1], [100, 0, -100])
   const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0])
 
+  // Check handle availability with debouncing
+  useEffect(() => {
+    if (sanitized.length < 3) {
+      setIsAvailable(null)
+      setIsChecking(false)
+      return
+    }
+
+    setIsChecking(true)
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/auth/check-handle?handle=${sanitized}`)
+        const data = await response.json()
+
+        // Handle rate limiting
+        if (response.status === 429) {
+          setIsChecking(false)
+          return
+        }
+
+        setIsAvailable(data.available)
+      } catch (error) {
+        console.error('Failed to check handle availability:', error)
+      } finally {
+        setIsChecking(false)
+      }
+    }, 500)
+
+    return () => clearTimeout(timeout)
+  }, [sanitized])
+
   const checkHandleAvailability = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (status !== 'available') {
+    if (isAvailable !== true) {
       setError('Please choose an available handle')
       return
     }
 
-    if (!sanitized) {
-      setError('Invalid handle format')
+    if (!sanitized || sanitized.length < 3) {
+      setError('Handle must be at least 3 characters')
       return
     }
 
@@ -42,29 +85,15 @@ export function FinalCTA() {
     setError(null)
 
     try {
-      // Check availability one final time
-      const checkResponse = await fetch(`/api/handles/check?handle=${sanitized}`)
+      // One final check before redirecting
+      const checkResponse = await fetch(`/api/auth/check-handle?handle=${sanitized}`)
       const checkData = await checkResponse.json()
 
       if (!checkData.available) {
         setError('This handle was just taken. Please try another.')
         setIsSubmitting(false)
+        setIsAvailable(false)
         return
-      }
-
-      // Reserve the handle
-      const reserveResponse = await fetch('/api/handles/reserve', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ handle: sanitized }),
-      })
-
-      const reserveData = await reserveResponse.json()
-
-      if (!reserveResponse.ok) {
-        throw new Error(reserveData.error || 'Failed to reserve handle')
       }
 
       // Show success state
@@ -73,15 +102,25 @@ export function FinalCTA() {
       // Wait for celebration animation
       await new Promise(resolve => setTimeout(resolve, 2000))
 
-      // Redirect to signup with the reserved handle
-      router.push(`/signup?handle=${sanitized}&token=${reserveData.reservationToken}`)
+      // Redirect to signup with the handle
+      router.push(`/signup?handle=${sanitized}`)
     } catch (err) {
-      console.error('Handle reservation error:', err)
+      console.error('Handle check error:', err)
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setIsSubmitting(false)
       setShowSuccess(false)
     }
   }
+
+  // Get status for UI display
+  const getStatus = () => {
+    if (isChecking) return 'checking'
+    if (isAvailable === true) return 'available'
+    if (isAvailable === false) return 'taken'
+    return 'idle'
+  }
+
+  const status = getStatus()
 
   return (
     <section
