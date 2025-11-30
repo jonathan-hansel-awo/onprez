@@ -10,7 +10,7 @@ const JWT_CONFIG = {
   accessTokenExpiry: env.JWT_ACCESS_TOKEN_EXPIRY,
   refreshTokenExpiry: env.JWT_REFRESH_TOKEN_EXPIRY,
   issuer: env.NEXT_PUBLIC_APP_NAME,
-  audience: env.NEXT_PUBLIC_APP_URL,
+  audience: env.APP_URL,
 } as const
 
 /**
