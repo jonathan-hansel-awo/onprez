@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 'use client'
 
@@ -48,6 +49,9 @@ interface ServiceFormData {
   maxAdvanceBookingDays: string
   featured: boolean
   active: boolean
+  useBusinessHours: boolean
+  availableDays: number[]
+  customAvailability: any
 }
 
 interface Variant {
@@ -74,6 +78,9 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
   const [variants, setVariants] = useState<Variant[]>([])
   const [showVariantForm, setShowVariantForm] = useState(false)
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null)
+  const [useBusinessHours, setUseBusinessHours] = useState(true)
+  const [availableDays, setAvailableDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6])
+  const [customAvailability, setCustomAvailability] = useState<any>(null)
   const [variantFormData, setVariantFormData] = useState({
     name: '',
     description: '',
@@ -98,6 +105,9 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
     maxAdvanceBookingDays: '',
     featured: false,
     active: true,
+    useBusinessHours,
+    availableDays,
+    customAvailability,
   })
 
   useEffect(() => {
@@ -117,6 +127,9 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
       }
 
       const service = serviceData.data.service
+      setUseBusinessHours(service.useBusinessHours ?? true)
+      setAvailableDays(service.availableDays || [0, 1, 2, 3, 4, 5, 6])
+      setCustomAvailability(service.customAvailability)
 
       const variantsRes = await fetch(`/api/services/${resolvedParams.id}/variants`)
       const variantsData = await variantsRes.json()
@@ -148,6 +161,9 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
         maxAdvanceBookingDays: service.maxAdvanceBookingDays?.toString() || '',
         featured: service.featured || false,
         active: service.active !== undefined ? service.active : true,
+        useBusinessHours: service.useBusinessHours ?? true,
+        availableDays: service.availableDays || [0, 1, 2, 3, 4, 5, 6],
+        customAvailability: service.customAvailability || null,
       })
     } catch (error) {
       console.error('Failed to fetch service:', error)
@@ -729,6 +745,76 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Availability Settings */}
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="text-xl font-semibold mb-6">Availability Settings</h2>
+
+          <div className="space-y-6">
+            {/* Use Business Hours Toggle */}
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <label className="font-medium">Use Business Hours</label>
+                <p className="text-sm text-muted-foreground">
+                  Follow the general business hours for this service
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useBusinessHours}
+                  onChange={e => setUseBusinessHours(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
+            {!useBusinessHours && (
+              <>
+                {/* Available Days */}
+                <div>
+                  <label className="block text-sm font-medium mb-3">Available Days</label>
+                  <div className="grid grid-cols-7 gap-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          if (availableDays.includes(index)) {
+                            setAvailableDays(availableDays.filter(d => d !== index))
+                          } else {
+                            setAvailableDays([...availableDays, index].sort())
+                          }
+                        }}
+                        className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                          availableDays.includes(index)
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-white hover:bg-gray-50'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Select the days this service is available
+                  </p>
+                </div>
+
+                {/* Custom Time Slots Info */}
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    <strong>Custom time slots</strong> can be configured for each day. For now, the
+                    service will use business hours on selected days only.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
 

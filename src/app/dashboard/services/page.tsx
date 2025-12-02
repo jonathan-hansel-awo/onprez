@@ -1,139 +1,412 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Image from 'next/image'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/form/input'
-import { Plus, Search, Edit, Package, Trash2 } from 'lucide-react'
-import { StatCard } from '@/components/dashboard/stat-card'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/form'
 import { ConfirmDialog } from '@/components/ui/dialog'
+import { StatCard } from '@/components/dashboard/stat-card'
+import { toast } from 'sonner'
+import {
+  Package,
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  DollarSign,
+  Clock,
+  Tag,
+  GripVertical,
+  FolderOpen,
+} from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
+interface ServiceCategory {
+  id: string
+  name: string
+  description: string | null
+  order: number
+  color: string | null
+  icon: string | null
+}
 
 interface Service {
   id: string
   name: string
   description: string | null
-  tagline: string | null
   price: number
   duration: number
   imageUrl: string | null
   active: boolean
   featured: boolean
-  category: {
-    id: string
-    name: string
-    color: string | null
-    icon: string | null
-  } | null
+  order: number
+  category: ServiceCategory | null
+  _count?: {
+    appointments: number
+  }
 }
 
 interface Category {
   id: string
   name: string
   description: string | null
+  order: number
   color: string | null
   icon: string | null
-  order: number
   _count: {
     services: number
   }
 }
 
-function ServicesComponent() {
+// SortableServiceCard Component
+function SortableServiceCard({
+  service,
+  onEdit,
+  onDelete,
+}: {
+  service: Service
+  onEdit: (service: Service) => void
+  onDelete: (service: Service) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: service.id,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2">
+      <button
+        className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-5 h-5 text-gray-400" />
+      </button>
+      <Card className="flex-1 hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between">
+            <div className="flex gap-4 flex-1">
+              {service.imageUrl && (
+                <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                  <Image src={service.imageUrl} alt={service.name} fill className="object-cover" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-lg">{service.name}</h3>
+                  {!service.active && (
+                    <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                      Inactive
+                    </span>
+                  )}
+                  {service.featured && (
+                    <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">
+                      Featured
+                    </span>
+                  )}
+                </div>
+                {service.description && (
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                    {service.description}
+                  </p>
+                )}
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <DollarSign className="w-4 h-4" />£{Number(service.price).toFixed(2)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {service.duration} min
+                  </span>
+                  {service.category && (
+                    <span className="flex items-center gap-1">
+                      <Tag className="w-4 h-4" />
+                      {service.category.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => onEdit(service)}>
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onDelete(service)}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function ServicesPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const tab = searchParams.get('tab') || 'services'
+  const currentTab = searchParams.get('tab') || 'services'
 
+  const [businessId, setBusinessId] = useState<string>('')
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-  const [businessId, setBusinessId] = useState<string | null>(null)
+  const [filteredServices, setFilteredServices] = useState<Service[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all')
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isReordering, setIsReordering] = useState(false)
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean
+    service: Service | null
+    loading: boolean
+  }>({
+    open: false,
+    service: null,
+    loading: false,
+  })
+  const [deleteCategoryDialog, setDeleteCategoryDialog] = useState<{
+    open: boolean
+    category: Category | null
+    loading: boolean
+  }>({
+    open: false,
+    category: null,
+    loading: false,
+  })
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  // Drag-and-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
-  const fetchData = async () => {
+  // Fetch business
+  const fetchBusiness = async () => {
     try {
-      const businessRes = await fetch('/api/business/current')
-      const businessData = await businessRes.json()
-
-      if (!businessData.success) {
-        console.error('Failed to fetch business')
-        return
-      }
-
-      const currentBusinessId = businessData.data.business.id
-      setBusinessId(currentBusinessId)
-
-      // Fetch services
-      const servicesRes = await fetch(`/api/services?businessId=${currentBusinessId}`)
-      const servicesData = await servicesRes.json()
-
-      if (servicesData.success) {
-        setServices(servicesData.data.services)
-      }
-
-      // Fetch categories
-      const categoriesRes = await fetch(`/api/service-categories?businessId=${currentBusinessId}`)
-      const categoriesData = await categoriesRes.json()
-
-      if (categoriesData.success) {
-        setCategories(categoriesData.data.categories)
-      }
+      const response = await fetch('/api/business/current')
+      if (!response.ok) throw new Error('Failed to fetch business')
+      const data = await response.json()
+      setBusinessId(data.id)
+      return data.id
     } catch (error) {
-      console.error('Error fetching data:', error)
-    } finally {
-      setLoading(false)
+      console.error('Fetch business error:', error)
+      toast.error('Failed to load business information')
+      return null
     }
   }
 
-  const handleDeleteCategory = async () => {
-    if (!deleteId) return
+  // Fetch services
+  const fetchServices = async (busId?: string) => {
+    const id = busId || businessId
+    if (!id) return
 
-    setDeleting(true)
     try {
-      const response = await fetch(`/api/service-categories/${deleteId}`, {
+      const response = await fetch(`/api/services?businessId=${id}`)
+      if (!response.ok) throw new Error('Failed to fetch services')
+      const data = await response.json()
+      setServices(data)
+      setFilteredServices(data)
+    } catch (error) {
+      console.error('Fetch services error:', error)
+      toast.error('Failed to load services')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Fetch categories
+  const fetchCategories = async (busId?: string) => {
+    const id = busId || businessId
+    if (!id) return
+
+    try {
+      const response = await fetch(`/api/service-categories?businessId=${id}`)
+      if (!response.ok) throw new Error('Failed to fetch categories')
+      const data = await response.json()
+      setCategories(data)
+    } catch (error) {
+      console.error('Fetch categories error:', error)
+      toast.error('Failed to load categories')
+    }
+  }
+
+  // Initial load
+  useEffect(() => {
+    const loadData = async () => {
+      const busId = await fetchBusiness()
+      if (busId) {
+        await Promise.all([fetchServices(busId), fetchCategories(busId)])
+      }
+    }
+    loadData()
+  }, [])
+
+  // Search filter
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredServices(services)
+    } else {
+      const query = searchQuery.toLowerCase()
+      const filtered = services.filter(
+        service =>
+          service.name.toLowerCase().includes(query) ||
+          service.description?.toLowerCase().includes(query) ||
+          service.category?.name.toLowerCase().includes(query)
+      )
+      setFilteredServices(filtered)
+    }
+  }, [searchQuery, services])
+
+  // Handle drag end
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = filteredServices.findIndex(s => s.id === active.id)
+      const newIndex = filteredServices.findIndex(s => s.id === over.id)
+
+      const newOrder = arrayMove(filteredServices, oldIndex, newIndex)
+      setFilteredServices(newOrder)
+      setServices(newOrder)
+
+      // Save to database
+      setIsReordering(true)
+      try {
+        const response = await fetch('/api/services/reorder', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            serviceIds: newOrder.map(s => s.id),
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to save order')
+        }
+
+        toast.success('Service order updated')
+      } catch (error) {
+        console.error('Reorder error:', error)
+        toast.error('Failed to update service order')
+        // Revert on error
+        fetchServices()
+      } finally {
+        setIsReordering(false)
+      }
+    }
+  }
+
+  // Handle edit
+  const handleEdit = (service: Service) => {
+    router.push(`/dashboard/services/${service.id}/edit`)
+  }
+
+  // Handle delete confirmation
+  const confirmDelete = (service: Service) => {
+    setDeleteDialog({
+      open: true,
+      service,
+      loading: false,
+    })
+  }
+
+  // Handle delete
+  const handleDelete = async () => {
+    if (!deleteDialog.service) return
+
+    setDeleteDialog(prev => ({ ...prev, loading: true }))
+
+    try {
+      const response = await fetch(`/api/services/${deleteDialog.service.id}`, {
         method: 'DELETE',
       })
 
-      const data = await response.json()
-
-      if (data.success) {
-        setCategories(categories.filter(cat => cat.id !== deleteId))
-        setDeleteId(null)
-      } else {
-        alert(data.error || 'Failed to delete category')
+      if (!response.ok) {
+        throw new Error('Failed to delete service')
       }
+
+      toast.success('Service deleted successfully')
+      setDeleteDialog({ open: false, service: null, loading: false })
+      fetchServices()
     } catch (error) {
-      console.error('Error deleting category:', error)
-      alert('Failed to delete category')
-    } finally {
-      setDeleting(false)
+      console.error('Delete error:', error)
+      toast.error('Failed to delete service')
+      setDeleteDialog(prev => ({ ...prev, loading: false }))
     }
   }
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus =
-      filterStatus === 'all' ||
-      (filterStatus === 'active' && service.active) ||
-      (filterStatus === 'inactive' && !service.active)
-    return matchesSearch && matchesStatus
-  })
+  // Handle category delete
+  const confirmDeleteCategory = (category: Category) => {
+    setDeleteCategoryDialog({
+      open: true,
+      category,
+      loading: false,
+    })
+  }
 
+  const handleDeleteCategory = async () => {
+    if (!deleteCategoryDialog.category) return
+
+    setDeleteCategoryDialog(prev => ({ ...prev, loading: true }))
+
+    try {
+      const response = await fetch(`/api/service-categories/${deleteCategoryDialog.category.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete category')
+      }
+
+      toast.success('Category deleted successfully')
+      setDeleteCategoryDialog({ open: false, category: null, loading: false })
+      fetchCategories()
+    } catch (error) {
+      console.error('Delete category error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete category')
+      setDeleteCategoryDialog(prev => ({ ...prev, loading: false }))
+    }
+  }
+
+  // Tab navigation
+  const setTab = (tab: string) => {
+    router.push(`/dashboard/services?tab=${tab}`)
+  }
+
+  // Stats
   const activeServices = services.filter(s => s.active).length
-  const inactiveServices = services.filter(s => !s.active).length
+  const totalRevenue = services.reduce((sum, s) => sum + Number(s.price), 0)
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     )
   }
@@ -144,17 +417,57 @@ function ServicesComponent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Services & Categories</h1>
-          <p className="text-muted-foreground mt-1">Manage your services and categories</p>
+          <p className="text-muted-foreground mt-1">Manage your bookable services and categories</p>
         </div>
+        {currentTab === 'services' ? (
+          <Link href="/dashboard/services/new">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Service
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/dashboard/categories/new">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Category
+            </Button>
+          </Link>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard
+          title="Total Services"
+          value={services.length}
+          icon={Package}
+          iconColor="text-blue-600"
+          iconBackground="bg-blue-100"
+        />
+        <StatCard
+          title="Active Services"
+          value={activeServices}
+          icon={Package}
+          iconColor="text-green-600"
+          iconBackground="bg-green-100"
+        />
+        <StatCard
+          title="Categories"
+          value={categories.length}
+          icon={FolderOpen}
+          iconColor="text-purple-600"
+          iconBackground="bg-purple-100"
+        />
       </div>
 
       {/* Tabs */}
       <div className="border-b">
-        <div className="flex gap-6">
+        <div className="flex gap-8">
           <button
-            onClick={() => router.push('/dashboard/services?tab=services')}
-            className={`pb-3 px-1 border-b-2 transition-colors ${
-              tab === 'services'
+            onClick={() => setTab('services')}
+            className={`pb-4 px-1 border-b-2 transition-colors ${
+              currentTab === 'services'
                 ? 'border-primary text-primary font-medium'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
@@ -162,9 +475,9 @@ function ServicesComponent() {
             Services ({services.length})
           </button>
           <button
-            onClick={() => router.push('/dashboard/services?tab=categories')}
-            className={`pb-3 px-1 border-b-2 transition-colors ${
-              tab === 'categories'
+            onClick={() => setTab('categories')}
+            className={`pb-4 px-1 border-b-2 transition-colors ${
+              currentTab === 'categories'
                 ? 'border-primary text-primary font-medium'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
@@ -174,276 +487,167 @@ function ServicesComponent() {
         </div>
       </div>
 
-      {/* Services Tab */}
-      {tab === 'services' && (
+      {/* Tab Content */}
+      {currentTab === 'services' ? (
         <>
-          {/* Stats */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <StatCard
-              title="Total Services"
-              value={services.length.toString()}
-              icon={Package}
-              trend={{ value: 12, isPositive: true }}
-            />
-            <StatCard
-              title="Active Services"
-              value={activeServices.toString()}
-              icon={Package}
-              iconColor="text-green-600"
-            />
-            <StatCard
-              title="Inactive Services"
-              value={inactiveServices.toString()}
-              icon={Package}
-              iconColor="text-gray-400"
-            />
+          {/* Search */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search services..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
-          {/* Filters & Search */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search services..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={filterStatus === 'all' ? 'primary' : 'outline'}
-                    onClick={() => setFilterStatus('all')}
-                  >
-                    All
-                  </Button>
-                  <Button
-                    variant={filterStatus === 'active' ? 'primary' : 'outline'}
-                    onClick={() => setFilterStatus('active')}
-                  >
-                    Active
-                  </Button>
-                  <Button
-                    variant={filterStatus === 'inactive' ? 'primary' : 'outline'}
-                    onClick={() => setFilterStatus('inactive')}
-                  >
-                    Inactive
-                  </Button>
-                </div>
-                <Button onClick={() => router.push('/dashboard/services/new')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Service
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Services Grid */}
+          {/* Services List with Drag-and-Drop */}
           {filteredServices.length === 0 ? (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Package className="w-12 h-12 text-muted-foreground mb-4" />
+              <CardContent className="p-12 text-center">
+                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No services found</h3>
-                <p className="text-muted-foreground text-center mb-4">
+                <p className="text-muted-foreground mb-4">
                   {searchQuery
-                    ? 'Try adjusting your search'
+                    ? 'Try adjusting your search query'
                     : 'Get started by creating your first service'}
                 </p>
                 {!searchQuery && (
-                  <Button onClick={() => router.push('/dashboard/services/new')}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create First Service
-                  </Button>
+                  <Link href="/dashboard/services/new">
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Service
+                    </Button>
+                  </Link>
                 )}
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredServices.map(service => (
-                <Card
-                  key={service.id}
-                  className="overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  {service.imageUrl && (
-                    <div className="aspect-video relative bg-gray-100">
-                      <img
-                        src={service.imageUrl}
-                        alt={service.name}
-                        className="w-full h-full object-cover"
-                      />
-                      {service.featured && (
-                        <Badge className="absolute top-2 right-2 bg-yellow-500">Featured</Badge>
-                      )}
-                    </div>
-                  )}
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{service.name}</CardTitle>
-                        {service.tagline && (
-                          <p className="text-sm text-muted-foreground mt-1">{service.tagline}</p>
-                        )}
-                      </div>
-                      <Badge variant={service.active ? 'success' : 'default'}>
-                        {service.active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {service.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {service.description}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-semibold text-lg">£{service.price.toFixed(2)}</span>
-                        <span className="text-muted-foreground">{service.duration} min</span>
-                      </div>
-                      {service.category && (
-                        <Badge
-                          variant="default"
-                          className="text-xs"
-                          style={{
-                            backgroundColor: service.category.color
-                              ? `${service.category.color}20`
-                              : undefined,
-                            color: service.category.color || undefined,
-                          }}
-                        >
-                          {service.category.icon} {service.category.name}
-                        </Badge>
-                      )}
-                      <div className="flex gap-2 mt-4">
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => router.push(`/dashboard/services/${service.id}/edit`)}
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={filteredServices.map(s => s.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-4">
+                  {filteredServices.map(service => (
+                    <SortableServiceCard
+                      key={service.id}
+                      service={service}
+                      onEdit={handleEdit}
+                      onDelete={confirmDelete}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+
+          {isReordering && (
+            <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg">
+              Saving order...
             </div>
           )}
         </>
-      )}
-
-      {/* Categories Tab */}
-      {tab === 'categories' && (
-        <>
-          <div className="flex justify-end">
-            <Button onClick={() => router.push('/dashboard/categories/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Category
-            </Button>
-          </div>
-
+      ) : (
+        /* Categories List */
+        <div className="space-y-4">
           {categories.length === 0 ? (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Package className="w-12 h-12 text-muted-foreground mb-4" />
+              <CardContent className="p-12 text-center">
+                <FolderOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No categories yet</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  Create categories to organize your services
+                <p className="text-muted-foreground mb-4">
+                  Organize your services by creating categories
                 </p>
-                <Button onClick={() => router.push('/dashboard/categories/new')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First Category
-                </Button>
+                <Link href="/dashboard/categories/new">
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Category
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {categories.map(category => (
-                <Card key={category.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        {category.color && (
-                          <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg"
-                            style={{ backgroundColor: category.color }}
-                          >
-                            {category.icon || '📁'}
-                          </div>
+            categories.map(category => (
+              <Card key={category.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                        style={{ backgroundColor: category.color || '#f3f4f6' }}
+                      >
+                        {category.icon || '📁'}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">{category.name}</h3>
+                        {category.description && (
+                          <p className="text-sm text-muted-foreground">{category.description}</p>
                         )}
-                        <div>
-                          <CardTitle className="text-lg">{category.name}</CardTitle>
-                          {category.description && (
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {category.description}
-                            </p>
-                          )}
-                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {category._count.services} service
+                          {category._count.services !== 1 ? 's' : ''}
+                        </p>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="default">
-                        {category._count.services}{' '}
-                        {category._count.services === 1 ? 'service' : 'services'}
-                      </Badge>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.push(`/dashboard/categories/${category.id}/edit`)}
-                        >
+                    <div className="flex items-center gap-2">
+                      <Link href={`/dashboard/categories/${category.id}/edit`}>
+                        <Button variant="ghost" size="sm">
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteId(category.id)}
-                          disabled={category._count.services > 0}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => confirmDeleteCategory(category)}
+                        disabled={category._count.services > 0}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           )}
-
-          {/* Delete Confirmation Dialog */}
-          <ConfirmDialog
-            open={deleteId !== null}
-            onOpenChange={open => !open && setDeleteId(null)}
-            title="Delete Category"
-            description="Are you sure you want to delete this category? This action cannot be undone."
-            confirmText="Delete"
-            onConfirm={handleDeleteCategory}
-            loading={deleting}
-            variant="destructive"
-          />
-        </>
-      )}
-    </div>
-  )
-}
-
-export default function ServicesPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
-      }
-    >
-      <ServicesComponent />
-    </Suspense>
+      )}
+
+      {/* Delete Service Dialog */}
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={open => setDeleteDialog(prev => ({ ...prev, open }))}
+        title="Delete Service"
+        description={`Are you sure you want to delete "${deleteDialog.service?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDelete}
+        loading={deleteDialog.loading}
+        variant="destructive"
+      />
+
+      {/* Delete Category Dialog */}
+      <ConfirmDialog
+        open={deleteCategoryDialog.open}
+        onOpenChange={open => setDeleteCategoryDialog(prev => ({ ...prev, open }))}
+        title="Delete Category"
+        description={
+          (deleteCategoryDialog.category?._count.services ?? 0 > 0)
+            ? `Cannot delete "${deleteCategoryDialog.category?.name}" because it has ${deleteCategoryDialog.category?._count.services} assigned service(s). Please reassign or delete these services first.`
+            : `Are you sure you want to delete "${deleteCategoryDialog.category?.name}"? This action cannot be undone.`
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteCategory}
+        loading={deleteCategoryDialog.loading}
+        variant="destructive"
+      />
+    </div>
   )
 }

@@ -379,6 +379,9 @@ model Service {
   requiresDeposit       Boolean          @default(false)
   depositAmount         Decimal?         @db.Decimal(10, 2)
   maxAdvanceBookingDays Int?
+  useBusinessHours      Boolean          @default(true)
+  customAvailability    Json?            // { monday: { enabled: true, slots: [{start: '09:00', end: '17:00'}] } }
+  availableDays         Int[]            @default([0,1,2,3,4,5,6]) // 0=Sunday, 6=Saturday
   featured              Boolean          @default(false)
   active                Boolean          @default(true)
   order                 Int              @default(0)

@@ -105,6 +105,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         maxAdvanceBookingDays: maxAdvanceBookingDays ? parseInt(maxAdvanceBookingDays) : null,
         featured: featured || false,
         active: active !== undefined ? active : true,
+        useBusinessHours: body.useBusinessHours ?? true,
+        availableDays: body.availableDays || [0, 1, 2, 3, 4, 5, 6],
+        customAvailability: body.customAvailability || null,
       },
       include: {
         category: true,

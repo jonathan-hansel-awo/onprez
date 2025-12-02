@@ -31,6 +31,9 @@
     "db:test:seed": "tsx scripts/test-seed-data.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-neon": "^6.17.1",
     "@prisma/client": "^6.17.1",
@@ -51,6 +54,7 @@
     "react-dom": "^18.3.1",
     "react-intersection-observer": "^9.16.0",
     "resend": "^6.2.2",
+    "sonner": "^2.0.7",
     "speakeasy": "^2.0.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
