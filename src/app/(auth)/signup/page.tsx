@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,6 +17,7 @@ import { usePasswordVisibility } from '@/lib/hooks/use-password-visibility'
 import { LockIcon, EyeIcon, EyeOffIcon, Check, Copy } from 'lucide-react'
 import { useClipboard } from '@/lib/hooks/use-clipboard'
 import { sessionStorage } from '@/lib/utils/session-storage'
+import Loading from '@/app/[handle]/loading'
 
 const BUSINESS_CATEGORIES: SelectOption[] = [
   { value: 'SALON', label: 'Hair Salon' },
@@ -42,7 +43,7 @@ const BUSINESS_CATEGORIES: SelectOption[] = [
   { value: 'OTHER', label: 'Other' },
 ]
 
-export default function SignupPage() {
+function SignupPageComponent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -827,5 +828,13 @@ export default function SignupPage() {
         </motion.div>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <SignupPageComponent />
+    </Suspense>
   )
 }

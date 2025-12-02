@@ -13,22 +13,29 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     const cookieStore = await cookies()
     let accessToken = cookieStore.get('accessToken')?.value
 
+    console.log('AccessToken from cookies:', accessToken ? 'Found' : 'Not found')
+
     // Fallback to Authorization header
     if (!accessToken) {
       const headersList = await headers()
       const authHeader = headersList.get('authorization')
       accessToken = authHeader?.replace('Bearer ', '')
+      console.log('AccessToken from header:', accessToken ? 'Found' : 'Not found')
     }
 
     if (!accessToken) {
+      console.log('No access token found')
       return null
     }
 
     // Verify token
     const tokenPayload = await verifyToken(accessToken)
     if (!tokenPayload) {
+      console.log('Token verification failed')
       return null
     }
+
+    console.log('Token verified, userId:', tokenPayload.payload.userId)
 
     // Get user from database
     const user = await prisma.user.findUnique({
@@ -43,8 +50,11 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     })
 
     if (!user) {
+      console.log('User not found in database')
       return null
     }
+
+    console.log('User found:', user.email)
 
     return {
       id: user.id,
