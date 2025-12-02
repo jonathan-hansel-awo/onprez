@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -166,7 +166,7 @@ function SortableServiceCard({
   )
 }
 
-export default function ServicesPage() {
+function Services() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentTab = searchParams.get('tab') || 'services'
@@ -649,5 +649,13 @@ export default function ServicesPage() {
         variant="destructive"
       />
     </div>
+  )
+}
+
+export default function ServicesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Services />
+    </Suspense>
   )
 }
