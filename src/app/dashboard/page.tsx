@@ -116,16 +116,30 @@ export default function DashboardPage() {
           title="Total Bookings"
           value={stats?.totalBookings || 0}
           icon={Calendar}
-          trend={stats?.bookingsTrend}
-          trendLabel="vs last month"
+          trend={
+            stats?.bookingsTrend
+              ? {
+                  value: stats.bookingsTrend,
+                  isPositive: stats.bookingsTrend >= 0,
+                  label: 'vs last month',
+                }
+              : undefined
+          }
           loading={loading}
         />
         <StatCard
           title="Revenue"
           value={`£${Number(stats?.totalRevenue || 0).toFixed(2)}`}
           icon={DollarSign}
-          trend={stats?.revenueTrend}
-          trendLabel="vs last month"
+          trend={
+            stats?.revenueTrend
+              ? {
+                  value: stats.revenueTrend,
+                  isPositive: stats.revenueTrend >= 0,
+                  label: 'vs last month',
+                }
+              : undefined
+          }
           loading={loading}
         />
         <StatCard
