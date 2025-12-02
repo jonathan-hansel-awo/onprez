@@ -36,10 +36,18 @@ export default function CategoriesPage() {
     try {
       // Fetch business
       const businessRes = await fetch('/api/business/current')
+
+      if (!businessRes.ok) {
+        console.error('Business fetch failed with status:', businessRes.status)
+        setLoading(false)
+        return
+      }
+
       const businessData = await businessRes.json()
 
       if (!businessData.success) {
-        console.error('Failed to fetch business')
+        console.error('Failed to fetch business:', businessData.error)
+        setLoading(false)
         return
       }
 

@@ -1,17 +1,29 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client'
 
 import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, Badge } from '@/components/ui'
 import { Input } from '@/components/form/input'
 import { TextArea } from '@/components/form/text-area'
 import { Select } from '@/components/form/select'
 import { ImageUpload } from '@/components/ui/image-upload'
-import { ConfirmDialog } from '@/components/ui/dialog'
-import { ArrowLeft, Loader2, DollarSign, Clock, AlertCircle, Trash2 } from 'lucide-react'
+import { ConfirmDialog, Dialog } from '@/components/ui/dialog'
+import {
+  ArrowLeft,
+  Loader2,
+  DollarSign,
+  Clock,
+  AlertCircle,
+  Trash2,
+  Edit,
+  Package,
+  Plus,
+} from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { id } from 'zod/v4/locales'
 
 const PRICE_TYPE_OPTIONS = [
   { value: 'FIXED', label: 'Fixed Price' },
@@ -38,6 +50,18 @@ interface ServiceFormData {
   active: boolean
 }
 
+interface Variant {
+  id: string
+  name: string
+  description: string | null
+  priceAdjustment: number
+  durationAdjustment: number
+  type: 'OPTION' | 'ADDON'
+  isDefault: boolean
+  active: boolean
+  order: number
+}
+
 export default function EditServicePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
@@ -47,6 +71,17 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [variants, setVariants] = useState<Variant[]>([])
+  const [showVariantForm, setShowVariantForm] = useState(false)
+  const [editingVariant, setEditingVariant] = useState<Variant | null>(null)
+  const [variantFormData, setVariantFormData] = useState({
+    name: '',
+    description: '',
+    priceAdjustment: '0',
+    durationAdjustment: '0',
+    type: 'OPTION' as 'OPTION' | 'ADDON',
+    isDefault: false,
+  })
   const [formData, setFormData] = useState<ServiceFormData>({
     name: '',
     description: '',
@@ -83,6 +118,11 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
 
       const service = serviceData.data.service
 
+      const variantsRes = await fetch(`/api/services/${resolvedParams.id}/variants`)
+      const variantsData = await variantsRes.json()
+      if (variantsData.success) {
+        setVariants(variantsData.data.variants)
+      }
       // Fetch categories
       const categoriesRes = await fetch(`/api/services/categories?businessId=${service.businessId}`)
       const categoriesData = await categoriesRes.json()
@@ -115,6 +155,103 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleAddVariant = async () => {
+    try {
+      const response = await fetch(`/api/services/${id}/variants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(variantFormData),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setVariants([...variants, data.data.variant])
+        setShowVariantForm(false)
+        setVariantFormData({
+          name: '',
+          description: '',
+          priceAdjustment: '0',
+          durationAdjustment: '0',
+          type: 'OPTION',
+          isDefault: false,
+        })
+      } else {
+        alert(data.error || 'Failed to create variant')
+      }
+    } catch (error) {
+      console.error('Error creating variant:', error)
+      alert('Failed to create variant')
+    }
+  }
+
+  const handleUpdateVariant = async () => {
+    if (!editingVariant) return
+
+    try {
+      const response = await fetch(`/api/services/${id}/variants/${editingVariant.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(variantFormData),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setVariants(variants.map(v => (v.id === editingVariant.id ? data.data.variant : v)))
+        setEditingVariant(null)
+        setShowVariantForm(false)
+        setVariantFormData({
+          name: '',
+          description: '',
+          priceAdjustment: '0',
+          durationAdjustment: '0',
+          type: 'OPTION',
+          isDefault: false,
+        })
+      } else {
+        alert(data.error || 'Failed to update variant')
+      }
+    } catch (error) {
+      console.error('Error updating variant:', error)
+      alert('Failed to update variant')
+    }
+  }
+
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!confirm('Are you sure you want to delete this variant?')) return
+
+    try {
+      const response = await fetch(`/api/services/${id}/variants/${variantId}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setVariants(variants.filter(v => v.id !== variantId))
+      } else {
+        alert(data.error || 'Failed to delete variant')
+      }
+    } catch (error) {
+      console.error('Error deleting variant:', error)
+      alert('Failed to delete variant')
+    }
+  }
+
+  const openEditVariant = (variant: Variant) => {
+    setEditingVariant(variant)
+    setVariantFormData({
+      name: variant.name,
+      description: variant.description || '',
+      priceAdjustment: variant.priceAdjustment.toString(),
+      durationAdjustment: variant.durationAdjustment.toString(),
+      type: variant.type,
+      isDefault: variant.isDefault,
+    })
+    setShowVariantForm(true)
   }
 
   function validateForm(): boolean {
@@ -496,6 +633,224 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
           </Button>
         </div>
       </form>
+
+      {/* Service Variants */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Service Variants & Add-ons</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Offer different options or add-ons for this service
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setEditingVariant(null)
+                setVariantFormData({
+                  name: '',
+                  description: '',
+                  priceAdjustment: '0',
+                  durationAdjustment: '0',
+                  type: 'OPTION',
+                  isDefault: false,
+                })
+                setShowVariantForm(true)
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Variant
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {variants.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No variants added yet</p>
+              <p className="text-sm mt-1">
+                Add options like "Short Hair" or add-ons like "Deep Conditioning"
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {variants.map(variant => (
+                <div
+                  key={variant.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{variant.name}</span>
+                      <Badge variant={variant.type === 'OPTION' ? 'default' : 'purple'}>
+                        {variant.type === 'OPTION' ? 'Option' : 'Add-on'}
+                      </Badge>
+                      {variant.isDefault && <Badge variant="success">Default</Badge>}
+                    </div>
+                    {variant.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{variant.description}</p>
+                    )}
+                    <div className="flex items-center gap-4 mt-2 text-sm">
+                      {variant.priceAdjustment !== 0 && (
+                        <span className="text-muted-foreground">
+                          Price: {variant.priceAdjustment > 0 ? '+' : ''}£
+                          {variant.priceAdjustment.toFixed(2)}
+                        </span>
+                      )}
+                      {variant.durationAdjustment !== 0 && (
+                        <span className="text-muted-foreground">
+                          Duration: {variant.durationAdjustment > 0 ? '+' : ''}
+                          {variant.durationAdjustment} min
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditVariant(variant)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteVariant(variant.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Variant Form Dialog */}
+      <Dialog
+        open={showVariantForm}
+        onOpenChange={setShowVariantForm}
+        title={editingVariant ? 'Edit Variant' : 'Add Variant'}
+        description="Configure a variant or add-on for this service"
+      >
+        <div className="space-y-4">
+          {/* Variant Type */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Type</label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={variantFormData.type === 'OPTION' ? 'primary' : 'outline'}
+                onClick={() => setVariantFormData({ ...variantFormData, type: 'OPTION' })}
+                className="flex-1"
+              >
+                Option
+              </Button>
+              <Button
+                type="button"
+                variant={variantFormData.type === 'ADDON' ? 'primary' : 'outline'}
+                onClick={() => setVariantFormData({ ...variantFormData, type: 'ADDON' })}
+                className="flex-1"
+              >
+                Add-on
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {variantFormData.type === 'OPTION'
+                ? 'Options: Customer must choose one (e.g., Short/Long hair)'
+                : 'Add-ons: Optional extras customer can add (e.g., Deep conditioning)'}
+            </p>
+          </div>
+
+          {/* Name */}
+          <Input
+            label="Name"
+            value={variantFormData.name}
+            onChange={e => setVariantFormData({ ...variantFormData, name: e.target.value })}
+            placeholder="e.g., Long Hair, Express Service"
+            required
+          />
+
+          {/* Description */}
+          <TextArea
+            label="Description (Optional)"
+            value={variantFormData.description}
+            onChange={e => setVariantFormData({ ...variantFormData, description: e.target.value })}
+            placeholder="Additional details"
+            rows={2}
+          />
+
+          {/* Price Adjustment */}
+          <Input
+            label="Price Adjustment"
+            type="number"
+            step="0.01"
+            value={variantFormData.priceAdjustment}
+            onChange={e =>
+              setVariantFormData({ ...variantFormData, priceAdjustment: e.target.value })
+            }
+            placeholder="0.00"
+            leftIcon={<span className="text-muted-foreground">£</span>}
+          />
+          <p className="text-xs text-muted-foreground -mt-2">
+            Use positive for extra charge, negative for discount
+          </p>
+
+          {/* Duration Adjustment */}
+          <Input
+            label="Duration Adjustment (minutes)"
+            type="number"
+            value={variantFormData.durationAdjustment}
+            onChange={e =>
+              setVariantFormData({ ...variantFormData, durationAdjustment: e.target.value })
+            }
+            placeholder="0"
+          />
+
+          {/* Is Default */}
+          {variantFormData.type === 'OPTION' && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isDefault"
+                checked={variantFormData.isDefault}
+                onChange={e =>
+                  setVariantFormData({ ...variantFormData, isDefault: e.target.checked })
+                }
+                className="rounded"
+              />
+              <label htmlFor="isDefault" className="text-sm">
+                Set as default option
+              </label>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowVariantForm(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={editingVariant ? handleUpdateVariant : handleAddVariant}
+              className="flex-1"
+            >
+              {editingVariant ? 'Update' : 'Add'} Variant
+            </Button>
+          </div>
+        </div>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
