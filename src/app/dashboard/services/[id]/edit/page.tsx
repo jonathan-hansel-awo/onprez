@@ -499,15 +499,14 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
         onConfirm={handleDelete}
         title="Delete Service"
-        description="Are you sure you want to delete this service? This action cannot be undone. All future bookings for this service will be affected."
-        confirmText="Delete Service"
-        cancelText="Cancel"
+        description="Are you sure you want to delete this service? This action cannot be undone."
+        confirmText="Delete"
         variant="destructive"
-        isLoading={deleting}
+        loading={deleting}
       />
     </div>
   )

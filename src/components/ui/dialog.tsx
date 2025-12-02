@@ -6,24 +6,24 @@ import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface DialogProps {
-  isOpen: boolean
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   title: string
   description?: string
   children?: ReactNode
 }
 
-export function Dialog({ isOpen, onClose, title, description, children }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children }: DialogProps) {
   return (
     <AnimatePresence>
-      {isOpen && (
+      {open && (
         <>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={() => onOpenChange(false)}
             className="fixed inset-0 bg-black/50 z-50"
           />
 
@@ -38,7 +38,7 @@ export function Dialog({ isOpen, onClose, title, description, children }: Dialog
             >
               {/* Close button */}
               <button
-                onClick={onClose}
+                onClick={() => onOpenChange(false)}
                 className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
@@ -62,36 +62,41 @@ export function Dialog({ isOpen, onClose, title, description, children }: Dialog
 }
 
 interface ConfirmDialogProps {
-  isOpen: boolean
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onConfirm: () => void
   title: string
   description: string
   confirmText?: string
   cancelText?: string
   variant?: 'destructive' | 'primary'
-  isLoading?: boolean
+  loading?: boolean
 }
 
 export function ConfirmDialog({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   onConfirm,
   title,
   description,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   variant = 'primary',
-  isLoading = false,
+  loading = false,
 }: ConfirmDialogProps) {
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} title={title} description={description}>
+    <Dialog open={open} onOpenChange={onOpenChange} title={title} description={description}>
       <div className="flex gap-3 mt-6">
-        <Button variant="ghost" onClick={onClose} disabled={isLoading} className="flex-1">
+        <Button
+          variant="ghost"
+          onClick={() => onOpenChange(false)}
+          disabled={loading}
+          className="flex-1"
+        >
           {cancelText}
         </Button>
-        <Button variant={variant} onClick={onConfirm} disabled={isLoading} className="flex-1">
-          {isLoading ? 'Loading...' : confirmText}
+        <Button variant={variant} onClick={onConfirm} disabled={loading} className="flex-1">
+          {loading ? 'Loading...' : confirmText}
         </Button>
       </div>
     </Dialog>
