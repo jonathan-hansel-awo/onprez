@@ -45,14 +45,6 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
   const fetchCategory = async () => {
     try {
       const response = await fetch(`/api/service-categories/${id}`)
-
-      if (!response.ok) {
-        console.error('Category fetch failed with status:', response.status)
-        alert('Category not found')
-        router.push('/dashboard/services?tab=categories')
-        return
-      }
-
       const data = await response.json()
 
       if (data.success) {
@@ -66,12 +58,12 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
         setServiceCount(category._count?.services || 0)
       } else {
         alert('Category not found')
-        router.push('/dashboard/services?tab=categories')
+        router.push('/dashboard/categories')
       }
     } catch (error) {
       console.error('Error fetching category:', error)
       alert('Failed to load category')
-      router.push('/dashboard/services?tab=categories')
+      router.push('/dashboard/categories')
     } finally {
       setLoading(false)
     }
