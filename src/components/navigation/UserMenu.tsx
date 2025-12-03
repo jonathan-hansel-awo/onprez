@@ -35,7 +35,10 @@ export function UserMenu() {
 
   if (!user) return null
 
-  const menuItems = [{ icon: Settings, label: 'Account Settings', href: '/account/security' }]
+  const menuItems = [
+    { icon: Settings, label: 'Account Settings', href: '/account/security' },
+    { icon: User, label: 'Dashboard', href: '/dashboard' },
+  ]
 
   return (
     <>
