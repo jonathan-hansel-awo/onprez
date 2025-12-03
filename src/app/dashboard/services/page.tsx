@@ -39,6 +39,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import Loading from '@/app/[handle]/loading'
 
 interface ServiceCategory {
   id: string
@@ -166,7 +167,7 @@ function SortableServiceCard({
   )
 }
 
-function Services() {
+function ServicesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentTab = searchParams.get('tab') || 'services'
@@ -177,6 +178,7 @@ function Services() {
   const [filteredServices, setFilteredServices] = useState<Service[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isReordering, setIsReordering] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean
@@ -208,13 +210,21 @@ function Services() {
   // Fetch business
   const fetchBusiness = async () => {
     try {
+      console.log('Fetching business...')
       const response = await fetch('/api/business/current')
-      if (!response.ok) throw new Error('Failed to fetch business')
+      console.log('Business response status:', response.status)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch business')
+      }
+
       const data = await response.json()
+      console.log('Business data:', data)
       setBusinessId(data.id)
       return data.id
     } catch (error) {
       console.error('Fetch business error:', error)
+      setError('Failed to load business information')
       toast.error('Failed to load business information')
       return null
     }
@@ -226,16 +236,22 @@ function Services() {
     if (!id) return
 
     try {
+      console.log('Fetching services for business:', id)
       const response = await fetch(`/api/services?businessId=${id}`)
-      if (!response.ok) throw new Error('Failed to fetch services')
+      console.log('Services response status:', response.status)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch services')
+      }
+
       const data = await response.json()
+      console.log('Services data:', data)
       setServices(data)
       setFilteredServices(data)
     } catch (error) {
       console.error('Fetch services error:', error)
+      setError('Failed to load services')
       toast.error('Failed to load services')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -245,22 +261,38 @@ function Services() {
     if (!id) return
 
     try {
+      console.log('Fetching categories for business:', id)
       const response = await fetch(`/api/service-categories?businessId=${id}`)
-      if (!response.ok) throw new Error('Failed to fetch categories')
+      console.log('Categories response status:', response.status)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories')
+      }
+
       const data = await response.json()
+      console.log('Categories data:', data)
       setCategories(data)
     } catch (error) {
       console.error('Fetch categories error:', error)
+      setError('Failed to load categories')
       toast.error('Failed to load categories')
     }
   }
 
   // Initial load
   useEffect(() => {
+    console.log('Component mounted, starting initial load...')
     const loadData = async () => {
-      const busId = await fetchBusiness()
-      if (busId) {
-        await Promise.all([fetchServices(busId), fetchCategories(busId)])
+      try {
+        const busId = await fetchBusiness()
+        if (busId) {
+          await Promise.all([fetchServices(busId), fetchCategories(busId)])
+        }
+      } catch (error) {
+        console.error('Load data error:', error)
+        setError('Failed to load data')
+      } finally {
+        setIsLoading(false)
       }
     }
     loadData()
@@ -401,12 +433,34 @@ function Services() {
 
   // Stats
   const activeServices = services.filter(s => s.active).length
-  const totalRevenue = services.reduce((sum, s) => sum + Number(s.price), 0)
 
+  console.log('Render state:', {
+    isLoading,
+    error,
+    servicesCount: services.length,
+    categoriesCount: categories.length,
+  })
+
+  // Error state
+  if (error && !isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading services...</p>
+        </div>
       </div>
     )
   }
@@ -638,7 +692,7 @@ function Services() {
         onOpenChange={open => setDeleteCategoryDialog(prev => ({ ...prev, open }))}
         title="Delete Category"
         description={
-          (deleteCategoryDialog.category?._count.services ?? 0 > 0)
+          (deleteCategoryDialog.category?._count.services ?? 0) > 0
             ? `Cannot delete "${deleteCategoryDialog.category?.name}" because it has ${deleteCategoryDialog.category?._count.services} assigned service(s). Please reassign or delete these services first.`
             : `Are you sure you want to delete "${deleteCategoryDialog.category?.name}"? This action cannot be undone.`
         }
@@ -647,6 +701,7 @@ function Services() {
         onConfirm={handleDeleteCategory}
         loading={deleteCategoryDialog.loading}
         variant="destructive"
+        // disabled={(deleteCategoryDialog.category?._count.services ?? 0) > 0}
       />
     </div>
   )
@@ -654,8 +709,8 @@ function Services() {
 
 export default function ServicesPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Services />
+    <Suspense fallback={<Loading />}>
+      <ServicesPageContent />
     </Suspense>
   )
 }
