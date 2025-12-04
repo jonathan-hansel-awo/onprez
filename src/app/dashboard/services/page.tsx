@@ -21,6 +21,8 @@ import {
   Tag,
   GripVertical,
   FolderOpen,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import {
   DndContext,
@@ -83,10 +85,12 @@ function SortableServiceCard({
   service,
   onEdit,
   onDelete,
+  onToggle,
 }: {
   service: Service
   onEdit: (service: Service) => void
   onDelete: (service: Service) => void
+  onToggle?: (service: Service) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: service.id,
@@ -153,6 +157,31 @@ function SortableServiceCard({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Toggle Active/Inactive */}
+              <Button
+                variant={service.active ? 'ghost' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  // We need to pass this from parent
+                  if (onToggle) onToggle(service)
+                }}
+                className={
+                  service.active ? '' : 'border-green-600 text-green-600 hover:bg-green-50'
+                }
+              >
+                {service.active ? (
+                  <>
+                    <EyeOff className="w-4 h-4 mr-1" />
+                    Hide
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4 mr-1" />
+                    Show
+                  </>
+                )}
+              </Button>
+
               <Button variant="ghost" size="sm" onClick={() => onEdit(service)}>
                 <Edit className="w-4 h-4" />
               </Button>
@@ -171,7 +200,7 @@ function ServicesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentTab = searchParams.get('tab') || 'services'
-
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [businessId, setBusinessId] = useState<string>('')
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -210,16 +239,13 @@ function ServicesPageContent() {
   // Fetch business
   const fetchBusiness = async () => {
     try {
-      console.log('Fetching business...')
       const response = await fetch('/api/business/current')
-      console.log('Business response status:', response.status)
 
       if (!response.ok) {
         throw new Error('Failed to fetch business')
       }
 
       const data = await response.json()
-      console.log('Business data:', data)
       setBusinessId(data.id)
       return data.id
     } catch (error) {
@@ -236,16 +262,13 @@ function ServicesPageContent() {
     if (!id) return
 
     try {
-      console.log('Fetching services for business:', id)
       const response = await fetch(`/api/services?businessId=${id}`)
-      console.log('Services response status:', response.status)
 
       if (!response.ok) {
         throw new Error('Failed to fetch services')
       }
 
       const data = await response.json()
-      console.log('Services data:', data)
       setServices(data)
       setFilteredServices(data)
     } catch (error) {
@@ -261,16 +284,13 @@ function ServicesPageContent() {
     if (!id) return
 
     try {
-      console.log('Fetching categories for business:', id)
       const response = await fetch(`/api/service-categories?businessId=${id}`)
-      console.log('Categories response status:', response.status)
 
       if (!response.ok) {
         throw new Error('Failed to fetch categories')
       }
 
       const data = await response.json()
-      console.log('Categories data:', data)
       setCategories(data)
     } catch (error) {
       console.error('Fetch categories error:', error)
@@ -281,7 +301,6 @@ function ServicesPageContent() {
 
   // Initial load
   useEffect(() => {
-    console.log('Component mounted, starting initial load...')
     const loadData = async () => {
       try {
         const busId = await fetchBusiness()
@@ -300,19 +319,28 @@ function ServicesPageContent() {
 
   // Search filter
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredServices(services)
-    } else {
+    let filtered = services
+
+    // Filter by active status
+    if (activeFilter === 'active') {
+      filtered = filtered.filter(s => s.active)
+    } else if (activeFilter === 'inactive') {
+      filtered = filtered.filter(s => !s.active)
+    }
+
+    // Filter by search
+    if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase()
-      const filtered = services.filter(
+      filtered = filtered.filter(
         service =>
           service.name.toLowerCase().includes(query) ||
           service.description?.toLowerCase().includes(query) ||
           service.category?.name.toLowerCase().includes(query)
       )
-      setFilteredServices(filtered)
     }
-  }, [searchQuery, services])
+
+    setFilteredServices(filtered)
+  }, [searchQuery, services, activeFilter])
 
   // Handle drag end
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -423,6 +451,34 @@ function ServicesPageContent() {
       console.error('Delete category error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to delete category')
       setDeleteCategoryDialog(prev => ({ ...prev, loading: false }))
+    }
+  }
+
+  // Handle toggle active/inactive
+  const handleToggle = async (service: Service) => {
+    try {
+      const response = await fetch(`/api/services/${service.id}/toggle`, {
+        method: 'PATCH',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle service')
+      }
+
+      const updatedService = await response.json()
+
+      // Update local state
+      setServices(prev =>
+        prev.map(s => (s.id === service.id ? { ...s, active: updatedService.active } : s))
+      )
+      setFilteredServices(prev =>
+        prev.map(s => (s.id === service.id ? { ...s, active: updatedService.active } : s))
+      )
+
+      toast.success(`Service ${updatedService.active ? 'activated' : 'deactivated'}`)
+    } catch (error) {
+      console.error('Toggle error:', error)
+      toast.error('Failed to toggle service status')
     }
   }
 
@@ -544,8 +600,34 @@ function ServicesPageContent() {
       {/* Tab Content */}
       {currentTab === 'services' ? (
         <>
-          {/* Search */}
+          {/* Filters and Search */}
           <div className="flex items-center gap-4">
+            {/* Status Filter */}
+            <div className="flex gap-2">
+              <Button
+                variant={activeFilter === 'all' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('all')}
+              >
+                All ({services.length})
+              </Button>
+              <Button
+                variant={activeFilter === 'active' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('active')}
+              >
+                Active ({services.filter(s => s.active).length})
+              </Button>
+              <Button
+                variant={activeFilter === 'inactive' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('inactive')}
+              >
+                Inactive ({services.filter(s => !s.active).length})
+              </Button>
+            </div>
+
+            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
@@ -595,6 +677,7 @@ function ServicesPageContent() {
                       service={service}
                       onEdit={handleEdit}
                       onDelete={confirmDelete}
+                      onToggle={handleToggle}
                     />
                   ))}
                 </div>
