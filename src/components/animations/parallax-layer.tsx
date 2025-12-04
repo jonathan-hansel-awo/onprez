@@ -39,10 +39,10 @@ export function ParallaxLayer({
 
 // Hook version for custom parallax
 export function useParallax(speed: number = 0.5): {
-  ref: React.RefObject<HTMLDivElement>
+  ref: React.RefObject<HTMLDivElement | null>
   y: MotionValue<string>
 } {
-  const ref = useRef(null)
+  const ref = useRef<HTMLDivElement>(null)
 
   const { scrollYProgress } = useScroll({
     target: ref,
