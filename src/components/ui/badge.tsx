@@ -7,7 +7,15 @@ import { cn } from '@/lib/utils/cn'
 import { ComponentPropsWithoutRef } from 'react'
 
 export interface BadgeProps extends ComponentPropsWithoutRef<typeof motion.div> {
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'purple'
+  variant?:
+    | 'default'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'purple'
+    | 'destructive'
+    | 'primary'
+    | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   children: React.ReactNode
 }
@@ -16,10 +24,13 @@ const Badge = forwardRef<HTMLDivElement, BadgeProps>(
   ({ className, variant = 'default', size = 'md', children, ...props }, ref) => {
     const variants = {
       default: 'bg-onprez-blue/10 text-onprez-blue border-onprez-blue/20',
+      secondary: 'bg-onprez-blue/10 text-onprez-blue border-onprez-blue/20',
       success: 'bg-onprez-green/10 text-onprez-green border-onprez-green/20',
       warning: 'bg-amber-100 text-amber-700 border-amber-200',
       error: 'bg-red-100 text-red-700 border-red-200',
+      destructive: 'bg-red-100 text-red-700 border-red-200',
       purple: 'bg-onprez-purple/10 text-onprez-purple border-onprez-purple/20',
+      primary: 'bg-onprez-purple/10 text-onprez-purple border-onprez-purple/20',
     }
 
     const sizes = {
