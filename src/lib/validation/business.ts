@@ -195,3 +195,42 @@ export const businessSettingsQuerySchema = z.object({
 })
 
 export type BusinessSettingsQuery = z.infer<typeof businessSettingsQuerySchema>
+
+/**
+ * Special date validation (holidays, exceptions)
+ */
+export const specialDateSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (use YYYY-MM-DD)'),
+  name: z.string().min(1, 'Name is required').max(100),
+  isClosed: z.boolean(),
+  openTime: z
+    .string()
+    .regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (use HH:MM)')
+    .optional()
+    .nullable(),
+  closeTime: z
+    .string()
+    .regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (use HH:MM)')
+    .optional()
+    .nullable(),
+  notes: z.string().max(500).optional().nullable(),
+  isRecurring: z.boolean().optional(),
+})
+
+export type SpecialDateInput = z.infer<typeof specialDateSchema>
+
+export const createSpecialDateSchema = specialDateSchema.refine(
+  data => {
+    if (!data.isClosed) {
+      return data.openTime && data.closeTime
+    }
+    return true
+  },
+  { message: 'Open and close times are required when not closed', path: ['openTime'] }
+)
+
+export const updateSpecialDateSchema = specialDateSchema.partial().extend({
+  id: z.string().cuid(),
+})
+
+export type UpdateSpecialDateInput = z.infer<typeof updateSpecialDateSchema>
