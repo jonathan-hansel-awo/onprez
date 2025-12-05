@@ -27,6 +27,7 @@ import { Logo } from '@/components/navigation'
 const navigation = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Presence', href: '/dashboard/presence', icon: Palette },
+  { name: 'Services', href: '/dashboard/services', icon: Package },
   { name: 'Bookings', href: '/dashboard/bookings', icon: Calendar },
   { name: 'Customers', href: '/dashboard/customers', icon: Users },
   { name: 'Inquiries', href: '/dashboard/inquiries', icon: MessageSquare },
