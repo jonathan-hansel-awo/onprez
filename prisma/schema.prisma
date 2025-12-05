@@ -280,6 +280,7 @@ model Business {
   publishedAt       DateTime?
   appointments      Appointment[]
   businessHours     BusinessHours[]
+  specialDates     SpecialDate[]
   owner             User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   customers         Customer[]
   faqs              FAQ[]
@@ -330,7 +331,7 @@ model Page {
   @@index([businessId])
   @@index([businessId, isPublished])
 }
-
+ 
 enum SectionType {
   HERO
   ABOUT
@@ -357,6 +358,26 @@ model BusinessHours {
   @@unique([businessId, dayOfWeek])
   @@index([businessId])
   @@map("business_hours")
+}
+
+model SpecialDate {
+  id          String   @id @default(cuid())
+  businessId  String
+  date        DateTime @db.Date
+  name        String
+  isClosed    Boolean  @default(true)
+  openTime    String?
+  closeTime   String?
+  notes       String?
+  isRecurring Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, date])
+  @@index([businessId])
+  @@index([businessId, date])
+  @@map("special_dates")
 }
 
 model Service {
