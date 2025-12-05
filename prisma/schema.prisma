@@ -400,6 +400,9 @@ model Service {
   requiresDeposit       Boolean          @default(false)
   depositAmount         Decimal?         @db.Decimal(10, 2)
   maxAdvanceBookingDays Int?
+  useBusinessHours      Boolean          @default(true)
+  customAvailability    Json?            // { monday: { enabled: true, slots: [{start: '09:00', end: '17:00'}] } }
+  availableDays         Int[]            @default([0,1,2,3,4,5,6]) // 0=Sunday, 6=Saturday
   featured              Boolean          @default(false)
   active                Boolean          @default(true)
   order                 Int              @default(0)
@@ -412,6 +415,7 @@ model Service {
   appointments          Appointment[]
   business              Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
   category              ServiceCategory? @relation(fields: [categoryId], references: [id])
+  variants              ServiceVariant[]
 
   @@index([businessId])
   @@index([categoryId])
@@ -730,4 +734,30 @@ enum InquiryPriority {
   NORMAL
   HIGH
   URGENT
+}
+
+model ServiceVariant {
+  id          String   @id @default(cuid())
+  serviceId   String
+  name        String
+  description String?
+  priceAdjustment Decimal @db.Decimal(10, 2) // Can be positive or negative
+  durationAdjustment Int @default(0) // Minutes to add/subtract
+  type        VariantType @default(OPTION)
+  isDefault   Boolean  @default(false)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  
+  @@index([serviceId])
+  @@index([serviceId, order])
+  @@map("service_variants")
+}
+
+enum VariantType {
+  OPTION      // Choice variants (e.g., Short/Medium/Long hair)
+  ADDON       // Optional add-ons (e.g., Deep conditioning)
 }
