@@ -224,7 +224,11 @@ export function generateDaySlots(
   }
 
   // Generate slots at regular intervals
-  for (let startMinutes = openMinutes; startMinutes <= lastStartTime; startMinutes += slotInterval) {
+  for (
+    let startMinutes = openMinutes;
+    startMinutes <= lastStartTime;
+    startMinutes += slotInterval
+  ) {
     const endMinutes = startMinutes + serviceDuration
     const slot: TimeSlot = {
       startTime: minutesToTime(startMinutes),
@@ -520,9 +524,10 @@ export function isSlotAvailable(
   if (!dayAvailability.isOpen) {
     return {
       available: false,
-      reason: dayAvailability.reason === 'special_date'
-        ? `Closed for ${dayAvailability.specialDate?.name}`
-        : 'Business is closed on this day',
+      reason:
+        dayAvailability.reason === 'special_date'
+          ? `Closed for ${dayAvailability.specialDate?.name}`
+          : 'Business is closed on this day',
     }
   }
 
@@ -560,11 +565,13 @@ export function getBookingWindow(
   timezone: string
 ): { startDate: string; endDate: string } {
   const today = getTodayInTimezone(timezone)
-  const startDate = sameDayBooking ? today : (() => {
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    return tomorrow.toISOString().split('T')[0]
-  })()
+  const startDate = sameDayBooking
+    ? today
+    : (() => {
+        const tomorrow = new Date(today)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        return tomorrow.toISOString().split('T')[0]
+      })()
 
   const endDateObj = new Date(today)
   endDateObj.setDate(endDateObj.getDate() + advanceBookingDays)
@@ -619,4 +626,516 @@ export function getDayAvailabilitySummary(dayAvailability: DayAvailability): {
     bookedSlots,
     percentageAvailable,
   }
+}
+
+export interface AvailabilitySlot {
+  startTime: string // HH:MM format
+  endTime: string
+  available: boolean
+  reason?: string
+  capacity?: number // For future multi-booking support
+  bookedCount?: number
+}
+
+export interface DetailedDayAvailability {
+  date: string
+  dateFormatted: string
+  dayOfWeek: number
+  dayName: string
+  isOpen: boolean
+  isSpecialDate: boolean
+  specialDateName?: string
+  businessHours?: {
+    openTime: string
+    closeTime: string
+  }
+  totalSlots: number
+  availableSlots: number
+  bookedSlots: number
+  utilizationPercent: number
+  slots: AvailabilitySlot[]
+  summary: {
+    firstAvailable?: string
+    lastAvailable?: string
+    longestGap?: number // minutes
+  }
+}
+
+export interface ServiceAvailability {
+  serviceId: string
+  serviceName: string
+  duration: number
+  bufferTime: number
+  availability: DetailedDayAvailability[]
+}
+
+export interface AvailabilitySummary {
+  totalDays: number
+  openDays: number
+  closedDays: number
+  totalSlots: number
+  availableSlots: number
+  bookedSlots: number
+  overallUtilization: number
+  busiestDay?: {
+    date: string
+    bookings: number
+  }
+  quietestDay?: {
+    date: string
+    bookings: number
+  }
+}
+
+export interface BookingRules {
+  minAdvanceTime: number // minutes
+  maxAdvanceDays: number
+  sameDayBookingAllowed: boolean
+  sameDayLeadTime: number // minutes
+  bufferBetweenAppointments: number // minutes
+  slotInterval: number // minutes
+  requiresApproval: boolean
+  requiresDeposit: boolean
+  depositAmount?: number
+  cancellationPolicy?: {
+    allowCancellation: boolean
+    cancellationDeadline: number // hours before appointment
+    refundPolicy: string
+  }
+}
+
+// Add these new functions after existing functions
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+export function formatDateString(date: Date): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}
+
+export function generateDetailedDayAvailability(
+  date: Date,
+  businessHours: Array<{
+    dayOfWeek: number
+    openTime: string
+    closeTime: string
+    isClosed: boolean
+  }>,
+  specialDates: Array<{
+    date: Date
+    name: string
+    isClosed: boolean
+    openTime?: string | null
+    closeTime?: string | null
+  }>,
+  existingAppointments: ExistingAppointment[],
+  config: SlotGenerationConfig,
+  timezone: string = 'Europe/London'
+): DetailedDayAvailability {
+  const dateString = date.toISOString().split('T')[0]
+  const dayOfWeek = date.getDay()
+
+  // Get special date if exists
+  const specialDate = specialDates.find(sd => {
+    const sdDate = new Date(sd.date)
+    return sdDate.toISOString().split('T')[0] === dateString
+  })
+
+  // Get business hours for this day
+  const dayHours = businessHours.find(bh => bh.dayOfWeek === dayOfWeek)
+
+  // Determine if open and get hours
+  let isOpen = false
+  let openTime: string | undefined
+  let closeTime: string | undefined
+
+  if (specialDate) {
+    if (!specialDate.isClosed && specialDate.openTime && specialDate.closeTime) {
+      isOpen = true
+      openTime = specialDate.openTime
+      closeTime = specialDate.closeTime
+    }
+  } else if (dayHours && !dayHours.isClosed) {
+    isOpen = true
+    openTime = dayHours.openTime
+    closeTime = dayHours.closeTime
+  }
+
+  // Generate slots
+  const slots: AvailabilitySlot[] = []
+  let availableCount = 0
+  let bookedCount = 0
+
+  if (isOpen && openTime && closeTime) {
+    const openMinutes = timeToMinutes(openTime)
+    const closeMinutes = timeToMinutes(closeTime)
+    const slotInterval = config.slotInterval || 15
+    const serviceDuration = config.serviceDuration
+    const bufferTime = config.bufferTime || 0
+
+    // Check if date is today
+    const today = new Date()
+    const isToday = date.toDateString() === today.toDateString()
+    const currentTimeMinutes = isToday ? getCurrentTimeInMinutes(timezone) : 0
+    const sameDayLeadTime = config.sameDayLeadTime || 60
+
+    for (let time = openMinutes; time + serviceDuration <= closeMinutes; time += slotInterval) {
+      const slotStart = minutesToTime(time)
+      const slotEnd = minutesToTime(time + serviceDuration)
+
+      let available = true
+      let reason: string | undefined
+
+      // Check if slot is in the past
+      if (isToday && time < currentTimeMinutes + sameDayLeadTime) {
+        available = false
+        reason = 'past'
+      }
+
+      // Check for conflicts with existing appointments
+      if (available) {
+        const slotStartTime = time
+        const slotEndTime = time + serviceDuration
+
+        for (const apt of existingAppointments) {
+          if (apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') continue
+
+          const aptStart = new Date(apt.startTime)
+          const aptEnd = new Date(apt.endTime)
+
+          // Only check appointments on this date
+          if (aptStart.toISOString().split('T')[0] !== dateString) continue
+
+          const aptStartMinutes = aptStart.getHours() * 60 + aptStart.getMinutes()
+          const aptEndMinutes = aptEnd.getHours() * 60 + aptEnd.getMinutes()
+
+          // Check direct overlap
+          if (slotStartTime < aptEndMinutes && slotEndTime > aptStartMinutes) {
+            available = false
+            reason = 'booked'
+            break
+          }
+
+          // Check buffer overlap
+          if (bufferTime > 0) {
+            const bufferStart = aptStartMinutes - bufferTime
+            const bufferEnd = aptEndMinutes + bufferTime
+
+            if (slotStartTime < bufferEnd && slotEndTime > bufferStart) {
+              if (slotStartTime >= aptStartMinutes && slotStartTime < aptEndMinutes) {
+                // Direct overlap already handled
+              } else {
+                available = false
+                reason = 'buffer'
+                break
+              }
+            }
+          }
         }
+      }
+
+      slots.push({
+        startTime: slotStart,
+        endTime: slotEnd,
+        available,
+        reason,
+      })
+
+      if (available) {
+        availableCount++
+      } else if (reason === 'booked') {
+        bookedCount++
+      }
+    }
+  }
+
+  // Calculate summary
+  const firstAvailable = slots.find(s => s.available)?.startTime
+  const lastAvailable = [...slots].reverse().find(s => s.available)?.startTime
+
+  // Calculate longest gap between available slots
+  let longestGap = 0
+  let currentGap = 0
+  for (const slot of slots) {
+    if (!slot.available) {
+      currentGap += config.slotInterval || 15
+    } else {
+      if (currentGap > longestGap) {
+        longestGap = currentGap
+      }
+      currentGap = 0
+    }
+  }
+
+  const totalSlots = slots.length
+  const utilizationPercent = totalSlots > 0 ? Math.round((bookedCount / totalSlots) * 100) : 0
+
+  return {
+    date: dateString,
+    dateFormatted: formatDateString(date),
+    dayOfWeek,
+    dayName: DAY_NAMES[dayOfWeek],
+    isOpen,
+    isSpecialDate: !!specialDate,
+    specialDateName: specialDate?.name,
+    businessHours: openTime && closeTime ? { openTime, closeTime } : undefined,
+    totalSlots,
+    availableSlots: availableCount,
+    bookedSlots: bookedCount,
+    utilizationPercent,
+    slots,
+    summary: {
+      firstAvailable,
+      lastAvailable,
+      longestGap,
+    },
+  }
+}
+
+export function generateDetailedAvailabilityRange(
+  startDate: Date,
+  endDate: Date,
+  businessHours: Array<{
+    dayOfWeek: number
+    openTime: string
+    closeTime: string
+    isClosed: boolean
+  }>,
+  specialDates: Array<{
+    date: Date
+    name: string
+    isClosed: boolean
+    openTime?: string | null
+    closeTime?: string | null
+  }>,
+  existingAppointments: ExistingAppointment[],
+  config: SlotGenerationConfig,
+  timezone: string = 'Europe/London'
+): DetailedDayAvailability[] {
+  const results: DetailedDayAvailability[] = []
+  const current = new Date(startDate)
+
+  while (current <= endDate) {
+    results.push(
+      generateDetailedDayAvailability(
+        new Date(current),
+        businessHours,
+        specialDates,
+        existingAppointments,
+        config,
+        timezone
+      )
+    )
+    current.setDate(current.getDate() + 1)
+  }
+
+  return results
+}
+
+export function calculateAvailabilitySummary(
+  availability: DetailedDayAvailability[]
+): AvailabilitySummary {
+  let totalSlots = 0
+  let availableSlots = 0
+  let bookedSlots = 0
+  let openDays = 0
+  let closedDays = 0
+  let busiestDay: { date: string; bookings: number } | undefined
+  let quietestDay: { date: string; bookings: number } | undefined
+
+  for (const day of availability) {
+    if (day.isOpen) {
+      openDays++
+      totalSlots += day.totalSlots
+      availableSlots += day.availableSlots
+      bookedSlots += day.bookedSlots
+
+      if (!busiestDay || day.bookedSlots > busiestDay.bookings) {
+        busiestDay = { date: day.date, bookings: day.bookedSlots }
+      }
+
+      if (!quietestDay || day.bookedSlots < quietestDay.bookings) {
+        quietestDay = { date: day.date, bookings: day.bookedSlots }
+      }
+    } else {
+      closedDays++
+    }
+  }
+
+  return {
+    totalDays: availability.length,
+    openDays,
+    closedDays,
+    totalSlots,
+    availableSlots,
+    bookedSlots,
+    overallUtilization: totalSlots > 0 ? Math.round((bookedSlots / totalSlots) * 100) : 0,
+    busiestDay,
+    quietestDay,
+  }
+}
+
+export function getBookingRulesFromSettings(
+  businessSettings: Record<string, unknown> | null,
+  serviceSettings?: {
+    requiresApproval?: boolean
+    requiresDeposit?: boolean
+    depositAmount?: number | null
+    maxAdvanceBookingDays?: number | null
+    bufferTime?: number
+  }
+): BookingRules {
+  const settings = businessSettings || {}
+
+  const defaultRules: BookingRules = {
+    minAdvanceTime: 60, // 1 hour minimum
+    maxAdvanceDays: 30,
+    sameDayBookingAllowed: true,
+    sameDayLeadTime: 60, // 1 hour lead time for same day
+    bufferBetweenAppointments: 0,
+    slotInterval: 15,
+    requiresApproval: false,
+    requiresDeposit: false,
+  }
+
+  // Merge business settings
+  const booking = settings.booking as Record<string, unknown> | undefined
+
+  if (booking) {
+    if (typeof booking.advanceBookingDays === 'number') {
+      defaultRules.maxAdvanceDays = booking.advanceBookingDays
+    }
+    if (typeof booking.sameDayBooking === 'boolean') {
+      defaultRules.sameDayBookingAllowed = booking.sameDayBooking
+    }
+    if (typeof booking.sameDayLeadTime === 'number') {
+      defaultRules.sameDayLeadTime = booking.sameDayLeadTime
+    }
+    if (typeof booking.bufferTime === 'number') {
+      defaultRules.bufferBetweenAppointments = booking.bufferTime
+    }
+    if (typeof booking.slotInterval === 'number') {
+      defaultRules.slotInterval = booking.slotInterval
+    }
+  }
+
+  // Override with service-specific settings
+  if (serviceSettings) {
+    if (serviceSettings.requiresApproval !== undefined) {
+      defaultRules.requiresApproval = serviceSettings.requiresApproval
+    }
+    if (serviceSettings.requiresDeposit !== undefined) {
+      defaultRules.requiresDeposit = serviceSettings.requiresDeposit
+    }
+    if (serviceSettings.depositAmount) {
+      defaultRules.depositAmount = Number(serviceSettings.depositAmount)
+    }
+    if (serviceSettings.maxAdvanceBookingDays) {
+      defaultRules.maxAdvanceDays = serviceSettings.maxAdvanceBookingDays
+    }
+    if (serviceSettings.bufferTime !== undefined) {
+      defaultRules.bufferBetweenAppointments = serviceSettings.bufferTime
+    }
+  }
+
+  // Add cancellation policy from settings
+  const cancellation = settings.cancellation as Record<string, unknown> | undefined
+  if (cancellation) {
+    defaultRules.cancellationPolicy = {
+      allowCancellation: cancellation.allowCancellation !== false,
+      cancellationDeadline: (cancellation.deadline as number) || 24,
+      refundPolicy:
+        (cancellation.refundPolicy as string) || 'No refunds for cancellations within 24 hours',
+    }
+  }
+
+  return defaultRules
+}
+
+export function findNextAvailableSlot(
+  availability: DetailedDayAvailability[],
+  preferredTime?: string // HH:MM format
+): { date: string; time: string } | null {
+  for (const day of availability) {
+    if (!day.isOpen) continue
+
+    for (const slot of day.slots) {
+      if (!slot.available) continue
+
+      // If no preferred time, return first available
+      if (!preferredTime) {
+        return { date: day.date, time: slot.startTime }
+      }
+
+      // If slot is at or after preferred time, return it
+      if (slot.startTime >= preferredTime) {
+        return { date: day.date, time: slot.startTime }
+      }
+    }
+  }
+
+  return null
+}
+
+export function getSlotsAroundTime(
+  day: DetailedDayAvailability,
+  targetTime: string,
+  range: number = 60 // minutes before and after
+): AvailabilitySlot[] {
+  const targetMinutes = timeToMinutes(targetTime)
+  const minTime = targetMinutes - range
+  const maxTime = targetMinutes + range
+
+  return day.slots.filter(slot => {
+    const slotMinutes = timeToMinutes(slot.startTime)
+    return slotMinutes >= minTime && slotMinutes <= maxTime
+  })
+}
+
+export function getAvailabilityHeatmap(
+  availability: DetailedDayAvailability[]
+): Record<string, number> {
+  // Returns utilization by day of week (0-6)
+  const heatmap: Record<string, { total: number; booked: number }> = {}
+
+  for (let i = 0; i < 7; i++) {
+    heatmap[i.toString()] = { total: 0, booked: 0 }
+  }
+
+  for (const day of availability) {
+    const dow = day.dayOfWeek.toString()
+    heatmap[dow].total += day.totalSlots
+    heatmap[dow].booked += day.bookedSlots
+  }
+
+  const result: Record<string, number> = {}
+  for (const [dow, data] of Object.entries(heatmap)) {
+    result[dow] = data.total > 0 ? Math.round((data.booked / data.total) * 100) : 0
+  }
+
+  return result
+}
+
+export function getPeakHours(
+  appointments: ExistingAppointment[]
+): { hour: number; count: number }[] {
+  const hourCounts: Record<number, number> = {}
+
+  for (let i = 0; i < 24; i++) {
+    hourCounts[i] = 0
+  }
+
+  for (const apt of appointments) {
+    if (apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') continue
+    const hour = new Date(apt.startTime).getHours()
+    hourCounts[hour]++
+  }
+
+  return Object.entries(hourCounts)
+    .map(([hour, count]) => ({ hour: parseInt(hour), count }))
+    .sort((a, b) => b.count - a.count)
+}
