@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useState, useRef, useEffect } from 'react'
 import { Check, X, Loader2, Sparkles } from 'lucide-react'
-import { Confetti } from '@/components/effects/confetti'
+import { Confetti } from '@/components/animations/confetti'
 import { useRouter } from 'next/navigation'
 
 export function FinalCTA() {

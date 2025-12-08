@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react/no-unescaped-entities */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
@@ -25,7 +25,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { ThemeCustomizer } from './ThemeCustomizer'
 import { debounce } from '@/lib/utils/debounce'
-import { Confetti } from '@/components/effects/confetti'
+import { Confetti } from '@/components/animations/confetti'
 
 interface PresenceEditorLayoutProps {
   sections: PageSection[]
