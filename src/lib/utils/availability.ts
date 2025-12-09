@@ -1139,3 +1139,193 @@ export function getPeakHours(
     .map(([hour, count]) => ({ hour: parseInt(hour), count }))
     .sort((a, b) => b.count - a.count)
 }
+
+export interface BookingWindowConfig {
+  maxAdvanceDays: number
+  minAdvanceHours: number
+  sameDayBooking: boolean
+  sameDayLeadTime: number
+  timezone: string
+}
+
+export interface BookingWindowResult {
+  canBook: boolean
+  reason?: string
+  window: {
+    start: Date
+    end: Date
+  }
+  requestedTime?: Date
+}
+
+export function calculateBookingWindow(
+  config: BookingWindowConfig,
+  serviceOverrides?: {
+    maxAdvanceDays?: number | null
+    minAdvanceHours?: number | null
+  }
+): { start: Date; end: Date } {
+  const now = new Date()
+
+  // Determine effective values (service overrides > business defaults)
+  const maxDays =
+    serviceOverrides?.maxAdvanceDays !== null && serviceOverrides?.maxAdvanceDays !== undefined
+      ? serviceOverrides.maxAdvanceDays === -1
+        ? 365
+        : serviceOverrides.maxAdvanceDays
+      : config.maxAdvanceDays
+
+  const minHours =
+    serviceOverrides?.minAdvanceHours !== null && serviceOverrides?.minAdvanceHours !== undefined
+      ? serviceOverrides.minAdvanceHours
+      : config.minAdvanceHours
+
+  // Calculate start (earliest bookable time)
+  const start = new Date(now)
+  if (minHours > 0) {
+    start.setTime(start.getTime() + minHours * 60 * 60 * 1000)
+  } else if (!config.sameDayBooking) {
+    // If same-day not allowed, start tomorrow
+    start.setDate(start.getDate() + 1)
+    start.setHours(0, 0, 0, 0)
+  } else if (config.sameDayLeadTime > 0) {
+    start.setTime(start.getTime() + config.sameDayLeadTime * 60 * 1000)
+  }
+
+  // Calculate end (latest bookable time)
+  const end = new Date(now)
+  end.setDate(end.getDate() + maxDays)
+  end.setHours(23, 59, 59, 999)
+
+  return { start, end }
+}
+
+export function validateBookingWindow(
+  requestedDateTime: Date,
+  config: BookingWindowConfig,
+  serviceOverrides?: {
+    maxAdvanceDays?: number | null
+    minAdvanceHours?: number | null
+  }
+): BookingWindowResult {
+  const window = calculateBookingWindow(config, serviceOverrides)
+  const now = new Date()
+
+  // Check if requested time is in the past
+  if (requestedDateTime < now) {
+    return {
+      canBook: false,
+      reason: 'Cannot book appointments in the past',
+      window,
+      requestedTime: requestedDateTime,
+    }
+  }
+
+  // Check minimum advance time
+  if (requestedDateTime < window.start) {
+    const minHours = serviceOverrides?.minAdvanceHours ?? config.minAdvanceHours
+    const hoursUntilSlot = Math.ceil(
+      (requestedDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
+    )
+
+    if (minHours > 0) {
+      return {
+        canBook: false,
+        reason: `This service requires at least ${minHours} hours advance notice. You're trying to book ${hoursUntilSlot} hours from now.`,
+        window,
+        requestedTime: requestedDateTime,
+      }
+    }
+
+    if (!config.sameDayBooking) {
+      return {
+        canBook: false,
+        reason: 'Same-day bookings are not available for this service',
+        window,
+        requestedTime: requestedDateTime,
+      }
+    }
+
+    return {
+      canBook: false,
+      reason: `Bookings require at least ${config.sameDayLeadTime} minutes notice`,
+      window,
+      requestedTime: requestedDateTime,
+    }
+  }
+
+  // Check maximum advance time
+  if (requestedDateTime > window.end) {
+    const maxDays = serviceOverrides?.maxAdvanceDays ?? config.maxAdvanceDays
+    return {
+      canBook: false,
+      reason: `Bookings can only be made up to ${maxDays} days in advance`,
+      window,
+      requestedTime: requestedDateTime,
+    }
+  }
+
+  return {
+    canBook: true,
+    window,
+    requestedTime: requestedDateTime,
+  }
+}
+
+export function getEffectiveBookingLimits(
+  businessSettings: {
+    maxAdvanceDays: number
+    minAdvanceHours: number
+    sameDayBooking: boolean
+    sameDayLeadTime: number
+  },
+  serviceSettings?: {
+    maxAdvanceBookingDays?: number | null
+    minAdvanceBookingHours?: number | null
+  }
+): {
+  maxAdvanceDays: number
+  minAdvanceHours: number
+  sameDayBooking: boolean
+  sameDayLeadTime: number
+  source: {
+    maxAdvance: 'business' | 'service'
+    minAdvance: 'business' | 'service'
+  }
+} {
+  const maxAdvanceDays =
+    serviceSettings?.maxAdvanceBookingDays !== null &&
+    serviceSettings?.maxAdvanceBookingDays !== undefined
+      ? serviceSettings.maxAdvanceBookingDays === -1
+        ? 365
+        : serviceSettings.maxAdvanceBookingDays
+      : businessSettings.maxAdvanceDays
+
+  const minAdvanceHours =
+    serviceSettings?.minAdvanceBookingHours !== null &&
+    serviceSettings?.minAdvanceBookingHours !== undefined
+      ? serviceSettings.minAdvanceBookingHours
+      : businessSettings.minAdvanceHours
+
+  // If service has high minimum advance, effectively disable same-day
+  const effectiveSameDayBooking = minAdvanceHours >= 24 ? false : businessSettings.sameDayBooking
+
+  return {
+    maxAdvanceDays,
+    minAdvanceHours,
+    sameDayBooking: effectiveSameDayBooking,
+    sameDayLeadTime: businessSettings.sameDayLeadTime,
+    source: {
+      maxAdvance:
+        serviceSettings?.maxAdvanceBookingDays !== null &&
+        serviceSettings?.maxAdvanceBookingDays !== undefined
+          ? 'service'
+          : 'business',
+      minAdvance:
+        serviceSettings?.minAdvanceBookingHours !== null &&
+        serviceSettings?.minAdvanceBookingHours !== undefined
+          ? 'service'
+          : 'business',
+    },
+  }
+}

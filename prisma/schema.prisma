@@ -399,7 +399,6 @@ model Service {
   requiresApproval      Boolean          @default(false)
   requiresDeposit       Boolean          @default(false)
   depositAmount         Decimal?         @db.Decimal(10, 2)
-  maxAdvanceBookingDays Int?
   useBusinessHours      Boolean          @default(true)
   customAvailability    Json?            // { monday: { enabled: true, slots: [{start: '09:00', end: '17:00'}] } }
   availableDays         Int[]            @default([0,1,2,3,4,5,6]) // 0=Sunday, 6=Saturday
@@ -416,6 +415,9 @@ model Service {
   business              Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
   category              ServiceCategory? @relation(fields: [categoryId], references: [id])
   variants              ServiceVariant[]
+  maxAdvanceBookingDays  Int?      // null = use business default, -1 = no limit
+  minAdvanceBookingHours Int?      // null = use business default
+
 
   @@index([businessId])
   @@index([categoryId])

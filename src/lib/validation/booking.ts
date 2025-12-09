@@ -1,4 +1,9 @@
 import { z } from 'zod'
+import {
+  validateBookingWindow,
+  getEffectiveBookingLimits,
+  type BookingWindowConfig,
+} from '@/lib/utils/availability'
 
 /**
  * Time format validation (HH:MM)
@@ -105,3 +110,117 @@ export const appointmentQuerySchema = z.object({
 })
 
 export type AppointmentQueryInput = z.infer<typeof appointmentQuerySchema>
+
+// Update the validateBookingTime function to include window validation
+export async function validateBookingTime(
+  businessId: string,
+  serviceId: string,
+  requestedDate: Date,
+  requestedStartTime: string
+): Promise<{ valid: boolean; error?: string }> {
+  // Get business with settings
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    include: {
+      businessHours: true,
+      specialDates: true,
+    },
+  })
+
+  if (!business) {
+    return { valid: false, error: 'Business not found' }
+  }
+
+  // Get service
+  const service = await prisma.service.findUnique({
+    where: { id: serviceId },
+  })
+
+  if (!service) {
+    return { valid: false, error: 'Service not found' }
+  }
+
+  // Get business booking settings
+  const businessSettings = (business.settings as Record<string, unknown>) || {}
+  const bookingConfig = (businessSettings.booking as Record<string, unknown>) || {}
+
+  const config: BookingWindowConfig = {
+    maxAdvanceDays: (bookingConfig.advanceBookingDays as number) || 30,
+    minAdvanceHours: (bookingConfig.minAdvanceHours as number) || 0,
+    sameDayBooking: (bookingConfig.sameDayBooking as boolean) ?? true,
+    sameDayLeadTime: (bookingConfig.sameDayLeadTime as number) || 60,
+    timezone: business.timezone,
+  }
+
+  // Build requested datetime
+  const [hours, minutes] = requestedStartTime.split(':').map(Number)
+  const requestedDateTime = new Date(requestedDate)
+  requestedDateTime.setHours(hours, minutes, 0, 0)
+
+  // Validate booking window
+  const windowValidation = validateBookingWindow(requestedDateTime, config, {
+    maxAdvanceDays: service.maxAdvanceBookingDays,
+    minAdvanceHours: service.minAdvanceBookingHours,
+  })
+
+  if (!windowValidation.canBook) {
+    return { valid: false, error: windowValidation.reason }
+  }
+
+  // Continue with existing validation (business hours, special dates, etc.)
+  const dateString = requestedDate.toISOString().split('T')[0]
+  const dayOfWeek = requestedDate.getDay()
+
+  // Check special dates
+  const specialDate = business.specialDates.find(sd => {
+    const sdDate = new Date(sd.date)
+    return sdDate.toISOString().split('T')[0] === dateString
+  })
+
+  if (specialDate?.isClosed) {
+    return { valid: false, error: `Business is closed on ${specialDate.name}` }
+  }
+
+  // Check business hours
+  const dayHours = business.businessHours.find(bh => bh.dayOfWeek === dayOfWeek)
+
+  let isOpen = false
+  let openTime: string | undefined
+  let closeTime: string | undefined
+
+  if (specialDate && !specialDate.isClosed && specialDate.openTime && specialDate.closeTime) {
+    isOpen = true
+    openTime = specialDate.openTime
+    closeTime = specialDate.closeTime
+  } else if (dayHours && !dayHours.isClosed) {
+    isOpen = true
+    openTime = dayHours.openTime
+    closeTime = dayHours.closeTime
+  }
+
+  if (!isOpen) {
+    return { valid: false, error: 'Business is closed on this day' }
+  }
+
+  // Check if time is within business hours
+  const requestedMinutes = hours * 60 + minutes
+  const openMinutes = timeToMinutes(openTime!)
+  const closeMinutes = timeToMinutes(closeTime!)
+  const endMinutes = requestedMinutes + service.duration
+
+  if (requestedMinutes < openMinutes) {
+    return { valid: false, error: `Business opens at ${openTime}` }
+  }
+
+  if (endMinutes > closeMinutes) {
+    return { valid: false, error: `Appointment would end after closing time (${closeTime})` }
+  }
+
+  return { valid: true }
+}
+
+// Helper function (add if not already present)
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}

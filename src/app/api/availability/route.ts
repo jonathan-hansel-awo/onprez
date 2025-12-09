@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth/jwt'
 import {
   generateDetailedAvailabilityRange,
   calculateAvailabilitySummary,
@@ -9,6 +8,7 @@ import {
   getAvailabilityHeatmap,
   getPeakHours,
   getBookingWindow,
+  getEffectiveBookingLimits,
   type DetailedDayAvailability,
   type AvailabilitySummary,
   type BookingRules,
@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
     const includeRules = searchParams.get('includeRules') === 'true'
     const includeHeatmap = searchParams.get('includeHeatmap') === 'true'
     const includePeakHours = searchParams.get('includePeakHours') === 'true'
+    const includeLimits = searchParams.get('includeLimits') === 'true'
     const findNext = searchParams.get('findNext') === 'true'
     const preferredTime = searchParams.get('preferredTime') // HH:MM for findNext
 
@@ -113,6 +114,27 @@ export async function GET(request: NextRequest) {
         : undefined
     )
 
+    // Get business booking settings for min advance hours
+    const businessSettings = (business.settings as Record<string, unknown>) || {}
+    const bookingConfig = (businessSettings.booking as Record<string, unknown>) || {}
+    const minAdvanceHours = (bookingConfig.minAdvanceHours as number) || 0
+
+    // Calculate effective booking limits for the service
+    const effectiveLimits = getEffectiveBookingLimits(
+      {
+        maxAdvanceDays: bookingRules.maxAdvanceDays,
+        minAdvanceHours: minAdvanceHours,
+        sameDayBooking: bookingRules.sameDayBookingAllowed,
+        sameDayLeadTime: bookingRules.sameDayLeadTime,
+      },
+      service
+        ? {
+            maxAdvanceBookingDays: service.maxAdvanceBookingDays,
+            minAdvanceBookingHours: service.minAdvanceBookingHours,
+          }
+        : undefined
+    )
+
     // Fetch existing appointments for the date range
     const appointments = await prisma.appointment.findMany({
       where: {
@@ -146,9 +168,9 @@ export async function GET(request: NextRequest) {
       serviceDuration: service?.duration || serviceDuration,
       bufferTime: service?.bufferTime || bookingRules.bufferBetweenAppointments,
       slotInterval: bookingRules.slotInterval,
-      advanceBookingDays: bookingRules.maxAdvanceDays,
-      sameDayBooking: bookingRules.sameDayBookingAllowed,
-      sameDayLeadTime: bookingRules.sameDayLeadTime,
+      advanceBookingDays: effectiveLimits.maxAdvanceDays, // Use effective limits
+      sameDayBooking: effectiveLimits.sameDayBooking,
+      sameDayLeadTime: effectiveLimits.sameDayLeadTime,
     }
 
     // Generate availability
@@ -206,6 +228,16 @@ export async function GET(request: NextRequest) {
           start: string
           end: string
         }
+        bookingLimits?: {
+          maxAdvanceDays: number
+          minAdvanceHours: number
+          sameDayBooking: boolean
+          sameDayLeadTime: number
+          source: {
+            maxAdvance: 'business' | 'service'
+            minAdvance: 'business' | 'service'
+          }
+        }
         nextAvailable?: {
           date: string
           time: string
@@ -250,13 +282,24 @@ export async function GET(request: NextRequest) {
 
     // Add booking window
     const bookingWindow = getBookingWindow(
-      config.advanceBookingDays,
-      config.sameDayBooking,
+      effectiveLimits.maxAdvanceDays,
+      effectiveLimits.sameDayBooking,
       business.timezone
     )
     response.data.bookingWindow = {
       start: bookingWindow.startDate.toString().split('T')[0],
       end: bookingWindow.endDate.toString().split('T')[0],
+    }
+
+    // Add booking limits if requested
+    if (includeLimits) {
+      response.data.bookingLimits = {
+        maxAdvanceDays: effectiveLimits.maxAdvanceDays,
+        minAdvanceHours: effectiveLimits.minAdvanceHours,
+        sameDayBooking: effectiveLimits.sameDayBooking,
+        sameDayLeadTime: effectiveLimits.sameDayLeadTime,
+        source: effectiveLimits.source,
+      }
     }
 
     // Find next available slot if requested
@@ -314,9 +357,10 @@ export async function POST(request: NextRequest) {
     // Get service if specified
     let serviceDuration = duration || 60
     let bufferTime = 0
+    let service = null
 
     if (serviceId) {
-      const service = await prisma.service.findUnique({
+      service = await prisma.service.findUnique({
         where: { id: serviceId },
       })
 
@@ -330,6 +374,69 @@ export async function POST(request: NextRequest) {
     const targetDate = new Date(date)
     const dayOfWeek = targetDate.getDay()
     const dateString = targetDate.toISOString().split('T')[0]
+
+    // Build requested datetime for booking window validation
+    const requestedDateTime = new Date(`${dateString}T${startTime}:00`)
+
+    // Validate booking window
+    const businessSettings = (business.settings as Record<string, unknown>) || {}
+    const bookingConfig = (businessSettings.booking as Record<string, unknown>) || {}
+
+    const effectiveLimits = getEffectiveBookingLimits(
+      {
+        maxAdvanceDays: (bookingConfig.advanceBookingDays as number) || 30,
+        minAdvanceHours: (bookingConfig.minAdvanceHours as number) || 0,
+        sameDayBooking: (bookingConfig.sameDayBooking as boolean) ?? true,
+        sameDayLeadTime: (bookingConfig.sameDayLeadTime as number) || 60,
+      },
+      service
+        ? {
+            maxAdvanceBookingDays: service.maxAdvanceBookingDays,
+            minAdvanceBookingHours: service.minAdvanceBookingHours,
+          }
+        : undefined
+    )
+
+    // Check minimum advance time
+    const now = new Date()
+    const hoursUntilSlot = (requestedDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
+
+    if (hoursUntilSlot < effectiveLimits.minAdvanceHours) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          available: false,
+          reason: `This ${service ? 'service' : 'business'} requires at least ${effectiveLimits.minAdvanceHours} hours advance notice`,
+          bookingLimits: effectiveLimits,
+        },
+      })
+    }
+
+    // Check maximum advance time
+    const daysUntilSlot = hoursUntilSlot / 24
+    if (daysUntilSlot > effectiveLimits.maxAdvanceDays) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          available: false,
+          reason: `Bookings can only be made up to ${effectiveLimits.maxAdvanceDays} days in advance`,
+          bookingLimits: effectiveLimits,
+        },
+      })
+    }
+
+    // Check same-day booking
+    const isSameDay = targetDate.toDateString() === now.toDateString()
+    if (isSameDay && !effectiveLimits.sameDayBooking) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          available: false,
+          reason: 'Same-day bookings are not available',
+          bookingLimits: effectiveLimits,
+        },
+      })
+    }
 
     // Check business hours
     const dayHours = business.businessHours.find(bh => bh.dayOfWeek === dayOfWeek)
@@ -461,6 +568,7 @@ export async function POST(request: NextRequest) {
           duration: serviceDuration,
         },
         businessHours: { openTime, closeTime },
+        bookingLimits: effectiveLimits,
       },
     })
   } catch (error) {
@@ -472,7 +580,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Helper functions (duplicated for this file - consider moving to shared utils)
+// Helper functions
 function timeToMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number)
   return hours * 60 + minutes
