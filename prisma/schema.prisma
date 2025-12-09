@@ -472,6 +472,12 @@ model Appointment {
   customerPhone      String?
   customerNotes      String?
   businessNotes      String?
+  isMultiDay        Boolean   @default(false)
+  endDate           DateTime? // For multi-day: the final day
+  recurrencePattern Json?     // For recurring: { type: 'daily'|'weekly', count: number, days?: number[] }
+  parentId          String?   // Link to parent appointment for series
+  parent            Appointment?  @relation("AppointmentSeries", fields: [parentId], references: [id])
+  children          Appointment[] @relation("AppointmentSeries")
   requiresDeposit    Boolean             @default(false)
   depositAmount      Decimal?            @db.Decimal(10, 2)
   depositPaid        Boolean             @default(false)
