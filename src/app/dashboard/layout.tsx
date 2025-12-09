@@ -20,6 +20,7 @@ import {
   HelpCircle,
   PanelLeftClose,
   PanelLeft,
+  Clock,
 } from 'lucide-react'
 import { UserMenu } from '@/components/navigation/UserMenu'
 import { Logo } from '@/components/navigation'
@@ -34,6 +35,7 @@ const navigation = [
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Sharing', href: '/dashboard/sharing', icon: Share2 },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  // { name: 'Booking Rules', href: '/dashboard/settings/booking', icon: Clock},
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

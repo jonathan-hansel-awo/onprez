@@ -234,3 +234,46 @@ export const updateSpecialDateSchema = specialDateSchema.partial().extend({
 })
 
 export type UpdateSpecialDateInput = z.infer<typeof updateSpecialDateSchema>
+
+export const bookingSettingsSchema = z.object({
+  bufferTime: z
+    .number()
+    .min(0, 'Buffer time cannot be negative')
+    .max(120, 'Buffer time cannot exceed 2 hours')
+    .optional(),
+  slotInterval: z
+    .number()
+    .min(5, 'Slot interval must be at least 5 minutes')
+    .max(60, 'Slot interval cannot exceed 60 minutes')
+    .optional(),
+  advanceBookingDays: z
+    .number()
+    .min(1, 'Must allow at least 1 day advance booking')
+    .max(365, 'Cannot exceed 365 days advance booking')
+    .optional(),
+  sameDayBooking: z.boolean().optional(),
+  sameDayLeadTime: z
+    .number()
+    .min(0, 'Lead time cannot be negative')
+    .max(480, 'Lead time cannot exceed 8 hours')
+    .optional(),
+  requireApproval: z.boolean().optional(),
+  autoConfirm: z.boolean().optional(),
+  cancellationDeadline: z
+    .number()
+    .min(0, 'Cancellation deadline cannot be negative')
+    .max(168, 'Cancellation deadline cannot exceed 7 days')
+    .optional(),
+  allowRescheduling: z.boolean().optional(),
+  rescheduleDeadline: z
+    .number()
+    .min(0, 'Reschedule deadline cannot be negative')
+    .max(168, 'Reschedule deadline cannot exceed 7 days')
+    .optional(),
+})
+
+export type BookingSettings = z.infer<typeof bookingSettingsSchema>
+
+export const updateBookingSettingsSchema = bookingSettingsSchema.extend({
+  businessId: z.string().optional(),
+})

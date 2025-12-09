@@ -23,6 +23,7 @@ export interface TokenPair {
  * Decoded and verified token
  */
 export interface VerifiedToken {
+  userId: any
   payload: TokenPayload
   expired: boolean
 }
