@@ -133,6 +133,7 @@ export function verifyToken(token: string, expectedType?: 'access' | 'refresh'):
     }
 
     return {
+      userId: decoded.userId,
       payload: decoded,
       expired: false,
     }
@@ -142,6 +143,7 @@ export function verifyToken(token: string, expectedType?: 'access' | 'refresh'):
       try {
         const decoded = jwt.decode(token) as TokenPayload
         return {
+          userId: decoded.userId,
           payload: decoded,
           expired: true,
         }
