@@ -1,206 +1,101 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth/jwt'
-import { cookies } from 'next/headers'
-import { updateServiceSchema } from '@/lib/validation/service'
+import { getCurrentUser } from '@/lib/auth/get-user'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// GET - List all services for a business
+export async function GET(request: NextRequest) {
   try {
-    const { id } = await params
+    const { searchParams } = new URL(request.url)
+    const businessId = searchParams.get('businessId')
+    const slug = searchParams.get('slug')
+    const activeOnly = searchParams.get('active') !== 'false'
 
-    const service = (await prisma.service.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        business: {
-          select: {
-            id: true,
-            name: true,
-            settings: true,
-          },
-        },
-      },
-    })) as any
-
-    if (!service) {
-      return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
-    }
-
-    // Include effective booking limits
-    const businessSettings = (service.business.settings as Record<string, unknown>) || {}
-    const bookingConfig = (businessSettings.booking as Record<string, unknown>) || {}
-
-    const effectiveLimits = {
-      maxAdvanceDays:
-        (service as any).maxAdvanceBookingDays ??
-        (bookingConfig.advanceBookingDays as number) ??
-        30,
-      minAdvanceHours:
-        (service as any).minAdvanceBookingHours ?? (bookingConfig.minAdvanceHours as number) ?? 0,
-      usingBusinessDefaults: {
-        maxAdvance: (service as any).maxAdvanceBookingDays === null,
-        minAdvance: (service as any).minAdvanceBookingHours === null,
-      },
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        ...service,
-        effectiveLimits,
-      },
-    })
-  } catch (error) {
-    console.error('Get service error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to get service' }, { status: 500 })
-  }
-}
-
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('accessToken')?.value
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 })
-    }
-
-    const { id } = await params
-    const body = await request.json()
-
-    // Get existing service and verify ownership
-    const existingService = await prisma.service.findUnique({
-      where: { id },
-      include: {
-        business: {
-          select: { ownerId: true },
-        },
-      },
-    })
-
-    if (!existingService) {
-      return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
-    }
-
-    if (existingService.business.ownerId !== payload.userId) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 })
-    }
-
-    // Validate input
-    const validation = updateServiceSchema.safeParse({ ...body, id })
-    if (!validation.success) {
+    if (!businessId && !slug) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Validation failed',
-          details: validation.error.issues,
-        },
+        { success: false, error: 'Business ID or slug required' },
         { status: 400 }
       )
     }
 
-    const { id: _, ...updateData } = validation.data
+    const services = await prisma.service.findMany({
+      where: {
+        business: businessId ? { id: businessId } : { slug: slug! },
+        ...(activeOnly && { active: true }),
+      },
+      include: {
+        category: true,
+      },
+      orderBy: [{ order: 'asc' }, { name: 'asc' }],
+    })
 
-    // Update service
-    const updated = await prisma.service.update({
-      where: { id },
+    return NextResponse.json({
+      success: true,
+      data: services,
+    })
+  } catch (error) {
+    console.error('List services error:', error)
+    return NextResponse.json({ success: false, error: 'Failed to list services' }, { status: 500 })
+  }
+}
+
+// POST - Create a new service
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { businessId, ...serviceData } = body
+
+    // Verify ownership
+    const business = await prisma.business.findFirst({
+      where: {
+        id: businessId,
+        ownerId: user.id,
+      },
+    })
+
+    if (!business) {
+      return NextResponse.json(
+        { success: false, error: 'Business not found or unauthorized' },
+        { status: 403 }
+      )
+    }
+
+    // Get next order number
+    const lastService = await prisma.service.findFirst({
+      where: { businessId },
+      orderBy: { order: 'desc' },
+      select: { order: true },
+    })
+
+    const service = await prisma.service.create({
       data: {
-        ...updateData,
-        price: updateData.price !== undefined ? updateData.price : undefined,
-        priceRangeMin:
-          updateData.priceRangeMin !== undefined ? updateData.priceRangeMin : undefined,
-        priceRangeMax:
-          updateData.priceRangeMax !== undefined ? updateData.priceRangeMax : undefined,
-        depositAmount:
-          updateData.depositAmount !== undefined ? updateData.depositAmount : undefined,
+        ...serviceData,
+        businessId,
+        price: parseFloat(serviceData.price),
+        duration: parseInt(serviceData.duration),
+        bufferTime: serviceData.bufferTime ? parseInt(serviceData.bufferTime) : 0,
+        order: (lastService?.order ?? -1) + 1,
       },
       include: {
         category: true,
       },
     })
 
-    return NextResponse.json({
-      success: true,
-      data: updated,
-      message: 'Service updated successfully',
-    })
-  } catch (error) {
-    console.error('Update service error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to update service' }, { status: 500 })
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('accessToken')?.value
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 })
-    }
-
-    const { id } = await params
-
-    // Verify ownership
-    const service = await prisma.service.findUnique({
-      where: { id },
-      include: {
-        business: {
-          select: { ownerId: true },
-        },
-        _count: {
-          select: { appointments: true },
-        },
-      },
-    })
-
-    if (!service) {
-      return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
-    }
-
-    if (service.business.ownerId !== payload.userId) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 })
-    }
-
-    // Check for existing appointments
-    if (service._count.appointments > 0) {
-      // Soft delete - deactivate instead
-      await prisma.service.update({
-        where: { id },
-        data: { active: false },
-      })
-
-      return NextResponse.json({
+    return NextResponse.json(
+      {
         success: true,
-        message: 'Service deactivated (has existing appointments)',
-        deactivated: true,
-      })
-    }
-
-    // Hard delete
-    await prisma.service.delete({
-      where: { id },
-    })
-
-    return NextResponse.json({
-      success: true,
-      message: 'Service deleted successfully',
-    })
+        data: { service },
+        message: 'Service created successfully',
+      },
+      { status: 201 }
+    )
   } catch (error) {
-    console.error('Delete service error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to delete service' }, { status: 500 })
+    console.error('Create service error:', error)
+    return NextResponse.json({ success: false, error: 'Failed to create service' }, { status: 500 })
   }
 }
