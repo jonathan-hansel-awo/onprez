@@ -4,6 +4,7 @@ import {
   getEffectiveBookingLimits,
   type BookingWindowConfig,
 } from '@/lib/utils/availability'
+import { prisma } from '../prisma'
 
 /**
  * Time format validation (HH:MM)

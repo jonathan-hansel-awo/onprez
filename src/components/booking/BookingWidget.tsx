@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Calendar, Clock, User, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
+import { ServiceSelectionStep } from './steps'
 
 // Step components will be created in subsequent milestones
 // For now, we define the structure and navigation
@@ -198,8 +199,7 @@ export function BookingWidget({
             transition={{ duration: 0.2 }}
           >
             {currentStep === 'service' && (
-              <ServiceStepPlaceholder
-                businessId={businessId}
+              <ServiceSelectionStep
                 businessHandle={businessHandle}
                 selectedServiceId={bookingData.serviceId}
                 onSelect={service => {
