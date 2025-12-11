@@ -8,8 +8,12 @@ import { cn } from '@/lib/utils/cn'
 
 interface DayAvailability {
   date: string
+  dateFormatted: string
+  dayName: string
+  dayOfWeek: number
   isOpen: boolean
   availableSlots: number
+  totalSlots: number
   isSpecialDate: boolean
   specialDateName?: string
 }
@@ -84,15 +88,15 @@ export function DatePickerStep({
   const currentYear = viewDate.getFullYear()
   const currentMonth = viewDate.getMonth()
 
-  // Calculate the date range to fetch (current month + buffer)
+  // Calculate the date range to fetch
   const fetchStartDate = useMemo(() => {
     const start = new Date(currentYear, currentMonth, 1)
-    // Don't fetch dates before today
     return start < today ? today : start
   }, [currentYear, currentMonth, today])
 
   const fetchEndDate = useMemo(() => {
-    return new Date(currentYear, currentMonth + 1, 7) // Include first week of next month
+    // End of current month + first week of next month
+    return new Date(currentYear, currentMonth + 1, 7)
   }, [currentYear, currentMonth])
 
   // Fetch availability for the visible month
@@ -101,18 +105,26 @@ export function DatePickerStep({
   }, [currentMonth, currentYear, serviceId])
 
   async function fetchAvailability() {
-    if (!serviceId) return
+    if (!serviceId) {
+      setLoading(false)
+      return
+    }
 
     setLoading(true)
     setError(null)
 
     try {
       const startStr = getDateString(fetchStartDate)
+      const response = await fetch(`/api/availability?${params}`)
       const endStr = getDateString(fetchEndDate)
 
-      const response = await fetch(
-        `/api/availability?slug=${businessHandle}&serviceId=${serviceId}&startDate=${startStr}&endDate=${endStr}`
-      )
+      const params = new URLSearchParams({
+        slug: businessHandle,
+        startDate: startStr,
+        endDate: endStr,
+        serviceId: serviceId,
+        includeSlots: 'false', // We only need day-level availability for the calendar
+      })
 
       const data = await response.json()
 
@@ -120,10 +132,10 @@ export function DatePickerStep({
         throw new Error(data.error || 'Failed to fetch availability')
       }
 
-      // Convert array to lookup object
+      // Convert array to lookup object by date
       const availabilityMap: Record<string, DayAvailability> = {}
-      if (Array.isArray(data.data)) {
-        data.data.forEach((day: DayAvailability) => {
+      if (data.data?.availability && Array.isArray(data.data.availability)) {
+        data.data.availability.forEach((day: DayAvailability) => {
           availabilityMap[day.date] = day
         })
       }
@@ -212,7 +224,6 @@ export function DatePickerStep({
 
   function goToPreviousMonth() {
     const prevMonth = new Date(currentYear, currentMonth - 1, 1)
-    // Don't go before current month
     if (prevMonth >= new Date(today.getFullYear(), today.getMonth(), 1)) {
       setViewDate(prevMonth)
     }

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Calendar, Clock, User, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
-import { DatePickerStep, DatePickerStep, ServiceSelectionStep } from './steps'
+import { DatePickerStep, ServiceSelectionStep } from './steps'
 
 // Step components will be created in subsequent milestones
 // For now, we define the structure and navigation
