@@ -4,6 +4,7 @@ import {
   type CreateMultiDayAppointment,
   createMultiDayAppointmentSchema,
 } from '@/lib/validation/multi-day-appointment'
+import { Prisma } from '@prisma/client'
 
 interface GeneratedSlot {
   date: string
@@ -270,31 +271,32 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
       const startDateTime = new Date(`${slot.date}T${slot.startTime}:00`)
       const endDateTime = new Date(`${slot.date}T${slot.endTime}:00`)
 
-      const appointment = await tx.appointment.create({
-        data: {
-          businessId: data.businessId,
-          serviceId: data.serviceId,
-          customerId: customerId!,
-          startTime: startDateTime,
-          endTime: endDateTime,
-          duration: service.duration,
-          timezone: 'Europe/London', // TODO: Get from business
-          status: 'PENDING',
-          customerName: data.customerName,
-          customerEmail: data.customerEmail,
-          customerPhone: data.customerPhone,
-          customerNotes: data.customerNotes,
-          businessNotes: data.businessNotes,
-          totalAmount: service.price,
-          isMultiDay: true,
-          endDate:
-            slots.length > 1
-              ? new Date(`${slots[slots.length - 1].date}T${slots[slots.length - 1].endTime}:00`)
-              : null,
-          parentId: i > 0 ? parentId : null,
-          recurrencePattern: i === 0 ? data.pattern : null,
-        },
-      })
+      const appointment: Awaited<ReturnType<typeof tx.appointment.create>> =
+        await tx.appointment.create({
+          data: {
+            businessId: data.businessId,
+            serviceId: data.serviceId,
+            customerId: customerId!,
+            startTime: startDateTime,
+            endTime: endDateTime,
+            duration: service.duration,
+            timezone: 'Europe/London', // TODO: Get from business
+            status: 'PENDING',
+            customerName: data.customerName,
+            customerEmail: data.customerEmail,
+            customerPhone: data.customerPhone,
+            customerNotes: data.customerNotes,
+            businessNotes: data.businessNotes,
+            totalAmount: service.price,
+            isMultiDay: true,
+            endDate:
+              slots.length > 1
+                ? new Date(`${slots[slots.length - 1].date}T${slots[slots.length - 1].endTime}:00`)
+                : null,
+            parentId: i > 0 ? parentId : null,
+            recurrencePattern: i === 0 ? data.pattern : Prisma.JsonNull,
+          },
+        })
 
       // First appointment becomes the parent
       if (i === 0) {
