@@ -1,2 +1,4 @@
 export { BookingWidget } from './BookingWidget'
-export type { BookingWidgetProps, BookingData, BookingStep } from './BookingWidget'
+export type { BookingData } from './BookingWidget'
+
+export { ServiceSelectionStep, DatePickerStep, TimeSlotSelectionStep } from './steps'

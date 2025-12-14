@@ -1,47 +1,41 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Calendar, Clock, User, Check } from 'lucide-react'
+import { Check, ChevronRight, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
-import { DatePickerStep, ServiceSelectionStep } from './steps'
+import { ServiceSelectionStep, DatePickerStep, TimeSlotSelectionStep } from './steps'
 
-// Step components will be created in subsequent milestones
-// For now, we define the structure and navigation
+// Booking flow steps
+type BookingStep = 'service' | 'datetime' | 'details' | 'confirmation'
 
-export type BookingStep = 'service' | 'datetime' | 'details' | 'confirmation'
+const STEPS: { id: BookingStep; label: string; shortLabel: string }[] = [
+  { id: 'service', label: 'Select Service', shortLabel: 'Service' },
+  { id: 'datetime', label: 'Choose Date & Time', shortLabel: 'Date & Time' },
+  { id: 'details', label: 'Your Details', shortLabel: 'Details' },
+  { id: 'confirmation', label: 'Confirmation', shortLabel: 'Confirm' },
+]
 
+// Data collected during booking
 export interface BookingData {
+  // Service info
   serviceId: string | null
   serviceName: string | null
   servicePrice: number | null
   serviceDuration: number | null
+
+  // Date/time
   date: Date | null
-  timeSlot: string | null
+  timeSlot: string | null // "09:00"
+  endTime: string | null // "10:00"
+
+  // Customer info
   customerName: string
   customerEmail: string
   customerPhone: string
   customerNotes: string
 }
-
-export interface BookingWidgetProps {
-  businessId: string
-  businessHandle: string
-  businessName: string
-  businessTimezone?: string
-  initialServiceId?: string
-  onComplete?: (bookingData: BookingData) => void
-  onCancel?: () => void
-  className?: string
-}
-
-const STEPS: { id: BookingStep; label: string; icon: React.ReactNode }[] = [
-  { id: 'service', label: 'Service', icon: <Calendar className="w-4 h-4" /> },
-  { id: 'datetime', label: 'Date & Time', icon: <Clock className="w-4 h-4" /> },
-  { id: 'details', label: 'Your Details', icon: <User className="w-4 h-4" /> },
-  { id: 'confirmation', label: 'Confirm', icon: <Check className="w-4 h-4" /> },
-]
 
 const initialBookingData: BookingData = {
   serviceId: null,
@@ -50,38 +44,53 @@ const initialBookingData: BookingData = {
   serviceDuration: null,
   date: null,
   timeSlot: null,
+  endTime: null,
   customerName: '',
   customerEmail: '',
   customerPhone: '',
   customerNotes: '',
 }
 
+interface BookingWidgetProps {
+  businessId: string
+  businessHandle: string
+  businessName: string
+  businessTimezone: string
+  preselectedServiceId?: string
+  onComplete?: (booking: BookingData) => void
+  onCancel?: () => void
+}
+
 export function BookingWidget({
   businessId,
   businessHandle,
   businessName,
-  businessTimezone = 'Europe/London',
-  initialServiceId,
+  businessTimezone,
+  preselectedServiceId,
   onComplete,
   onCancel,
-  className,
 }: BookingWidgetProps) {
   const [currentStep, setCurrentStep] = useState<BookingStep>(
-    initialServiceId ? 'datetime' : 'service'
+    preselectedServiceId ? 'datetime' : 'service'
   )
-  const [bookingData, setBookingData] = useState<BookingData>({
+  const [bookingData, setBookingData] = useState<BookingData>(() => ({
     ...initialBookingData,
-    serviceId: initialServiceId || null,
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+    serviceId: preselectedServiceId || null,
+  }))
 
-  const currentStepIndex = STEPS.findIndex(s => s.id === currentStep)
+  // Sub-step for datetime: 'date' or 'time'
+  const [dateTimeSubStep, setDateTimeSubStep] = useState<'date' | 'time'>('date')
 
+  // Update booking data
   const updateBookingData = useCallback((updates: Partial<BookingData>) => {
     setBookingData(prev => ({ ...prev, ...updates }))
   }, [])
 
-  const canProceed = useCallback((): boolean => {
+  // Get current step index
+  const currentStepIndex = useMemo(() => STEPS.findIndex(s => s.id === currentStep), [currentStep])
+
+  // Check if can proceed to next step
+  const canProceed = useMemo(() => {
     switch (currentStep) {
       case 'service':
         return !!bookingData.serviceId
@@ -89,8 +98,8 @@ export function BookingWidget({
         return !!bookingData.date && !!bookingData.timeSlot
       case 'details':
         return (
-          !!bookingData.customerName.trim() &&
-          !!bookingData.customerEmail.trim() &&
+          bookingData.customerName.trim() !== '' &&
+          bookingData.customerEmail.trim() !== '' &&
           /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bookingData.customerEmail)
         )
       case 'confirmation':
@@ -100,87 +109,139 @@ export function BookingWidget({
     }
   }, [currentStep, bookingData])
 
+  // Navigate to next step
   const goToNextStep = useCallback(() => {
     const nextIndex = currentStepIndex + 1
     if (nextIndex < STEPS.length) {
       setCurrentStep(STEPS[nextIndex].id)
+      // Reset datetime sub-step when entering datetime step
+      if (STEPS[nextIndex].id === 'datetime') {
+        setDateTimeSubStep('date')
+      }
     }
   }, [currentStepIndex])
 
+  // Navigate to previous step
   const goToPreviousStep = useCallback(() => {
     const prevIndex = currentStepIndex - 1
     if (prevIndex >= 0) {
       setCurrentStep(STEPS[prevIndex].id)
-    } else if (onCancel) {
-      onCancel()
     }
-  }, [currentStepIndex, onCancel])
+  }, [currentStepIndex])
 
-  const handleSubmit = async () => {
-    if (!canProceed()) return
-
-    setIsSubmitting(true)
-    try {
-      // Will be implemented in Milestone 8.7
-      if (onComplete) {
-        onComplete(bookingData)
+  // Navigate to specific step (only if completed)
+  const goToStep = useCallback(
+    (step: BookingStep) => {
+      const targetIndex = STEPS.findIndex(s => s.id === step)
+      if (targetIndex <= currentStepIndex) {
+        setCurrentStep(step)
+        if (step === 'datetime') {
+          // If going back to datetime, check if we already have a date
+          setDateTimeSubStep(bookingData.date ? 'time' : 'date')
+        }
       }
-    } catch (error) {
-      console.error('Booking submission failed:', error)
-    } finally {
-      setIsSubmitting(false)
+    },
+    [currentStepIndex, bookingData.date]
+  )
+
+  // Handle booking completion
+  const handleComplete = useCallback(() => {
+    if (onComplete) {
+      onComplete(bookingData)
     }
-  }
+  }, [bookingData, onComplete])
+
+  // Handle service selection
+  const handleServiceSelect = useCallback(
+    (service: { id: string; name: string; price: number; duration: number }) => {
+      updateBookingData({
+        serviceId: service.id,
+        serviceName: service.name,
+        servicePrice: service.price,
+        serviceDuration: service.duration,
+      })
+    },
+    [updateBookingData]
+  )
+
+  // Handle date selection
+  const handleDateSelect = useCallback(
+    (date: Date) => {
+      updateBookingData({
+        date,
+        timeSlot: null, // Reset time when date changes
+        endTime: null,
+      })
+      setDateTimeSubStep('time')
+    },
+    [updateBookingData]
+  )
+
+  // Handle time selection
+  const handleTimeSelect = useCallback(
+    (startTime: string, endTime: string) => {
+      updateBookingData({
+        timeSlot: startTime,
+        endTime: endTime,
+      })
+    },
+    [updateBookingData]
+  )
+
+  // Handle back from time selection
+  const handleBackToDate = useCallback(() => {
+    setDateTimeSubStep('date')
+  }, [])
 
   return (
-    <div className={cn('bg-white rounded-2xl shadow-xl overflow-hidden', className)}>
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
-        <h2 className="text-xl font-bold text-white">Book an Appointment</h2>
-        <p className="text-blue-100 text-sm mt-1">{businessName}</p>
-      </div>
-
+    <div className="w-full max-w-2xl mx-auto">
       {/* Progress Steps */}
-      <div className="px-6 py-4 border-b border-gray-100">
+      <div className="mb-8">
         <div className="flex items-center justify-between">
           {STEPS.map((step, index) => {
-            const isActive = step.id === currentStep
             const isCompleted = index < currentStepIndex
-            const isClickable = index < currentStepIndex
+            const isCurrent = step.id === currentStep
+            const isClickable = index <= currentStepIndex
 
             return (
-              <div key={step.id} className="flex items-center">
+              <div key={step.id} className="flex items-center flex-1">
+                {/* Step circle */}
                 <button
-                  onClick={() => isClickable && setCurrentStep(step.id)}
+                  onClick={() => isClickable && goToStep(step.id)}
                   disabled={!isClickable}
                   className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-lg transition-all',
-                    isActive && 'bg-blue-50 text-blue-600',
-                    isCompleted && 'text-green-600 cursor-pointer hover:bg-green-50',
-                    !isActive && !isCompleted && 'text-gray-400',
-                    isClickable && 'cursor-pointer'
+                    'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-all',
+                    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                    isCompleted && 'bg-blue-600 text-white cursor-pointer hover:bg-blue-700',
+                    isCurrent && 'bg-blue-600 text-white ring-4 ring-blue-100',
+                    !isCompleted && !isCurrent && 'bg-gray-200 text-gray-500',
+                    isClickable && !isCurrent && 'cursor-pointer'
                   )}
+                  aria-current={isCurrent ? 'step' : undefined}
                 >
-                  <div
-                    className={cn(
-                      'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all',
-                      isActive && 'bg-blue-600 text-white',
-                      isCompleted && 'bg-green-500 text-white',
-                      !isActive && !isCompleted && 'bg-gray-200 text-gray-500'
-                    )}
-                  >
-                    {isCompleted ? <Check className="w-4 h-4" /> : index + 1}
-                  </div>
-                  <span className="hidden sm:inline text-sm font-medium">{step.label}</span>
+                  {isCompleted ? <Check className="w-4 h-4" /> : index + 1}
                 </button>
 
+                {/* Step label (hidden on mobile) */}
+                <span
+                  className={cn(
+                    'hidden sm:block ml-2 text-sm font-medium',
+                    isCurrent ? 'text-blue-600' : 'text-gray-500'
+                  )}
+                >
+                  {step.shortLabel}
+                </span>
+
+                {/* Connector line */}
                 {index < STEPS.length - 1 && (
-                  <div
-                    className={cn(
-                      'w-8 sm:w-12 h-0.5 mx-1',
-                      index < currentStepIndex ? 'bg-green-500' : 'bg-gray-200'
-                    )}
-                  />
+                  <div className="flex-1 mx-2 sm:mx-4">
+                    <div
+                      className={cn(
+                        'h-0.5 rounded-full',
+                        index < currentStepIndex ? 'bg-blue-600' : 'bg-gray-200'
+                      )}
+                    />
+                  </div>
                 )}
               </div>
             )
@@ -189,31 +250,27 @@ export function BookingWidget({
       </div>
 
       {/* Step Content */}
-      <div className="p-6 min-h-[400px]">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentStep}
+            key={currentStep + (currentStep === 'datetime' ? `-${dateTimeSubStep}` : '')}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
+            className="p-6"
           >
+            {/* Service Selection Step */}
             {currentStep === 'service' && (
               <ServiceSelectionStep
                 businessHandle={businessHandle}
                 selectedServiceId={bookingData.serviceId}
-                onSelect={service => {
-                  updateBookingData({
-                    serviceId: service.id,
-                    serviceName: service.name,
-                    servicePrice: service.price,
-                    serviceDuration: service.duration,
-                  })
-                }}
+                onSelect={handleServiceSelect}
               />
             )}
 
-            {currentStep === 'datetime' && (
+            {/* DateTime Step - Date Selection */}
+            {currentStep === 'datetime' && dateTimeSubStep === 'date' && (
               <DatePickerStep
                 businessId={businessId}
                 businessHandle={businessHandle}
@@ -221,16 +278,30 @@ export function BookingWidget({
                 serviceDuration={bookingData.serviceDuration}
                 timezone={businessTimezone}
                 selectedDate={bookingData.date}
-                onSelect={date => {
-                  updateBookingData({ date, timeSlot: null })
-                }}
+                onSelect={handleDateSelect}
               />
             )}
 
-            {currentStep === 'details' && (
-              <DetailsStepPlaceholder data={bookingData} onChange={updateBookingData} />
+            {/* DateTime Step - Time Selection */}
+            {currentStep === 'datetime' && dateTimeSubStep === 'time' && bookingData.date && (
+              <TimeSlotSelectionStep
+                businessHandle={businessHandle}
+                serviceId={bookingData.serviceId!}
+                serviceDuration={bookingData.serviceDuration!}
+                selectedDate={bookingData.date}
+                timezone={businessTimezone}
+                selectedTimeSlot={bookingData.timeSlot}
+                onSelect={handleTimeSelect}
+                onBack={handleBackToDate}
+              />
             )}
 
+            {/* Details Step - Placeholder */}
+            {currentStep === 'details' && (
+              <CustomerDetailsStepPlaceholder data={bookingData} onUpdate={updateBookingData} />
+            )}
+
+            {/* Confirmation Step - Placeholder */}
             {currentStep === 'confirmation' && (
               <ConfirmationStepPlaceholder
                 data={bookingData}
@@ -240,210 +311,120 @@ export function BookingWidget({
             )}
           </motion.div>
         </AnimatePresence>
-      </div>
 
-      {/* Footer Navigation */}
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-        <Button variant="ghost" onClick={goToPreviousStep} className="flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          {currentStepIndex === 0 ? 'Cancel' : 'Back'}
-        </Button>
+        {/* Navigation Footer */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+          <div className="flex items-center justify-between">
+            {/* Back button */}
+            <div>
+              {currentStepIndex > 0 &&
+                !(currentStep === 'datetime' && dateTimeSubStep === 'time') && (
+                  <Button variant="ghost" onClick={goToPreviousStep}>
+                    Back
+                  </Button>
+                )}
+              {currentStep === 'datetime' && dateTimeSubStep === 'time' && (
+                <Button variant="ghost" onClick={handleBackToDate}>
+                  Back to Date
+                </Button>
+              )}
+            </div>
 
-        {currentStep === 'confirmation' ? (
-          <Button
-            onClick={handleSubmit}
-            disabled={!canProceed() || isSubmitting}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Booking...
-              </>
-            ) : (
-              <>
-                <Check className="w-4 h-4" />
-                Confirm Booking
-              </>
-            )}
-          </Button>
-        ) : (
-          <Button
-            onClick={goToNextStep}
-            disabled={!canProceed()}
-            className="flex items-center gap-2"
-          >
-            Continue
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
-    </div>
-  )
-}
+            {/* Next/Submit button */}
+            <div className="flex items-center gap-3">
+              {onCancel && currentStepIndex === 0 && (
+                <Button variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+              )}
 
-// Placeholder components - will be fully implemented in subsequent milestones
-
-interface ServiceStepPlaceholderProps {
-  businessId: string
-  businessHandle: string
-  selectedServiceId: string | null
-  onSelect: (service: { id: string; name: string; price: number; duration: number }) => void
-}
-
-function ServiceStepPlaceholder({
-  businessHandle,
-  selectedServiceId,
-  onSelect,
-}: ServiceStepPlaceholderProps) {
-  const [services, setServices] = useState<
-    Array<{
-      id: string
-      name: string
-      description: string
-      price: number
-      duration: number
-      category?: string
-    }>
-  >([])
-  const [loading, setLoading] = useState(true)
-
-  useState(() => {
-    fetch(`/api/public/businesses/${businessHandle}/services`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setServices(data.data.services)
-        }
-      })
-      .finally(() => setLoading(false))
-  })
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Select a Service</h3>
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
-          ))}
+              {currentStep !== 'confirmation' ? (
+                <Button onClick={goToNextStep} disabled={!canProceed} className="min-w-[120px]">
+                  Continue
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              ) : (
+                <Button onClick={handleComplete} className="min-w-[120px]">
+                  Confirm Booking
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    )
-  }
-
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Select a Service</h3>
-      <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2">
-        {services.map(service => (
-          <button
-            key={service.id}
-            onClick={() => onSelect(service)}
-            className={cn(
-              'w-full p-4 rounded-lg border-2 text-left transition-all hover:border-blue-300',
-              selectedServiceId === service.id
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 bg-white'
-            )}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                {service.category && (
-                  <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
-                    {service.category}
-                  </span>
-                )}
-                <h4 className="font-semibold text-gray-900">{service.name}</h4>
-                <p className="text-sm text-gray-500 line-clamp-2 mt-1">{service.description}</p>
-              </div>
-              <div className="text-right ml-4">
-                <div className="font-bold text-gray-900">£{service.price.toFixed(2)}</div>
-                <div className="text-sm text-gray-500">{service.duration} min</div>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
     </div>
   )
 }
 
-interface DateTimeStepPlaceholderProps {
-  businessId: string
-  serviceId: string | null
-  serviceDuration: number | null
-  timezone: string
-  selectedDate: Date | null
-  selectedTime: string | null
-  onSelect: (date: Date, time: string) => void
-}
+// Placeholder components for steps not yet implemented
 
-function DateTimeStepPlaceholder({ selectedDate, selectedTime }: DateTimeStepPlaceholderProps) {
-  // Full implementation in Milestone 8.3 and 8.4
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Choose Date & Time</h3>
-      <p className="text-gray-500">
-        Date picker and time slot selection will be implemented in Milestone 8.3 and 8.4
-      </p>
-      {selectedDate && (
-        <p className="text-sm text-blue-600">
-          Selected: {selectedDate.toLocaleDateString()} at {selectedTime}
-        </p>
-      )}
-    </div>
-  )
-}
-
-interface DetailsStepPlaceholderProps {
+function CustomerDetailsStepPlaceholder({
+  data,
+  onUpdate,
+}: {
   data: BookingData
-  onChange: (updates: Partial<BookingData>) => void
-}
-
-function DetailsStepPlaceholder({ data, onChange }: DetailsStepPlaceholderProps) {
-  // Full implementation in Milestone 8.5
+  onUpdate: (updates: Partial<BookingData>) => void
+}) {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Your Details</h3>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">Your Details</h3>
+        <p className="text-sm text-gray-500 mt-1">Please provide your contact information</p>
+      </div>
+
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            Full Name *
+          </label>
           <input
             type="text"
+            id="name"
             value={data.customerName}
-            onChange={e => onChange({ customerName: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={e => onUpdate({ customerName: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="John Smith"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email Address *
+          </label>
           <input
             type="email"
+            id="email"
             value={data.customerEmail}
-            onChange={e => onChange({ customerEmail: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={e => onUpdate({ customerEmail: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="john@example.com"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            Phone Number
+          </label>
           <input
             type="tel"
+            id="phone"
             value={data.customerPhone}
-            onChange={e => onChange({ customerPhone: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={e => onUpdate({ customerPhone: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="+44 7123 456789"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+            Additional Notes
+          </label>
           <textarea
+            id="notes"
             value={data.customerNotes}
-            onChange={e => onChange({ customerNotes: e.target.value })}
+            onChange={e => onUpdate({ customerNotes: e.target.value })}
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             placeholder="Any special requests or notes..."
           />
         </div>
@@ -452,64 +433,80 @@ function DetailsStepPlaceholder({ data, onChange }: DetailsStepPlaceholderProps)
   )
 }
 
-interface ConfirmationStepPlaceholderProps {
+function ConfirmationStepPlaceholder({
+  data,
+  businessName,
+  timezone,
+}: {
   data: BookingData
   businessName: string
   timezone: string
-}
+}) {
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number)
+    const period = hours >= 12 ? 'PM' : 'AM'
+    const displayHours = hours % 12 || 12
+    return `${displayHours}:${String(minutes).padStart(2, '0')} ${period}`
+  }
 
-function ConfirmationStepPlaceholder({ data, businessName }: ConfirmationStepPlaceholderProps) {
-  // Full implementation in Milestone 8.6
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Confirm Your Booking</h3>
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">Confirm Your Booking</h3>
+        <p className="text-sm text-gray-500 mt-1">
+          Please review your booking details before confirming
+        </p>
+      </div>
 
       <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="text-sm text-gray-500">Service</p>
-            <p className="font-semibold text-gray-900">{data.serviceName}</p>
-          </div>
-          <div className="text-right">
-            <p className="font-bold text-gray-900">£{data.servicePrice?.toFixed(2)}</p>
-            <p className="text-sm text-gray-500">{data.serviceDuration} min</p>
-          </div>
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wide">Business</p>
+          <p className="font-medium text-gray-900">{businessName}</p>
         </div>
 
-        <div className="border-t border-gray-200 pt-4">
-          <p className="text-sm text-gray-500">Date & Time</p>
-          <p className="font-semibold text-gray-900">
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wide">Service</p>
+          <p className="font-medium text-gray-900">{data.serviceName}</p>
+          {data.servicePrice && (
+            <p className="text-sm text-gray-600">£{data.servicePrice.toFixed(2)}</p>
+          )}
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wide">Date & Time</p>
+          <p className="font-medium text-gray-900">
             {data.date?.toLocaleDateString('en-GB', {
               weekday: 'long',
               day: 'numeric',
               month: 'long',
               year: 'numeric',
-            })}{' '}
-            at {data.timeSlot}
+            })}
           </p>
+          {data.timeSlot && data.endTime && (
+            <p className="text-sm text-gray-600">
+              {formatTime(data.timeSlot)} - {formatTime(data.endTime)} ({timezone})
+            </p>
+          )}
         </div>
 
-        <div className="border-t border-gray-200 pt-4">
-          <p className="text-sm text-gray-500">Your Details</p>
-          <p className="font-semibold text-gray-900">{data.customerName}</p>
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wide">Your Details</p>
+          <p className="font-medium text-gray-900">{data.customerName}</p>
           <p className="text-sm text-gray-600">{data.customerEmail}</p>
           {data.customerPhone && <p className="text-sm text-gray-600">{data.customerPhone}</p>}
         </div>
 
         {data.customerNotes && (
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-sm text-gray-500">Notes</p>
-            <p className="text-sm text-gray-900">{data.customerNotes}</p>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Notes</p>
+            <p className="text-sm text-gray-600">{data.customerNotes}</p>
           </div>
         )}
       </div>
 
-      <div className="bg-blue-50 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          By confirming this booking, you agree to the cancellation policy of{' '}
-          <span className="font-semibold">{businessName}</span>.
-        </p>
-      </div>
+      <p className="text-xs text-gray-500 text-center">
+        By confirming, you agree to receive booking confirmation and reminder emails.
+      </p>
     </div>
   )
 }

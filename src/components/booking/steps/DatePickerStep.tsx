@@ -115,7 +115,6 @@ export function DatePickerStep({
 
     try {
       const startStr = getDateString(fetchStartDate)
-      const response = await fetch(`/api/availability?${params}`)
       const endStr = getDateString(fetchEndDate)
 
       const params = new URLSearchParams({
@@ -126,6 +125,7 @@ export function DatePickerStep({
         includeSlots: 'false', // We only need day-level availability for the calendar
       })
 
+      const response = await fetch(`/api/availability?${params}`)
       const data = await response.json()
 
       if (!response.ok || !data.success) {
