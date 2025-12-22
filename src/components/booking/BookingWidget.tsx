@@ -10,6 +10,7 @@ import {
   DatePickerStep,
   TimeSlotSelectionStep,
   CustomerDetailsStep,
+  ConfirmationStep,
 } from './steps'
 
 // Booking flow steps
@@ -318,12 +319,27 @@ export function BookingWidget({
               />
             )}
 
-            {/* Confirmation Step - Placeholder */}
+            {/* Confirmation Step */}
             {currentStep === 'confirmation' && (
-              <ConfirmationStepPlaceholder
-                data={bookingData}
+              <ConfirmationStep
                 businessName={businessName}
                 timezone={businessTimezone}
+                serviceName={bookingData.serviceName}
+                servicePrice={bookingData.servicePrice}
+                serviceDuration={bookingData.serviceDuration}
+                date={bookingData.date}
+                timeSlot={bookingData.timeSlot}
+                endTime={bookingData.endTime}
+                customerName={bookingData.customerName}
+                customerEmail={bookingData.customerEmail}
+                customerPhone={bookingData.customerPhone}
+                customerNotes={bookingData.customerNotes}
+                onEditStep={step => {
+                  setCurrentStep(step)
+                  if (step === 'datetime') {
+                    setDateTimeSubStep(bookingData.date ? 'time' : 'date')
+                  }
+                }}
               />
             )}
           </motion.div>

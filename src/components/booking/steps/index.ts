@@ -6,3 +6,5 @@ export { DatePickerStep } from './DatePickerStep'
 export { TimeSlotSelectionStep } from './TimeSlotSelectionStep'
 
 export { CustomerDetailsStep } from './CustomerDetailsStep'
+
+export { ConfirmationStep } from './ConfirmationStep'
