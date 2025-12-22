@@ -89,7 +89,7 @@ export function BookingPageClient({ business, service }: BookingPageClientProps)
             businessHandle={business.handle}
             businessName={business.name}
             businessTimezone={business.timezone}
-            initialServiceId={service.id}
+            preselectedServiceId={service.id}
             onComplete={handleComplete}
             onCancel={handleCancel}
           />

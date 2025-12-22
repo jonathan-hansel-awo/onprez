@@ -5,7 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronRight, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
-import { ServiceSelectionStep, DatePickerStep, TimeSlotSelectionStep } from './steps'
+import {
+  ServiceSelectionStep,
+  DatePickerStep,
+  TimeSlotSelectionStep,
+  CustomerDetailsStep,
+} from './steps'
 
 // Booking flow steps
 type BookingStep = 'service' | 'datetime' | 'details' | 'confirmation'
@@ -97,10 +102,16 @@ export function BookingWidget({
       case 'datetime':
         return !!bookingData.date && !!bookingData.timeSlot
       case 'details':
+        const isValidUKPhone = (phone: string): boolean => {
+          if (!phone) return true
+          const digits = phone.replace(/\D/g, '')
+          return digits.length >= 10 && digits.length <= 11
+        }
         return (
-          bookingData.customerName.trim() !== '' &&
+          bookingData.customerName.trim().length >= 2 &&
           bookingData.customerEmail.trim() !== '' &&
-          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bookingData.customerEmail)
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bookingData.customerEmail) &&
+          isValidUKPhone(bookingData.customerPhone)
         )
       case 'confirmation':
         return true
@@ -296,9 +307,15 @@ export function BookingWidget({
               />
             )}
 
-            {/* Details Step - Placeholder */}
+            {/* Customer Details Step */}
             {currentStep === 'details' && (
-              <CustomerDetailsStepPlaceholder data={bookingData} onUpdate={updateBookingData} />
+              <CustomerDetailsStep
+                customerName={bookingData.customerName}
+                customerEmail={bookingData.customerEmail}
+                customerPhone={bookingData.customerPhone}
+                customerNotes={bookingData.customerNotes}
+                onUpdate={updateBookingData}
+              />
             )}
 
             {/* Confirmation Step - Placeholder */}
