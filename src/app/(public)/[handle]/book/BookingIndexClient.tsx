@@ -18,14 +18,28 @@ export function BookingIndexClient({
 }: BookingIndexClientProps) {
   const router = useRouter()
 
+  const handleComplete = (
+    booking: any,
+    confirmation: { id: string; confirmationNumber: string }
+  ) => {
+    // Redirect to success page with confirmation number
+    router.push(`/${businessHandle}/book/success?confirmation=${confirmation.confirmationNumber}`)
+  }
+
+  const handleCancel = () => {
+    router.push(`/${businessHandle}`)
+  }
+
   return (
-    <BookingWidget
-      businessId={businessId}
-      businessHandle={businessHandle}
-      businessName={businessName}
-      businessTimezone={businessTimezone}
-      onComplete={() => router.push(`/${businessHandle}/book/success`)}
-      onCancel={() => router.push(`/${businessHandle}`)}
-    />
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <BookingWidget
+        businessId={businessId}
+        businessHandle={businessHandle}
+        businessName={businessName}
+        businessTimezone={businessTimezone}
+        onComplete={handleComplete}
+        onCancel={handleCancel}
+      />
+    </div>
   )
 }
