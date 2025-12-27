@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectOption } from '@/components/form/select'
 import { DatePicker } from '@/components/ui/date-picker'
 import { BookingDetailModal } from '@/components/bookings/booking-detail-modal'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Calendar,
   Search,
@@ -63,6 +64,41 @@ interface PaginationData {
   totalPages: number
 }
 
+// Status change confirmation config
+interface StatusChangeConfig {
+  title: string
+  description: string
+  variant: 'info' | 'warning' | 'danger' | 'success'
+  confirmLabel: string
+}
+
+const STATUS_CHANGE_CONFIG: { [key: string]: StatusChangeConfig } = {
+  CONFIRMED: {
+    title: 'Confirm Appointment',
+    description: 'This will confirm the appointment and notify the customer.',
+    variant: 'success',
+    confirmLabel: 'Confirm Appointment',
+  },
+  COMPLETED: {
+    title: 'Mark as Complete',
+    description: 'This will mark the appointment as completed. This action cannot be undone.',
+    variant: 'success',
+    confirmLabel: 'Mark Complete',
+  },
+  NO_SHOW: {
+    title: 'Mark as No Show',
+    description: 'This will mark the customer as a no-show. This affects their booking history.',
+    variant: 'warning',
+    confirmLabel: 'Mark No Show',
+  },
+  CANCELLED: {
+    title: 'Cancel Appointment',
+    description: 'Are you sure you want to cancel this appointment? The customer will be notified.',
+    variant: 'danger',
+    confirmLabel: 'Cancel Appointment',
+  },
+}
+
 const STATUS_OPTIONS: SelectOption[] = [
   { value: '', label: 'All Statuses' },
   { value: 'PENDING', label: 'Pending' },
@@ -115,6 +151,14 @@ export default function BookingsPage() {
   // Modal state
   const [selectedBooking, setSelectedBooking] = useState<BookingListItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Status change state
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    bookingId: string
+    newStatus: AppointmentStatus
+  } | null>(null)
+  const [isStatusChanging, setIsStatusChanging] = useState(false)
+  const [statusChangeError, setStatusChangeError] = useState<string | null>(null)
 
   // Filters
   const [status, setStatus] = useState(searchParams.get('status') || '')
@@ -219,11 +263,71 @@ export default function BookingsPage() {
     setSelectedBooking(null)
   }
 
-  const handleStatusChange = async (newStatus: AppointmentStatus) => {
-    // TODO: Implement in Milestone 9.3
-    console.log('Status change:', newStatus)
-    handleCloseModal()
-    fetchBookings()
+  // Status change - show confirmation dialog
+  const handleStatusChange = (newStatus: AppointmentStatus) => {
+    if (!selectedBooking) return
+    setPendingStatusChange({
+      bookingId: selectedBooking.id,
+      newStatus,
+    })
+  }
+
+  // Confirm status change
+  const confirmStatusChange = async () => {
+    if (!pendingStatusChange) return
+
+    setIsStatusChanging(true)
+    setStatusChangeError(null)
+
+    try {
+      const response = await fetch(
+        `/api/dashboard/bookings/${pendingStatusChange.bookingId}/status`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: pendingStatusChange.newStatus }),
+        }
+      )
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update status')
+      }
+
+      // Update the booking in local state
+      setBookings(prev =>
+        prev.map(b =>
+          b.id === pendingStatusChange.bookingId
+            ? { ...b, status: pendingStatusChange.newStatus }
+            : b
+        )
+      )
+
+      // Update selected booking if open
+      if (selectedBooking?.id === pendingStatusChange.bookingId) {
+        setSelectedBooking(prev =>
+          prev ? { ...prev, status: pendingStatusChange.newStatus } : null
+        )
+      }
+
+      // Refresh to get updated counts
+      fetchBookings()
+
+      // Close dialogs
+      setPendingStatusChange(null)
+      handleCloseModal()
+    } catch (err) {
+      setStatusChangeError(err instanceof Error ? err.message : 'Failed to update status')
+    } finally {
+      setIsStatusChanging(false)
+    }
+  }
+
+  // Cancel status change
+  const cancelStatusChange = () => {
+    setPendingStatusChange(null)
+    setStatusChangeError(null)
   }
 
   const handleReschedule = () => {
@@ -232,8 +336,9 @@ export default function BookingsPage() {
   }
 
   const handleCancel = () => {
-    // TODO: Implement in Milestone 9.5
-    console.log('Cancel booking')
+    if (selectedBooking) {
+      handleStatusChange('CANCELLED')
+    }
   }
 
   const hasActiveFilters = status || search || startDate || endDate
@@ -244,6 +349,11 @@ export default function BookingsPage() {
     }
     return statusCounts[statusValue] || 0
   }
+
+  // Get config for pending status change dialog
+  const statusChangeConfig = pendingStatusChange
+    ? STATUS_CHANGE_CONFIG[pendingStatusChange.newStatus]
+    : null
 
   return (
     <div className="space-y-6">
@@ -297,7 +407,6 @@ export default function BookingsPage() {
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -314,7 +423,6 @@ export default function BookingsPage() {
               </div>
             </div>
 
-            {/* Toggle Filters Button */}
             <Button
               variant="secondary"
               onClick={() => setShowFilters(!showFilters)}
@@ -325,7 +433,6 @@ export default function BookingsPage() {
               {hasActiveFilters && <span className="ml-2 w-2 h-2 bg-onprez-blue rounded-full" />}
             </Button>
 
-            {/* Desktop Filters */}
             <div
               className={cn(
                 'flex flex-col lg:flex-row gap-4',
@@ -505,6 +612,26 @@ export default function BookingsPage() {
         onReschedule={handleReschedule}
         onCancel={handleCancel}
       />
+
+      {/* Status Change Confirmation Dialog */}
+      {statusChangeConfig && (
+        <ConfirmDialog
+          isOpen={!!pendingStatusChange}
+          onClose={cancelStatusChange}
+          onConfirm={confirmStatusChange}
+          title={statusChangeConfig.title}
+          description={statusChangeConfig.description}
+          confirmLabel={statusChangeConfig.confirmLabel}
+          variant={statusChangeConfig.variant}
+          isLoading={isStatusChanging}
+        >
+          {statusChangeError && (
+            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">{statusChangeError}</p>
+            </div>
+          )}
+        </ConfirmDialog>
+      )}
     </div>
   )
 }
@@ -522,7 +649,6 @@ function BookingCard({ booking, onView }: BookingCardProps) {
     <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={onView}>
       <CardContent className="p-4">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          {/* Date/Time Block */}
           <div className="flex-shrink-0 w-full sm:w-auto">
             <div className="bg-gray-50 rounded-lg p-3 text-center sm:w-24">
               <div className="text-xs text-gray-500 uppercase">
@@ -540,7 +666,6 @@ function BookingCard({ booking, onView }: BookingCardProps) {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
               <div>
@@ -552,7 +677,6 @@ function BookingCard({ booking, onView }: BookingCardProps) {
               </Badge>
             </div>
 
-            {/* Customer Info */}
             <div className="space-y-1 mb-3">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <User className="w-4 h-4" />
@@ -570,7 +694,6 @@ function BookingCard({ booking, onView }: BookingCardProps) {
               )}
             </div>
 
-            {/* Details Row */}
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-1 text-gray-500">
                 <Clock className="w-4 h-4" />
@@ -580,7 +703,6 @@ function BookingCard({ booking, onView }: BookingCardProps) {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex sm:flex-col gap-2" onClick={e => e.stopPropagation()}>
             <Button variant="secondary" size="sm" onClick={onView} className="flex-1 sm:flex-none">
               <Eye className="w-4 h-4 sm:mr-2" />
