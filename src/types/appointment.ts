@@ -9,6 +9,11 @@ import {
 } from '@prisma/client'
 
 /**
+ * Minimal type for status check functions
+ */
+export type AppointmentStatusCheck = Pick<Appointment, 'status' | 'startTime' | 'endTime'>
+
+/**
  * Appointment with relations
  */
 export type AppointmentWithRelations = Appointment & {
@@ -117,13 +122,13 @@ export interface AppointmentFilterOptions {
   status?: AppointmentStatus
   startDate?: Date
   endDate?: Date
-  search?: string // Search by customer name or email
+  search?: string
 }
 
 /**
  * Check if appointment is upcoming
  */
-export function isUpcoming(appointment: Appointment): boolean {
+export function isUpcoming(appointment: AppointmentStatusCheck): boolean {
   return (
     appointment.startTime > new Date() &&
     (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED')
@@ -133,14 +138,14 @@ export function isUpcoming(appointment: Appointment): boolean {
 /**
  * Check if appointment is past
  */
-export function isPast(appointment: Appointment): boolean {
+export function isPast(appointment: AppointmentStatusCheck): boolean {
   return appointment.startTime < new Date()
 }
 
 /**
  * Check if appointment can be cancelled
  */
-export function canBeCancelled(appointment: Appointment): boolean {
+export function canBeCancelled(appointment: AppointmentStatusCheck): boolean {
   return (
     (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') &&
     appointment.startTime > new Date()
@@ -150,7 +155,7 @@ export function canBeCancelled(appointment: Appointment): boolean {
 /**
  * Check if appointment can be rescheduled
  */
-export function canBeRescheduled(appointment: Appointment): boolean {
+export function canBeRescheduled(appointment: AppointmentStatusCheck): boolean {
   return (
     (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') &&
     appointment.startTime > new Date()
@@ -160,14 +165,14 @@ export function canBeRescheduled(appointment: Appointment): boolean {
 /**
  * Check if appointment can be marked as completed
  */
-export function canBeCompleted(appointment: Appointment): boolean {
+export function canBeCompleted(appointment: AppointmentStatusCheck): boolean {
   return appointment.status === 'CONFIRMED' && appointment.startTime <= new Date()
 }
 
 /**
  * Check if appointment can be marked as no-show
  */
-export function canBeMarkedNoShow(appointment: Appointment): boolean {
+export function canBeMarkedNoShow(appointment: AppointmentStatusCheck): boolean {
   return appointment.status === 'CONFIRMED' && appointment.endTime < new Date()
 }
 
