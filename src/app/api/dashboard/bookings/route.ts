@@ -26,24 +26,26 @@ export async function GET(request: NextRequest) {
 
     // Get user's business - check ownership first, then membership
     let businessId: string | null = null
+    let businessSlug: string | null = null
 
     // Check if user owns a business
     const ownedBusiness = await prisma.business.findFirst({
       where: { ownerId: user.id },
-      select: { id: true },
+      select: { id: true, slug: true },
     })
 
     if (ownedBusiness) {
       businessId = ownedBusiness.id
+      businessSlug = ownedBusiness.slug
     } else {
-      // Check if user is a member of a business
       const membership = await prisma.businessMember.findFirst({
         where: { userId: user.id },
-        select: { businessId: true },
+        select: { businessId: true, business: { select: { slug: true } } },
       })
 
       if (membership) {
         businessId = membership.businessId
+        businessSlug = membership.business.slug
       }
     }
 
@@ -161,6 +163,7 @@ export async function GET(request: NextRequest) {
       data: {
         appointments: appointments.map(apt => ({
           id: apt.id,
+          businessSlug,
           confirmationNumber: apt.id.slice(0, 8).toUpperCase(),
           startTime: apt.startTime,
           endTime: apt.endTime,

@@ -27,6 +27,7 @@ import {
 import { cn } from '@/lib/utils/cn'
 import { APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_COLORS } from '@/types/appointment'
 import { AppointmentStatus, PaymentStatus } from '@prisma/client'
+import { RescheduleModal } from '@/components/bookings/reschedule-modal'
 
 interface BookingListItem {
   id: string
@@ -147,6 +148,7 @@ export default function BookingsPage() {
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [businessSlug, setBusinessSlug] = useState<string>('')
 
   // Modal state
   const [selectedBooking, setSelectedBooking] = useState<BookingListItem | null>(null)
@@ -163,6 +165,8 @@ export default function BookingsPage() {
   // Filters
   const [status, setStatus] = useState(searchParams.get('status') || '')
   const [search, setSearch] = useState(searchParams.get('search') || '')
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false)
+  const [isRescheduling, setIsRescheduling] = useState(false)
   const [startDate, setStartDate] = useState<Date | null>(
     searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : null
   )
@@ -213,6 +217,7 @@ export default function BookingsPage() {
       setBookings(result.data.appointments)
       setPagination(result.data.pagination)
       setStatusCounts(result.data.statusCounts)
+      setBusinessSlug(result.data.businessSlug || '')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -331,8 +336,64 @@ export default function BookingsPage() {
   }
 
   const handleReschedule = () => {
-    // TODO: Implement in Milestone 9.4
-    console.log('Reschedule booking')
+    if (selectedBooking) {
+      setIsRescheduleOpen(true)
+    }
+  }
+
+  const handleRescheduleSubmit = async (
+    date: string,
+    startTime: string,
+    endTime: string,
+    reason?: string
+  ) => {
+    if (!selectedBooking) return
+
+    setIsRescheduling(true)
+
+    try {
+      const response = await fetch(`/api/dashboard/bookings/${selectedBooking.id}/reschedule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, startTime, endTime, reason }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reschedule')
+      }
+
+      // Update local state with new times
+      setBookings(prev =>
+        prev.map(b =>
+          b.id === selectedBooking.id
+            ? {
+                ...b,
+                startTime: result.data.startTime,
+                endTime: result.data.endTime,
+                duration: result.data.duration,
+                status: result.data.status,
+              }
+            : b
+        )
+      )
+
+      // Refresh data
+      fetchBookings()
+
+      // Close modals
+      setIsRescheduleOpen(false)
+      handleCloseModal()
+    } catch (err) {
+      throw err // Let the modal handle the error display
+    } finally {
+      setIsRescheduling(false)
+    }
+  }
+
+  const handleRescheduleClose = () => {
+    setIsRescheduleOpen(false)
   }
 
   const handleCancel = () => {
@@ -632,6 +693,27 @@ export default function BookingsPage() {
           )}
         </ConfirmDialog>
       )}
+
+      {/* Reschedule Modal */}
+      <RescheduleModal
+        isOpen={isRescheduleOpen}
+        onClose={handleRescheduleClose}
+        onReschedule={handleRescheduleSubmit}
+        businessSlug={businessSlug}
+        booking={
+          selectedBooking
+            ? {
+                id: selectedBooking.id,
+                confirmationNumber: selectedBooking.confirmationNumber,
+                startTime: selectedBooking.startTime,
+                endTime: selectedBooking.endTime,
+                duration: selectedBooking.duration,
+                service: selectedBooking.service,
+              }
+            : null
+        }
+        isLoading={isRescheduling}
+      />
     </div>
   )
 }

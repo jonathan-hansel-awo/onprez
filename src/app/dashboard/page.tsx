@@ -5,16 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/dashboard/stat-card'
-import {
-  Calendar,
-  DollarSign,
-  Users,
-  Clock,
-  Loader2,
-  Plus,
-  ExternalLink,
-  ArrowRight,
-} from 'lucide-react'
+import { Calendar, DollarSign, Users, Clock, Plus, ExternalLink, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
