@@ -23,12 +23,14 @@ import {
   Eye,
   RefreshCw,
   X,
+  Plus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_COLORS } from '@/types/appointment'
 import { AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { RescheduleModal } from '@/components/bookings/reschedule-modal'
 import { CancelBookingModal } from '@/components/bookings/cancel-booking-modal'
+import { QuickCreateBookingModal } from '@/components/bookings/quick-create-booking-modal'
 
 interface BookingListItem {
   id: string
@@ -159,6 +161,9 @@ export default function BookingsPage() {
   const [isCancelOpen, setIsCancelOpen] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
 
+  // Quick create state
+  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false)
+
   // Status change state
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     bookingId: string
@@ -250,6 +255,10 @@ export default function BookingsPage() {
   }, [status, search, startDate, endDate, sortValue, router])
 
   // Handlers
+  const handleQuickCreateSuccess = () => {
+    fetchBookings()
+  }
+
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }))
   }
@@ -525,6 +534,11 @@ export default function BookingsPage() {
         })}
       </div>
 
+      <Button onClick={() => setIsQuickCreateOpen(true)}>
+        <Plus className="w-4 h-4 mr-2" />
+        New Booking
+      </Button>
+
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -794,6 +808,14 @@ export default function BookingsPage() {
             : null
         }
         isLoading={isCancelling}
+      />
+
+      {/* Quick Create Booking Modal */}
+      <QuickCreateBookingModal
+        isOpen={isQuickCreateOpen}
+        onClose={() => setIsQuickCreateOpen(false)}
+        onSuccess={handleQuickCreateSuccess}
+        businessSlug={businessSlug}
       />
     </div>
   )

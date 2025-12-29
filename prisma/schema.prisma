@@ -466,6 +466,7 @@ model Appointment {
   cancelledBy        String?
   rescheduledFrom    String?
   rescheduledTo      String?
+  rescheduledBy      String?
   rescheduledAt      DateTime?
   rescheduleReason   String?
   customerName       String

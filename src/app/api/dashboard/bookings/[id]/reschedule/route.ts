@@ -157,16 +157,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         startTime: newStartTime,
         endTime: newEndTime,
         duration: newDuration,
-        status: 'CONFIRMED', // Confirm the rescheduled appointment
+        status: 'CONFIRMED',
         previousStatus: appointment.status,
         rescheduledAt: now,
-        rescheduledBy: user.id,
-        rescheduledFrom: oldStartTime,
-        rescheduleCount: { increment: 1 },
+        rescheduledFrom: oldStartTime.toISOString(),
+        rescheduleReason: reason || null,
         // Add reschedule note to business notes
         businessNotes: appointment.businessNotes
-          ? `${appointment.businessNotes}\n\n[${now.toISOString()}] Rescheduled from ${oldStartTime.toISOString()} to ${newStartTime.toISOString()}${reason ? `. Reason: ${reason}` : ''}`
-          : `[${now.toISOString()}] Rescheduled from ${oldStartTime.toISOString()} to ${newStartTime.toISOString()}${reason ? `. Reason: ${reason}` : ''}`,
+          ? `${appointment.businessNotes}\n\n[${now.toISOString()}] Rescheduled by ${user.email} from ${oldStartTime.toISOString()} to ${newStartTime.toISOString()}${reason ? `. Reason: ${reason}` : ''}`
+          : `[${now.toISOString()}] Rescheduled by ${user.email} from ${oldStartTime.toISOString()} to ${newStartTime.toISOString()}${reason ? `. Reason: ${reason}` : ''}`,
       },
       include: {
         service: {
@@ -197,7 +196,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       success: true,
       data: {
         id: updatedAppointment.id,
-        confirmationNumber: updatedAppointment.confirmationNumber,
         status: updatedAppointment.status,
         startTime: updatedAppointment.startTime,
         endTime: updatedAppointment.endTime,
