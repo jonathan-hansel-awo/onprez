@@ -462,6 +462,7 @@ model Appointment {
   cancelledAt        DateTime?
   cancellationSource CancellationSource?
   cancellationReason String?
+  cancellationDetails String?
   cancelledBy        String?
   rescheduledFrom    String?
   rescheduledTo      String?

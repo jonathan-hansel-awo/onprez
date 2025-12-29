@@ -20,8 +20,7 @@ type OverlappingMotionProps =
   | 'onPointerOut'
 
 export interface ButtonProps
-  extends Omit<ComponentPropsWithRef<'button'>, OverlappingMotionProps | 'style'>,
-    MotionProps {
+  extends Omit<ComponentPropsWithRef<'button'>, OverlappingMotionProps | 'style'>, MotionProps {
   variant?: 'primary' | 'secondary' | 'ghost' | 'destructive' | 'outline'
   size?: 'sm' | 'md' | 'lg'
   children: ReactNode
@@ -40,6 +39,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         'bg-white text-onprez-blue border-2 border-onprez-blue hover:bg-onprez-blue hover:text-white',
       ghost: 'bg-transparent text-onprez-blue hover:bg-onprez-blue/10 border border-onprez-blue/20',
       destructive: 'bg-red-600 text-white hover:bg-red-700 border border-red-700 hover:scale-105',
+      danger: 'bg-red-600 text-white hover:bg-red-700 border border-red-700 hover:scale-105',
       outline: 'bg-transparent text-onprez-blue border-2 border-onprez-blue hover:bg-onprez-blue/5',
     }
 

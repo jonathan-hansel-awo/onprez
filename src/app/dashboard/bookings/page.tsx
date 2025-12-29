@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils/cn'
 import { APPOINTMENT_STATUS_LABELS, APPOINTMENT_STATUS_COLORS } from '@/types/appointment'
 import { AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { RescheduleModal } from '@/components/bookings/reschedule-modal'
+import { CancelBookingModal } from '@/components/bookings/cancel-booking-modal'
 
 interface BookingListItem {
   id: string
@@ -153,6 +154,10 @@ export default function BookingsPage() {
   // Modal state
   const [selectedBooking, setSelectedBooking] = useState<BookingListItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Cancel state
+  const [isCancelOpen, setIsCancelOpen] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   // Status change state
   const [pendingStatusChange, setPendingStatusChange] = useState<{
@@ -400,6 +405,62 @@ export default function BookingsPage() {
     if (selectedBooking) {
       handleStatusChange('CANCELLED')
     }
+  }
+
+  // Handle cancel from detail modal
+  const handleCancelFromModal = () => {
+    setIsModalOpen(false)
+    setIsCancelOpen(true)
+    handleCancel()
+  }
+
+  // Handle cancel submission
+  const handleCancelSubmit = async (
+    reason: string,
+    customReason?: string,
+    notifyCustomer?: boolean
+  ) => {
+    if (!selectedBooking) return
+
+    setIsCancelling(true)
+
+    try {
+      const response = await fetch(`/api/dashboard/bookings/${selectedBooking.id}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reason,
+          customReason,
+          notifyCustomer,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to cancel booking')
+      }
+
+      // Update local state
+      setBookings(prev =>
+        prev.map(b => (b.id === selectedBooking.id ? { ...b, status: 'CANCELLED' as const } : b))
+      )
+
+      // Refresh to get updated data
+      await fetchBookings()
+
+      // Close modals
+      setIsCancelOpen(false)
+      setSelectedBooking(null)
+    } catch (error) {
+      throw error // Let modal handle the error display
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  const handleCancelClose = () => {
+    setIsCancelOpen(false)
   }
 
   const hasActiveFilters = status || search || startDate || endDate
@@ -671,7 +732,7 @@ export default function BookingsPage() {
         booking={selectedBooking}
         onStatusChange={handleStatusChange}
         onReschedule={handleReschedule}
-        onCancel={handleCancel}
+        onCancel={handleCancelFromModal}
       />
 
       {/* Status Change Confirmation Dialog */}
@@ -713,6 +774,26 @@ export default function BookingsPage() {
             : null
         }
         isLoading={isRescheduling}
+      />
+
+      {/* Cancel Booking Modal */}
+      <CancelBookingModal
+        isOpen={isCancelOpen}
+        onClose={handleCancelClose}
+        onCancel={handleCancelSubmit}
+        booking={
+          selectedBooking
+            ? {
+                id: selectedBooking.id,
+                confirmationNumber: selectedBooking.confirmationNumber,
+                startTime: selectedBooking.startTime,
+                endTime: selectedBooking.endTime,
+                service: selectedBooking.service,
+                customer: selectedBooking.customer,
+              }
+            : null
+        }
+        isLoading={isCancelling}
       />
     </div>
   )
