@@ -3,10 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CalendarDayView } from '@/components/bookings/calendar-day-view'
+import { CalendarWeekView } from '@/components/bookings/calendar-week-view'
+import { CalendarViewToggle } from '@/components/bookings/calendar-view-toggle'
 import { BookingDetailModal } from '@/components/bookings/booking-detail-modal'
 import { QuickCreateBookingModal } from '@/components/bookings/quick-create-booking-modal'
 import { RescheduleModal } from '@/components/bookings/reschedule-modal'
 import { CancelBookingModal, CancellationReason } from '@/components/bookings/cancel-booking-modal'
+
+type CalendarView = 'day' | 'week'
 
 // Type from CalendarDayView/API response
 interface CalendarBooking {
@@ -35,7 +39,7 @@ interface CalendarBooking {
 function toBookingDetails(booking: CalendarBooking) {
   return {
     id: booking.id,
-    confirmationNumber: booking.id.slice(0, 8).toUpperCase(), // Use ID prefix as confirmation
+    confirmationNumber: booking.id.slice(0, 8).toUpperCase(),
     startTime: booking.startTime,
     endTime: booking.endTime,
     duration: booking.duration,
@@ -49,12 +53,16 @@ function toBookingDetails(booking: CalendarBooking) {
     paymentStatus: 'UNPAID' as const,
     service: booking.service,
     customer: booking.customer,
-    createdAt: new Date().toISOString(), // Not available from API, use placeholder
+    createdAt: new Date().toISOString(),
   }
 }
 
 export default function CalendarPage() {
   const router = useRouter()
+
+  // View state
+  const [view, setView] = useState<CalendarView>('week')
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   // Raw booking from calendar
   const [selectedBooking, setSelectedBooking] = useState<CalendarBooking | null>(null)
@@ -75,11 +83,10 @@ export default function CalendarPage() {
   // Initial time for quick create (from slot click)
   const [initialTime, setInitialTime] = useState<string | undefined>()
 
-  // Get business slug (you may need to fetch this or get from context)
+  // Business slug
   const [businessSlug, setBusinessSlug] = useState('')
 
   useEffect(() => {
-    // Fetch business slug
     const fetchBusinessSlug = async () => {
       try {
         const response = await fetch('/api/dashboard/business')
@@ -98,6 +105,11 @@ export default function CalendarPage() {
   const handleBookingClick = (booking: CalendarBooking) => {
     setSelectedBooking(booking)
     setIsDetailOpen(true)
+  }
+
+  const handleDayClick = (date: string) => {
+    setSelectedDate(date)
+    setView('day')
   }
 
   const handleAddBooking = (time?: string) => {
@@ -141,7 +153,6 @@ export default function CalendarPage() {
     setRefreshTrigger(prev => prev + 1)
   }
 
-  // Reschedule handler matching RescheduleModal's onReschedule signature
   const handleReschedule = async (
     date: string,
     startTime: string,
@@ -174,13 +185,12 @@ export default function CalendarPage() {
       setRefreshTrigger(prev => prev + 1)
     } catch (error) {
       console.error('Reschedule error:', error)
-      throw error // Re-throw so modal can handle it
+      throw error
     } finally {
       setIsRescheduling(false)
     }
   }
 
-  // Cancel handler matching CancelBookingModal's onCancel signature
   const handleCancel = async (
     reason: CancellationReason,
     customReason?: string,
@@ -211,19 +221,37 @@ export default function CalendarPage() {
       setRefreshTrigger(prev => prev + 1)
     } catch (error) {
       console.error('Cancel error:', error)
-      throw error // Re-throw so modal can handle it
+      throw error
     } finally {
       setIsCancelling(false)
     }
   }
 
   return (
-    <div className="h-[calc(100vh-120px)]">
-      <CalendarDayView
-        onBookingClick={handleBookingClick}
-        onAddBooking={handleAddBooking}
-        refreshTrigger={refreshTrigger}
-      />
+    <div className="h-[calc(100vh-120px)] flex flex-col">
+      {/* View Toggle */}
+      <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+        <h1 className="text-xl font-semibold text-gray-900">Calendar</h1>
+        <CalendarViewToggle view={view} onChange={setView} />
+      </div>
+
+      {/* Calendar View */}
+      <div className="flex-1 overflow-hidden">
+        {view === 'day' ? (
+          <CalendarDayView
+            onBookingClick={handleBookingClick}
+            onAddBooking={handleAddBooking}
+            refreshTrigger={refreshTrigger}
+          />
+        ) : (
+          <CalendarWeekView
+            onBookingClick={handleBookingClick}
+            onDayClick={handleDayClick}
+            onAddBooking={() => handleAddBooking()}
+            refreshTrigger={refreshTrigger}
+          />
+        )}
+      </div>
 
       {/* Detail Modal */}
       {selectedBooking && (
@@ -255,9 +283,7 @@ export default function CalendarPage() {
       {selectedBooking && (
         <RescheduleModal
           isOpen={isRescheduleOpen}
-          onClose={() => {
-            setIsRescheduleOpen(false)
-          }}
+          onClose={() => setIsRescheduleOpen(false)}
           onReschedule={handleReschedule}
           booking={{
             id: selectedBooking.id,
@@ -280,9 +306,7 @@ export default function CalendarPage() {
       {selectedBooking && (
         <CancelBookingModal
           isOpen={isCancelOpen}
-          onClose={() => {
-            setIsCancelOpen(false)
-          }}
+          onClose={() => setIsCancelOpen(false)}
           onCancel={handleCancel}
           booking={{
             id: selectedBooking.id,
