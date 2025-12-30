@@ -23,6 +23,8 @@ import {
   CheckCircle,
   RefreshCw,
   AlertCircle,
+  Loader2,
+  Bell,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import {
@@ -149,12 +151,34 @@ export function BookingDetailModal({
   onCancel,
 }: BookingDetailModalProps) {
   const [copied, setCopied] = useState(false)
+  const [isSendingReminder, setIsSendingReminder] = useState(false)
 
   const handleCopyConfirmation = () => {
     if (booking) {
       navigator.clipboard.writeText(booking.confirmationNumber)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleSendReminder = async () => {
+    setIsSendingReminder(true)
+    try {
+      const response = await fetch(`/api/dashboard/bookings/${booking!.id}/reminder`, {
+        method: 'POST',
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        // Show success toast/message
+        alert('Reminder sent successfully!')
+      } else {
+        alert(result.error || 'Failed to send reminder')
+      }
+    } catch (error) {
+      alert('Failed to send reminder')
+    } finally {
+      setIsSendingReminder(false)
     }
   }
 
@@ -394,6 +418,22 @@ export function BookingDetailModal({
               >
                 <XCircle className="w-4 h-4 mr-2" />
                 Cancel
+              </Button>
+            )}
+
+            {new Date(booking.startTime) > new Date() && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSendReminder}
+                disabled={isSendingReminder}
+              >
+                {isSendingReminder ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Bell className="w-4 h-4 mr-1" />
+                )}
+                Send Reminder
               </Button>
             )}
 

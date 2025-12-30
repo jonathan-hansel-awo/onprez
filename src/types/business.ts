@@ -414,3 +414,18 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   showTeamMembers: true,
   acceptInternationalBookings: false,
 }
+
+export interface ReminderSettings {
+  enabled: boolean
+  emailEnabled: boolean
+  smsEnabled: boolean // Future
+  reminderTimes: number[] // Hours before appointment (e.g., [24, 2])
+  defaultMessage?: string
+}
+
+export interface BusinessSettings {
+  businessHours?: Record<string, { open: string; close: string; closed?: boolean }>
+  bufferTime?: number
+  advanceBookingDays?: number
+  reminders?: ReminderSettings
+}
