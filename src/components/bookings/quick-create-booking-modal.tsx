@@ -44,6 +44,7 @@ interface QuickCreateBookingModalProps {
   onClose: () => void
   onSuccess: () => void
   businessSlug: string
+  initialTime?: string // HH:MM format
 }
 
 type Step = 'service' | 'customer' | 'datetime' | 'confirm'

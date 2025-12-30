@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { AlertTriangle, Calendar, Clock, User } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
-type CancellationReason =
+export type CancellationReason =
   | 'CUSTOMER_REQUEST'
   | 'BUSINESS_UNAVAILABLE'
   | 'STAFF_UNAVAILABLE'

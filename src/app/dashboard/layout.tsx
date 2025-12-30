@@ -35,6 +35,7 @@ const navigation = [
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Sharing', href: '/dashboard/sharing', icon: Share2 },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  // { name: 'Calendar', href: '/dashboard/bookings/calendar', icon: Calendar },
   // { name: 'Booking Rules', href: '/dashboard/settings/booking', icon: Clock},
 ]
 
