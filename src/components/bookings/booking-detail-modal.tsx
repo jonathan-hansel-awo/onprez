@@ -35,6 +35,7 @@ import {
   canBeMarkedNoShow,
 } from '@/types/appointment'
 import { AppointmentStatus, PaymentStatus } from '@prisma/client'
+import { BookingNotesDisplay } from './booking-notes-display'
 
 interface BookingDetails {
   id: string
@@ -308,29 +309,18 @@ export function BookingDetailModal({
               </div>
             </div>
 
-            {/* Notes */}
-            {(booking.customerNotes || booking.businessNotes) && (
-              <div className="space-y-4">
-                {booking.customerNotes && (
-                  <div className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-2 text-gray-500 mb-2">
-                      <MessageSquare className="w-4 h-4" />
-                      <span className="text-sm font-medium">Customer Notes</span>
-                    </div>
-                    <p className="text-gray-700 whitespace-pre-wrap">{booking.customerNotes}</p>
-                  </div>
-                )}
-                {booking.businessNotes && (
-                  <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
-                    <div className="flex items-center gap-2 text-amber-700 mb-2">
-                      <FileText className="w-4 h-4" />
-                      <span className="text-sm font-medium">Internal Notes</span>
-                    </div>
-                    <p className="text-amber-900 whitespace-pre-wrap">{booking.businessNotes}</p>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Notes Section */}
+            <div className="border-t border-gray-200 pt-4">
+              <BookingNotesDisplay
+                bookingId={booking.id}
+                businessNotes={booking.businessNotes}
+                customerNotes={booking.customerNotes}
+                onUpdate={updatedNotes => {
+                  // Optionally update local state or trigger refresh
+                  console.log('Notes updated:', updatedNotes)
+                }}
+              />
+            </div>
 
             {/* Payment Info */}
             <div className="p-4 border border-gray-200 rounded-lg">

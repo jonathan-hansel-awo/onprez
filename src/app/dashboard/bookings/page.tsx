@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -31,6 +31,7 @@ import { AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { RescheduleModal } from '@/components/bookings/reschedule-modal'
 import { CancelBookingModal } from '@/components/bookings/cancel-booking-modal'
 import { QuickCreateBookingModal } from '@/components/bookings/quick-create-booking-modal'
+import Loading from '@/app/[handle]/loading'
 
 interface BookingListItem {
   id: string
@@ -136,7 +137,7 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-export default function BookingsPage() {
+function Bookings() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -818,6 +819,14 @@ export default function BookingsPage() {
         businessSlug={businessSlug}
       />
     </div>
+  )
+}
+
+export default function BookingsPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <Bookings />
+    </Suspense>
   )
 }
 
