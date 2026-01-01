@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { sendEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/services/email'
 import { generateReminderEmailHtml, generateReminderEmailText } from '@/lib/email/templates/appointment-reminder'
 import { format } from 'date-fns'
 
