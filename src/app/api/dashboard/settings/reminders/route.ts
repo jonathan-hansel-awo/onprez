@@ -6,16 +6,17 @@ import { z } from 'zod'
 const reminderSettingsSchema = z.object({
   enabled: z.boolean(),
   emailEnabled: z.boolean(),
-  smsEnabled: z.boolean().default(false),
-  reminderTimes: z.array(z.number().min(1).max(168)), // 1 hour to 7 days
   defaultMessage: z.string().max(500).optional(),
 })
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await getCurrentUser()
     if (!user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
     const business = await prisma.business.findFirst({
@@ -24,15 +25,16 @@ export async function GET(request: NextRequest) {
     })
 
     if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Business not found' },
+        { status: 404 }
+      )
     }
 
-    const settings = (business.settings as Record<string, unknown>) || {}
+    const settings = business.settings as Record<string, unknown> || {}
     const reminders = settings.reminders || {
       enabled: true,
       emailEnabled: true,
-      smsEnabled: false,
-      reminderTimes: [24, 2], // 24 hours and 2 hours before
       defaultMessage: '',
     }
 
@@ -53,7 +55,10 @@ export async function PUT(request: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
     const body = await request.json()
@@ -72,10 +77,13 @@ export async function PUT(request: NextRequest) {
     })
 
     if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Business not found' },
+        { status: 404 }
+      )
     }
 
-    const currentSettings = (business.settings as Record<string, unknown>) || {}
+    const currentSettings = business.settings as Record<string, unknown> || {}
     const updatedSettings = {
       ...currentSettings,
       reminders: validation.data,
