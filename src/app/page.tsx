@@ -7,6 +7,7 @@ import {
   FeatureOneLink,
   FinalCTA,
   Hero,
+  HowItWorks,
   SocialProofStreamDual,
 } from '@/components/landing'
 
@@ -63,6 +64,8 @@ export default function LandingPage() {
         {/* Above the fold - Critical */}
         <Hero />
         {/* Early sections - High priority */}
+        <HowItWorks />
+
         <SocialProofStreamDual />
 
         {/* <ProblemSolutionSplit /> */}

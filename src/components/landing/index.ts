@@ -1,4 +1,5 @@
 export { Hero } from './hero'
+export { HowItWorks } from './how-it-works'
 export { AnimatedHeadline } from './animated-headline'
 export { GradientMesh } from './gradient-mesh'
 export { BrowserMockup } from './browser-mockup'
