@@ -147,12 +147,12 @@ export function HowItWorks() {
         {/* Main content grid */}
         <div className="mt-16 grid gap-10 lg:mt-20 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:items-center">
           {/* Steps — on desktop, left. On mobile, below the device. */}
-          <div className="order-2 lg:order-1">
+          <div className="order-1 lg:order-1">
             <StepList activeStep={activeStep} onStepClick={goToStep} />
           </div>
 
           {/* Device mockup — on desktop, right. On mobile, on top. */}
-          <div className="order-1 lg:order-2">
+          <div className="order-2 lg:order-2">
             <div className="relative">
               {/* Chevron arrows — visible only on mobile/tablet */}
               <button
