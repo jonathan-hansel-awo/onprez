@@ -78,7 +78,6 @@ const BOOKINGS: Booking[] = [
  * All pixel values tuned for the 1000×600 design canvas in DeviceMockup.
  */
 export function Step3Screens({ active }: Step3ScreensProps) {
-  console.log('Step3Screens rendering, active =', active)
   const [visibleCount, setVisibleCount] = useState(0)
 
   useEffect(() => {

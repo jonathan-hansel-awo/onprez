@@ -95,6 +95,14 @@ export function HowItWorks() {
 
   /* ---------- Render ---------- */
 
+  console.log(
+    'HowItWorks render — inView:',
+    inView,
+    'hasStarted:',
+    hasStarted,
+    'activeStep:',
+    activeStep
+  )
   return (
     <section
       ref={sectionRef}
@@ -175,7 +183,7 @@ export function HowItWorks() {
               >
                 <DeviceMockup>
                   <div className="relative h-full w-full">
-                    <AnimatePresence mode="wait">
+                    <AnimatePresence>
                       <motion.div
                         key={`step-${activeStep}`}
                         initial={{ opacity: 0 }}

@@ -21,7 +21,6 @@ interface Step1ScreensProps {
  * All pixel values tuned for the 1000×600 design canvas in DeviceMockup.
  */
 export function Step1Screens({ active }: Step1ScreensProps) {
-  console.log('Step1Screens rendering, active =', active)
   const [phase, setPhase] = useState<Phase>('signup')
   const [buttonPressed, setButtonPressed] = useState(false)
 
