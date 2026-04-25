@@ -32,6 +32,6 @@ export const STEPS: Step[] = [
     title: 'Share and get booked',
     description:
       'Share onprez.com/your-handle anywhere — bio, email, cards. Watch bookings roll straight into your dashboard.',
-    duration: 700000,
+    duration: 7000,
   },
 ]
