@@ -176,42 +176,18 @@ export function HowItWorks() {
                 <DeviceMockup>
                   <div className="relative h-full w-full">
                     <AnimatePresence mode="wait">
-                      {activeStep === 1 && (
-                        <motion.div
-                          key="step-1"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="h-full w-full absolute inset-0"
-                        >
-                          <Step1Screens active={activeStep === 1 && hasStarted} />
-                        </motion.div>
-                      )}
-                      {activeStep === 2 && (
-                        <motion.div
-                          key="step-2"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="h-full w-full absolute inset-0"
-                        >
-                          <Step2Screens active={activeStep === 2 && hasStarted} />
-                        </motion.div>
-                      )}
-                      {activeStep === 3 && (
-                        <motion.div
-                          key="step-3"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="h-full w-full absolute inset-0"
-                        >
-                          <Step3Screens active={activeStep === 3 && hasStarted} />
-                        </motion.div>
-                      )}
+                      <motion.div
+                        key={`step-${activeStep}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 h-full w-full"
+                      >
+                        {activeStep === 1 && <Step1Screens active={hasStarted} />}
+                        {activeStep === 2 && <Step2Screens active={hasStarted} />}
+                        {activeStep === 3 && <Step3Screens active={hasStarted} />}
+                      </motion.div>
                     </AnimatePresence>
                   </div>
                 </DeviceMockup>

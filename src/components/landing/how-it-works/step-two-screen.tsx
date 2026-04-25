@@ -69,6 +69,7 @@ type Layout = 'stacked' | 'grid'
  *  4.8s — toggle gallery section on (briefly highlight)
  */
 export function Step2Screens({ active }: Step2ScreensProps) {
+  // console.log('Step2Screens rendering, active =', active)
   const [themeIndex, setThemeIndex] = useState(0)
   const [layout, setLayout] = useState<Layout>('stacked')
   const [galleryOn, setGalleryOn] = useState(false)
