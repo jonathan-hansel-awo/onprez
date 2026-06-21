@@ -4,7 +4,7 @@ import { verifyMfaToken, verifyBackupCode } from './mfa'
 import { createSession } from './session'
 import { logSecurityEvent } from './security-logging'
 import { generateToken } from '@/lib/utils/token' // ADD THIS IMPORT
-import { createHash } from 'crypto' // ADD THIS IMPORT
+import { createHmac } from 'crypto'
 
 interface MfaChallengeResult {
   success: boolean
@@ -38,9 +38,39 @@ interface VerifyMfaChallengeParams {
 /**
  * Generate device fingerprint
  */
+function getTrustedDevicePepper(): string {
+  const pepper = process.env.TRUSTED_DEVICE_PEPPER
+
+  if (process.env.NODE_ENV === 'production' && !pepper) {
+    throw new Error('TRUSTED_DEVICE_PEPPER is required in production')
+  }
+
+  return pepper || process.env.JWT_SECRET || 'development-only-trusted-device-pepper'
+}
+
+function getMfaTempTokenPepper(): string {
+  const pepper = process.env.MFA_TEMP_TOKEN_PEPPER
+
+  if (process.env.NODE_ENV === 'production' && !pepper) {
+    throw new Error('MFA_TEMP_TOKEN_PEPPER is required in production')
+  }
+
+  return pepper || process.env.JWT_SECRET || 'development-only-mfa-temp-token-pepper'
+}
+
 function generateDeviceFingerprint(deviceInfo: any, userAgent: string): string {
-  const data = JSON.stringify({ deviceInfo, userAgent })
-  return createHash('sha256').update(data).digest('hex')
+  const data = JSON.stringify({
+    browser: deviceInfo?.browser || '',
+    os: deviceInfo?.os || '',
+    device: deviceInfo?.device || '',
+    userAgent,
+  })
+
+  return createHmac('sha256', getTrustedDevicePepper()).update(data).digest('hex')
+}
+
+export function hashMfaTempToken(token: string): string {
+  return createHmac('sha256', getMfaTempTokenPepper()).update(token).digest('hex')
 }
 
 /**
@@ -56,9 +86,16 @@ export async function verifyMfaChallenge({
   userAgent,
 }: VerifyMfaChallengeParams): Promise<MfaChallengeResult> {
   try {
-    // Validate temp token
-    const mfaTempToken = await prisma.mfaTempToken.findUnique({
-      where: { token: tempToken },
+    const hashedTempToken = hashMfaTempToken(tempToken)
+
+    const mfaTempToken = await prisma.mfaTempToken.findFirst({
+      where: {
+        OR: [
+          { token: hashedTempToken },
+          // Temporary legacy fallback for temp tokens created before hashing.
+          { token: tempToken },
+        ],
+      },
       include: { user: true },
     })
 
@@ -88,16 +125,11 @@ export async function verifyMfaChallenge({
 
     const user = mfaTempToken.user
 
-    // Verify MFA code
-    let verificationResult
-    if (isBackupCode) {
-      verificationResult = await verifyBackupCode(user.id, code, ipAddress, userAgent)
-    } else {
-      verificationResult = await verifyMfaToken(user.id, code, ipAddress, userAgent)
-    }
+    const verificationResult = isBackupCode
+      ? await verifyBackupCode(user.id, code, ipAddress, userAgent)
+      : await verifyMfaToken(user.id, code, ipAddress, userAgent)
 
     if (!verificationResult.success) {
-      // Track failed MFA attempts
       await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -113,13 +145,25 @@ export async function verifyMfaChallenge({
       }
     }
 
-    // Mark temp token as used
-    await prisma.mfaTempToken.update({
-      where: { id: mfaTempToken.id },
-      data: { usedAt: new Date() },
+    const consumeResult = await prisma.mfaTempToken.updateMany({
+      where: {
+        id: mfaTempToken.id,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      data: {
+        usedAt: new Date(),
+      },
     })
 
-    // Create session
+    if (consumeResult.count !== 1) {
+      return {
+        success: false,
+        message: 'MFA session already used',
+        error: 'TOKEN_ALREADY_USED',
+      }
+    }
+
     const sessionResult = await createSession({
       userId: user.id,
       deviceInfo: deviceInfo || {},
@@ -136,30 +180,51 @@ export async function verifyMfaChallenge({
       }
     }
 
-    // Store trusted device if requested
     if (trustDevice) {
-      await prisma.trustedDevice.create({
-        data: {
+      const deviceFingerprint = generateDeviceFingerprint(deviceInfo, userAgent)
+      const deviceName = `${deviceInfo?.browser || 'Unknown'} on ${deviceInfo?.os || 'Unknown'}`
+
+      const existingTrustedDevice = await prisma.trustedDevice.findFirst({
+        where: {
           userId: user.id,
-          deviceFingerprint: generateDeviceFingerprint(deviceInfo, userAgent),
-          deviceName: `${deviceInfo?.browser || 'Unknown'} on ${deviceInfo?.os || 'Unknown'}`,
-          ipAddress,
-          userAgent,
-          lastUsedAt: new Date(),
+          deviceFingerprint,
+          revokedAt: null,
         },
       })
 
-      await logSecurityEvent({
-        userId: user.id,
-        action: 'trusted_device_added',
-        details: { deviceInfo },
-        ipAddress,
-        userAgent,
-        severity: 'info',
-      })
+      if (existingTrustedDevice) {
+        await prisma.trustedDevice.update({
+          where: { id: existingTrustedDevice.id },
+          data: {
+            deviceName,
+            ipAddress,
+            userAgent,
+            lastUsedAt: new Date(),
+          },
+        })
+      } else {
+        await prisma.trustedDevice.create({
+          data: {
+            userId: user.id,
+            deviceFingerprint,
+            deviceName,
+            ipAddress,
+            userAgent,
+            lastUsedAt: new Date(),
+          },
+        })
+
+        await logSecurityEvent({
+          userId: user.id,
+          action: 'trusted_device_added',
+          details: { deviceInfo },
+          ipAddress,
+          userAgent,
+          severity: 'info',
+        })
+      }
     }
 
-    // Reset failed login attempts
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -196,6 +261,7 @@ export async function verifyMfaChallenge({
     }
   } catch (error) {
     console.error('MFA challenge verification error:', error)
+
     return {
       success: false,
       message: 'Failed to verify MFA challenge',
@@ -223,16 +289,16 @@ export async function isDeviceTrusted(
       },
     })
 
-    if (trustedDevice) {
-      // Update last used
-      await prisma.trustedDevice.update({
-        where: { id: trustedDevice.id },
-        data: { lastUsedAt: new Date() },
-      })
-      return true
+    if (!trustedDevice) {
+      return false
     }
 
-    return false
+    await prisma.trustedDevice.update({
+      where: { id: trustedDevice.id },
+      data: { lastUsedAt: new Date() },
+    })
+
+    return true
   } catch (error) {
     console.error('Check trusted device error:', error)
     return false
@@ -248,22 +314,29 @@ export async function resendMfaChallenge(
   userAgent: string
 ): Promise<{ success: boolean; tempToken?: string; message: string }> {
   try {
-    const mfaTempToken = await prisma.mfaTempToken.findUnique({
-      where: { token: oldTempToken },
+    const oldTempTokenHash = hashMfaTempToken(oldTempToken)
+
+    const mfaTempToken = await prisma.mfaTempToken.findFirst({
+      where: {
+        OR: [
+          { token: oldTempTokenHash },
+          // Temporary legacy fallback.
+          { token: oldTempToken },
+        ],
+      },
       include: { user: true },
     })
 
-    if (!mfaTempToken || mfaTempToken.expiresAt < new Date()) {
+    if (!mfaTempToken || mfaTempToken.usedAt || mfaTempToken.expiresAt < new Date()) {
       return {
         success: false,
         message: 'Session expired. Please log in again.',
       }
     }
 
-    // Generate new temp token
     const newTempToken = generateToken(32)
+    const newTempTokenHash = hashMfaTempToken(newTempToken)
 
-    // Invalidate old token and create new one
     await prisma.$transaction([
       prisma.mfaTempToken.update({
         where: { id: mfaTempToken.id },
@@ -272,7 +345,7 @@ export async function resendMfaChallenge(
       prisma.mfaTempToken.create({
         data: {
           userId: mfaTempToken.userId,
-          token: newTempToken,
+          token: newTempTokenHash,
           expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         },
       }),
@@ -294,6 +367,7 @@ export async function resendMfaChallenge(
     }
   } catch (error) {
     console.error('Resend MFA challenge error:', error)
+
     return {
       success: false,
       message: 'Failed to extend MFA session',

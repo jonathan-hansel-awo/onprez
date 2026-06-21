@@ -1,7 +1,7 @@
 import speakeasy from 'speakeasy'
 import QRCode from 'qrcode'
 import { prisma } from '@/lib/prisma'
-import { randomBytes, createHash, createCipheriv, createDecipheriv } from 'crypto'
+import { randomBytes, createHash, createHmac, createCipheriv, createDecipheriv } from 'crypto'
 import { logSecurityEvent } from './security-logging'
 
 interface MfaSetupResult {
@@ -38,43 +38,113 @@ const ENCRYPTION_KEY =
 /**
  * Encrypt MFA secret for storage
  */
+function getEncryptionKey(): Buffer {
+  const source = process.env.MFA_ENCRYPTION_KEY
+
+  if (process.env.NODE_ENV === 'production' && !source) {
+    throw new Error('MFA_ENCRYPTION_KEY is required in production')
+  }
+
+  return createHash('sha256')
+    .update(source || process.env.JWT_SECRET || 'development-only-mfa-key')
+    .digest()
+}
+
+function getBackupCodePepper(): string {
+  const pepper = process.env.MFA_BACKUP_CODE_PEPPER
+
+  if (process.env.NODE_ENV === 'production' && !pepper) {
+    throw new Error('MFA_BACKUP_CODE_PEPPER is required in production')
+  }
+
+  return pepper || process.env.JWT_SECRET || 'development-only-backup-code-pepper'
+}
+
+/**
+ * Encrypt MFA secret for storage.
+ *
+ * New format: AES-256-GCM stored as "ciphertext:authTag".
+ * Old CBC values are still supported in decryptSecret() for compatibility.
+ */
 function encryptSecret(secret: string): { encrypted: string; iv: string } {
-  const iv = randomBytes(16)
-  const cipher = createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv)
+  const iv = randomBytes(12)
+  const cipher = createCipheriv('aes-256-gcm', getEncryptionKey(), iv)
+
   let encrypted = cipher.update(secret, 'utf8', 'hex')
   encrypted += cipher.final('hex')
+
+  const authTag = cipher.getAuthTag().toString('hex')
+
   return {
-    encrypted,
+    encrypted: `${encrypted}:${authTag}`,
     iv: iv.toString('hex'),
   }
 }
 
 /**
- * Decrypt MFA secret from storage
+ * Decrypt MFA secret from storage.
+ *
+ * Supports:
+ * - New AES-GCM format: "ciphertext:authTag"
+ * - Legacy AES-CBC format: "ciphertext"
  */
 function decryptSecret(encrypted: string, iv: string): string {
-  const decipher = createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, Buffer.from(iv, 'hex'))
+  const key = getEncryptionKey()
+
+  if (encrypted.includes(':')) {
+    const [ciphertext, authTag] = encrypted.split(':')
+
+    const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(iv, 'hex'))
+    decipher.setAuthTag(Buffer.from(authTag, 'hex'))
+
+    let decrypted = decipher.update(ciphertext, 'hex', 'utf8')
+    decrypted += decipher.final('utf8')
+
+    return decrypted
+  }
+
+  // Legacy fallback for secrets already stored with AES-CBC.
+  const decipher = createDecipheriv('aes-256-cbc', key, Buffer.from(iv, 'hex'))
+
   let decrypted = decipher.update(encrypted, 'hex', 'utf8')
   decrypted += decipher.final('utf8')
+
   return decrypted
 }
 
 /**
- * Generate secure backup codes
+ * Generate secure backup codes.
  */
 function generateBackupCodes(count: number = 8): string[] {
   const codes: string[] = []
+
   for (let i = 0; i < count; i++) {
-    const code = randomBytes(4).toString('hex').toUpperCase()
+    const code = randomBytes(6).toString('hex').toUpperCase()
     codes.push(code.match(/.{1,4}/g)?.join('-') || code)
   }
+
   return codes
 }
 
+function normalizeBackupCode(code: string): string {
+  return code.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+}
+
 /**
- * Hash backup code for storage
+ * Hash backup code for storage.
+ *
+ * Use HMAC rather than plain SHA-256 so a database-only leak does not allow
+ * cheap offline guessing of backup codes.
  */
 function hashBackupCode(code: string): string {
+  return createHmac('sha256', getBackupCodePepper()).update(normalizeBackupCode(code)).digest('hex')
+}
+
+/**
+ * Legacy fallback for backup codes created before HMAC hashing.
+ * Keep temporarily so existing users are not locked out.
+ */
+function legacyHashBackupCode(code: string): string {
   return createHash('sha256').update(code).digest('hex')
 }
 
@@ -165,9 +235,7 @@ export async function setupMfa(
     await logSecurityEvent({
       userId: user.id,
       action: 'mfa_setup_initiated',
-      details: {
-        email: userEmail,
-      },
+      details: {},
       ipAddress,
       userAgent,
       severity: 'info',
@@ -279,9 +347,7 @@ export async function verifyMfaSetup(
     await logSecurityEvent({
       userId: user.id,
       action: 'mfa_enabled',
-      details: {
-        email: user.email,
-      },
+      details: {},
       ipAddress,
       userAgent,
       severity: 'info',
@@ -389,7 +455,10 @@ export async function verifyBackupCode(
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { mfaBackupCodes: true },
+      select: {
+        id: true,
+        mfaEnabled: true,
+      },
     })
 
     if (!user || !user.mfaEnabled) {
@@ -400,11 +469,19 @@ export async function verifyBackupCode(
       }
     }
 
-    // Hash the provided code
     const hashedCode = hashBackupCode(code)
+    const legacyHashedCode = legacyHashBackupCode(code)
 
-    // Find unused backup code
-    const backupCode = user.mfaBackupCodes.find(bc => bc.hashedCode === hashedCode && !bc.usedAt)
+    const backupCode = await prisma.mfaBackupCode.findFirst({
+      where: {
+        userId: user.id,
+        usedAt: null,
+        OR: [{ hashedCode }, { hashedCode: legacyHashedCode }],
+      },
+      select: {
+        id: true,
+      },
+    })
 
     if (!backupCode) {
       await logSecurityEvent({
@@ -425,11 +502,24 @@ export async function verifyBackupCode(
       }
     }
 
-    // Mark backup code as used
-    await prisma.mfaBackupCode.update({
-      where: { id: backupCode.id },
-      data: { usedAt: new Date() },
+    const updateResult = await prisma.mfaBackupCode.updateMany({
+      where: {
+        id: backupCode.id,
+        userId: user.id,
+        usedAt: null,
+      },
+      data: {
+        usedAt: new Date(),
+      },
     })
+
+    if (updateResult.count !== 1) {
+      return {
+        success: false,
+        message: 'Invalid or already used backup code',
+        error: 'INVALID_BACKUP_CODE',
+      }
+    }
 
     await logSecurityEvent({
       userId: user.id,
@@ -437,7 +527,7 @@ export async function verifyBackupCode(
       details: {},
       ipAddress,
       userAgent,
-      severity: 'warning', // Using backup code is noteworthy
+      severity: 'warning',
     })
 
     return {
@@ -446,6 +536,7 @@ export async function verifyBackupCode(
     }
   } catch (error) {
     console.error('Backup code verification error:', error)
+
     return {
       success: false,
       message: 'Failed to verify backup code',
@@ -461,10 +552,9 @@ export async function getMfaStatus(userId: string): Promise<MfaStatusResult> {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        mfaBackupCodes: {
-          where: { usedAt: null },
-        },
+      select: {
+        id: true,
+        mfaEnabled: true,
       },
     })
 
@@ -476,14 +566,22 @@ export async function getMfaStatus(userId: string): Promise<MfaStatusResult> {
       }
     }
 
+    const backupCodesCount = await prisma.mfaBackupCode.count({
+      where: {
+        userId,
+        usedAt: null,
+      },
+    })
+
     return {
       success: true,
       mfaEnabled: user.mfaEnabled,
-      hasBackupCodes: user.mfaBackupCodes.length > 0,
-      backupCodesCount: user.mfaBackupCodes.length,
+      hasBackupCodes: backupCodesCount > 0,
+      backupCodesCount,
     }
   } catch (error) {
     console.error('Get MFA status error:', error)
+
     return {
       success: false,
       mfaEnabled: false,
@@ -503,6 +601,10 @@ export async function regenerateBackupCodes(
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        mfaEnabled: true,
+      },
     })
 
     if (!user || !user.mfaEnabled) {
@@ -513,22 +615,20 @@ export async function regenerateBackupCodes(
       }
     }
 
-    // Delete old backup codes
-    await prisma.mfaBackupCode.deleteMany({
-      where: { userId: user.id },
-    })
-
-    // Generate new backup codes
     const backupCodes = generateBackupCodes(8)
     const hashedBackupCodes = backupCodes.map(hashBackupCode)
 
-    // Store new backup codes
-    await prisma.mfaBackupCode.createMany({
-      data: hashedBackupCodes.map(hashedCode => ({
-        userId: user.id,
-        hashedCode,
-      })),
-    })
+    await prisma.$transaction([
+      prisma.mfaBackupCode.deleteMany({
+        where: { userId: user.id },
+      }),
+      prisma.mfaBackupCode.createMany({
+        data: hashedBackupCodes.map(hashedCode => ({
+          userId: user.id,
+          hashedCode,
+        })),
+      }),
+    ])
 
     await logSecurityEvent({
       userId: user.id,
@@ -543,13 +643,14 @@ export async function regenerateBackupCodes(
       success: true,
       message: 'Backup codes regenerated successfully',
       data: {
-        secret: '', // Not needed for regenerate
-        qrCodeUrl: '', // Not needed for regenerate
+        secret: '',
+        qrCodeUrl: '',
         backupCodes,
       },
     }
   } catch (error) {
     console.error('Regenerate backup codes error:', error)
+
     return {
       success: false,
       message: 'Failed to regenerate backup codes',
