@@ -233,3 +233,6 @@ publicRateLimit(request, key)
    | `/api/account/sessions` | Authenticated | Validate session; return only current user's sessions; never return raw tokens | Reviewed | Uses `isCurrent` instead of exposing token. |
    | `/api/account/sessions/terminate-all` | Authenticated | Validate session; revoke only current user's sessions | Reviewed | Keeps current session by default. |
    | `/api/account/sessions/[id]` | Authenticated | Validate session; ensure session belongs to current user | Reviewed | Uses `id + userId` ownership check. |
+   | `/api/account/activity` | Authenticated | Validate session; return only current user's security activity | Reviewed | User-scoped and bounded pagination/filtering. |
+   | `/api/account/trusted-devices` | Authenticated | Validate session; return only current user's non-revoked trusted devices; safe selected fields only | Reviewed | Does not return full DB row. |
+   | `/api/account/trusted-devices/[id]` | Authenticated | Validate session; ensure device belongs to current user before revoking | Reviewed | Soft-revokes with `revokedAt`; rejects cross-user IDs. |

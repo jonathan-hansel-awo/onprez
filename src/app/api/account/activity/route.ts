@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 
+const ALLOWED_SEVERITIES = new Set(['info', 'warning', 'error', 'critical'])
+const MAX_LIMIT = 100
+const MAX_DAYS = 365
+
+function parsePositiveInt(value: string | null, fallback: number, max: number) {
+  const parsed = Number.parseInt(value || '', 10)
+
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback
+  }
+
+  return Math.min(parsed, max)
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -12,19 +26,20 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
 
-    // Pagination
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const page = parsePositiveInt(searchParams.get('page'), 1, Number.MAX_SAFE_INTEGER)
+    const limit = parsePositiveInt(searchParams.get('limit'), 20, MAX_LIMIT)
+    const days = parsePositiveInt(searchParams.get('days'), 90, MAX_DAYS)
     const skip = (page - 1) * limit
 
-    // Filters
     const action = searchParams.get('action')
     const severity = searchParams.get('severity')
-    const days = parseInt(searchParams.get('days') || '90')
 
-    // Build where clause
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {
+    const where: {
+      userId: string
+      createdAt: { gte: Date }
+      action?: string
+      severity?: string
+    } = {
       userId: user.id,
       createdAt: {
         gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
@@ -32,14 +47,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (action && action !== 'all') {
-      where.action = action
+      where.action = action.slice(0, 100)
     }
 
-    if (severity && severity !== 'all') {
+    if (severity && severity !== 'all' && ALLOWED_SEVERITIES.has(severity)) {
       where.severity = severity
     }
 
-    // Get logs with pagination
     const [logs, total] = await Promise.all([
       prisma.securityLog.findMany({
         where,
@@ -59,7 +73,6 @@ export async function GET(request: NextRequest) {
       prisma.securityLog.count({ where }),
     ])
 
-    // Get unique actions and severities for filters
     const [actions, severities] = await Promise.all([
       prisma.securityLog.findMany({
         where: { userId: user.id },

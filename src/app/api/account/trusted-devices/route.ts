@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await getCurrentUser()
 
@@ -16,6 +16,13 @@ export async function GET(request: NextRequest) {
         revokedAt: null,
       },
       orderBy: { lastUsedAt: 'desc' },
+      select: {
+        id: true,
+        deviceName: true,
+        ipAddress: true,
+        lastUsedAt: true,
+        createdAt: true,
+      },
     })
 
     return NextResponse.json({
