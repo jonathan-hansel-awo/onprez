@@ -11,7 +11,11 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      user,
+      user: {
+        id: user.id,
+        email: user.email,
+        emailVerified: user.emailVerified,
+      },
     })
   } catch (error) {
     console.error('Get current user API error:', error)

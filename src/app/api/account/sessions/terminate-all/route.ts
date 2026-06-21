@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 import { logSecurityEvent } from '@/lib/services/security-logging'
-import { cookies } from 'next/headers'
 
 const terminateAllSchema = z.object({
   keepCurrent: z.boolean().optional().default(true),
 })
+
+async function parseJsonBody(request: NextRequest) {
+  try {
+    return await request.json()
+  } catch {
+    return {}
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +25,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await parseJsonBody(request)
     const validation = terminateAllSchema.safeParse(body)
 
     if (!validation.success) {
@@ -29,28 +37,24 @@ export async function POST(request: NextRequest) {
 
     const { keepCurrent } = validation.data
 
-    // Get current session token
     const cookieStore = await cookies()
     const currentToken = cookieStore.get('accessToken')?.value
 
-    let deletedCount: number
+    const result =
+      keepCurrent && currentToken
+        ? await prisma.session.deleteMany({
+            where: {
+              userId: user.id,
+              token: { not: currentToken },
+            },
+          })
+        : await prisma.session.deleteMany({
+            where: {
+              userId: user.id,
+            },
+          })
 
-    if (keepCurrent && currentToken) {
-      // Delete all sessions except current
-      const result = await prisma.session.deleteMany({
-        where: {
-          userId: user.id,
-          token: { not: currentToken },
-        },
-      })
-      deletedCount = result.count
-    } else {
-      // Delete all sessions
-      const result = await prisma.session.deleteMany({
-        where: { userId: user.id },
-      })
-      deletedCount = result.count
-    }
+    const deletedCount = result.count
 
     const ipAddress = request.headers.get('x-forwarded-for') || 'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'

@@ -13,7 +13,6 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
 
     const { id } = await context.params
 
-    // Verify session belongs to user
     const session = await prisma.session.findFirst({
       where: {
         id,
@@ -25,9 +24,11 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
       return NextResponse.json({ success: false, message: 'Session not found' }, { status: 404 })
     }
 
-    // Delete session
-    await prisma.session.delete({
-      where: { id },
+    await prisma.session.deleteMany({
+      where: {
+        id,
+        userId: user.id,
+      },
     })
 
     const ipAddress = request.headers.get('x-forwarded-for') || 'unknown'

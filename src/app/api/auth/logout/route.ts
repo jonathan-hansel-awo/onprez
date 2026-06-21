@@ -1,22 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 import { logSecurityEvent } from '@/lib/services/security-logging'
-import { cookies } from 'next/headers'
+
+function createLogoutResponse(message = 'Logged out successfully') {
+  const response = NextResponse.json({
+    success: true,
+    message,
+  })
+
+  response.cookies.set('accessToken', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  })
+
+  response.cookies.set('refreshToken', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  })
+
+  return response
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
-
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'Not logged in' }, { status: 401 })
-    }
-
-    // Get access token
     const cookieStore = await cookies()
     const accessToken = cookieStore.get('accessToken')?.value
 
-    // Delete session from database
+    const user = await getCurrentUser()
+
+    // Logout should still clear stale/invalid cookies.
+    if (!user) {
+      return createLogoutResponse()
+    }
+
     if (accessToken) {
       await prisma.session.deleteMany({
         where: {
@@ -32,35 +56,13 @@ export async function POST(request: NextRequest) {
     await logSecurityEvent({
       userId: user.id,
       action: 'logout',
-      details: { email: user.email },
+      details: {},
       ipAddress,
       userAgent,
       severity: 'info',
     })
 
-    // Clear cookies
-    const response = NextResponse.json({
-      success: true,
-      message: 'Logged out successfully',
-    })
-
-    response.cookies.set('accessToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 0,
-      path: '/',
-    })
-
-    response.cookies.set('refreshToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 0,
-      path: '/',
-    })
-
-    return response
+    return createLogoutResponse()
   } catch (error) {
     console.error('Logout API error:', error)
     return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
