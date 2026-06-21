@@ -236,3 +236,10 @@ publicRateLimit(request, key)
    | `/api/account/activity` | Authenticated | Validate session; return only current user's security activity | Reviewed | User-scoped and bounded pagination/filtering. |
    | `/api/account/trusted-devices` | Authenticated | Validate session; return only current user's non-revoked trusted devices; safe selected fields only | Reviewed | Does not return full DB row. |
    | `/api/account/trusted-devices/[id]` | Authenticated | Validate session; ensure device belongs to current user before revoking | Reviewed | Soft-revokes with `revokedAt`; rejects cross-user IDs. |
+   | `/api/auth/mfa/challenge` | Public token-based | Validate temp token; rate limit attempts; consume backup codes once; create DB-backed session only after successful MFA | Needs service review | Route shape reviewed; inspect `mfa-challenge` service next. |
+   | `/api/auth/mfa/setup` | Authenticated | Validate current session; use current user only; rate limit; do not trust client userId/email | Reviewed | Converted to session-based identity. |
+   | `/api/auth/mfa/verify-setup` | Authenticated | Validate current session; verify TOTP for current user only; rate limit | Reviewed | Does not accept userId from client. |
+   | `/api/auth/mfa/status` | Authenticated | Validate current session; return safe MFA metadata only | Reviewed | Confirm `getMfaStatus()` does not return secrets. |
+   | `/api/auth/mfa/disable` | Authenticated | Validate current session; require password; rate limit; delete only current user's MFA data | Reviewed | Requires MFA to be enabled first. |
+   | `/api/auth/mfa/backup-codes` | Authenticated | Validate current session; require password; rate limit; return metadata only, never hashes or raw codes | Reviewed | Actual backup codes shown only on regeneration/setup. |
+   | `/api/auth/mfa/regenerate-codes` | Authenticated | Validate current session; require password; rate limit; invalidate old codes and return new codes once | Reviewed | Check service stores only hashed codes. |

@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
+import { getCurrentUser } from '@/lib/auth/get-user'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { setupMfa } from '@/lib/services/mfa'
-import { verifyToken } from '@/lib/auth/jwt'
-import { VerifiedToken } from '../../../../../lib/auth/types'
-
-const setupSchema = z.object({
-  userId: z.string().min(1),
-  email: z.string().email(),
-})
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+
     const ipAddress = request.headers.get('x-forwarded-for') || 'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
-    // Rate limiting
-    const rateLimitKey = `mfa-setup:${ipAddress}`
+    const rateLimitKey = `mfa-setup:${user.id}:${ipAddress}`
     const rateLimit = await checkRateLimit(rateLimitKey, 'auth:mfa-setup')
 
     if (!rateLimit.allowed) {
@@ -36,39 +34,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get authorization token
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-    }
-
-    const token = authHeader.substring(7)
-    const verifiedToken = await verifyToken(token)
-
-    if (!verifiedToken) {
-      return NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 })
-    }
-
-    // Parse request body
-    const body = await request.json()
-    const validation = setupSchema.safeParse(body)
-
-    if (!validation.success) {
+    if (user.mfaEnabled) {
       return NextResponse.json(
-        { success: false, message: 'Invalid input', errors: validation.error.issues },
+        { success: false, message: 'MFA is already enabled' },
         { status: 400 }
       )
     }
 
-    const { userId, email } = validation.data
-
-    // Verify user matches token
-    if (userId !== verifiedToken.payload.userId) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 })
-    }
-
-    // Setup MFA
-    const result = await setupMfa(userId, email, ipAddress, userAgent)
+    const result = await setupMfa(user.id, user.email, ipAddress, userAgent)
 
     if (!result.success) {
       return NextResponse.json({ success: false, message: result.message }, { status: 400 })
