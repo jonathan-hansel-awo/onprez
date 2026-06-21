@@ -1,46 +1,54 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+const protectedRoutes = ['/dashboard', '/account']
+
+function matchesRoute(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(`${route}/`)
+}
+
+function isProtectedRoute(pathname: string) {
+  return protectedRoutes.some(route => matchesRoute(pathname, route))
+}
+
+function redirectToLogin(request: NextRequest) {
+  const loginUrl = new URL('/login', request.url)
+
+  const redirectPath = `${request.nextUrl.pathname}${request.nextUrl.search}`
+  loginUrl.searchParams.set('redirect', redirectPath)
+
+  return NextResponse.redirect(loginUrl)
+}
+
 export async function proxy(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl
 
-    // Public routes that don't need protection
-    const publicRoutes = [
-      '/login',
-      '/signup',
-      '/invite',
-      '/forgot-password',
-      '/reset-password',
-      '/',
-    ]
-
-    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-
-    // Protected routes
-    const protectedRoutes = ['/dashboard', '/account']
-    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
-
-    if (!isProtectedRoute || isPublicRoute) {
+    // Only explicitly protected routes need auth at this proxy layer.
+    // Everything else is public unless protected elsewhere.
+    if (!isProtectedRoute(pathname)) {
       return NextResponse.next()
     }
 
-    // Check for access token in cookies
-    const accessToken = request.cookies.get('accessToken')?.value
+    const accessToken = request.cookies.get('accessToken')?.value?.trim()
 
     if (!accessToken) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(loginUrl)
+      return redirectToLogin(request)
     }
 
-    // Let the token validation happen server-side in API routes
-    // Edge runtime has limitations, so we just check token existence here
+    // Important:
+    // This only checks that a token exists.
+    // The dashboard/account pages must still validate the token server-side.
     return NextResponse.next()
   } catch (error) {
-    console.error('Middleware error:', error)
-    // On any error, allow the request to continue
-    // Let pages/API routes handle auth
+    console.error('Proxy error:', error)
+
+    // Fail closed for protected routes.
+    // If proxy logic breaks, do not accidentally expose dashboard/account pages.
+    if (isProtectedRoute(request.nextUrl.pathname)) {
+      return redirectToLogin(request)
+    }
+
     return NextResponse.next()
   }
 }
@@ -49,11 +57,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - api routes (handled by API middleware)
-     * - _next/static (static files)
-     * - _next/image (image optimization)
+     * - api routes
+     * - _next/static
+     * - _next/image
      * - favicon.ico
-     * - public folder
+     * - common public image assets
      */
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg).*)',
   ],
