@@ -243,3 +243,4 @@ publicRateLimit(request, key)
    | `/api/auth/mfa/disable` | Authenticated | Validate current session; require password; rate limit; delete only current user's MFA data | Reviewed | Requires MFA to be enabled first. |
    | `/api/auth/mfa/backup-codes` | Authenticated | Validate current session; require password; rate limit; return metadata only, never hashes or raw codes | Reviewed | Actual backup codes shown only on regeneration/setup. |
    | `/api/auth/mfa/regenerate-codes` | Authenticated | Validate current session; require password; rate limit; invalidate old codes and return new codes once | Reviewed | Check service stores only hashed codes. |
+   | `/api/auth/login` | Public | Validate credentials; rate limit; generic failures; if MFA required, return raw temp token once and store only hashed temp token | Reviewed | Login route and service reviewed; raw MFA temp token is not stored. |

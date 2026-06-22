@@ -4,6 +4,7 @@ import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt'
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import { sendNewDeviceAlert } from '@/lib/services/email'
 import { generateToken } from '../utils/token'
+import { hashMfaTempToken } from './mfa-challenge'
 
 export interface LoginInput {
   email: string
@@ -15,7 +16,6 @@ export interface LoginResult {
   success: boolean
   requiresMfa?: boolean
   mfaToken?: string
-  userId?: string
   accessToken?: string
   refreshToken?: string
   user?: {
@@ -33,47 +33,64 @@ interface DeviceInfo {
   browser?: string
 }
 
+async function logSecurityEventSafely(event: Parameters<typeof logSecurityEvent>[0]) {
+  try {
+    await logSecurityEvent(event)
+  } catch (error) {
+    console.error('Security logging failed:', error)
+  }
+}
+
 /**
- * Authenticate user with email and password
+ * Authenticate user with email and password.
  */
 export async function loginUser(
   credentials: LoginInput,
   deviceInfo: DeviceInfo
 ): Promise<LoginResult> {
-  const { email, password, rememberMe } = credentials
+  const email = credentials.email.trim().toLowerCase()
+  const { password, rememberMe } = credentials
   const { userAgent, ipAddress } = deviceInfo
 
   try {
-    // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        emailVerified: true,
+        passwordHash: true,
+        accountLocked: true,
+        failedLoginAttempts: true,
+        mfaEnabled: true,
         sessions: {
           where: {
             expiresAt: { gt: new Date() },
+          },
+          select: {
+            userAgent: true,
+            ipAddress: true,
           },
           orderBy: { createdAt: 'desc' },
         },
       },
     })
 
-    // Record login attempt
-    await prisma.authAttempt.create({
+    const authAttempt = await prisma.authAttempt.create({
       data: {
         userId: user?.id,
         email,
         ipAddress,
         userAgent,
         attemptType: 'login',
-        success: false, // Will update if successful
+        success: false,
       },
     })
 
     if (!user) {
-      // Don't reveal if user exists
-      await logSecurityEvent({
+      await logSecurityEventSafely({
         action: 'login_failed',
-        details: { email, reason: 'invalid_credentials' },
+        details: { reason: 'invalid_credentials' },
         ipAddress,
         userAgent,
         severity: 'warning',
@@ -85,12 +102,11 @@ export async function loginUser(
       }
     }
 
-    // Check if account is locked
     if (user.accountLocked) {
-      await logSecurityEvent({
+      await logSecurityEventSafely({
         userId: user.id,
         action: 'login_failed',
-        details: { email, reason: 'account_locked' },
+        details: { reason: 'account_locked' },
         ipAddress,
         userAgent,
         severity: 'warning',
@@ -102,20 +118,26 @@ export async function loginUser(
       }
     }
 
-    // Check if email is verified
     if (!user.emailVerified) {
+      await logSecurityEventSafely({
+        userId: user.id,
+        action: 'login_failed',
+        details: { reason: 'email_not_verified' },
+        ipAddress,
+        userAgent,
+        severity: 'warning',
+      })
+
       return {
         success: false,
         error: 'Please verify your email address before logging in.',
       }
     }
 
-    // Verify password
     const isPasswordValid = await verifyPassword(password, user.passwordHash)
 
     if (!isPasswordValid) {
-      // Increment failed attempts
-      const failedAttempts = user.failedLoginAttempts + 1
+      const failedAttempts = (user.failedLoginAttempts ?? 0) + 1
       const shouldLock = failedAttempts >= 5
 
       await prisma.user.update({
@@ -127,11 +149,10 @@ export async function loginUser(
         },
       })
 
-      await logSecurityEvent({
+      await logSecurityEventSafely({
         userId: user.id,
         action: 'login_failed',
         details: {
-          email,
           reason: 'invalid_password',
           failedAttempts,
           accountLocked: shouldLock,
@@ -155,24 +176,35 @@ export async function loginUser(
       }
     }
 
-    // Check if MFA is enabled
     if (user.mfaEnabled) {
-      // Generate temporary token for MFA challenge
       const tempToken = generateToken(32)
+      const hashedTempToken = hashMfaTempToken(tempToken)
+      const now = new Date()
 
-      // Store temp token in database with short expiry (5 minutes)
-      await prisma.mfaTempToken.create({
-        data: {
-          userId: user.id,
-          token: tempToken,
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
-        },
-      })
+      await prisma.$transaction([
+        prisma.mfaTempToken.updateMany({
+          where: {
+            userId: user.id,
+            usedAt: null,
+            expiresAt: { gt: now },
+          },
+          data: {
+            usedAt: now,
+          },
+        }),
+        prisma.mfaTempToken.create({
+          data: {
+            userId: user.id,
+            token: hashedTempToken,
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+          },
+        }),
+      ])
 
-      await logSecurityEvent({
+      await logSecurityEventSafely({
         userId: user.id,
         action: 'mfa_challenge_initiated',
-        details: { email: user.email },
+        details: {},
         ipAddress,
         userAgent,
         severity: 'info',
@@ -182,11 +214,9 @@ export async function loginUser(
         success: true,
         requiresMfa: true,
         mfaToken: tempToken,
-        userId: user.id,
       }
     }
 
-    // Reset failed attempts on successful login
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -195,13 +225,11 @@ export async function loginUser(
       },
     })
 
-    // Check if this is a new device
     const isNewDevice = !user.sessions.some(
       session => session.userAgent === userAgent && session.ipAddress === ipAddress
     )
 
-    // Create session
-    const sessionDuration = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000 // 30 days or 1 day
+    const sessionDuration = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
     const expiresAt = new Date(Date.now() + sessionDuration)
 
     const accessToken = generateAccessToken({
@@ -229,41 +257,40 @@ export async function loginUser(
       },
     })
 
-    // Update auth attempt to successful
-    await prisma.authAttempt.updateMany({
-      where: {
-        userId: user.id,
-        email,
-        success: false,
-        createdAt: { gte: new Date(Date.now() - 60000) }, // Last minute
-      },
+    await prisma.authAttempt.update({
+      where: { id: authAttempt.id },
       data: { success: true },
     })
 
-    // Send new device alert if needed
     if (isNewDevice) {
-      await sendNewDeviceAlert(user.email, {
-        deviceInfo: userAgent,
-        ipAddress,
-        timestamp: new Date(),
-        location: 'Unknown', // Could integrate with IP geolocation service
-      })
+      try {
+        await sendNewDeviceAlert(user.email, {
+          deviceInfo: userAgent,
+          ipAddress,
+          timestamp: new Date(),
+          location: 'Unknown',
+        })
+      } catch (error) {
+        console.error('New device alert failed:', error)
+      }
 
-      await logSecurityEvent({
+      await logSecurityEventSafely({
         userId: user.id,
         action: 'new_device_login',
-        details: { email, userAgent, ipAddress },
+        details: { isNewDevice: true },
         ipAddress,
         userAgent,
         severity: 'info',
       })
     }
 
-    // Log successful login
-    await logSecurityEvent({
+    await logSecurityEventSafely({
       userId: user.id,
       action: 'login_success',
-      details: { email, rememberMe, isNewDevice },
+      details: {
+        rememberMe: Boolean(rememberMe),
+        isNewDevice,
+      },
       ipAddress,
       userAgent,
       severity: 'info',
@@ -282,11 +309,10 @@ export async function loginUser(
   } catch (error) {
     console.error('Login error:', error)
 
-    await logSecurityEvent({
+    await logSecurityEventSafely({
       action: 'login_error',
       details: {
-        email,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        reason: 'login_service_error',
       },
       ipAddress,
       userAgent,
@@ -301,7 +327,7 @@ export async function loginUser(
 }
 
 /**
- * Parse user agent for device info
+ * Parse user agent for device info.
  */
 export function parseUserAgent(userAgent: string): {
   platform?: string

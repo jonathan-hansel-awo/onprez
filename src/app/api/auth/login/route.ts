@@ -9,12 +9,58 @@ const loginSchema = z.object({
   rememberMe: z.boolean().optional(),
 })
 
+type SafeLoginUser = {
+  id?: string
+  email?: string
+  emailVerified?: boolean
+  name?: string | null
+  businessId?: string | null
+  handle?: string | null
+}
+
+function toSafeUser(user: unknown): SafeLoginUser | undefined {
+  if (!user || typeof user !== 'object') {
+    return undefined
+  }
+
+  const value = user as Record<string, unknown>
+
+  return {
+    id: typeof value.id === 'string' ? value.id : undefined,
+    email: typeof value.email === 'string' ? value.email : undefined,
+    emailVerified: typeof value.emailVerified === 'boolean' ? value.emailVerified : undefined,
+    name: typeof value.name === 'string' || value.name === null ? value.name : undefined,
+    businessId:
+      typeof value.businessId === 'string' || value.businessId === null
+        ? value.businessId
+        : undefined,
+    handle: typeof value.handle === 'string' || value.handle === null ? value.handle : undefined,
+  }
+}
+
+function getSafeLoginFailureMessage(error?: string) {
+  // Allow only intentionally user-safe messages.
+  if (error === 'EMAIL_NOT_VERIFIED') {
+    return 'Please verify your email before logging in.'
+  }
+
+  if (error === 'ACCOUNT_LOCKED') {
+    return 'This account is temporarily locked. Please try again later.'
+  }
+
+  if (error === 'MFA_REQUIRED') {
+    return 'MFA verification is required.'
+  }
+
+  return 'Invalid email or password'
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Validate input
     const validation = loginSchema.safeParse(body)
+
     if (!validation.success) {
       return NextResponse.json(
         {
@@ -31,12 +77,10 @@ export async function POST(request: NextRequest) {
 
     const { email, password, rememberMe } = validation.data
 
-    // Get client info
     const ipAddress =
-      request.headers.get('x-forwarded-for') || request.headers.get('real-ip') || 'unknown'
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
-    // Check rate limit (5 attempts per 10 minutes per IP)
     const rateLimitKey = `login:${ipAddress}`
     const rateLimit = await checkRateLimit(rateLimitKey, 'auth:login')
 
@@ -61,10 +105,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse device info
     const deviceParsed = parseUserAgent(userAgent)
 
-    // Attempt login - using the correct signature
     const result = await loginUser(
       {
         email,
@@ -80,48 +122,53 @@ export async function POST(request: NextRequest) {
     )
 
     if (!result.success) {
-      console.log('Login attempt:', {
-        nodeEnv: process.env.NODE_ENV,
-        appUrl: process.env.NEXT_PUBLIC_APP_URL,
-        hasJwtSecret: !!process.env.JWT_SECRET,
-      })
       return NextResponse.json(
-        { success: false, message: result.error || 'Login failed' },
+        {
+          success: false,
+          message: getSafeLoginFailureMessage(result.error),
+        },
         { status: 401 }
       )
     }
 
-    // If MFA is required
-    if (result.requiresMfa && result.mfaToken && result.userId) {
+    if (result.requiresMfa && result.mfaToken) {
       return NextResponse.json({
         success: true,
         requiresMfa: true,
         mfaToken: result.mfaToken,
-        userId: result.userId,
       })
     }
 
-    // Set HTTP-only cookies for tokens
+    if (!result.accessToken || !result.refreshToken) {
+      console.error('Login succeeded without tokens')
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Login failed',
+        },
+        { status: 500 }
+      )
+    }
+
     const response = NextResponse.json({
       success: true,
-      user: result.user,
+      user: toSafeUser(result.user),
     })
 
-    // Set access token cookie
-    response.cookies.set('accessToken', result.accessToken!, {
+    response.cookies.set('accessToken', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60, // 30 days or 1 day
+      maxAge: rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60,
       path: '/',
     })
 
-    // Set refresh token cookie
-    response.cookies.set('refreshToken', result.refreshToken!, {
+    response.cookies.set('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60, // 30 days or 7 days
+      maxAge: rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60,
       path: '/',
     })
 
