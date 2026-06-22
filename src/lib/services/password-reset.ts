@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { sendPasswordChangedEmail, sendPasswordResetEmail } from '@/lib/services/email'
 import { logSecurityEvent } from '@/lib/services/security-logging'
@@ -20,8 +21,30 @@ export interface RequestPasswordResetResult {
   message: string
 }
 
+function getPasswordResetPepper(): string {
+  const pepper = process.env.PASSWORD_RESET_TOKEN_PEPPER
+
+  if (process.env.NODE_ENV === 'production' && !pepper) {
+    throw new Error('PASSWORD_RESET_TOKEN_PEPPER is required in production')
+  }
+
+  return pepper || process.env.JWT_SECRET || 'development-only-password-reset-pepper'
+}
+
+export function hashPasswordResetToken(token: string): string {
+  return createHmac('sha256', getPasswordResetPepper()).update(token).digest('hex')
+}
+
+async function logSecurityEventSafely(event: Parameters<typeof logSecurityEvent>[0]) {
+  try {
+    await logSecurityEvent(event)
+  } catch (error) {
+    console.error('Security logging failed:', error)
+  }
+}
+
 /**
- * Complete password reset with new password
+ * Complete password reset with new password.
  */
 export async function completePasswordReset(
   input: CompletePasswordResetInput,
@@ -31,9 +54,16 @@ export async function completePasswordReset(
   const { token, newPassword } = input
 
   try {
-    // Find reset token
-    const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { token },
+    const hashedToken = hashPasswordResetToken(token)
+
+    const resetToken = await prisma.passwordResetToken.findFirst({
+      where: {
+        OR: [
+          { token: hashedToken },
+          // Temporary legacy fallback for tokens created before hashing.
+          { token },
+        ],
+      },
       include: {
         user: {
           include: {
@@ -50,7 +80,6 @@ export async function completePasswordReset(
       }
     }
 
-    // Check if already used
     if (resetToken.usedAt) {
       return {
         success: false,
@@ -58,16 +87,17 @@ export async function completePasswordReset(
       }
     }
 
-    // Check if expired
-    if (new Date() > resetToken.expiresAt) {
+    const now = new Date()
+
+    if (now > resetToken.expiresAt) {
       return {
         success: false,
         message: 'Reset link has expired. Please request a new one.',
       }
     }
 
-    // Validate password strength
     const passwordValidation = validatePasswordStrength(newPassword)
+
     if (!passwordValidation.isValid) {
       return {
         success: false,
@@ -75,12 +105,25 @@ export async function completePasswordReset(
       }
     }
 
-    // Hash new password
     const passwordHash = await hashPassword(newPassword)
 
-    // Update password, mark token as used, reset failed attempts, unlock account, and delete all sessions in a transaction
-    await prisma.$transaction(async tx => {
-      // Update user password and security fields
+    const completed = await prisma.$transaction(async tx => {
+      const tokenUpdate = await tx.passwordResetToken.updateMany({
+        where: {
+          id: resetToken.id,
+          usedAt: null,
+          expiresAt: { gt: now },
+        },
+        data: {
+          usedAt: now,
+          token: hashedToken,
+        },
+      })
+
+      if (tokenUpdate.count !== 1) {
+        return false
+      }
+
       await tx.user.update({
         where: { id: resetToken.userId },
         data: {
@@ -91,28 +134,43 @@ export async function completePasswordReset(
         },
       })
 
-      // Mark reset token as used
-      await tx.passwordResetToken.update({
-        where: { id: resetToken.id },
-        data: { usedAt: new Date() },
+      // Invalidate any other outstanding reset tokens for this user.
+      await tx.passwordResetToken.updateMany({
+        where: {
+          userId: resetToken.userId,
+          usedAt: null,
+        },
+        data: {
+          usedAt: now,
+        },
       })
 
-      // Invalidate all existing sessions
       await tx.session.deleteMany({
         where: { userId: resetToken.userId },
       })
+
+      return true
     })
 
-    // Send password changed confirmation email
-    const businessName = resetToken.user.businesses[0]?.name || 'Your Business'
-    await sendPasswordChangedEmail(resetToken.user.email, businessName)
+    if (!completed) {
+      return {
+        success: false,
+        message: 'Invalid or expired reset token',
+      }
+    }
 
-    // Log security event
-    await logSecurityEvent({
+    const businessName = resetToken.user.businesses[0]?.name || 'Your Business'
+
+    try {
+      await sendPasswordChangedEmail(resetToken.user.email, businessName)
+    } catch (error) {
+      console.error('Password changed email failed:', error)
+    }
+
+    await logSecurityEventSafely({
       userId: resetToken.userId,
       action: 'password_reset_completed',
       details: {
-        email: resetToken.user.email,
         sessionsInvalidated: true,
       },
       ipAddress,
@@ -127,11 +185,10 @@ export async function completePasswordReset(
   } catch (error) {
     console.error('Complete password reset error:', error)
 
-    await logSecurityEvent({
+    await logSecurityEventSafely({
       action: 'password_reset_completion_error',
       details: {
-        token: token.substring(0, 10) + '...',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        reason: 'completion_error',
       },
       ipAddress,
       userAgent,
@@ -146,7 +203,7 @@ export async function completePasswordReset(
 }
 
 /**
- * Validate password strength
+ * Validate password strength.
  */
 export function validatePasswordStrength(password: string): {
   isValid: boolean
@@ -156,6 +213,13 @@ export function validatePasswordStrength(password: string): {
     return {
       isValid: false,
       message: 'Password must be at least 8 characters long',
+    }
+  }
+
+  if (password.length > 128) {
+    return {
+      isValid: false,
+      message: 'Password must be no more than 128 characters long',
     }
   }
 
@@ -194,26 +258,25 @@ export function validatePasswordStrength(password: string): {
 }
 
 /**
- * Request password reset
+ * Request password reset.
  */
 export async function requestPasswordReset(
   email: string,
   ipAddress: string,
   userAgent?: string
 ): Promise<RequestPasswordResetResult> {
+  const normalizedEmail = email.toLowerCase().trim()
+
   try {
-    // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
       include: { businesses: true },
     })
 
-    // Don't reveal if user exists or not for security
     if (!user) {
-      // Still log this for security monitoring
-      await logSecurityEvent({
+      await logSecurityEventSafely({
         action: 'password_reset_requested_nonexistent',
-        details: { email },
+        details: {},
         ipAddress,
         userAgent,
         severity: 'warning',
@@ -225,7 +288,6 @@ export async function requestPasswordReset(
       }
     }
 
-    // Delete any existing unused reset tokens for this user
     await prisma.passwordResetToken.deleteMany({
       where: {
         userId: user.id,
@@ -233,29 +295,26 @@ export async function requestPasswordReset(
       },
     })
 
-    // Generate new reset token (valid for 1 hour)
     const { token: resetToken, expiresAt: resetExpiresAt } = generatePasswordResetToken()
+    const hashedResetToken = hashPasswordResetToken(resetToken)
 
-    // Create reset token
     await prisma.passwordResetToken.create({
       data: {
         userId: user.id,
-        token: resetToken,
+        token: hashedResetToken,
         expiresAt: resetExpiresAt,
       },
     })
 
-    // Send password reset email
     const resetUrl = `${getAppUrl()}/reset-password?token=${resetToken}`
     const businessName = user.businesses[0]?.name || 'Your Business'
 
     await sendPasswordResetEmail(user.email, resetUrl, businessName)
 
-    // Log security event
-    await logSecurityEvent({
+    await logSecurityEventSafely({
       userId: user.id,
       action: 'password_reset_requested',
-      details: { email },
+      details: {},
       ipAddress,
       userAgent,
       severity: 'info',
@@ -268,11 +327,10 @@ export async function requestPasswordReset(
   } catch (error) {
     console.error('Password reset request error:', error)
 
-    await logSecurityEvent({
+    await logSecurityEventSafely({
       action: 'password_reset_request_error',
       details: {
-        email,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        reason: 'request_error',
       },
       ipAddress,
       userAgent,

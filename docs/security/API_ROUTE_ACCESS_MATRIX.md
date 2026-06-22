@@ -250,3 +250,8 @@ publicRateLimit(request, key)
    | `/api/auth/verify-email` | Public token-based | Validate token; rate limit; safe token failure response | Reviewed | Does not return raw service failure. |
    | `/api/auth/password-reset/request` | Public | Validate email; rate limit by IP+email hash; generic response | Reviewed | Does not reveal account existence. |
    | `/api/auth/password-reset/complete` | Public token-based | Validate token and new password; rate limit by IP+token hash; safe token failure response | Reviewed | Does not return raw service failure. |
+   | `/api/auth/signup` | Public | Validate input; rate limit; safe failure messages; store hashed verification token | Reviewed | Service stores verification token hash; raw token sent only by email. |
+   | `/api/auth/resend-verification` | Public | Validate email; rate limit by IP+email hash; generic response; store hashed verification token | Reviewed | Does not reveal account state. |
+   | `/api/auth/verify-email` | Public token-based | Validate token; rate limit; look up hashed token with legacy fallback; consume once | Reviewed | Atomic token consumption prevents replay races. |
+   | `/api/auth/password-reset/request` | Public | Validate email; rate limit by IP+email hash; generic response; store hashed reset token | Reviewed | Raw reset token only appears in email link. |
+   | `/api/auth/password-reset/complete` | Public token-based | Validate token/password; rate limit; look up hashed token with legacy fallback; consume once; delete sessions | Reviewed | Atomic token consumption and session invalidation. |
