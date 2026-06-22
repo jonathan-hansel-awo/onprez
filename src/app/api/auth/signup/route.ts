@@ -2,53 +2,89 @@ import { checkRateLimit } from '@/lib/services/rate-limit'
 import { signupUser } from '@/lib/services/signup'
 import { signupSchema } from '@/lib/validation/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { ZodError } from 'zod'
+
+function getClientIp(request: NextRequest) {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIp = request.headers.get('x-real-ip')
+
+  return forwarded ? forwarded.split(',')[0]?.trim() || 'unknown' : realIp || 'unknown'
+}
+
+function safeSignupFailureMessage(error?: string) {
+  if (!error) {
+    return 'Signup failed. Please check your details and try again.'
+  }
+
+  const normalized = error.toLowerCase()
+
+  if (normalized.includes('handle')) {
+    return 'That handle is not available. Please choose another.'
+  }
+
+  if (normalized.includes('email')) {
+    return 'This email cannot be used to create an account.'
+  }
+
+  if (normalized.includes('password')) {
+    return 'Password does not meet the requirements.'
+  }
+
+  return 'Signup failed. Please check your details and try again.'
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // Get IP address for rate limiting
-    const forwarded = request.headers.get('x-forwarded-for')
-    const realIp = request.headers.get('x-real-ip')
-    const ipAddress = forwarded ? forwarded.split(',')[0] : realIp || 'unknown'
+    const ipAddress = getClientIp(request)
 
-    // Check rate limit
-    const rateLimitKey = `ip:${ipAddress}`
-    const rateLimitResult = await checkRateLimit(rateLimitKey, 'auth:signup')
+    const rateLimitKey = `signup:${ipAddress}`
+    const rateLimit = await checkRateLimit(rateLimitKey, 'auth:signup')
 
-    if (!rateLimitResult.allowed) {
+    if (!rateLimit.allowed) {
+      const resetInSeconds = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
+
       return NextResponse.json(
         {
           success: false,
           message: 'Too many signup attempts. Please try again later.',
-          retryAfter: rateLimitResult.retryAfter,
         },
         {
           status: 429,
           headers: {
-            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': Math.floor(rateLimitResult.resetAt.getTime() / 1000).toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '0',
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+            'X-RateLimit-Reset': Math.floor(rateLimit.resetAt.getTime() / 1000).toString(),
+            'Retry-After': (rateLimit.retryAfter || resetInSeconds).toString(),
           },
         }
       )
     }
 
-    // Parse and validate request body
     const body = await request.json()
-    const validatedData = signupSchema.parse(body)
+    const validation = signupSchema.safeParse(body)
 
-    // Get user agent
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Validation failed',
+          errors: validation.error.issues.map(err => ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        },
+        { status: 400 }
+      )
+    }
+
     const userAgent = request.headers.get('user-agent') || undefined
 
-    // Create user account
-    const result = await signupUser(validatedData, ipAddress, userAgent)
+    const result = await signupUser(validation.data, ipAddress, userAgent)
 
     if (!result.success) {
       return NextResponse.json(
         {
           success: false,
-          message: result.error || 'Signup failed',
+          message: safeSignupFailureMessage(result.error),
         },
         { status: 400 }
       )
@@ -59,9 +95,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Account created successfully. Please check your email to verify your account.',
         data: {
-          userId: result.userId,
           email: result.email,
-          businessId: result.businessId,
           handle: result.handle,
           requiresVerification: result.requiresVerification,
         },
@@ -69,20 +103,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Validation failed',
-          errors: error.issues.map(err => ({
-            field: err.path.join('.'),
-            message: err.message,
-          })),
-        },
-        { status: 400 }
-      )
-    }
-
     console.error('Signup API error:', error)
 
     return NextResponse.json(

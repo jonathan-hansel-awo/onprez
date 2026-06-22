@@ -244,3 +244,9 @@ publicRateLimit(request, key)
    | `/api/auth/mfa/backup-codes` | Authenticated | Validate current session; require password; rate limit; return metadata only, never hashes or raw codes | Reviewed | Actual backup codes shown only on regeneration/setup. |
    | `/api/auth/mfa/regenerate-codes` | Authenticated | Validate current session; require password; rate limit; invalidate old codes and return new codes once | Reviewed | Check service stores only hashed codes. |
    | `/api/auth/login` | Public | Validate credentials; rate limit; generic failures; if MFA required, return raw temp token once and store only hashed temp token | Reviewed | Login route and service reviewed; raw MFA temp token is not stored. |
+   | `/api/auth/check-handle` | Public | Validate handle format; rate limit; no raw error leakage | Reviewed | Public by design; safe error response only. |
+   | `/api/auth/signup` | Public | Validate input; rate limit; safe failure messages; no internal IDs in response | Reviewed | Uses signup schema and sanitized service errors. |
+   | `/api/auth/resend-verification` | Public | Validate email; rate limit by IP+email hash; generic response | Reviewed | Does not reveal whether account exists or needs verification. |
+   | `/api/auth/verify-email` | Public token-based | Validate token; rate limit; safe token failure response | Reviewed | Does not return raw service failure. |
+   | `/api/auth/password-reset/request` | Public | Validate email; rate limit by IP+email hash; generic response | Reviewed | Does not reveal account existence. |
+   | `/api/auth/password-reset/complete` | Public token-based | Validate token and new password; rate limit by IP+token hash; safe token failure response | Reviewed | Does not return raw service failure. |

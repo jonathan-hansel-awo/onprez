@@ -5,13 +5,16 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const HANDLE_REGEX = /^[a-z0-9-]+$/
 
+function getClientIp(request: NextRequest) {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIp = request.headers.get('x-real-ip')
+
+  return forwarded ? forwarded.split(',')[0]?.trim() || 'unknown' : realIp || 'unknown'
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // Get handle from query params
-    const searchParams = request.nextUrl.searchParams
-    const handle = searchParams.get('handle')
-
-    console.log('🔍 Checking handle:', handle)
+    const handle = request.nextUrl.searchParams.get('handle')
 
     if (!handle) {
       return NextResponse.json(
@@ -23,26 +26,30 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('📊 Querying database...')
+    const ipAddress = getClientIp(request)
+    const rateLimitKey = `handle-check:${ipAddress}`
+    const rateLimit = await checkRateLimit(rateLimitKey, 'handle:check')
 
-    // Rate limiting
-    const forwarded = request.headers.get('x-forwarded-for')
-    const realIp = request.headers.get('x-real-ip')
-    const ipAddress = forwarded ? forwarded.split(',')[0] : realIp || 'unknown'
-    const rateLimitKey = `ip:${ipAddress}`
-    const rateLimitResult = await checkRateLimit(rateLimitKey, 'handle:check')
+    if (!rateLimit.allowed) {
+      const resetInSeconds = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
 
-    if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
           available: false,
           reason: 'Too many requests. Please slow down.',
         },
-        { status: 429 }
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+            'X-RateLimit-Reset': Math.floor(rateLimit.resetAt.getTime() / 1000).toString(),
+            'Retry-After': (rateLimit.retryAfter || resetInSeconds).toString(),
+          },
+        }
       )
     }
 
-    // Validate format
     const normalizedHandle = handle.toLowerCase().trim()
 
     if (normalizedHandle.length < 3 || normalizedHandle.length > 30) {
@@ -59,19 +66,19 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Check if reserved
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (RESERVED_HANDLES.includes(normalizedHandle as any)) {
+    if (RESERVED_HANDLES.includes(normalizedHandle as (typeof RESERVED_HANDLES)[number])) {
       return NextResponse.json({
         available: false,
         reason: 'This handle is reserved',
       })
     }
 
-    // Check availability in database
     const result = await checkHandleAvailability(normalizedHandle)
 
-    return NextResponse.json(result)
+    return NextResponse.json({
+      available: result.available,
+      reason: result.reason,
+    })
   } catch (error) {
     console.error('Handle check error:', error)
 
@@ -79,9 +86,6 @@ export async function GET(request: NextRequest) {
       {
         available: false,
         reason: 'Failed to check handle availability',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack?.split('\n')[0] : undefined,
-        type: error?.constructor?.name,
       },
       { status: 500 }
     )
