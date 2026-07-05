@@ -260,4 +260,4 @@ publicRateLimit(request, key)
    | `/api/business/features` | Business-scoped | GET requires business access; PUT requires owner/admin/manager access | Reviewed | Uses selected settings only. |
    | `/api/business/hours` | Business-scoped | GET requires business access; PUT requires owner/admin/manager access | Reviewed | Updates hours transactionally for authorized business only. |
    | `/api/business/settings/booking` | Business-scoped | GET requires business access; PUT requires owner/admin/manager access; uses DB-backed session auth | Reviewed | Replaced direct `verifyToken()` usage. |
-npx jest --runTestsByPath __tests__/api/business-special-dates-routes.test.ts --runInBand --verbose
+   | `/api/business/special-dates` | Business-scoped | GET requires business access; POST requires owner/admin/manager access; scope all reads/writes to authorized business | Reviewed | Uses centralized business authorization and handles duplicate dates safely. |
