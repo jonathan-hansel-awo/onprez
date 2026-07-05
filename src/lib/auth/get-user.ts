@@ -1,45 +1,58 @@
 import { cookies, headers } from 'next/headers'
-import { verifyToken } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
+import { validateSession } from '@/lib/auth/session-service'
 import type { AuthUser, UserRole } from '@/types/auth'
 
+async function getAccessTokenFromRequest() {
+  const cookieStore = await cookies()
+  const cookieToken = cookieStore.get('accessToken')?.value?.trim()
+
+  if (cookieToken) {
+    return cookieToken
+  }
+
+  const headersList = await headers()
+  const authHeader = headersList.get('authorization')
+
+  if (!authHeader) {
+    return undefined
+  }
+
+  const [scheme, token] = authHeader.split(' ')
+
+  if (scheme?.toLowerCase() !== 'bearer' || !token?.trim()) {
+    return undefined
+  }
+
+  return token.trim()
+}
+
 /**
- * Get current authenticated user from token
- * Use this in Server Components and API routes
+ * Get current authenticated user from a DB-backed session.
+ *
+ * This must validate both:
+ * 1. the JWT itself
+ * 2. the session row in the database
+ *
+ * Without the DB session check, deleted/revoked sessions can keep working
+ * until the JWT expires.
  */
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
-    // Try to get token from cookies first (preferred)
-    const cookieStore = await cookies()
-    let accessToken = cookieStore.get('accessToken')?.value
-
-    console.log('AccessToken from cookies:', accessToken ? 'Found' : 'Not found')
-
-    // Fallback to Authorization header
-    if (!accessToken) {
-      const headersList = await headers()
-      const authHeader = headersList.get('authorization')
-      accessToken = authHeader?.replace('Bearer ', '')
-      console.log('AccessToken from header:', accessToken ? 'Found' : 'Not found')
-    }
+    const accessToken = await getAccessTokenFromRequest()
 
     if (!accessToken) {
-      console.log('No access token found')
       return null
     }
 
-    // Verify token
-    const tokenPayload = await verifyToken(accessToken)
-    if (!tokenPayload) {
-      console.log('Token verification failed')
+    const validation = await validateSession(accessToken)
+
+    if (!validation.valid || !validation.session) {
       return null
     }
 
-    console.log('Token verified, userId:', tokenPayload.payload.userId)
-
-    // Get user from database
     const user = await prisma.user.findUnique({
-      where: { id: tokenPayload.payload.userId },
+      where: { id: validation.session.userId },
       select: {
         id: true,
         email: true,
@@ -50,11 +63,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     })
 
     if (!user) {
-      console.log('User not found in database')
       return null
     }
-
-    console.log('User found:', user.email)
 
     return {
       id: user.id,
@@ -70,58 +80,66 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 }
 
 /**
- * Get current user or throw error
+ * Get current user or throw error.
  */
 export async function requireUser(): Promise<AuthUser> {
   const user = await getCurrentUser()
+
   if (!user) {
     throw new Error('Unauthorized')
   }
+
   return user
 }
 
 /**
- * Require user with email verification
+ * Require user with email verification.
  */
 export async function requireVerifiedUser(): Promise<AuthUser> {
   const user = await requireUser()
+
   if (!user.emailVerified) {
     throw new Error('Email verification required')
   }
+
   return user
 }
 
 /**
- * Require user with MFA enabled
+ * Require user with MFA enabled.
  */
 export async function requireMfaUser(): Promise<AuthUser> {
   const user = await requireUser()
+
   if (!user.mfaEnabled) {
     throw new Error('MFA required')
   }
+
   return user
 }
 
 /**
- * Require user with specific role
+ * Require user with specific platform role.
  */
 export async function requireRole(allowedRoles: UserRole[]): Promise<AuthUser> {
   const user = await requireUser()
+
   if (!allowedRoles.includes(user.role)) {
     throw new Error('Insufficient permissions')
   }
+
   return user
 }
 
 /**
- * Check if user has role
+ * Check if user has role.
  */
 export function hasRole(user: AuthUser, roles: UserRole[]): boolean {
   return roles.includes(user.role)
 }
 
 /**
- * Check if user is admin
+ * Check if user is platform admin.
  */
 export function isAdmin(user: AuthUser): boolean {
   return user.role === 'ADMIN'

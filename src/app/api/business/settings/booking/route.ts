@@ -1,29 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth/jwt'
-import { cookies } from 'next/headers'
 import { bookingSettingsSchema } from '@/lib/validation/business'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import {
+  resolveReadableBusinessContext,
+  resolveWritableBusinessContext,
+} from '@/lib/auth/business-route-utils'
+
+function toRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
+}
+
+function getBookingSettings(settings: Record<string, unknown>) {
+  const bookingSettings = toRecord(settings.booking)
+
+  return {
+    bufferTime: bookingSettings.bufferTime ?? 0,
+    slotInterval: bookingSettings.slotInterval ?? 15,
+    advanceBookingDays: bookingSettings.advanceBookingDays ?? 30,
+    sameDayBooking: bookingSettings.sameDayBooking ?? true,
+    sameDayLeadTime: bookingSettings.sameDayLeadTime ?? 60,
+    requireApproval: bookingSettings.requireApproval ?? false,
+    autoConfirm: bookingSettings.autoConfirm ?? true,
+    cancellationDeadline: bookingSettings.cancellationDeadline ?? 24,
+    allowRescheduling: bookingSettings.allowRescheduling ?? true,
+    rescheduleDeadline: bookingSettings.rescheduleDeadline ?? 24,
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('accessToken')?.value
+    const user = await getCurrentUser()
 
-    if (!token) {
+    if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const businessId = searchParams.get('businessId')
 
-    // Get business
-    const business = await prisma.business.findFirst({
-      where: businessId ? { id: businessId, ownerId: payload.userId } : { ownerId: payload.userId },
+    const context = await resolveReadableBusinessContext(user.id, businessId)
+
+    const business = await prisma.business.findUnique({
+      where: { id: context.businessId },
       select: {
         id: true,
         name: true,
@@ -35,32 +57,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    const settings = (business.settings as Record<string, unknown>) || {}
-    const bookingSettings = (settings.booking as Record<string, unknown>) || {}
-
-    // Return with defaults
-    const response = {
-      bufferTime: bookingSettings.bufferTime ?? 0,
-      slotInterval: bookingSettings.slotInterval ?? 15,
-      advanceBookingDays: bookingSettings.advanceBookingDays ?? 30,
-      sameDayBooking: bookingSettings.sameDayBooking ?? true,
-      sameDayLeadTime: bookingSettings.sameDayLeadTime ?? 60,
-      requireApproval: bookingSettings.requireApproval ?? false,
-      autoConfirm: bookingSettings.autoConfirm ?? true,
-      cancellationDeadline: bookingSettings.cancellationDeadline ?? 24,
-      allowRescheduling: bookingSettings.allowRescheduling ?? true,
-      rescheduleDeadline: bookingSettings.rescheduleDeadline ?? 24,
-    }
+    const settings = toRecord(business.settings)
 
     return NextResponse.json({
       success: true,
       data: {
         businessId: business.id,
         businessName: business.name,
-        settings: response,
+        settings: getBookingSettings(settings),
       },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Get booking settings error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to get booking settings' },
@@ -71,23 +81,18 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('accessToken')?.value
+    const user = await getCurrentUser()
 
-    if (!token) {
+    if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 })
-    }
-
     const body = await request.json()
-    const { businessId, ...settingsData } = body
+    const businessId = typeof body.businessId === 'string' ? body.businessId : undefined
+    const { businessId: _businessId, ...settingsData } = body
 
-    // Validate settings
     const validation = bookingSettingsSchema.safeParse(settingsData)
+
     if (!validation.success) {
       return NextResponse.json(
         {
@@ -99,11 +104,13 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Get business
-    const business = await prisma.business.findFirst({
-      where: businessId ? { id: businessId, ownerId: payload.userId } : { ownerId: payload.userId },
+    const context = await resolveWritableBusinessContext(user.id, businessId)
+
+    const business = await prisma.business.findUnique({
+      where: { id: context.businessId },
       select: {
         id: true,
+        name: true,
         settings: true,
       },
     })
@@ -112,9 +119,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Merge with existing settings
-    const currentSettings = (business.settings as Record<string, unknown>) || {}
-    const currentBooking = (currentSettings.booking as Record<string, unknown>) || {}
+    const currentSettings = toRecord(business.settings)
+    const currentBooking = toRecord(currentSettings.booking)
 
     const updatedSettings = {
       ...currentSettings,
@@ -125,7 +131,6 @@ export async function PUT(request: NextRequest) {
       },
     }
 
-    // Update business
     const updated = await prisma.business.update({
       where: { id: business.id },
       data: {
@@ -138,18 +143,21 @@ export async function PUT(request: NextRequest) {
       },
     })
 
-    const newBookingSettings = (updated.settings as Record<string, unknown>)?.booking || {}
+    const newSettings = toRecord(updated.settings)
 
     return NextResponse.json({
       success: true,
       data: {
         businessId: updated.id,
         businessName: updated.name,
-        settings: newBookingSettings,
+        settings: getBookingSettings(newSettings),
       },
       message: 'Booking settings updated successfully',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Update booking settings error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to update booking settings' },

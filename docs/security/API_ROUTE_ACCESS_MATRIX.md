@@ -255,3 +255,9 @@ publicRateLimit(request, key)
    | `/api/auth/verify-email` | Public token-based | Validate token; rate limit; look up hashed token with legacy fallback; consume once | Reviewed | Atomic token consumption prevents replay races. |
    | `/api/auth/password-reset/request` | Public | Validate email; rate limit by IP+email hash; generic response; store hashed reset token | Reviewed | Raw reset token only appears in email link. |
    | `/api/auth/password-reset/complete` | Public token-based | Validate token/password; rate limit; look up hashed token with legacy fallback; consume once; delete sessions | Reviewed | Atomic token consumption and session invalidation. |
+   | `/api/business/current` | Business-scoped | Validate DB-backed session; resolve default owned/member business context | Reviewed | No longer assumes owner-only access; returns selected business fields. |
+   | `/api/business/settings` | Business-scoped | GET requires business access; PUT/PATCH requires owner/admin/manager access | Reviewed | Supports explicit `businessId` with centralized authorization. |
+   | `/api/business/features` | Business-scoped | GET requires business access; PUT requires owner/admin/manager access | Reviewed | Uses selected settings only. |
+   | `/api/business/hours` | Business-scoped | GET requires business access; PUT requires owner/admin/manager access | Reviewed | Updates hours transactionally for authorized business only. |
+   | `/api/business/settings/booking` | Business-scoped | GET requires business access; PUT requires owner/admin/manager access; uses DB-backed session auth | Reviewed | Replaced direct `verifyToken()` usage. |
+npx jest --runTestsByPath __tests__/api/business-special-dates-routes.test.ts --runInBand --verbose

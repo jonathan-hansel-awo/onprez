@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { z } from 'zod'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import {
+  resolveReadableBusinessContext,
+  resolveWritableBusinessContext,
+} from '@/lib/auth/business-route-utils'
 
 const businessHoursSchema = z.object({
+  businessId: z.string().optional(),
   hours: z
     .array(
       z.object({
@@ -20,13 +26,21 @@ const businessHoursSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const business = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-      include: {
+    const { searchParams } = new URL(request.url)
+    const businessId = searchParams.get('businessId')
+
+    const context = await resolveReadableBusinessContext(user.id, businessId)
+
+    const business = await prisma.business.findUnique({
+      where: { id: context.businessId },
+      select: {
+        id: true,
+        timezone: true,
         businessHours: {
           orderBy: { dayOfWeek: 'asc' },
         },
@@ -40,11 +54,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        businessId: business.id,
         businessHours: business.businessHours,
         timezone: business.timezone,
       },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Get business hours error:', error)
     return NextResponse.json({ success: false, error: 'Failed to fetch hours' }, { status: 500 })
   }
@@ -53,6 +71,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
@@ -67,37 +86,41 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const business = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-    })
+    const context = await resolveWritableBusinessContext(user.id, validation.data.businessId)
 
-    if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
-    }
-
-    // Delete existing hours and create new ones
-    await prisma.businessHours.deleteMany({
-      where: { businessId: business.id },
-    })
-
-    await prisma.businessHours.createMany({
-      data: validation.data.hours.map(hour => ({
-        businessId: business.id,
-        ...hour,
-      })),
-    })
+    await prisma.$transaction([
+      prisma.businessHours.deleteMany({
+        where: { businessId: context.businessId },
+      }),
+      prisma.businessHours.createMany({
+        data: validation.data.hours.map(hour => ({
+          businessId: context.businessId,
+          dayOfWeek: hour.dayOfWeek,
+          openTime: hour.openTime,
+          closeTime: hour.closeTime,
+          isClosed: hour.isClosed,
+          notes: hour.notes,
+        })),
+      }),
+    ])
 
     const updatedHours = await prisma.businessHours.findMany({
-      where: { businessId: business.id },
+      where: { businessId: context.businessId },
       orderBy: { dayOfWeek: 'asc' },
     })
 
     return NextResponse.json({
       success: true,
       message: 'Business hours updated successfully',
-      data: { businessHours: updatedHours },
+      data: {
+        businessId: context.businessId,
+        businessHours: updatedHours,
+      },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Update business hours error:', error)
     return NextResponse.json({ success: false, error: 'Failed to update hours' }, { status: 500 })
   }
