@@ -35,9 +35,12 @@ jest.mock('@/lib/prisma', () => ({
 
 jest.mock('@/lib/validation/business', () => ({
   specialDateSchema: {
-    partial: jest.fn(() => ({
-      safeParse: jest.fn((body: unknown) => ({ success: true, data: body })),
-    })),
+    partial: () => ({
+      safeParse: (body: unknown) => ({
+        success: true,
+        data: body,
+      }),
+    }),
   },
 }))
 
@@ -88,7 +91,7 @@ const existingSpecialDate = {
 
 describe('business special date [id] route', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
 
     mockedGetCurrentUser.mockResolvedValue(authUser)
     mockedRequireBusinessAccess.mockResolvedValue({})
@@ -151,9 +154,7 @@ describe('business special date [id] route', () => {
   })
 
   it('PUT requires writable business role for the special date business', async () => {
-    mockedPrisma.specialDate.findUnique
-      .mockResolvedValueOnce(existingSpecialDate)
-      .mockResolvedValueOnce(null)
+    mockedPrisma.specialDate.findUnique.mockResolvedValue(existingSpecialDate)
 
     mockedPrisma.specialDate.update.mockResolvedValue({
       ...existingSpecialDate,
