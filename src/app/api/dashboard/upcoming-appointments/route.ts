@@ -1,35 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { resolveReadableBusinessContext } from '@/lib/auth/business-route-utils'
+
+function parseLimit(value: string | null) {
+  const parsed = Number.parseInt(value || '5', 10)
+
+  if (!Number.isFinite(parsed)) {
+    return 5
+  }
+
+  return Math.min(Math.max(parsed, 1), 20)
+}
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const business = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-    })
-
-    if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
-    }
+    const context = await resolveReadableBusinessContext(user.id)
+    const businessId = context.businessId
 
     const searchParams = request.nextUrl.searchParams
-    const limit = parseInt(searchParams.get('limit') || '5')
+    const limit = parseLimit(searchParams.get('limit'))
 
     const now = new Date()
 
-    // Get upcoming appointments
     const upcomingAppointments = await prisma.appointment.findMany({
       where: {
-        businessId: business.id,
+        businessId,
         startTime: { gte: now },
         status: { in: ['PENDING', 'CONFIRMED'] },
       },
-      include: {
+      select: {
+        id: true,
+        startTime: true,
+        endTime: true,
+        duration: true,
+        status: true,
+        customerName: true,
+        customerEmail: true,
+        customerPhone: true,
+        totalAmount: true,
+        paymentStatus: true,
+        createdAt: true,
         service: {
           select: {
             name: true,
@@ -50,9 +68,17 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { appointments: upcomingAppointments },
+      data: {
+        appointments: upcomingAppointments.map(appointment => ({
+          ...appointment,
+          totalAmount: Number(appointment.totalAmount),
+        })),
+      },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Get upcoming appointments error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch appointments' },

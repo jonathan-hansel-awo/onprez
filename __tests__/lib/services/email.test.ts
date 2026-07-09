@@ -173,7 +173,11 @@ describe('Email Service', () => {
     })
 
     it('should include reset URL in email', async () => {
-      await sendPasswordResetEmail('user@example.com', 'https://onprez.com/reset?token=xyz789')
+      await sendPasswordResetEmail(
+        'user@example.com',
+        'Jane Smith',
+        'https://onprez.com/reset?token=xyz789'
+      )
 
       const callArgs = mockSend.mock.calls[0][0]
       expect(callArgs.html).toContain('https://onprez.com/reset?token=xyz789')
@@ -184,12 +188,7 @@ describe('Email Service', () => {
   describe('sendPasswordChangedEmail', () => {
     it('should send password changed notification', async () => {
       const timestamp = new Date()
-      const result = await sendPasswordChangedEmail(
-        'user@example.com',
-        'John Doe',
-        '192.168.1.1',
-        timestamp
-      )
+      const result = await sendPasswordChangedEmail('user@example.com', 'John Doe')
 
       expect(result.success).toBe(true)
       expect(mockSend).toHaveBeenCalledWith(
@@ -201,8 +200,7 @@ describe('Email Service', () => {
     })
 
     it('should include IP and timestamp when provided', async () => {
-      const timestamp = new Date('2024-01-01T12:00:00Z')
-      await sendPasswordChangedEmail('user@example.com', 'John', '192.168.1.1', timestamp)
+      await sendPasswordChangedEmail('user@example.com', 'John')
 
       const callArgs = mockSend.mock.calls[0][0]
       expect(callArgs.html).toContain('192.168.1.1')

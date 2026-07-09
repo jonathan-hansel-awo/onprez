@@ -80,6 +80,8 @@ const mockMfaSecret = {
   updatedAt: new Date(),
 }
 
+const mockTotpVerify = speakeasy.totp.verify as jest.MockedFunction<typeof speakeasy.totp.verify>
+
 describe('MFA Service', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -139,8 +141,8 @@ describe('MFA Service', () => {
         { ...mockMfaSecret, verified: true },
         { ...mockUser, mfaEnabled: true },
       ])
-      speakeasy.totp.verify.mockReturnValue(true)
-      speakeasy.totp.verify.mockReturnValue(true)
+      mockTotpVerify.mockReturnValue(true)
+      mockTotpVerify.mockReturnValue(true)
 
       const result = await verifyMfaSetup('user-123', '123456', '127.0.0.1', 'Mozilla/5.0')
 
@@ -158,7 +160,7 @@ describe('MFA Service', () => {
         mfaSecret: mockMfaSecret,
       })
 
-      speakeasy.totp.verify.mockReturnValue(false)
+      mockTotpVerify.mockReturnValue(false)
 
       const result = await verifyMfaSetup('user-123', '000000', '127.0.0.1', 'Mozilla/5.0')
 
@@ -189,7 +191,7 @@ describe('MFA Service', () => {
         mfaSecret: { ...mockMfaSecret, verified: true },
       })
 
-      speakeasy.totp.verify.mockReturnValue(true)
+      mockTotpVerify.mockReturnValue(true)
 
       const result = await verifyMfaToken('user-123', '123456', '127.0.0.1', 'Mozilla/5.0')
 
@@ -208,7 +210,7 @@ describe('MFA Service', () => {
         mfaSecret: { ...mockMfaSecret, verified: true },
       })
 
-      speakeasy.totp.verify.mockReturnValue(false)
+      mockTotpVerify.mockReturnValue(false)
 
       const result = await verifyMfaToken('user-123', '000000', '127.0.0.1', 'Mozilla/5.0')
 

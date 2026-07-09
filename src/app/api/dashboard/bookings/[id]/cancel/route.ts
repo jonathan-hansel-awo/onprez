@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
-import { z } from 'zod'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { requireAppointmentRole } from '@/lib/auth/appointment-access'
 
 const cancelSchema = z.object({
   reason: z.enum([
@@ -20,9 +22,20 @@ const cancelSchema = z.object({
 
 export type CancellationReason = z.infer<typeof cancelSchema>['reason']
 
+const reasonLabels: Record<CancellationReason, string> = {
+  CUSTOMER_REQUEST: 'Customer requested cancellation',
+  BUSINESS_UNAVAILABLE: 'Business unavailable',
+  STAFF_UNAVAILABLE: 'Staff unavailable',
+  EMERGENCY: 'Emergency',
+  DUPLICATE_BOOKING: 'Duplicate booking',
+  NO_SHOW_POLICY: 'No-show policy applied',
+  OTHER: 'Other reason',
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
@@ -30,8 +43,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { id } = await params
     const body = await request.json()
 
-    // Validate request body
     const validation = cancelSchema.safeParse(body)
+
     if (!validation.success) {
       return NextResponse.json(
         { success: false, error: 'Invalid request', details: validation.error.flatten() },
@@ -41,15 +54,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const { reason, customReason, notifyCustomer, waiveCancellationFee } = validation.data
 
-    // Fetch appointment with business info
-    const appointment = await prisma.appointment.findUnique({
-      where: { id },
+    const { appointment: appointmentAccess } = await requireAppointmentRole(user.id, id, [
+      'ADMIN',
+      'MANAGER',
+      'STAFF',
+    ])
+
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        id,
+        businessId: appointmentAccess.businessId,
+      },
       include: {
         business: {
           select: {
             id: true,
             name: true,
-            ownerId: true,
             email: true,
             settings: true,
           },
@@ -76,23 +96,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ success: false, error: 'Appointment not found' }, { status: 404 })
     }
 
-    // Check authorization - must be business owner or team member
-    const isOwner = appointment.business.ownerId === user.id
-    const isMember = await prisma.businessMember.findFirst({
-      where: {
-        businessId: appointment.businessId,
-        userId: user.id,
-      },
-    })
-
-    if (!isOwner && !isMember) {
-      return NextResponse.json(
-        { success: false, error: 'You do not have permission to cancel this appointment' },
-        { status: 403 }
-      )
-    }
-
-    // Check if appointment can be cancelled
     if (appointment.status === 'CANCELLED') {
       return NextResponse.json(
         { success: false, error: 'Appointment is already cancelled' },
@@ -107,19 +110,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       )
     }
 
-    // Build cancellation note
-    const reasonLabels: Record<string, string> = {
-      CUSTOMER_REQUEST: 'Customer requested cancellation',
-      BUSINESS_UNAVAILABLE: 'Business unavailable',
-      STAFF_UNAVAILABLE: 'Staff unavailable',
-      EMERGENCY: 'Emergency',
-      DUPLICATE_BOOKING: 'Duplicate booking',
-      NO_SHOW_POLICY: 'No-show policy applied',
-      OTHER: 'Other reason',
-    }
+    const now = new Date()
 
     const cancellationNote = [
-      `[${new Date().toISOString()}] Cancelled by ${user.email}`,
+      `[${now.toISOString()}] Cancelled by ${user.email}`,
       `Reason: ${reasonLabels[reason]}`,
       customReason ? `Details: ${customReason}` : null,
       waiveCancellationFee ? 'Cancellation fee waived' : null,
@@ -127,16 +121,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .filter(Boolean)
       .join('\n')
 
-    // Update appointment
     const updatedAppointment = await prisma.appointment.update({
       where: { id },
       data: {
         status: 'CANCELLED',
         previousStatus: appointment.status,
-        cancelledAt: new Date(),
+        cancelledAt: now,
         cancelledBy: user.id,
         cancellationReason: reason,
         cancellationDetails: customReason || null,
+        cancellationSource: 'BUSINESS',
         businessNotes: appointment.businessNotes
           ? `${appointment.businessNotes}\n\n${cancellationNote}`
           : cancellationNote,
@@ -161,28 +155,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
     })
 
-    // Update customer stats
     await prisma.customer.update({
       where: { id: appointment.customerId },
       data: {
         cancelledBookings: { increment: 1 },
       },
     })
-
-    // TODO: Send cancellation email if notifyCustomer is true
-    // This will be implemented in Milestone 9.10
-    if (notifyCustomer && appointment.customer?.email) {
-      // await sendCancellationEmail({
-      //   to: appointment.customer.email,
-      //   customerName: appointment.customer.name,
-      //   businessName: appointment.business.name,
-      //   serviceName: appointment.service.name,
-      //   appointmentDate: appointment.startTime,
-      //   reason: reasonLabels[reason],
-      //   customReason,
-      // })
-      console.log('TODO: Send cancellation email to', appointment.customer.email)
-    }
 
     return NextResponse.json({
       success: true,
@@ -192,6 +170,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Cancel booking error:', error)
     return NextResponse.json({ success: false, error: 'Failed to cancel booking' }, { status: 500 })
   }
