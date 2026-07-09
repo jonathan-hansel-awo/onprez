@@ -263,3 +263,14 @@ publicRateLimit(request, key)
    | `/api/business/special-dates` | Business-scoped | GET requires business access; POST requires owner/admin/manager access; scope all reads/writes to authorized business | Reviewed | Uses centralized business authorization and handles duplicate dates safely. |
    | `/api/business/[businessId]` | Business-scoped | Validate DB-backed session; require access to exact `businessId`; return selected fields only | Reviewed | Uses centralized business authorization and no owner-only assumption. |
    | `/api/business/[businessId]/theme` | Business-scoped | Validate DB-backed session; require owner/admin/manager access to exact `businessId`; validate theme payload | Reviewed | Updates scoped business settings only and returns selected fields. |
+   | `/api/dashboard/stats` | Business-scoped | Validate session; resolve readable default business context | Reviewed | Supports owner/member access consistently. |
+   | `/api/dashboard/recent-bookings` | Business-scoped | Validate session; resolve readable default business context | Reviewed | Appointment reads scoped to authorized business. |
+   | `/api/dashboard/upcoming-appointments` | Business-scoped | Validate session; resolve readable default business context | Reviewed | Appointment reads scoped to authorized business. |
+   | `/api/dashboard/bookings` | Business-scoped | Validate session; resolve readable default business context; paginate/filter within business scope | Reviewed | Customer data remains scoped to authorized business. |
+   | `/api/dashboard/bookings/day` | Business-scoped | Validate session; resolve readable default business context | Reviewed | Day view scoped to authorized business. |
+   | `/api/dashboard/bookings/week` | Business-scoped | Validate session; resolve readable default business context | Reviewed | Week view scoped to authorized business. |
+   | `/api/dashboard/customers/search` | Business-scoped | Validate session; resolve readable default business context; minimum query length | Reviewed | Customer search scoped to authorized business. |
+   | `/api/dashboard/services` | Business-scoped | Validate session; resolve readable default business context | Reviewed | Dashboard service picker scoped to authorized business. |
+   | `/api/dashboard/settings/reminders` | Business-scoped | GET requires business access; PUT requires writable business role | Reviewed | Reminder settings updated only for authorized business. |
+   | `/api/dashboard/bookings/quick-create` | Business-scoped | Validate session; require owner/admin/manager/staff; create booking only for authorized business | Reviewed | Manual booking creation scoped to authorized business. |
+   | `/api/dashboard/bookings/[id]/notes` | Business-scoped | GET requires appointment access; PUT requires writable appointment role | Reviewed | Fixes incorrect membership check against appointment ID. |

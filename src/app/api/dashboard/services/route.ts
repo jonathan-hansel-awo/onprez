@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { resolveReadableBusinessContext } from '@/lib/auth/business-route-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,20 +14,8 @@ export async function GET(request: NextRequest) {
     const activeOnly = searchParams.get('activeOnly') !== 'false'
 
     // Get user's business
-    const ownedBusiness = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-      select: { id: true },
-    })
-
-    const membership = await prisma.businessMember.findFirst({
-      where: { userId: user.id },
-      select: { businessId: true },
-    })
-
-    const businessId = ownedBusiness?.id || membership?.businessId
-    if (!businessId) {
-      return NextResponse.json({ success: false, error: 'No business found' }, { status: 404 })
-    }
+    const context = await resolveReadableBusinessContext(user.id)
+    const businessId = context.businessId
 
     const services = await prisma.service.findMany({
       where: {

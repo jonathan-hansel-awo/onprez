@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { z } from 'zod'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { requireAppointmentRole } from '@/lib/auth/appointment-access'
 
 const rescheduleSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
@@ -22,31 +24,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Get user's business
-    let businessId: string | null = null
+    const { appointment: appointmentAccess } = await requireAppointmentRole(user.id, id, [
+      'ADMIN',
+      'MANAGER',
+      'STAFF',
+    ])
 
-    const ownedBusiness = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-      select: { id: true, timezone: true },
-    })
-
-    if (ownedBusiness) {
-      businessId = ownedBusiness.id
-    } else {
-      const membership = await prisma.businessMember.findFirst({
-        where: { userId: user.id },
-        select: { businessId: true },
-      })
-      if (membership) {
-        businessId = membership.businessId
-      }
-    }
-
-    if (!businessId) {
-      return NextResponse.json(
-        { success: false, error: 'No business found for user' },
-        { status: 404 }
-      )
-    }
+    const businessId = appointmentAccess.businessId
 
     // Parse request body
     const body = await request.json()
@@ -207,7 +191,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
     })
   } catch (error) {
-    console.error('Error rescheduling appointment:', error)
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
+    console.error('Reschedule appointment error:', error)
+
     return NextResponse.json(
       { success: false, error: 'Failed to reschedule appointment' },
       { status: 500 }

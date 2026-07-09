@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { AppointmentStatus } from '@prisma/client'
 import { z } from 'zod'
+import { resolveReadableBusinessContext } from '@/lib/auth/business-route-utils'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 
 // Query params validation
 const querySchema = z.object({
@@ -25,36 +27,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's business - check ownership first, then membership
-    let businessId: string | null = null
-    let businessSlug: string | null = null
-
     // Check if user owns a business
-    const ownedBusiness = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-      select: { id: true, slug: true },
-    })
-
-    if (ownedBusiness) {
-      businessId = ownedBusiness.id
-      businessSlug = ownedBusiness.slug
-    } else {
-      const membership = await prisma.businessMember.findFirst({
-        where: { userId: user.id },
-        select: { businessId: true, business: { select: { slug: true } } },
-      })
-
-      if (membership) {
-        businessId = membership.businessId
-        businessSlug = membership.business.slug
-      }
-    }
-
-    if (!businessId) {
-      return NextResponse.json(
-        { success: false, error: 'No business found for user' },
-        { status: 404 }
-      )
-    }
+    const context = await resolveReadableBusinessContext(user.id)
+    const businessId = context.businessId
+    const businessSlug = context.business.slug
 
     // Parse query params
     const { searchParams } = new URL(request.url)
@@ -195,6 +171,9 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Error fetching bookings:', error)
     return NextResponse.json({ success: false, error: 'Failed to fetch bookings' }, { status: 500 })
   }

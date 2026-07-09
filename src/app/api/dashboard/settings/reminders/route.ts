@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { z } from 'zod'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import {
+  resolveReadableBusinessContext,
+  resolveWritableBusinessContext,
+} from '@/lib/auth/business-route-utils'
 
 const reminderSettingsSchema = z.object({
   enabled: z.boolean(),
@@ -9,40 +14,48 @@ const reminderSettingsSchema = z.object({
   defaultMessage: z.string().max(500).optional(),
 })
 
+function toRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
+}
+
+const defaultReminders = {
+  enabled: true,
+  emailEnabled: true,
+  defaultMessage: '',
+}
+
 export async function GET() {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const business = await prisma.business.findFirst({
-      where: { ownerId: user.id },
+    const context = await resolveReadableBusinessContext(user.id)
+
+    const business = await prisma.business.findUnique({
+      where: { id: context.businessId },
       select: { id: true, settings: true },
     })
 
     if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    const settings = business.settings as Record<string, unknown> || {}
-    const reminders = settings.reminders || {
-      enabled: true,
-      emailEnabled: true,
-      defaultMessage: '',
-    }
+    const settings = toRecord(business.settings)
+    const reminders = settings.reminders || defaultReminders
 
     return NextResponse.json({
       success: true,
       data: reminders,
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Get reminder settings error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to get reminder settings' },
@@ -54,11 +67,9 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -71,26 +82,26 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const business = await prisma.business.findFirst({
-      where: { ownerId: user.id },
+    const context = await resolveWritableBusinessContext(user.id)
+
+    const business = await prisma.business.findUnique({
+      where: { id: context.businessId },
       select: { id: true, settings: true },
     })
 
     if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    const currentSettings = business.settings as Record<string, unknown> || {}
+    const currentSettings = toRecord(business.settings)
+
     const updatedSettings = {
       ...currentSettings,
       reminders: validation.data,
     }
 
     await prisma.business.update({
-      where: { id: business.id },
+      where: { id: context.businessId },
       data: { settings: updatedSettings },
     })
 
@@ -99,6 +110,9 @@ export async function PUT(request: NextRequest) {
       data: validation.data,
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Update reminder settings error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to update reminder settings' },
