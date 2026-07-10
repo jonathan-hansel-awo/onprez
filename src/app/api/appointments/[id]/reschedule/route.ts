@@ -1,25 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { rescheduleAppointmentSchema } from '@/lib/validation/booking'
 import { rescheduleAppointment } from '@/lib/services/booking'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { requireAppointmentRole } from '@/lib/auth/appointment-access'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
     const { id } = await params
 
-    const business = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-    })
-
-    if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
-    }
+    const { appointment } = await requireAppointmentRole(user.id, id, ['ADMIN', 'MANAGER', 'STAFF'])
 
     const body = await request.json()
     const validation = rescheduleAppointmentSchema.safeParse(body)
@@ -33,12 +29,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const { date, startTime, reason } = validation.data
 
-    const result = await rescheduleAppointment(id, business.id, date, startTime, reason)
+    const result = await rescheduleAppointment(id, appointment.businessId, date, startTime, reason)
 
     if (!result.success) {
       return NextResponse.json(
         { success: false, error: result.error, conflicts: result.conflicts },
-        { status: 409 }
+        { status: result.conflicts ? 409 : 400 }
       )
     }
 
@@ -48,6 +44,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: { appointment: result.appointment },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Reschedule appointment error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to reschedule appointment' },

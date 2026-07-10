@@ -1,32 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
+import { businessAuthErrorResponse, requireBusinessAccess } from '@/lib/auth/business-access'
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const businessId = searchParams.get('businessId')
 
     if (!businessId) {
-      return NextResponse.json({ error: 'Business ID required' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Business ID required' }, { status: 400 })
     }
 
-    // Verify ownership
-    const business = await prisma.business.findUnique({
-      where: { id: businessId },
-      select: { ownerId: true },
-    })
+    const context = await requireBusinessAccess(user.id, businessId)
 
-    if (!business || business.ownerId !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
-
-    // Get statistics
     const [
       totalServices,
       activeServices,
@@ -35,41 +28,30 @@ export async function GET(request: NextRequest) {
       totalRevenue,
       mostBooked,
     ] = await Promise.all([
-      // Total services
       prisma.service.count({
-        where: { businessId },
+        where: { businessId: context.businessId },
       }),
-
-      // Active services
       prisma.service.count({
-        where: { businessId, active: true },
+        where: { businessId: context.businessId, active: true },
       }),
-
-      // Featured services
       prisma.service.count({
-        where: { businessId, featured: true },
+        where: { businessId: context.businessId, featured: true },
       }),
-
-      // Total bookings
       prisma.appointment.count({
-        where: { businessId },
+        where: { businessId: context.businessId },
       }),
-
-      // Total revenue (sum of all completed appointments)
       prisma.appointment.aggregate({
         where: {
-          businessId,
+          businessId: context.businessId,
           status: 'COMPLETED',
         },
         _sum: {
           totalAmount: true,
         },
       }),
-
-      // Most booked services
       prisma.appointment.groupBy({
         by: ['serviceId'],
-        where: { businessId },
+        where: { businessId: context.businessId },
         _count: {
           id: true,
         },
@@ -82,10 +64,13 @@ export async function GET(request: NextRequest) {
       }),
     ])
 
-    // Get service details for most booked
     const mostBookedIds = mostBooked.map(m => m.serviceId)
+
     const mostBookedServices = await prisma.service.findMany({
-      where: { id: { in: mostBookedIds } },
+      where: {
+        id: { in: mostBookedIds },
+        businessId: context.businessId,
+      },
       select: {
         id: true,
         name: true,
@@ -95,6 +80,7 @@ export async function GET(request: NextRequest) {
 
     const mostBookedWithDetails = mostBooked.map(mb => {
       const service = mostBookedServices.find(s => s.id === mb.serviceId)
+
       return {
         serviceId: mb.serviceId,
         name: service?.name || 'Unknown',
@@ -104,16 +90,25 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({
-      totalServices,
-      activeServices,
-      inactiveServices: totalServices - activeServices,
-      featuredServices,
-      totalBookings,
-      totalRevenue: Number(totalRevenue._sum.totalAmount || 0),
-      mostBooked: mostBookedWithDetails,
+      success: true,
+      data: {
+        totalServices,
+        activeServices,
+        inactiveServices: totalServices - activeServices,
+        featuredServices,
+        totalBookings,
+        totalRevenue: Number(totalRevenue._sum.totalAmount || 0),
+        mostBooked: mostBookedWithDetails,
+      },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Service stats error:', error)
-    return NextResponse.json({ error: 'Failed to fetch statistics' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch statistics' },
+      { status: 500 }
+    )
   }
 }

@@ -1,6 +1,19 @@
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { VariantType } from '@prisma/client'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { requireServiceAccess, requireServiceRole } from '@/lib/auth/service-access'
+
+const variantSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  description: z.string().max(500).optional().nullable(),
+  priceAdjustment: z.coerce.number().default(0),
+  durationAdjustment: z.coerce.number().int().default(0),
+  type: z.nativeEnum(VariantType).default('OPTION'),
+  isDefault: z.boolean().default(false),
+})
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -11,23 +24,24 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify service exists and user has access
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId },
-      include: { business: true },
-    })
+    await requireServiceAccess(user.id, serviceId)
 
-    if (!service) {
-      return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
-    }
-
-    if (service.business.ownerId !== user.id) {
-      return NextResponse.json({ success: false, error: 'Access denied' }, { status: 403 })
-    }
-
-    // Fetch variants
     const variants = await prisma.serviceVariant.findMany({
       where: { serviceId },
+      select: {
+        id: true,
+        serviceId: true,
+        name: true,
+        description: true,
+        priceAdjustment: true,
+        durationAdjustment: true,
+        type: true,
+        isDefault: true,
+        order: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
+      },
       orderBy: { order: 'asc' },
     })
 
@@ -36,6 +50,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       data: { variants },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Fetch variants error:', error)
     return NextResponse.json({ success: false, error: 'Failed to fetch variants' }, { status: 500 })
   }
@@ -50,69 +67,65 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify service exists and user has access
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId },
-      include: { business: true },
-    })
-
-    if (!service) {
-      return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
-    }
-
-    if (service.business.ownerId !== user.id) {
-      return NextResponse.json({ success: false, error: 'Access denied' }, { status: 403 })
-    }
+    await requireServiceRole(user.id, serviceId, ['ADMIN', 'MANAGER'])
 
     const body = await request.json()
-    const { name, description, priceAdjustment, durationAdjustment, type, isDefault } = body
+    const validation = variantSchema.safeParse(body)
 
-    // Validate required fields
-    if (!name) {
-      return NextResponse.json({ success: false, error: 'Name is required' }, { status: 400 })
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid request', details: validation.error.flatten() },
+        { status: 400 }
+      )
     }
 
-    // Get current max order
+    const { name, description, priceAdjustment, durationAdjustment, type, isDefault } =
+      validation.data
+
     const maxOrderVariant = await prisma.serviceVariant.findFirst({
       where: { serviceId },
       orderBy: { order: 'desc' },
       select: { order: true },
     })
 
-    const newOrder = (maxOrderVariant?.order || 0) + 1
+    const newOrder = (maxOrderVariant?.order ?? -1) + 1
 
-    // If this is set as default, unset other defaults of the same type
     if (isDefault) {
       await prisma.serviceVariant.updateMany({
         where: {
           serviceId,
-          type: type || 'OPTION',
+          type,
           isDefault: true,
         },
         data: { isDefault: false },
       })
     }
 
-    // Create variant
     const variant = await prisma.serviceVariant.create({
       data: {
         serviceId,
         name,
         description: description || null,
-        priceAdjustment: parseFloat(priceAdjustment || '0'),
-        durationAdjustment: parseInt(durationAdjustment || '0'),
-        type: type || 'OPTION',
-        isDefault: isDefault || false,
+        priceAdjustment,
+        durationAdjustment,
+        type,
+        isDefault,
         order: newOrder,
       },
     })
 
-    return NextResponse.json({
-      success: true,
-      data: { variant },
-      message: 'Variant created successfully',
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: { variant },
+        message: 'Variant created successfully',
+      },
+      { status: 201 }
+    )
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Create variant error:', error)
     return NextResponse.json({ success: false, error: 'Failed to create variant' }, { status: 500 })
   }

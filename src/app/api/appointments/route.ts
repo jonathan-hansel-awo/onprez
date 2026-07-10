@@ -1,25 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { createAppointmentSchema, appointmentQuerySchema } from '@/lib/validation/booking'
 import { createBooking } from '@/lib/services/booking'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import {
+  resolveReadableBusinessContext,
+  resolveWritableBusinessContext,
+} from '@/lib/auth/business-route-utils'
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const business = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-    })
-
-    if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
-    }
+    const context = await resolveReadableBusinessContext(user.id)
+    const businessId = context.businessId
 
     const { searchParams } = new URL(request.url)
+
     const queryParams = {
       status: searchParams.get('status') || undefined,
       startDate: searchParams.get('startDate') || undefined,
@@ -33,6 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     const validation = appointmentQuerySchema.safeParse(queryParams)
+
     if (!validation.success) {
       return NextResponse.json(
         { success: false, error: 'Invalid query parameters', details: validation.error.issues },
@@ -43,23 +47,57 @@ export async function GET(request: NextRequest) {
     const { status, startDate, endDate, customerId, serviceId, page, limit, sortBy, sortOrder } =
       validation.data
 
-    const skip = (page - 1) * limit
-
-    const where = {
-      businessId: business.id,
+    const where: Prisma.AppointmentWhereInput = {
+      businessId,
       ...(status && { status }),
       ...(customerId && { customerId }),
       ...(serviceId && { serviceId }),
-      ...(startDate && { startTime: { gte: new Date(startDate) } }),
-      ...(endDate && { startTime: { lte: new Date(endDate + 'T23:59:59') } }),
     }
+
+    if (startDate || endDate) {
+      where.startTime = {
+        ...(startDate && { gte: new Date(startDate) }),
+        ...(endDate && { lte: new Date(`${endDate}T23:59:59`) }),
+      }
+    }
+
+    const skip = (page - 1) * limit
 
     const [appointments, total] = await Promise.all([
       prisma.appointment.findMany({
         where,
-        include: {
-          service: { select: { id: true, name: true, price: true, duration: true } },
-          customer: { select: { id: true, name: true, email: true, phone: true } },
+        select: {
+          id: true,
+          startTime: true,
+          endTime: true,
+          duration: true,
+          status: true,
+          previousStatus: true,
+          customerName: true,
+          customerEmail: true,
+          customerPhone: true,
+          customerNotes: true,
+          businessNotes: true,
+          totalAmount: true,
+          paymentStatus: true,
+          createdAt: true,
+          updatedAt: true,
+          service: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              duration: true,
+            },
+          },
+          customer: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
         },
         orderBy: { [sortBy]: sortOrder },
         skip,
@@ -71,7 +109,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        appointments,
+        appointments: appointments.map(appointment => ({
+          ...appointment,
+          totalAmount: Number(appointment.totalAmount),
+          service: {
+            ...appointment.service,
+            price: Number(appointment.service.price),
+          },
+        })),
         pagination: {
           page,
           limit,
@@ -81,6 +126,9 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Get appointments error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch appointments' },
@@ -92,20 +140,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const business = await prisma.business.findFirst({
-      where: { ownerId: user.id },
-    })
-
-    if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
-    }
+    const context = await resolveWritableBusinessContext(user.id, undefined, [
+      'ADMIN',
+      'MANAGER',
+      'STAFF',
+    ])
 
     const body = await request.json()
-    const validation = createAppointmentSchema.safeParse({ ...body, businessId: business.id })
+    const validation = createAppointmentSchema.safeParse({
+      ...body,
+      businessId: context.businessId,
+    })
 
     if (!validation.success) {
       return NextResponse.json(
@@ -124,8 +174,23 @@ export async function POST(request: NextRequest) {
       customerNotes,
     } = validation.data
 
+    const service = await prisma.service.findFirst({
+      where: {
+        id: serviceId,
+        businessId: context.businessId,
+        active: true,
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (!service) {
+      return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
+    }
+
     const result = await createBooking(
-      business.id,
+      context.businessId,
       serviceId,
       date,
       startTime,
@@ -146,7 +211,7 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       return NextResponse.json(
         { success: false, error: result.error, conflicts: result.conflicts },
-        { status: 409 }
+        { status: result.conflicts ? 409 : 400 }
       )
     }
 
@@ -159,6 +224,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Create appointment error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to create appointment' },

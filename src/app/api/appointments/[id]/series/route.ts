@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth/jwt'
-import { cookies } from 'next/headers'
 import { getAppointmentSeries, cancelAppointmentSeries } from '@/lib/services/multi-day-booking'
-import { prisma } from '@/lib/prisma'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { requireAppointmentAccess, requireAppointmentRole } from '@/lib/auth/appointment-access'
 
-// GET - Get all appointments in a series
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
+
+    await requireAppointmentAccess(user.id, id)
 
     const series = await getAppointmentSeries(id)
 
@@ -20,6 +27,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: series,
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Get appointment series error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to get appointment series' },
@@ -28,46 +38,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-// DELETE - Cancel entire series
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('accessToken')?.value
+    const user = await getCurrentUser()
 
-    if (!token) {
+    if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 })
     }
 
     const { id } = await params
     const body = await request.json().catch(() => ({}))
 
-    // Verify ownership
-    const appointment = await prisma.appointment.findUnique({
-      where: { id },
-      include: {
-        business: {
-          select: { ownerId: true },
-        },
-      },
-    })
+    await requireAppointmentRole(user.id, id, ['ADMIN', 'MANAGER', 'STAFF'])
 
-    if (!appointment) {
-      return NextResponse.json({ success: false, error: 'Appointment not found' }, { status: 404 })
-    }
-
-    if (appointment.business.ownerId !== payload.userId) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 })
-    }
-
-    const result = await cancelAppointmentSeries(id, body.reason, payload.userId)
+    const result = await cancelAppointmentSeries(id, body.reason, user.id)
 
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 400 })
@@ -81,6 +68,9 @@ export async function DELETE(
       },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Cancel appointment series error:', error)
     return NextResponse.json({ success: false, error: 'Failed to cancel series' }, { status: 500 })
   }

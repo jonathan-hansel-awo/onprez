@@ -274,3 +274,10 @@ publicRateLimit(request, key)
    | `/api/dashboard/settings/reminders` | Business-scoped | GET requires business access; PUT requires writable business role | Reviewed | Reminder settings updated only for authorized business. |
    | `/api/dashboard/bookings/quick-create` | Business-scoped | Validate session; require owner/admin/manager/staff; create booking only for authorized business | Reviewed | Manual booking creation scoped to authorized business. |
    | `/api/dashboard/bookings/[id]/notes` | Business-scoped | GET requires appointment access; PUT requires writable appointment role | Reviewed | Fixes incorrect membership check against appointment ID. |
+
+   | `/api/appointments` | Business-scoped read/write | GET requires readable business context; POST requires owner/admin/manager/staff | Reviewed | Replaced owner-only lookup; service creation scoped to authorized business. |
+   | `/api/appointments/[id]` | Appointment-scoped read/write | GET requires appointment business access; PUT/DELETE require owner/admin/manager/staff | Reviewed | Replaced owner-only lookup with appointment-scoped authorization. |
+   | `/api/appointments/[id]/reschedule` | Appointment-scoped mutation | Requires owner/admin/manager/staff access to appointment's business | Reviewed | Uses appointment businessId from authorization helper. |
+   | `/api/appointments/check-availability` | Public availability check with protected exclusions | Public for normal checks; excludeAppointmentId requires business access | Reviewed | Service must be active and belong to business. |
+   | `/api/appointments/multi-day` | Business-scoped read/write | Requires authenticated business access; create requires owner/admin/manager/staff | Reviewed | Removed raw verifyToken usage. |
+   | `/api/appointments/[id]/series` | Appointment-scoped read/write | GET requires appointment access; DELETE requires owner/admin/manager/staff | Reviewed | Fixed public series data exposure. |

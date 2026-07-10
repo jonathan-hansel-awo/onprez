@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { requireServiceAccess, requireServiceRole } from '@/lib/auth/service-access'
+
+function parseNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -11,24 +18,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get service and verify ownership
+    const { service: serviceAccess } = await requireServiceAccess(user.id, id)
+
     const service = await prisma.service.findFirst({
       where: {
         id,
-        business: {
-          ownerId: user.id,
-        },
+        businessId: serviceAccess.businessId,
       },
       include: {
         category: true,
+        variants: {
+          orderBy: { order: 'asc' },
+        },
       },
     })
 
     if (!service) {
-      return NextResponse.json(
-        { success: false, error: 'Service not found or access denied' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
     }
 
     return NextResponse.json({
@@ -36,6 +42,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: { service },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Get service error:', error)
     return NextResponse.json({ success: false, error: 'Failed to fetch service' }, { status: 500 })
   }
@@ -50,64 +59,61 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { service: serviceAccess } = await requireServiceRole(user.id, id, ['ADMIN', 'MANAGER'])
     const body = await request.json()
-    const {
-      name,
-      description,
-      tagline,
-      price,
-      priceType,
-      duration,
-      bufferTime,
-      categoryId,
-      imageUrl,
-      requiresApproval,
-      requiresDeposit,
-      depositAmount,
-      maxAdvanceBookingDays,
-      featured,
-      active,
-    } = body
 
-    // Verify ownership
-    const existingService = await prisma.service.findFirst({
-      where: {
-        id,
-        business: {
-          ownerId: user.id,
+    if (body.categoryId) {
+      const category = await prisma.serviceCategory.findFirst({
+        where: {
+          id: body.categoryId,
+          businessId: serviceAccess.businessId,
         },
-      },
-    })
+        select: { id: true },
+      })
 
-    if (!existingService) {
-      return NextResponse.json(
-        { success: false, error: 'Service not found or access denied' },
-        { status: 404 }
-      )
+      if (!category) {
+        return NextResponse.json(
+          { success: false, error: 'Service category not found' },
+          { status: 404 }
+        )
+      }
     }
 
-    // Update service
     const service = await prisma.service.update({
       where: { id },
       data: {
-        name,
-        description: description || null,
-        tagline: tagline || null,
-        price: parseFloat(price),
-        priceType: priceType || 'FIXED',
-        duration: parseInt(duration),
-        bufferTime: bufferTime ? parseInt(bufferTime) : 0,
-        categoryId: categoryId || null,
-        imageUrl: imageUrl || null,
-        requiresApproval: requiresApproval || false,
-        requiresDeposit: requiresDeposit || false,
-        depositAmount: depositAmount ? parseFloat(depositAmount) : null,
-        maxAdvanceBookingDays: maxAdvanceBookingDays ? parseInt(maxAdvanceBookingDays) : null,
-        featured: featured || false,
-        active: active !== undefined ? active : true,
-        useBusinessHours: body.useBusinessHours ?? true,
-        availableDays: body.availableDays || [0, 1, 2, 3, 4, 5, 6],
-        customAvailability: body.customAvailability || null,
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.description !== undefined && { description: body.description || null }),
+        ...(body.tagline !== undefined && { tagline: body.tagline || null }),
+        ...(body.price !== undefined && { price: parseNumber(body.price) }),
+        ...(body.priceType !== undefined && { priceType: body.priceType || 'FIXED' }),
+        ...(body.duration !== undefined && { duration: parseNumber(body.duration) }),
+        ...(body.bufferTime !== undefined && { bufferTime: parseNumber(body.bufferTime) }),
+        ...(body.categoryId !== undefined && { categoryId: body.categoryId || null }),
+        ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl || null }),
+        ...(body.requiresApproval !== undefined && {
+          requiresApproval: Boolean(body.requiresApproval),
+        }),
+        ...(body.requiresDeposit !== undefined && {
+          requiresDeposit: Boolean(body.requiresDeposit),
+        }),
+        ...(body.depositAmount !== undefined && {
+          depositAmount: body.depositAmount ? parseNumber(body.depositAmount) : null,
+        }),
+        ...(body.maxAdvanceBookingDays !== undefined && {
+          maxAdvanceBookingDays: body.maxAdvanceBookingDays
+            ? parseNumber(body.maxAdvanceBookingDays)
+            : null,
+        }),
+        ...(body.featured !== undefined && { featured: Boolean(body.featured) }),
+        ...(body.active !== undefined && { active: Boolean(body.active) }),
+        ...(body.useBusinessHours !== undefined && {
+          useBusinessHours: Boolean(body.useBusinessHours),
+        }),
+        ...(body.availableDays !== undefined && { availableDays: body.availableDays }),
+        ...(body.customAvailability !== undefined && {
+          customAvailability: body.customAvailability || null,
+        }),
       },
       include: {
         category: true,
@@ -120,6 +126,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       message: 'Service updated successfully',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Update service error:', error)
     return NextResponse.json({ success: false, error: 'Failed to update service' }, { status: 500 })
   }
@@ -137,33 +146,27 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify ownership
-    const service = await prisma.service.findFirst({
+    const { service } = await requireServiceRole(user.id, id, ['ADMIN', 'MANAGER'])
+
+    const result = await prisma.service.deleteMany({
       where: {
         id,
-        business: {
-          ownerId: user.id,
-        },
+        businessId: service.businessId,
       },
     })
 
-    if (!service) {
-      return NextResponse.json(
-        { success: false, error: 'Service not found or access denied' },
-        { status: 404 }
-      )
+    if (result.count !== 1) {
+      return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
     }
-
-    // Delete service
-    await prisma.service.delete({
-      where: { id },
-    })
 
     return NextResponse.json({
       success: true,
       message: 'Service deleted successfully',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Delete service error:', error)
     return NextResponse.json({ success: false, error: 'Failed to delete service' }, { status: 500 })
   }
