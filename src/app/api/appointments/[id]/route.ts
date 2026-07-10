@@ -105,11 +105,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const updateData = { ...validation.data } as Prisma.AppointmentUpdateInput
+    const v = validation.data as any
 
-    if (validation.data.serviceId) {
+    if (v.serviceId) {
       const service = await prisma.service.findFirst({
         where: {
-          id: validation.data.serviceId,
+          id: v.serviceId,
           businessId: appointmentAccess.businessId,
         },
         select: { id: true },
@@ -120,10 +121,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
-    if (validation.data.customerId) {
+    if (v.customerId) {
       const customer = await prisma.customer.findFirst({
         where: {
-          id: validation.data.customerId,
+          id: v.customerId,
           businessId: appointmentAccess.businessId,
         },
         select: { id: true },
@@ -134,29 +135,29 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     }
 
-    if (validation.data.status) {
+    if (v.status) {
       const statusUpdateData: Prisma.AppointmentUpdateInput = {
-        status: validation.data.status,
+        status: v.status,
         previousStatus: existingAppointment.status,
       }
 
-      if (validation.data.status === 'CONFIRMED' && existingAppointment.status === 'PENDING') {
+      if (v.status === 'CONFIRMED' && existingAppointment.status === 'PENDING') {
         statusUpdateData.confirmedAt = new Date()
         statusUpdateData.confirmedBy = user.id
       }
 
-      if (validation.data.status === 'COMPLETED') {
+      if (v.status === 'COMPLETED') {
         statusUpdateData.completedAt = new Date()
       }
 
-      if (validation.data.status === 'CANCELLED') {
+      if (v.status === 'CANCELLED') {
         statusUpdateData.cancelledAt = new Date()
         statusUpdateData.cancelledBy = user.id
         statusUpdateData.cancellationSource = 'BUSINESS'
-        statusUpdateData.cancellationReason = validation.data.cancellationReason || null
+        statusUpdateData.cancellationReason = v.cancellationReason || null
       }
 
-      if (validation.data.status === 'NO_SHOW') {
+      if (v.status === 'NO_SHOW') {
         await prisma.customer.updateMany({
           where: {
             id: existingAppointment.customerId,

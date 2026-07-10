@@ -105,7 +105,9 @@ export function BookingSuccessClient({ business, confirmationNumber }: BookingSu
       }
 
       try {
-        const response = await fetch(`/api/bookings?confirmationNumber=${confirmationNumber}`)
+        const response = await fetch(
+          `/api/bookings?confirmationNumber=${confirmationNumber}&customerEmail=${booking?.customer.email}`
+        )
         const result = await response.json()
 
         if (!response.ok) {

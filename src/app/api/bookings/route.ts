@@ -1,30 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createBooking } from '@/lib/services/booking'
 import { z } from 'zod'
 
-// Validation schema for booking creation
 const createBookingSchema = z.object({
-  businessId: z.string().min(1, 'Business ID is required'),
-  serviceId: z.string().min(1, 'Service ID is required'),
+  businessId: z.string().min(1, 'Business ID is required').max(128),
+  serviceId: z.string().min(1, 'Service ID is required').max(128),
 
-  // Date/time
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Start time must be HH:MM format'),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/, 'End time must be HH:MM format'),
 
-  // Customer info
-  customerName: z.string().min(2, 'Name must be at least 2 characters').max(100),
-  customerEmail: z.string().email('Invalid email address'),
-  customerPhone: z.string().max(20).optional().default(''),
-  customerNotes: z.string().max(500).optional().default(''),
+  // Accepted for current frontend compatibility, but verified against service duration.
+  endTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, 'End time must be HH:MM format')
+    .optional(),
+
+  customerName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
+  customerEmail: z.string().trim().email('Invalid email address').max(254),
+  customerPhone: z.string().trim().max(20).optional().default(''),
+  customerNotes: z.string().trim().max(500).optional().default(''),
 })
+
+const confirmationLookupSchema = z.object({
+  confirmationNumber: z
+    .string()
+    .trim()
+    .min(8, 'Confirmation number is too short')
+    .max(32, 'Confirmation number is too long')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Invalid confirmation number'),
+  customerEmail: z.string().trim().email('Customer email is required').max(254),
+})
+
+function getClientIp(request: NextRequest) {
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  const realIp = request.headers.get('x-real-ip')
+
+  return forwardedFor?.split(',')[0]?.trim() || realIp || 'unknown'
+}
+
+function parseDateTime(date: string, time: string) {
+  return new Date(`${date}T${time}:00`)
+}
+
+function serializeAppointment(appointment: {
+  id: string
+  status: string
+  startTime: Date
+  endTime: Date
+  duration: number
+  customerNotes: string | null
+  createdAt: Date
+  service: {
+    name: string
+    price: unknown
+    duration: number
+  }
+  customer: {
+    name: string
+    email: string
+  }
+  business: {
+    name: string
+    timezone: string
+    address: unknown
+    slug?: string
+  }
+}) {
+  return {
+    id: appointment.id,
+    confirmationNumber: appointment.id.slice(0, 8).toUpperCase(),
+    status: appointment.status,
+    startTime: appointment.startTime,
+    endTime: appointment.endTime,
+    duration: appointment.duration,
+    service: {
+      name: appointment.service.name,
+      price: Number(appointment.service.price),
+      duration: appointment.service.duration,
+    },
+    customer: {
+      name: appointment.customer.name,
+      email: appointment.customer.email,
+    },
+    business: {
+      name: appointment.business.name,
+      timezone: appointment.business.timezone,
+      address: appointment.business.address,
+      ...(appointment.business.slug && { slug: appointment.business.slug }),
+    },
+    notes: appointment.customerNotes,
+    createdAt: appointment.createdAt,
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Validate request body
     const validationResult = createBookingSchema.safeParse(body)
+
     if (!validationResult.success) {
       return NextResponse.json(
         {
@@ -37,18 +112,23 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validationResult.data
+    const customerEmail = data.customerEmail.toLowerCase()
 
-    // Verify business exists
     const business = await prisma.business.findUnique({
       where: { id: data.businessId },
-      select: { id: true, name: true, timezone: true, email: true, address: true },
+      select: {
+        id: true,
+        name: true,
+        timezone: true,
+        email: true,
+        address: true,
+      },
     })
 
     if (!business) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Verify service exists and belongs to business
     const service = await prisma.service.findFirst({
       where: {
         id: data.serviceId,
@@ -58,10 +138,8 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         name: true,
-        price: true,
         duration: true,
-        requiresDeposit: true,
-        depositAmount: true,
+        requiresApproval: true,
       },
     })
 
@@ -72,21 +150,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Build start and end DateTime
-    const startDateTime = new Date(`${data.date}T${data.startTime}:00`)
-    const endDateTime = new Date(`${data.date}T${data.endTime}:00`)
+    const startDateTime = parseDateTime(data.date, data.startTime)
 
-    // Validate dates
-    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+    if (Number.isNaN(startDateTime.getTime())) {
       return NextResponse.json(
         { success: false, error: 'Invalid date or time format' },
-        { status: 400 }
-      )
-    }
-
-    if (startDateTime >= endDateTime) {
-      return NextResponse.json(
-        { success: false, error: 'End time must be after start time' },
         { status: 400 }
       )
     }
@@ -98,151 +166,103 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check for conflicting appointments
-    const conflictingAppointment = await prisma.appointment.findFirst({
-      where: {
-        businessId: data.businessId,
-        status: { in: ['PENDING', 'CONFIRMED'] },
-        OR: [
-          {
-            // New appointment starts during existing appointment
-            startTime: { lte: startDateTime },
-            endTime: { gt: startDateTime },
-          },
-          {
-            // New appointment ends during existing appointment
-            startTime: { lt: endDateTime },
-            endTime: { gte: endDateTime },
-          },
-          {
-            // New appointment completely contains existing appointment
-            startTime: { gte: startDateTime },
-            endTime: { lte: endDateTime },
-          },
-        ],
-      },
-    })
+    if (data.endTime) {
+      const suppliedEndDateTime = parseDateTime(data.date, data.endTime)
 
-    if (conflictingAppointment) {
-      return NextResponse.json(
-        { success: false, error: 'This time slot is no longer available' },
-        { status: 409 }
-      )
-    }
+      if (Number.isNaN(suppliedEndDateTime.getTime())) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid end time format' },
+          { status: 400 }
+        )
+      }
 
-    // Find or create customer
-    let customer = await prisma.customer.findFirst({
-      where: {
-        businessId: data.businessId,
-        email: data.customerEmail.toLowerCase(),
-      },
-    })
+      const expectedEndDateTime = new Date(startDateTime.getTime() + service.duration * 60 * 1000)
 
-    if (!customer) {
-      customer = await prisma.customer.create({
-        data: {
-          businessId: data.businessId,
-          email: data.customerEmail.toLowerCase(),
-          name: data.customerName,
-          phone: data.customerPhone || null,
-        },
-      })
-    } else {
-      // Update customer info if changed
-      if (customer.name !== data.customerName || customer.phone !== (data.customerPhone || null)) {
-        customer = await prisma.customer.update({
-          where: { id: customer.id },
-          data: {
-            name: data.customerName,
-            phone: data.customerPhone || null,
-          },
-        })
+      if (suppliedEndDateTime.getTime() !== expectedEndDateTime.getTime()) {
+        return NextResponse.json(
+          { success: false, error: 'End time does not match service duration' },
+          { status: 400 }
+        )
       }
     }
 
-    // Calculate duration in minutes
-    const durationMs = endDateTime.getTime() - startDateTime.getTime()
-    const durationMinutes = Math.round(durationMs / (1000 * 60))
-
-    // Get client IP for booking source tracking
-    const forwardedFor = request.headers.get('x-forwarded-for')
-    const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : 'unknown'
-
-    // Create the appointment
-    const appointment = await prisma.appointment.create({
-      data: {
-        businessId: data.businessId,
-        serviceId: data.serviceId,
-        customerId: customer.id,
-        startTime: startDateTime,
-        endTime: endDateTime,
-        duration: durationMinutes,
-        timezone: business.timezone,
-        status: 'CONFIRMED',
-        confirmedAt: new Date(),
-        customerName: data.customerName,
-        customerEmail: data.customerEmail.toLowerCase(),
-        customerPhone: data.customerPhone || null,
-        customerNotes: data.customerNotes || null,
-        totalAmount: service.price,
-        requiresDeposit: service.requiresDeposit,
-        depositAmount: service.depositAmount,
-        bookingSource: 'WEBSITE',
-        bookingIp: clientIp,
+    const result = await createBooking(
+      data.businessId,
+      data.serviceId,
+      data.date,
+      data.startTime,
+      {
+        name: data.customerName,
+        email: customerEmail,
+        phone: data.customerPhone || null,
+        notes: data.customerNotes || null,
       },
-      include: {
+      {
+        status: service.requiresApproval ? 'PENDING' : 'CONFIRMED',
+        bookingSource: 'WEBSITE',
+        bookingIp: getClientIp(request),
+      }
+    )
+
+    if (!result.success || !result.appointment?.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error || 'Failed to create booking',
+          conflicts: result.conflicts,
+        },
+        { status: result.conflicts ? 409 : 400 }
+      )
+    }
+
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        id: result.appointment.id,
+        businessId: data.businessId,
+      },
+      select: {
+        id: true,
+        status: true,
+        startTime: true,
+        endTime: true,
+        duration: true,
+        customerNotes: true,
+        createdAt: true,
         service: {
-          select: { name: true, price: true, duration: true },
+          select: {
+            name: true,
+            price: true,
+            duration: true,
+          },
         },
         customer: {
-          select: { name: true, email: true, phone: true },
+          select: {
+            name: true,
+            email: true,
+          },
         },
         business: {
-          select: { name: true, timezone: true, address: true },
+          select: {
+            name: true,
+            timezone: true,
+            address: true,
+            slug: true,
+          },
         },
       },
     })
 
-    // Update customer booking stats
-    await prisma.customer.update({
-      where: { id: customer.id },
-      data: {
-        totalBookings: { increment: 1 },
-        lastBookingAt: new Date(),
-        firstBookingAt: customer.firstBookingAt || new Date(),
-      },
-    })
-
-    // TODO: Send confirmation email (Milestone 8.9)
-    // await sendBookingConfirmationEmail({...})
+    if (!appointment) {
+      return NextResponse.json(
+        { success: false, error: 'Booking created but could not be retrieved' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(
       {
         success: true,
-        data: {
-          id: appointment.id,
-          confirmationNumber: appointment.id.slice(0, 8).toUpperCase(),
-          status: appointment.status,
-          startTime: appointment.startTime,
-          endTime: appointment.endTime,
-          duration: appointment.duration,
-          service: {
-            name: appointment.service.name,
-            price: Number(appointment.service.price),
-            duration: appointment.service.duration,
-          },
-          customer: {
-            name: appointment.customer.name,
-            email: appointment.customer.email,
-          },
-          business: {
-            name: appointment.business.name,
-            timezone: appointment.business.timezone,
-            address: appointment.business.address,
-          },
-          notes: appointment.customerNotes,
-          createdAt: appointment.createdAt,
-        },
+        data: serializeAppointment(appointment),
       },
       { status: 201 }
     )
@@ -252,72 +272,78 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET - Fetch booking by confirmation number (public) or list bookings (auth required)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const confirmationNumber = searchParams.get('confirmationNumber')
 
-    // Lookup by confirmation number (public - for booking confirmation page)
-    if (confirmationNumber) {
-      const appointment = await prisma.appointment.findFirst({
-        where: {
-          id: { startsWith: confirmationNumber.toLowerCase() },
-        },
-        include: {
-          service: {
-            select: { name: true, price: true, duration: true },
-          },
-          customer: {
-            select: { name: true, email: true, phone: true },
-          },
-          business: {
-            select: { name: true, timezone: true, address: true, slug: true },
-          },
-        },
-      })
+    const validation = confirmationLookupSchema.safeParse({
+      confirmationNumber: searchParams.get('confirmationNumber') || '',
+      customerEmail: searchParams.get('customerEmail') || searchParams.get('email') || '',
+    })
 
-      if (!appointment) {
-        return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404 })
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          id: appointment.id,
-          confirmationNumber: appointment.id.slice(0, 8).toUpperCase(),
-          status: appointment.status,
-          startTime: appointment.startTime,
-          endTime: appointment.endTime,
-          duration: appointment.duration,
-          service: {
-            name: appointment.service.name,
-            price: Number(appointment.service.price),
-            duration: appointment.service.duration,
-          },
-          customer: {
-            name: appointment.customer.name,
-            email: appointment.customer.email,
-          },
-          business: {
-            name: appointment.business.name,
-            timezone: appointment.business.timezone,
-            address: appointment.business.address,
-            slug: appointment.business.slug,
-          },
-          notes: appointment.customerNotes,
-          createdAt: appointment.createdAt,
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Confirmation number and customer email are required',
+          details: validation.error.flatten().fieldErrors,
         },
-      })
+        { status: 400 }
+      )
     }
 
-    // TODO: Add authentication check for listing bookings
-    return NextResponse.json(
-      { success: false, error: 'Confirmation number required or authentication needed' },
-      { status: 400 }
-    )
+    const confirmationNumber = validation.data.confirmationNumber.toLowerCase()
+    const customerEmail = validation.data.customerEmail.toLowerCase()
+
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        id: {
+          startsWith: confirmationNumber,
+        },
+        customerEmail,
+      },
+      select: {
+        id: true,
+        status: true,
+        startTime: true,
+        endTime: true,
+        duration: true,
+        customerNotes: true,
+        createdAt: true,
+        service: {
+          select: {
+            name: true,
+            price: true,
+            duration: true,
+          },
+        },
+        customer: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        business: {
+          select: {
+            name: true,
+            timezone: true,
+            address: true,
+            slug: true,
+          },
+        },
+      },
+    })
+
+    if (!appointment) {
+      return NextResponse.json({ success: false, error: 'Booking not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: serializeAppointment(appointment),
+    })
   } catch (error) {
-    console.error('Error fetching bookings:', error)
-    return NextResponse.json({ success: false, error: 'Failed to fetch bookings' }, { status: 500 })
+    console.error('Error fetching booking:', error)
+    return NextResponse.json({ success: false, error: 'Failed to fetch booking' }, { status: 500 })
   }
 }

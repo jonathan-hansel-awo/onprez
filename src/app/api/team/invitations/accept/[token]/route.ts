@@ -6,9 +6,24 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tok
   try {
     const { token } = await context.params
 
+    if (!token || token.length < 32) {
+      return NextResponse.json({ success: false, error: 'Invalid invitation' }, { status: 404 })
+    }
+
     const invitation = await prisma.teamInvitation.findUnique({
       where: { token },
-      include: { business: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        expiresAt: true,
+        business: {
+          select: {
+            name: true,
+          },
+        },
+      },
     })
 
     if (!invitation) {
@@ -27,6 +42,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tok
         where: { id: invitation.id },
         data: { status: 'EXPIRED' },
       })
+
       return NextResponse.json({ success: false, error: 'Invitation expired' }, { status: 400 })
     }
 
@@ -50,15 +66,33 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tok
 export async function POST(request: NextRequest, context: { params: Promise<{ token: string }> }) {
   try {
     const user = await getCurrentUser()
+
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
     const { token } = await context.params
 
+    if (!token || token.length < 32) {
+      return NextResponse.json({ success: false, error: 'Invalid invitation' }, { status: 404 })
+    }
+
     const invitation = await prisma.teamInvitation.findUnique({
       where: { token },
-      include: { business: true },
+      select: {
+        id: true,
+        businessId: true,
+        email: true,
+        role: true,
+        status: true,
+        expiresAt: true,
+        business: {
+          select: {
+            name: true,
+            ownerId: true,
+          },
+        },
+      },
     })
 
     if (!invitation) {
@@ -77,24 +111,33 @@ export async function POST(request: NextRequest, context: { params: Promise<{ to
         where: { id: invitation.id },
         data: { status: 'EXPIRED' },
       })
+
       return NextResponse.json({ success: false, error: 'Invitation expired' }, { status: 400 })
     }
 
-    // Check if email matches logged-in user
-    if (invitation.email !== user.email) {
+    if (invitation.email.toLowerCase() !== user.email.toLowerCase()) {
       return NextResponse.json(
         { success: false, error: 'Invitation email does not match your account' },
         { status: 400 }
       )
     }
 
-    // Check if user is already a member
+    if (invitation.business.ownerId === user.id) {
+      return NextResponse.json(
+        { success: false, error: 'You are already the owner of this business' },
+        { status: 400 }
+      )
+    }
+
     const existingMember = await prisma.businessMember.findUnique({
       where: {
         businessId_userId: {
           businessId: invitation.businessId,
           userId: user.id,
         },
+      },
+      select: {
+        id: true,
       },
     })
 
@@ -105,7 +148,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ to
       )
     }
 
-    // Add user to business team
     await prisma.$transaction([
       prisma.businessMember.create({
         data: {
@@ -114,6 +156,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ to
           role: invitation.role,
         },
       }),
+
       prisma.teamInvitation.update({
         where: { id: invitation.id },
         data: {
