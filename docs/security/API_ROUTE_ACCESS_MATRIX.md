@@ -289,3 +289,6 @@ publicRateLimit(request, key)
    | `/api/presence/apply-template` | Business-scoped mutation | Requires owner/admin/manager | Reviewed | Replaced owner-only check with shared business role authorization and scoped page upsert. |
    | `/api/presence/pages` | Business-scoped draft page read/write | GET requires business access; PUT requires owner/admin/manager | Reviewed | Fixed pageId/businessId mismatch risk by verifying the page belongs to the authorized business before update. |
    | `/api/presence/pages/publish` | Business-scoped publish mutation | Requires owner/admin | Reviewed | Fixed pageId/businessId mismatch risk and scoped publish/unpublish to the authorized business. |
+   | `/api/faq` | Business-scoped FAQ read/write | GET requires business access; create/update/delete require owner/admin/manager | Reviewed | Replaced owner-only checks and scoped FAQ updates/deletes to the authorized business. |
+   | `/api/faq/reorder` | Business-scoped FAQ mutation | Requires owner/admin/manager | Reviewed | Verifies every FAQ ID belongs to the authorized business before reordering. |
+   | `/api/faq/bulk` | Business-scoped FAQ mutation | Requires owner/admin/manager | Reviewed | Validates bulk input and replaces FAQs inside a business-scoped transaction. |

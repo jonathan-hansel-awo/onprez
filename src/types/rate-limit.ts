@@ -1,5 +1,3 @@
-import { RateLimit, RateLimitConfig } from '@prisma/client'
-
 /**
  * Rate limit configuration
  */

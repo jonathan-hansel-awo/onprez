@@ -1,6 +1,6 @@
 // types/auth.ts
 
-import { User, Session, SecurityLog } from '@prisma/client'
+import { User, Session } from '@prisma/client'
 
 /**
  * User without sensitive data

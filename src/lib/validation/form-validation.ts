@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod'
-import { signupSchema } from '@/lib/validation/auth'
 
 export interface ValidationRule {
   required?: { value: boolean; message: string }

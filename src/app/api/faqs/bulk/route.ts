@@ -1,9 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { z } from 'zod'
+import { businessAuthErrorResponse, requireBusinessRole } from '@/lib/auth/business-access'
 
-// POST - Bulk create/update FAQs (useful for presence editor)
+const bulkFaqItemSchema = z.object({
+  question: z.string().trim().min(1).max(500),
+  answer: z.string().trim().min(1).max(5000),
+  isActive: z.boolean().optional().default(true),
+})
+
+const bulkFaqSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required').max(128),
+  faqs: z.array(bulkFaqItemSchema).max(100),
+})
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -12,53 +23,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { businessId, faqs } = await request.json()
+    const body = await request.json()
+    const validation = bulkFaqSchema.safeParse(body)
 
-    if (!businessId || !Array.isArray(faqs)) {
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Business ID and FAQs array are required' },
+        { success: false, error: 'Validation failed', details: validation.error.flatten() },
         { status: 400 }
       )
     }
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        ownerId: user.id,
-      },
-    })
+    const { businessId, faqs } = validation.data
+    const context = await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
 
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
-    }
+    const result = await prisma.$transaction(async tx => {
+      await tx.fAQ.deleteMany({
+        where: { businessId: context.businessId },
+      })
 
-    // Delete all existing FAQs and create new ones
-    // This is a simple approach for syncing from presence editor
-    await prisma.fAQ.deleteMany({
-      where: { businessId },
-    })
+      if (faqs.length === 0) {
+        return { count: 0 }
+      }
 
-    // Create new FAQs
-    const createdFaqs = await prisma.fAQ.createMany({
-      data: faqs.map((faq: any, index: number) => ({
-        businessId,
-        question: faq.question,
-        answer: faq.answer,
-        order: index,
-        isActive: true,
-      })),
+      return tx.fAQ.createMany({
+        data: faqs.map((faq, index) => ({
+          businessId: context.businessId,
+          question: faq.question,
+          answer: faq.answer,
+          order: index,
+          isActive: faq.isActive,
+        })),
+      })
     })
 
     return NextResponse.json({
       success: true,
-      data: { count: createdFaqs.count },
+      data: { count: result.count },
       message: 'FAQs synced successfully',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Bulk FAQ operation error:', error)
     return NextResponse.json({ success: false, error: 'Failed to sync FAQs' }, { status: 500 })
   }

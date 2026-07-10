@@ -1,8 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { z } from 'zod'
+import {
+  businessAuthErrorResponse,
+  requireBusinessAccess,
+  requireBusinessRole,
+} from '@/lib/auth/business-access'
 
-// GET - Fetch FAQs for a business
+const createFaqSchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required').max(128),
+  question: z.string().trim().min(1, 'Question is required').max(500),
+  answer: z.string().trim().min(1, 'Answer is required').max(5000),
+  order: z.number().int().min(0).max(1000).optional(),
+})
+
+const updateFaqSchema = z.object({
+  faqId: z.string().min(1, 'FAQ ID is required').max(128),
+  businessId: z.string().min(1, 'Business ID is required').max(128),
+  question: z.string().trim().min(1).max(500).optional(),
+  answer: z.string().trim().min(1).max(5000).optional(),
+  isActive: z.boolean().optional(),
+})
+
+const faqSelect = {
+  id: true,
+  businessId: true,
+  question: true,
+  answer: true,
+  order: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -11,8 +42,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const searchParams = request.nextUrl.searchParams
-    const businessId = searchParams.get('businessId')
+    const businessId = request.nextUrl.searchParams.get('businessId')
 
     if (!businessId) {
       return NextResponse.json(
@@ -21,29 +51,16 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        ownerId: user.id,
-      },
-    })
+    const context = await requireBusinessAccess(user.id, businessId)
 
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
-    }
-
-    // Fetch FAQs
     const faqs = await prisma.fAQ.findMany({
       where: {
-        businessId: businessId,
+        businessId: context.businessId,
       },
       orderBy: {
         order: 'asc',
       },
+      select: faqSelect,
     })
 
     return NextResponse.json({
@@ -51,12 +68,14 @@ export async function GET(request: NextRequest) {
       data: { faqs },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Fetch FAQs error:', error)
     return NextResponse.json({ success: false, error: 'Failed to fetch FAQs' }, { status: 500 })
   }
 }
 
-// POST - Create a new FAQ
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -65,63 +84,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { businessId, question, answer, order } = await request.json()
+    const body = await request.json()
+    const validation = createFaqSchema.safeParse(body)
 
-    if (!businessId || !question || !answer) {
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Business ID, question, and answer are required' },
+        { success: false, error: 'Validation failed', details: validation.error.flatten() },
         { status: 400 }
       )
     }
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        ownerId: user.id,
-      },
-    })
+    const { businessId, question, answer, order } = validation.data
+    const context = await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
 
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
-    }
-
-    // Get the next order number if not provided
     let faqOrder = order
+
     if (faqOrder === undefined) {
       const lastFaq = await prisma.fAQ.findFirst({
-        where: { businessId },
+        where: { businessId: context.businessId },
         orderBy: { order: 'desc' },
+        select: { order: true },
       })
+
       faqOrder = lastFaq ? lastFaq.order + 1 : 0
     }
 
-    // Create FAQ
     const faq = await prisma.fAQ.create({
       data: {
-        businessId,
+        businessId: context.businessId,
         question,
         answer,
         order: faqOrder,
         isActive: true,
       },
+      select: faqSelect,
     })
 
-    return NextResponse.json({
-      success: true,
-      data: { faq },
-      message: 'FAQ created successfully',
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: { faq },
+        message: 'FAQ created successfully',
+      },
+      { status: 201 }
+    )
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Create FAQ error:', error)
     return NextResponse.json({ success: false, error: 'Failed to create FAQ' }, { status: 500 })
   }
 }
 
-// PUT - Update FAQ
 export async function PUT(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -130,38 +145,39 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { faqId, businessId, question, answer, isActive } = await request.json()
+    const body = await request.json()
+    const validation = updateFaqSchema.safeParse(body)
 
-    if (!faqId || !businessId) {
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'FAQ ID and Business ID are required' },
+        { success: false, error: 'Validation failed', details: validation.error.flatten() },
         { status: 400 }
       )
     }
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
+    const { faqId, businessId, question, answer, isActive } = validation.data
+    const context = await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+
+    const existingFaq = await prisma.fAQ.findFirst({
       where: {
-        id: businessId,
-        ownerId: user.id,
+        id: faqId,
+        businessId: context.businessId,
       },
+      select: { id: true },
     })
 
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
+    if (!existingFaq) {
+      return NextResponse.json({ success: false, error: 'FAQ not found' }, { status: 404 })
     }
 
-    // Update FAQ
     const faq = await prisma.fAQ.update({
-      where: { id: faqId },
+      where: { id: existingFaq.id },
       data: {
         ...(question !== undefined && { question }),
         ...(answer !== undefined && { answer }),
         ...(isActive !== undefined && { isActive }),
       },
+      select: faqSelect,
     })
 
     return NextResponse.json({
@@ -170,12 +186,14 @@ export async function PUT(request: NextRequest) {
       message: 'FAQ updated successfully',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Update FAQ error:', error)
     return NextResponse.json({ success: false, error: 'Failed to update FAQ' }, { status: 500 })
   }
 }
 
-// DELETE - Delete FAQ
 export async function DELETE(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -184,9 +202,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const searchParams = request.nextUrl.searchParams
-    const faqId = searchParams.get('faqId')
-    const businessId = searchParams.get('businessId')
+    const faqId = request.nextUrl.searchParams.get('faqId')
+    const businessId = request.nextUrl.searchParams.get('businessId')
 
     if (!faqId || !businessId) {
       return NextResponse.json(
@@ -195,31 +212,27 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
+    const context = await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+
+    const result = await prisma.fAQ.deleteMany({
       where: {
-        id: businessId,
-        ownerId: user.id,
+        id: faqId,
+        businessId: context.businessId,
       },
     })
 
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
+    if (result.count !== 1) {
+      return NextResponse.json({ success: false, error: 'FAQ not found' }, { status: 404 })
     }
-
-    // Delete FAQ
-    await prisma.fAQ.delete({
-      where: { id: faqId },
-    })
 
     return NextResponse.json({
       success: true,
       message: 'FAQ deleted successfully',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Delete FAQ error:', error)
     return NextResponse.json({ success: false, error: 'Failed to delete FAQ' }, { status: 500 })
   }

@@ -1,38 +1,6 @@
 // Simple HTML sanitizer for user content
 // This allows basic formatting tags but removes potentially harmful scripts
 
-const ALLOWED_TAGS = [
-  'p',
-  'br',
-  'strong',
-  'b',
-  'em',
-  'i',
-  'u',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'ul',
-  'ol',
-  'li',
-  'a',
-  'blockquote',
-  'code',
-  'pre',
-  'span',
-  'div',
-]
-
-const ALLOWED_ATTRIBUTES = {
-  a: ['href', 'title', 'target'],
-  img: ['src', 'alt', 'title'],
-  span: ['class'],
-  div: ['class'],
-}
-
 export function sanitizeHtml(html: string): string {
   // This is a basic sanitizer. For production, consider using a library like DOMPurify
   // For now, we'll do basic script tag removal

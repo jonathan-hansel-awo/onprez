@@ -1,4 +1,4 @@
-import { Customer, Review } from '@prisma/client'
+import { Customer } from '@prisma/client'
 
 /**
  * Customer with relations

@@ -1,9 +1,5 @@
 import { z } from 'zod'
-import {
-  validateBookingWindow,
-  getEffectiveBookingLimits,
-  type BookingWindowConfig,
-} from '@/lib/utils/availability'
+import { validateBookingWindow, type BookingWindowConfig } from '@/lib/utils/availability'
 import { prisma } from '../prisma'
 
 /**

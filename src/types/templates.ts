@@ -1,4 +1,4 @@
-import { PageContent, PageSection } from './page-sections'
+import { PageContent } from './page-sections'
 
 export interface PresenceTemplate {
   id: string
