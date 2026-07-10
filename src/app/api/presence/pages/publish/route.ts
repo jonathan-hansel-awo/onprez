@@ -1,7 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { Prisma } from '@prisma/client'
+import { z } from 'zod'
+import { businessAuthErrorResponse, requireBusinessRole } from '@/lib/auth/business-access'
+
+const publishPageSchema = z.object({
+  pageId: z.string().min(1, 'Page ID is required').max(128),
+  businessId: z.string().min(1, 'Business ID is required').max(128),
+  isPublished: z.boolean(),
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,63 +19,76 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { pageId, businessId, isPublished } = await request.json()
+    const body = await request.json()
+    const validation = publishPageSchema.safeParse(body)
 
-    if (!pageId || !businessId || typeof isPublished !== 'boolean') {
-      return NextResponse.json({ success: false, error: 'Invalid request data' }, { status: 400 })
-    }
-
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        ownerId: user.id,
-      },
-    })
-
-    if (!business) {
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten(),
+        },
+        { status: 400 }
       )
     }
 
-    // Get current page
-    const currentPage = await prisma.page.findUnique({
-      where: { id: pageId },
+    const { pageId, businessId, isPublished } = validation.data
+
+    const context = await requireBusinessRole(user.id, businessId, ['ADMIN'])
+
+    const currentPage = await prisma.page.findFirst({
+      where: {
+        id: pageId,
+        businessId: context.businessId,
+      },
+      select: {
+        id: true,
+        businessId: true,
+        content: true,
+      },
     })
 
     if (!currentPage) {
       return NextResponse.json({ success: false, error: 'Page not found' }, { status: 404 })
     }
 
-    // Update page publish status
-    const updateData: any = { isPublished }
+    const updateData: Prisma.PageUncheckedUpdateInput = {
+      isPublished,
+    }
 
     if (isPublished) {
-      // Publishing: Save current content as published version
-      updateData.publishedContent = currentPage.content
+      updateData.publishedContent = currentPage.content as Prisma.InputJsonValue
       updateData.publishedAt = new Date()
       updateData.lastPublishedBy = user.id
       updateData.version = { increment: 1 }
     } else {
-      // Unpublishing: Keep draft content, clear published version
       updateData.publishedAt = null
       updateData.lastPublishedBy = null
     }
 
     const page = await prisma.page.update({
-      where: { id: pageId },
+      where: { id: currentPage.id },
       data: updateData,
+      select: {
+        id: true,
+        businessId: true,
+        slug: true,
+        title: true,
+        isPublished: true,
+        publishedAt: true,
+        version: true,
+        updatedAt: true,
+      },
     })
 
-    // Update business publish status
     await prisma.business.update({
-      where: { id: businessId },
+      where: { id: context.businessId },
       data: {
         isPublished,
         publishedAt: isPublished ? new Date() : null,
       },
+      select: { id: true },
     })
 
     return NextResponse.json({
@@ -78,6 +99,9 @@ export async function POST(request: NextRequest) {
         : 'Page unpublished',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Publish page error:', error)
     return NextResponse.json({ success: false, error: 'Failed to publish page' }, { status: 500 })
   }

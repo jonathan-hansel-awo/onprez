@@ -3,8 +3,19 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { Prisma } from '@prisma/client'
 import { syncFAQsFromPage } from '@/lib/utils/sync-faqs'
+import { z } from 'zod'
+import {
+  businessAuthErrorResponse,
+  requireBusinessAccess,
+  requireBusinessRole,
+} from '@/lib/auth/business-access'
 
-// GET - Fetch pages for a business
+const updatePageSchema = z.object({
+  pageId: z.string().min(1, 'Page ID is required').max(128),
+  businessId: z.string().min(1, 'Business ID is required').max(128),
+  content: z.array(z.any()),
+})
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -15,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const businessId = searchParams.get('businessId')
-    const slug = searchParams.get('slug')
+    const slug = searchParams.get('slug')?.trim()
 
     if (!businessId) {
       return NextResponse.json(
@@ -24,23 +35,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        ownerId: user.id,
-      },
-    })
+    const context = await requireBusinessAccess(user.id, businessId)
 
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
+    const where: Prisma.PageWhereInput = {
+      businessId: context.businessId,
     }
 
-    // Fetch pages
-    const where: Prisma.PageWhereInput = { businessId }
     if (slug) {
       where.slug = slug
     }
@@ -48,6 +48,20 @@ export async function GET(request: NextRequest) {
     const pages = await prisma.page.findMany({
       where,
       orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        businessId: true,
+        slug: true,
+        title: true,
+        content: true,
+        publishedContent: true,
+        isPublished: true,
+        publishedAt: true,
+        version: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     })
 
     return NextResponse.json({
@@ -55,12 +69,14 @@ export async function GET(request: NextRequest) {
       data: { pages },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Fetch pages error:', error)
     return NextResponse.json({ success: false, error: 'Failed to fetch pages' }, { status: 500 })
   }
 }
 
-// PUT - Update page content
 export async function PUT(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -69,41 +85,57 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { pageId, businessId, content } = await request.json()
+    const body = await request.json()
+    const validation = updatePageSchema.safeParse(body)
 
-    if (!pageId || !businessId || !content) {
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Page ID, Business ID, and content are required' },
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten(),
+        },
         { status: 400 }
       )
     }
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
+    const { pageId, businessId, content } = validation.data
+
+    const context = await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+
+    const existingPage = await prisma.page.findFirst({
       where: {
-        id: businessId,
-        ownerId: user.id,
+        id: pageId,
+        businessId: context.businessId,
+      },
+      select: {
+        id: true,
+        businessId: true,
       },
     })
 
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
+    if (!existingPage) {
+      return NextResponse.json({ success: false, error: 'Page not found' }, { status: 404 })
     }
 
-    // Convert content to JSON
     const contentJson = JSON.parse(JSON.stringify(content)) as Prisma.JsonArray
 
-    // Update page
     const page = await prisma.page.update({
-      where: { id: pageId },
+      where: { id: existingPage.id },
       data: { content: contentJson },
+      select: {
+        id: true,
+        businessId: true,
+        slug: true,
+        title: true,
+        content: true,
+        isPublished: true,
+        version: true,
+        updatedAt: true,
+      },
     })
 
-    // Sync FAQs from page content to FAQ table
-    await syncFAQsFromPage(businessId, content)
+    await syncFAQsFromPage(context.businessId, content)
 
     return NextResponse.json({
       success: true,
@@ -111,6 +143,9 @@ export async function PUT(request: NextRequest) {
       message: 'Page updated successfully',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Update page error:', error)
     return NextResponse.json({ success: false, error: 'Failed to update page' }, { status: 500 })
   }

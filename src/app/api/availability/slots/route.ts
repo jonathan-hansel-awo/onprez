@@ -7,6 +7,16 @@ import {
   type ExistingAppointment,
 } from '@/lib/utils/availability'
 
+function parseBoundedInt(value: string | null, fallback: number, min: number, max: number) {
+  const parsed = Number.parseInt(value || String(fallback), 10)
+
+  if (!Number.isFinite(parsed)) {
+    return fallback
+  }
+
+  return Math.min(Math.max(parsed, min), max)
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -15,17 +25,20 @@ export async function GET(request: NextRequest) {
     const slug = searchParams.get('slug')
     const date = searchParams.get('date')
     const serviceId = searchParams.get('serviceId')
-    const aroundTime = searchParams.get('aroundTime') // HH:MM
-    const range = parseInt(searchParams.get('range') || '60') // minutes
+    const aroundTime = searchParams.get('aroundTime')
+    const range = parseBoundedInt(searchParams.get('range'), 60, 15, 240)
 
-    if ((!businessId && !slug) || !date) {
+    if ((!businessId && !slug) || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json(
-        { success: false, error: 'Business ID/slug and date are required' },
+        { success: false, error: 'Business ID/slug and valid date are required' },
         { status: 400 }
       )
     }
 
-    // Get business
+    if (aroundTime && !/^\d{2}:\d{2}$/.test(aroundTime)) {
+      return NextResponse.json({ success: false, error: 'Invalid aroundTime' }, { status: 400 })
+    }
+
     const business = await prisma.business.findFirst({
       where: businessId ? { id: businessId } : { slug: slug! },
       include: {
@@ -38,24 +51,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Get service
     let serviceDuration = 60
     let bufferTime = 0
 
     if (serviceId) {
-      const service = await prisma.service.findUnique({
-        where: { id: serviceId },
+      const service = await prisma.service.findFirst({
+        where: {
+          id: serviceId,
+          businessId: business.id,
+          active: true,
+        },
+        select: {
+          duration: true,
+          bufferTime: true,
+        },
       })
 
-      if (service) {
-        serviceDuration = service.duration
-        bufferTime = service.bufferTime
+      if (!service) {
+        return NextResponse.json(
+          { success: false, error: 'Service not found or unavailable' },
+          { status: 404 }
+        )
       }
+
+      serviceDuration = service.duration
+      bufferTime = service.bufferTime
     }
 
-    const targetDate = new Date(date)
+    const targetDate = new Date(`${date}T00:00:00`)
 
-    // Get appointments for this date
+    if (Number.isNaN(targetDate.getTime())) {
+      return NextResponse.json({ success: false, error: 'Invalid date' }, { status: 400 })
+    }
+
     const appointments = await prisma.appointment.findMany({
       where: {
         businessId: business.id,
@@ -66,7 +94,6 @@ export async function GET(request: NextRequest) {
         status: {
           notIn: ['CANCELLED', 'NO_SHOW'],
         },
-        ...(serviceId && { serviceId }),
       },
       select: {
         startTime: true,
@@ -81,12 +108,10 @@ export async function GET(request: NextRequest) {
       status: apt.status,
     }))
 
-    // Get booking rules
     const bookingRules = getBookingRulesFromSettings(
       business.settings as Record<string, unknown> | null
     )
 
-    // Generate availability for the day
     const dayAvailability = generateDetailedDayAvailability(
       targetDate,
       business.businessHours.map(bh => ({
@@ -114,11 +139,9 @@ export async function GET(request: NextRequest) {
       business.timezone
     )
 
-    // If aroundTime specified, filter slots
-    let slots = dayAvailability.slots
-    if (aroundTime) {
-      slots = getSlotsAroundTime(dayAvailability, aroundTime, range)
-    }
+    const slots = aroundTime
+      ? getSlotsAroundTime(dayAvailability, aroundTime, range)
+      : dayAvailability.slots
 
     return NextResponse.json({
       success: true,

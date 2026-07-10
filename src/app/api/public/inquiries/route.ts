@@ -1,12 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { headers } from 'next/headers'
+import { z } from 'zod'
 
-// Rate limiting helper (simple in-memory implementation)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 
-function checkRateLimit(ip: string, limit: number = 5, windowMs: number = 60000): boolean {
+const inquirySchema = z.object({
+  businessId: z.string().min(1).max(128),
+  customerName: z.string().trim().min(2).max(100),
+  customerEmail: z.string().trim().email().max(254),
+  customerPhone: z.string().trim().max(20).optional().default(''),
+  subject: z.string().trim().min(2).max(150),
+  message: z.string().trim().min(10).max(2000),
+  preferredContact: z.enum(['EMAIL', 'PHONE', 'EITHER']).optional().default('EMAIL'),
+})
+
+function checkRateLimit(ip: string, limit = 5, windowMs = 60_000) {
   const now = Date.now()
   const record = rateLimitMap.get(ip)
 
@@ -19,124 +27,143 @@ function checkRateLimit(ip: string, limit: number = 5, windowMs: number = 60000)
     return false
   }
 
-  record.count++
+  record.count += 1
   return true
+}
+
+function getClientIp(request: NextRequest) {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIp = request.headers.get('x-real-ip')
+
+  return forwarded?.split(',')[0]?.trim() || realIp || 'unknown'
+}
+
+function getSettingsRecord(settings: unknown): Record<string, unknown> {
+  return settings && typeof settings === 'object' && !Array.isArray(settings)
+    ? (settings as Record<string, unknown>)
+    : {}
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Get IP address for rate limiting
-    const headersList = headers()
-    const forwarded = (await headersList).get('x-forwarded-for')
-    const ip = forwarded
-      ? forwarded.split(',')[0]
-      : (await headersList).get('x-real-ip') || 'unknown'
+    const ip = getClientIp(request)
 
-    // Rate limiting: 5 inquiries per minute per IP
-    if (!checkRateLimit(ip, 5, 60000)) {
+    if (!checkRateLimit(ip, 5, 60_000)) {
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please try again later.' },
         { status: 429 }
       )
     }
 
-    const {
-      businessId,
-      customerName,
-      customerEmail,
-      customerPhone,
-      subject,
-      message,
-      preferredContact,
-    } = await request.json()
+    const body = await request.json()
+    const validation = inquirySchema.safeParse(body)
 
-    // Validation
-    if (!businessId || !customerName || !customerEmail || !subject || !message) {
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Required fields are missing' },
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten(),
+        },
         { status: 400 }
       )
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(customerEmail)) {
-      return NextResponse.json({ success: false, error: 'Invalid email address' }, { status: 400 })
-    }
+    const data = validation.data
+    const customerEmail = data.customerEmail.toLowerCase()
 
-    // Check if business exists and inquiries are enabled
     const business = await prisma.business.findUnique({
-      where: { id: businessId },
+      where: { id: data.businessId },
       select: {
         id: true,
         name: true,
         email: true,
         settings: true,
+        isPublished: true,
       },
     })
 
-    if (!business) {
+    if (!business || !business.isPublished) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Check if inquiries are enabled in business settings
-    const settings = business.settings as any
-    if (settings?.inquiriesEnabled === false) {
+    const settings = getSettingsRecord(business.settings)
+
+    if (settings.inquiriesEnabled === false) {
       return NextResponse.json(
         { success: false, error: 'Inquiries are currently disabled' },
         { status: 403 }
       )
     }
 
-    // Check if customer already exists
     let customer = await prisma.customer.findFirst({
       where: {
-        businessId,
+        businessId: business.id,
         email: customerEmail,
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
       },
     })
 
-    // Create customer if doesn't exist
     if (!customer) {
       customer = await prisma.customer.create({
         data: {
-          businessId,
+          businessId: business.id,
           email: customerEmail,
-          name: customerName,
-          phone: customerPhone || null,
+          name: data.customerName,
+          phone: data.customerPhone || null,
+        },
+        select: {
+          id: true,
+          name: true,
+          phone: true,
         },
       })
     }
 
-    // Get user agent
-    const userAgent = (await headersList).get('user-agent') || undefined
+    const userAgent = request.headers.get('user-agent') || undefined
 
-    // Create inquiry
+    // Build payload as any to avoid strict Prisma type mismatch for optional/renamed fields
+    const createPayload: any = {
+      businessId: business.id,
+      customerId: customer.id,
+      customerEmail,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone || null,
+      subject: data.subject,
+      message: data.message,
+      status: 'PENDING',
+      priority: 'NORMAL',
+      isRead: false,
+      ipAddress: ip,
+      userAgent,
+    }
+
+    if (data.preferredContact) {
+      // include preferredContact only when provided to avoid TypeScript error if the DB field was renamed
+      createPayload.preferredContact = data.preferredContact
+    }
+
     const inquiry = await prisma.inquiry.create({
-      data: {
-        businessId,
-        customerId: customer.id,
-        customerEmail,
-        customerName,
-        customerPhone: customerPhone || null,
-        subject,
-        message,
-        status: 'PENDING',
-        priority: 'NORMAL',
-        isRead: false,
-        ipAddress: ip,
-        userAgent,
+      data: createPayload,
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
       },
     })
 
-    // TODO: Send email notification to business owner
-    // This would be implemented in Milestone 11 with email service
-
-    return NextResponse.json({
-      success: true,
-      data: { inquiry },
-      message: 'Inquiry submitted successfully',
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: { inquiry },
+        message: 'Inquiry submitted successfully',
+      },
+      { status: 201 }
+    )
   } catch (error) {
     console.error('Submit inquiry error:', error)
     return NextResponse.json({ success: false, error: 'Failed to submit inquiry' }, { status: 500 })

@@ -3,6 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { getTemplateById } from '@/lib/templates/presence-templates'
 import { Prisma } from '@prisma/client'
+import { z } from 'zod'
+import { businessAuthErrorResponse, requireBusinessRole } from '@/lib/auth/business-access'
+
+const applyTemplateSchema = z.object({
+  templateId: z.string().min(1, 'Template ID is required').max(100),
+  businessId: z.string().min(1, 'Business ID is required').max(128),
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,50 +19,54 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { templateId, businessId } = await request.json()
+    const body = await request.json()
+    const validation = applyTemplateSchema.safeParse(body)
 
-    if (!templateId || !businessId) {
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Template ID and Business ID are required' },
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten(),
+        },
         { status: 400 }
       )
     }
 
-    // Get template
+    const { templateId, businessId } = validation.data
+
     const template = getTemplateById(templateId)
 
     if (!template) {
       return NextResponse.json({ success: false, error: 'Template not found' }, { status: 404 })
     }
 
-    // Verify user owns the business - using ownerId from your schema
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        ownerId: user.id,
+    const context = await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+
+    const business = await prisma.business.findUnique({
+      where: { id: context.businessId },
+      select: {
+        id: true,
+        name: true,
+        settings: true,
       },
     })
 
     if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Convert sections to plain JSON for Prisma
     const contentJson = JSON.parse(JSON.stringify(template.content.sections)) as Prisma.JsonArray
 
-    // Create or update the main page with template content
     const page = await prisma.page.upsert({
       where: {
         businessId_slug: {
-          businessId: businessId,
+          businessId: context.businessId,
           slug: 'home',
         },
       },
       create: {
-        businessId: businessId,
+        businessId: context.businessId,
         slug: 'home',
         title: business.name,
         content: contentJson,
@@ -64,25 +75,38 @@ export async function POST(request: NextRequest) {
       update: {
         content: contentJson,
       },
+      select: {
+        id: true,
+        businessId: true,
+        slug: true,
+        title: true,
+        content: true,
+        isPublished: true,
+        version: true,
+        updatedAt: true,
+      },
     })
 
-    // Convert theme to plain JSON for Prisma
     const themeJson = template.content.theme
       ? JSON.parse(JSON.stringify(template.content.theme))
       : null
 
-    // Update business theme settings
-    const currentSettings = (business.settings as Prisma.JsonObject) || {}
-    const updatedSettings = {
-      ...currentSettings,
-      theme: themeJson,
-    }
+    const currentSettings =
+      business.settings &&
+      typeof business.settings === 'object' &&
+      !Array.isArray(business.settings)
+        ? (business.settings as Prisma.JsonObject)
+        : {}
 
     await prisma.business.update({
-      where: { id: businessId },
+      where: { id: context.businessId },
       data: {
-        settings: updatedSettings,
+        settings: {
+          ...currentSettings,
+          theme: themeJson,
+        },
       },
+      select: { id: true },
     })
 
     return NextResponse.json({
@@ -91,6 +115,9 @@ export async function POST(request: NextRequest) {
       message: 'Template applied successfully',
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Apply template error:', error)
     return NextResponse.json({ success: false, error: 'Failed to apply template' }, { status: 500 })
   }

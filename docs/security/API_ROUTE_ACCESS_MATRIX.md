@@ -283,3 +283,9 @@ publicRateLimit(request, key)
    | `/api/appointments/[id]/series` | Appointment-scoped read/write | GET requires appointment access; DELETE requires owner/admin/manager/staff | Reviewed | Fixed public series data exposure. |
    | `/api/service-categories` | Business-scoped read/write | GET requires business access; POST requires owner/admin/manager | Reviewed | Replaced owner-only lookup with shared business authorization. |
    | `/api/service-categories/[id]` | Category-scoped read/write | GET requires access to category business; PUT/DELETE require owner/admin/manager | Reviewed | Authorizes through category.businessId and uses scoped deleteMany. |
+   | `/api/public/businesses/[handle]/faqs` | Public read | Public, published business only, active FAQs only | Reviewed | Added published-business check and safe field selection. |
+   | `/api/public/businesses/[handle]/services` | Public read | Public, published business only, active services only | Reviewed | Bounded ids filter and kept active-service filtering. |
+   | `/api/public/inquiries` | Public write | Public, rate-limited, published business only | Reviewed | Added zod validation, normalized email, safe response, and published-business check. |
+   | `/api/presence/apply-template` | Business-scoped mutation | Requires owner/admin/manager | Reviewed | Replaced owner-only check with shared business role authorization and scoped page upsert. |
+   | `/api/presence/pages` | Business-scoped draft page read/write | GET requires business access; PUT requires owner/admin/manager | Reviewed | Fixed pageId/businessId mismatch risk by verifying the page belongs to the authorized business before update. |
+   | `/api/presence/pages/publish` | Business-scoped publish mutation | Requires owner/admin | Reviewed | Fixed pageId/businessId mismatch risk and scoped publish/unpublish to the authorized business. |

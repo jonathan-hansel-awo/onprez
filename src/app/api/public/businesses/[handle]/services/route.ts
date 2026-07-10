@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+function parseIds(idsParam: string | null) {
+  if (!idsParam) return undefined
+
+  const ids = idsParam
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean)
+    .slice(0, 50)
+
+  return ids.length > 0 ? ids : undefined
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ handle: string }> }
@@ -8,11 +20,15 @@ export async function GET(
   try {
     const { handle } = await params
     const searchParams = request.nextUrl.searchParams
-    const idsParam = searchParams.get('ids')
-    const categoryId = searchParams.get('categoryId')
+
+    if (!handle || handle.length > 100) {
+      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
+    }
+
+    const ids = parseIds(searchParams.get('ids'))
+    const categoryId = searchParams.get('categoryId')?.trim()
     const featured = searchParams.get('featured')
 
-    // Find business by slug/handle
     const business = await prisma.business.findUnique({
       where: { slug: handle },
       select: { id: true, isPublished: true },
@@ -22,7 +38,6 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Build where clause
     const where: {
       businessId: string
       active: boolean
@@ -34,25 +49,18 @@ export async function GET(
       active: true,
     }
 
-    // Filter by specific IDs if provided
-    if (idsParam) {
-      const ids = idsParam.split(',').filter(Boolean)
-      if (ids.length > 0) {
-        where.id = { in: ids }
-      }
+    if (ids) {
+      where.id = { in: ids }
     }
 
-    // Filter by category if provided
     if (categoryId) {
       where.categoryId = categoryId
     }
 
-    // Filter by featured if provided
     if (featured === 'true') {
       where.featured = true
     }
 
-    // Fetch services with category
     const services = await prisma.service.findMany({
       where,
       orderBy: [{ featured: 'desc' }, { order: 'asc' }, { name: 'asc' }],
@@ -83,7 +91,6 @@ export async function GET(
       },
     })
 
-    // Fetch categories for filtering
     const categories = await prisma.serviceCategory.findMany({
       where: {
         businessId: business.id,
@@ -109,7 +116,6 @@ export async function GET(
       },
     })
 
-    // Transform services to include formatted data
     const transformedServices = services.map(service => ({
       id: service.id,
       name: service.name,

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { businessAuthErrorResponse, requireBusinessAccess } from '@/lib/auth/business-access'
 import {
   generateDetailedAvailabilityRange,
   calculateAvailabilitySummary,
@@ -15,11 +17,55 @@ import {
   type ExistingAppointment,
 } from '@/lib/utils/availability'
 
+function parseBoundedInt(value: string | null, fallback: number, min: number, max: number) {
+  const parsed = Number.parseInt(value || String(fallback), 10)
+
+  if (!Number.isFinite(parsed)) {
+    return fallback
+  }
+
+  return Math.min(Math.max(parsed, min), max)
+}
+
+function parseDateOnly(value: string | null) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null
+  }
+
+  const date = new Date(`${value}T00:00:00`)
+
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function isTimeString(value: string | null) {
+  return !value || /^\d{2}:\d{2}$/.test(value)
+}
+
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+function minutesToTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+}
+
+async function requireAnalyticsAccess(userId: string | null, businessId: string) {
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  }
+
+  await requireBusinessAccess(userId, businessId)
+
+  return null
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
 
-    // Required: businessId or slug
     const businessId = searchParams.get('businessId')
     const slug = searchParams.get('slug')
 
@@ -30,17 +76,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Date parameters
-    const dateParam = searchParams.get('date') // Single date
-    const startDateParam = searchParams.get('startDate') // Range start
-    const endDateParam = searchParams.get('endDate') // Range end
-    const days = parseInt(searchParams.get('days') || '7') // Number of days from today
+    const dateParam = searchParams.get('date')
+    const startDateParam = searchParams.get('startDate')
+    const endDateParam = searchParams.get('endDate')
+    const days = parseBoundedInt(searchParams.get('days'), 7, 1, 90)
 
-    // Service parameters
     const serviceId = searchParams.get('serviceId')
-    const serviceDuration = parseInt(searchParams.get('serviceDuration') || '60')
+    const serviceDuration = parseBoundedInt(searchParams.get('serviceDuration'), 60, 5, 480)
 
-    // Options
     const includeSlots = searchParams.get('includeSlots') !== 'false'
     const includeSummary = searchParams.get('includeSummary') === 'true'
     const includeRules = searchParams.get('includeRules') === 'true'
@@ -48,9 +91,12 @@ export async function GET(request: NextRequest) {
     const includePeakHours = searchParams.get('includePeakHours') === 'true'
     const includeLimits = searchParams.get('includeLimits') === 'true'
     const findNext = searchParams.get('findNext') === 'true'
-    const preferredTime = searchParams.get('preferredTime') // HH:MM for findNext
+    const preferredTime = searchParams.get('preferredTime')
 
-    // Get business
+    if (!isTimeString(preferredTime)) {
+      return NextResponse.json({ success: false, error: 'Invalid preferred time' }, { status: 400 })
+    }
+
     const business = await prisma.business.findFirst({
       where: businessId ? { id: businessId } : { slug: slug! },
       include: {
@@ -63,36 +109,70 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Get service if specified
+    if (includeHeatmap || includePeakHours) {
+      const user = await getCurrentUser()
+      const authResponse = await requireAnalyticsAccess(user?.id || null, business.id)
+      if (authResponse) return authResponse
+    }
+
     let service = null
+
     if (serviceId) {
-      service = await prisma.service.findUnique({
-        where: { id: serviceId },
+      service = await prisma.service.findFirst({
+        where: {
+          id: serviceId,
+          businessId: business.id,
+          active: true,
+        },
       })
 
       if (!service) {
-        return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 })
+        return NextResponse.json(
+          { success: false, error: 'Service not found or unavailable' },
+          { status: 404 }
+        )
       }
     }
 
-    // Determine date range
     let startDate: Date
     let endDate: Date
 
     if (dateParam) {
-      startDate = new Date(dateParam)
-      endDate = new Date(dateParam)
+      const parsedDate = parseDateOnly(dateParam)
+
+      if (!parsedDate) {
+        return NextResponse.json({ success: false, error: 'Invalid date' }, { status: 400 })
+      }
+
+      startDate = parsedDate
+      endDate = parsedDate
     } else if (startDateParam && endDateParam) {
-      startDate = new Date(startDateParam)
-      endDate = new Date(endDateParam)
+      const parsedStartDate = parseDateOnly(startDateParam)
+      const parsedEndDate = parseDateOnly(endDateParam)
+
+      if (!parsedStartDate || !parsedEndDate) {
+        return NextResponse.json({ success: false, error: 'Invalid date range' }, { status: 400 })
+      }
+
+      startDate = parsedStartDate
+      endDate = parsedEndDate
     } else {
       startDate = new Date()
-      endDate = new Date()
+      startDate.setHours(0, 0, 0, 0)
+
+      endDate = new Date(startDate)
       endDate.setDate(endDate.getDate() + days - 1)
     }
 
-    // Validate date range (max 90 days)
+    if (endDate < startDate) {
+      return NextResponse.json(
+        { success: false, error: 'End date must be after start date' },
+        { status: 400 }
+      )
+    }
+
     const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+
     if (daysDiff > 90) {
       return NextResponse.json(
         { success: false, error: 'Date range cannot exceed 90 days' },
@@ -100,7 +180,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get booking rules
     const bookingRules = getBookingRulesFromSettings(
       business.settings as Record<string, unknown> | null,
       service
@@ -114,16 +193,14 @@ export async function GET(request: NextRequest) {
         : undefined
     )
 
-    // Get business booking settings for min advance hours
     const businessSettings = (business.settings as Record<string, unknown>) || {}
     const bookingConfig = (businessSettings.booking as Record<string, unknown>) || {}
     const minAdvanceHours = (bookingConfig.minAdvanceHours as number) || 0
 
-    // Calculate effective booking limits for the service
     const effectiveLimits = getEffectiveBookingLimits(
       {
         maxAdvanceDays: bookingRules.maxAdvanceDays,
-        minAdvanceHours: minAdvanceHours,
+        minAdvanceHours,
         sameDayBooking: bookingRules.sameDayBookingAllowed,
         sameDayLeadTime: bookingRules.sameDayLeadTime,
       },
@@ -135,18 +212,16 @@ export async function GET(request: NextRequest) {
         : undefined
     )
 
-    // Fetch existing appointments for the date range
     const appointments = await prisma.appointment.findMany({
       where: {
         businessId: business.id,
         startTime: {
           gte: startDate,
-          lte: new Date(endDate.getTime() + 24 * 60 * 60 * 1000), // Include full end date
+          lte: new Date(endDate.getTime() + 24 * 60 * 60 * 1000),
         },
         status: {
           notIn: ['CANCELLED', 'NO_SHOW'],
         },
-        ...(serviceId && { serviceId }),
       },
       select: {
         id: true,
@@ -163,17 +238,15 @@ export async function GET(request: NextRequest) {
       status: apt.status,
     }))
 
-    // Generate configuration
     const config = {
       serviceDuration: service?.duration || serviceDuration,
       bufferTime: service?.bufferTime || bookingRules.bufferBetweenAppointments,
       slotInterval: bookingRules.slotInterval,
-      advanceBookingDays: effectiveLimits.maxAdvanceDays, // Use effective limits
+      advanceBookingDays: effectiveLimits.maxAdvanceDays,
       sameDayBooking: effectiveLimits.sameDayBooking,
       sameDayLeadTime: effectiveLimits.sameDayLeadTime,
     }
 
-    // Generate availability
     const availability = generateDetailedAvailabilityRange(
       startDate,
       endDate,
@@ -195,7 +268,6 @@ export async function GET(request: NextRequest) {
       business.timezone
     )
 
-    // Strip slots if not requested (reduces payload size)
     const responseAvailability = includeSlots
       ? availability
       : availability.map(day => ({
@@ -203,7 +275,6 @@ export async function GET(request: NextRequest) {
           slots: undefined,
         }))
 
-    // Build response
     const response: {
       success: boolean
       data: {
@@ -260,7 +331,6 @@ export async function GET(request: NextRequest) {
       },
     }
 
-    // Add service info if specified
     if (service) {
       response.data.service = {
         id: service.id,
@@ -270,28 +340,25 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Add summary if requested
     if (includeSummary) {
       response.data.summary = calculateAvailabilitySummary(availability)
     }
 
-    // Add booking rules if requested
     if (includeRules) {
       response.data.rules = bookingRules
     }
 
-    // Add booking window
     const bookingWindow = getBookingWindow(
       effectiveLimits.maxAdvanceDays,
       effectiveLimits.sameDayBooking,
       business.timezone
     )
+
     response.data.bookingWindow = {
       start: bookingWindow.startDate.toString().split('T')[0],
       end: bookingWindow.endDate.toString().split('T')[0],
     }
 
-    // Add booking limits if requested
     if (includeLimits) {
       response.data.bookingLimits = {
         maxAdvanceDays: effectiveLimits.maxAdvanceDays,
@@ -302,23 +369,23 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Find next available slot if requested
     if (findNext) {
       response.data.nextAvailable = findNextAvailableSlot(availability, preferredTime || undefined)
     }
 
-    // Add heatmap if requested (requires authenticated request for business owner)
     if (includeHeatmap) {
       response.data.heatmap = getAvailabilityHeatmap(availability)
     }
 
-    // Add peak hours if requested
     if (includePeakHours) {
       response.data.peakHours = getPeakHours(existingAppointments).slice(0, 5)
     }
 
     return NextResponse.json(response)
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Availability API error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to get availability' },
@@ -327,21 +394,30 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST endpoint for checking specific slot availability
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const { businessId, serviceId, date, startTime, duration } = body
+    const businessId = typeof body.businessId === 'string' ? body.businessId : ''
+    const serviceId = typeof body.serviceId === 'string' ? body.serviceId : undefined
+    const date = typeof body.date === 'string' ? body.date : ''
+    const startTime = typeof body.startTime === 'string' ? body.startTime : ''
+    const duration =
+      typeof body.duration === 'number' ? Math.min(Math.max(body.duration, 5), 480) : undefined
 
-    if (!businessId || !date || !startTime) {
+    if (
+      !businessId ||
+      !date ||
+      !startTime ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      !/^\d{2}:\d{2}$/.test(startTime)
+    ) {
       return NextResponse.json(
-        { success: false, error: 'Business ID, date, and start time are required' },
+        { success: false, error: 'Business ID, valid date, and valid start time are required' },
         { status: 400 }
       )
     }
 
-    // Get business
     const business = await prisma.business.findUnique({
       where: { id: businessId },
       include: {
@@ -354,31 +430,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Get service if specified
     let serviceDuration = duration || 60
     let bufferTime = 0
     let service = null
 
     if (serviceId) {
-      service = await prisma.service.findUnique({
-        where: { id: serviceId },
+      service = await prisma.service.findFirst({
+        where: {
+          id: serviceId,
+          businessId,
+          active: true,
+        },
       })
 
-      if (service) {
-        serviceDuration = service.duration
-        bufferTime = service.bufferTime
+      if (!service) {
+        return NextResponse.json(
+          { success: false, error: 'Service not found or unavailable' },
+          { status: 404 }
+        )
       }
+
+      serviceDuration = service.duration
+      bufferTime = service.bufferTime
     }
 
-    // Parse date and check
-    const targetDate = new Date(date)
+    const targetDate = new Date(`${date}T00:00:00`)
+
+    if (Number.isNaN(targetDate.getTime())) {
+      return NextResponse.json({ success: false, error: 'Invalid date' }, { status: 400 })
+    }
+
     const dayOfWeek = targetDate.getDay()
     const dateString = targetDate.toISOString().split('T')[0]
-
-    // Build requested datetime for booking window validation
     const requestedDateTime = new Date(`${dateString}T${startTime}:00`)
 
-    // Validate booking window
+    if (Number.isNaN(requestedDateTime.getTime())) {
+      return NextResponse.json({ success: false, error: 'Invalid start time' }, { status: 400 })
+    }
+
     const businessSettings = (business.settings as Record<string, unknown>) || {}
     const bookingConfig = (businessSettings.booking as Record<string, unknown>) || {}
 
@@ -397,7 +486,6 @@ export async function POST(request: NextRequest) {
         : undefined
     )
 
-    // Check minimum advance time
     const now = new Date()
     const hoursUntilSlot = (requestedDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
 
@@ -412,8 +500,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Check maximum advance time
     const daysUntilSlot = hoursUntilSlot / 24
+
     if (daysUntilSlot > effectiveLimits.maxAdvanceDays) {
       return NextResponse.json({
         success: true,
@@ -425,8 +513,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Check same-day booking
     const isSameDay = targetDate.toDateString() === now.toDateString()
+
     if (isSameDay && !effectiveLimits.sameDayBooking) {
       return NextResponse.json({
         success: true,
@@ -438,16 +526,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Check business hours
     const dayHours = business.businessHours.find(bh => bh.dayOfWeek === dayOfWeek)
 
-    // Check special dates
     const specialDate = business.specialDates.find(sd => {
       const sdDate = new Date(sd.date)
       return sdDate.toISOString().split('T')[0] === dateString
     })
 
-    // Determine if business is open
     let isOpen = false
     let openTime: string | undefined
     let closeTime: string | undefined
@@ -474,7 +559,6 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Check if time is within business hours
     const startMinutes = timeToMinutes(startTime)
     const endMinutes = startMinutes + serviceDuration
     const openMinutes = timeToMinutes(openTime!)
@@ -491,7 +575,6 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Check for conflicts
     const conflicts = await prisma.appointment.findMany({
       where: {
         businessId,
@@ -511,7 +594,6 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Check each appointment for conflicts
     const requestedStart = new Date(`${dateString}T${startTime}:00`)
     const requestedEnd = new Date(requestedStart.getTime() + serviceDuration * 60 * 1000)
 
@@ -519,7 +601,6 @@ export async function POST(request: NextRequest) {
       const aptStart = new Date(apt.startTime)
       const aptEnd = new Date(apt.endTime)
 
-      // Direct overlap check
       if (requestedStart < aptEnd && requestedEnd > aptStart) {
         return NextResponse.json({
           success: true,
@@ -534,7 +615,6 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Buffer check
       if (bufferTime > 0) {
         const bufferStart = new Date(aptStart.getTime() - bufferTime * 60 * 1000)
         const bufferEnd = new Date(aptEnd.getTime() + bufferTime * 60 * 1000)
@@ -556,7 +636,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Slot is available
     return NextResponse.json({
       success: true,
       data: {
@@ -578,16 +657,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-// Helper functions
-function timeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number)
-  return hours * 60 + minutes
-}
-
-function minutesToTime(minutes: number): string {
-  const hours = Math.floor(minutes / 60)
-  const mins = minutes % 60
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
 }

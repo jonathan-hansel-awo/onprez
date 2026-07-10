@@ -7,6 +7,16 @@ import {
   type ExistingAppointment,
 } from '@/lib/utils/availability'
 
+function parseBoundedInt(value: string | null, fallback: number, min: number, max: number) {
+  const parsed = Number.parseInt(value || String(fallback), 10)
+
+  if (!Number.isFinite(parsed)) {
+    return fallback
+  }
+
+  return Math.min(Math.max(parsed, min), max)
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -14,9 +24,9 @@ export async function GET(request: NextRequest) {
     const businessId = searchParams.get('businessId')
     const slug = searchParams.get('slug')
     const serviceId = searchParams.get('serviceId')
-    const preferredTime = searchParams.get('preferredTime') // HH:MM
-    const preferredDay = searchParams.get('preferredDay') // 0-6
-    const maxDays = parseInt(searchParams.get('maxDays') || '30')
+    const preferredTime = searchParams.get('preferredTime')
+    const preferredDay = searchParams.get('preferredDay')
+    const maxDays = parseBoundedInt(searchParams.get('maxDays'), 30, 1, 90)
 
     if (!businessId && !slug) {
       return NextResponse.json(
@@ -25,7 +35,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get business
+    if (preferredTime && !/^\d{2}:\d{2}$/.test(preferredTime)) {
+      return NextResponse.json({ success: false, error: 'Invalid preferredTime' }, { status: 400 })
+    }
+
+    let preferredDayNumber: number | null = null
+
+    if (preferredDay !== null) {
+      preferredDayNumber = Number.parseInt(preferredDay, 10)
+
+      if (
+        !Number.isInteger(preferredDayNumber) ||
+        preferredDayNumber < 0 ||
+        preferredDayNumber > 6
+      ) {
+        return NextResponse.json({ success: false, error: 'Invalid preferredDay' }, { status: 400 })
+      }
+    }
+
     const business = await prisma.business.findFirst({
       where: businessId ? { id: businessId } : { slug: slug! },
       include: {
@@ -38,26 +65,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    // Get service
     let serviceDuration = 60
     let bufferTime = 0
 
     if (serviceId) {
-      const service = await prisma.service.findUnique({
-        where: { id: serviceId },
+      const service = await prisma.service.findFirst({
+        where: {
+          id: serviceId,
+          businessId: business.id,
+          active: true,
+        },
+        select: {
+          duration: true,
+          bufferTime: true,
+        },
       })
 
-      if (service) {
-        serviceDuration = service.duration
-        bufferTime = service.bufferTime
+      if (!service) {
+        return NextResponse.json(
+          { success: false, error: 'Service not found or unavailable' },
+          { status: 404 }
+        )
       }
+
+      serviceDuration = service.duration
+      bufferTime = service.bufferTime
     }
 
     const startDate = new Date()
-    const endDate = new Date()
+    startDate.setHours(0, 0, 0, 0)
+
+    const endDate = new Date(startDate)
     endDate.setDate(endDate.getDate() + maxDays)
 
-    // Get appointments
     const appointments = await prisma.appointment.findMany({
       where: {
         businessId: business.id,
@@ -68,7 +108,6 @@ export async function GET(request: NextRequest) {
         status: {
           notIn: ['CANCELLED', 'NO_SHOW'],
         },
-        ...(serviceId && { serviceId }),
       },
       select: {
         startTime: true,
@@ -87,7 +126,6 @@ export async function GET(request: NextRequest) {
       business.settings as Record<string, unknown> | null
     )
 
-    // Generate availability
     const availability = generateDetailedAvailabilityRange(
       startDate,
       endDate,
@@ -116,19 +154,15 @@ export async function GET(request: NextRequest) {
       business.timezone
     )
 
-    // Filter by preferred day if specified
-    let filteredAvailability = availability
-    if (preferredDay !== null && preferredDay !== undefined) {
-      const dayNum = parseInt(preferredDay)
-      filteredAvailability = availability.filter(day => day.dayOfWeek === dayNum)
-    }
+    const filteredAvailability =
+      preferredDayNumber !== null
+        ? availability.filter(day => day.dayOfWeek === preferredDayNumber)
+        : availability
 
-    // Find next available
     const nextAvailable = findNextAvailableSlot(filteredAvailability, preferredTime || undefined)
 
     if (!nextAvailable) {
-      // Try without preferred day filter
-      if (preferredDay !== null) {
+      if (preferredDayNumber !== null) {
         const fallbackNext = findNextAvailableSlot(availability, preferredTime || undefined)
 
         return NextResponse.json({
@@ -154,7 +188,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Get the day's availability for context
     const dayInfo = availability.find(d => d.date === nextAvailable.date)
 
     return NextResponse.json({
