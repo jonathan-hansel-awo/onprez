@@ -1,6 +1,20 @@
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import {
+  businessAuthErrorResponse,
+  requireBusinessAccess,
+  requireBusinessRole,
+} from '@/lib/auth/business-access'
+
+const createCategorySchema = z.object({
+  businessId: z.string().min(1, 'Business ID is required'),
+  name: z.string().trim().min(1, 'Name is required').max(100),
+  description: z.string().trim().max(500).optional().nullable(),
+  color: z.string().trim().max(50).optional().nullable(),
+  icon: z.string().trim().max(50).optional().nullable(),
+})
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,27 +34,22 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        ownerId: user.id,
-      },
-    })
+    const context = await requireBusinessAccess(user.id, businessId)
 
-    if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
-      )
-    }
-
-    // Fetch categories with service count
     const categories = await prisma.serviceCategory.findMany({
       where: {
-        businessId: businessId,
+        businessId: context.businessId,
       },
-      include: {
+      select: {
+        id: true,
+        businessId: true,
+        name: true,
+        description: true,
+        color: true,
+        icon: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: { services: true },
         },
@@ -55,6 +64,9 @@ export async function GET(request: NextRequest) {
       data: { categories },
     })
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Fetch categories error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch categories' },
@@ -72,37 +84,28 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { businessId, name, description, color, icon } = body
+    const validation = createCategorySchema.safeParse(body)
 
-    // Verify user owns the business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        ownerId: user.id,
-      },
-    })
-
-    if (!business) {
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Business not found or access denied' },
-        { status: 404 }
+        { success: false, error: 'Validation failed', details: validation.error.flatten() },
+        { status: 400 }
       )
     }
 
-    // Validate required fields
-    if (!name) {
-      return NextResponse.json({ success: false, error: 'Name is required' }, { status: 400 })
-    }
+    const { businessId, name, description, color, icon } = validation.data
 
-    // Check for duplicate category name
+    const context = await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+
     const existingCategory = await prisma.serviceCategory.findFirst({
       where: {
-        businessId,
+        businessId: context.businessId,
         name: {
           equals: name,
           mode: 'insensitive',
         },
       },
+      select: { id: true },
     })
 
     if (existingCategory) {
@@ -112,38 +115,51 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get current max order
     const maxOrderCategory = await prisma.serviceCategory.findFirst({
-      where: { businessId },
+      where: { businessId: context.businessId },
       orderBy: { order: 'desc' },
       select: { order: true },
     })
 
-    const newOrder = (maxOrderCategory?.order || 0) + 1
+    const newOrder = (maxOrderCategory?.order ?? -1) + 1
 
-    // Create category
     const category = await prisma.serviceCategory.create({
       data: {
-        businessId,
+        businessId: context.businessId,
         name,
         description: description || null,
         color: color || null,
         icon: icon || null,
         order: newOrder,
       },
-      include: {
+      select: {
+        id: true,
+        businessId: true,
+        name: true,
+        description: true,
+        color: true,
+        icon: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: { services: true },
         },
       },
     })
 
-    return NextResponse.json({
-      success: true,
-      data: { category },
-      message: 'Category created successfully',
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        data: { category },
+        message: 'Category created successfully',
+      },
+      { status: 201 }
+    )
   } catch (error) {
+    const authResponse = businessAuthErrorResponse(error)
+    if (authResponse) return authResponse
+
     console.error('Create category error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to create category' },

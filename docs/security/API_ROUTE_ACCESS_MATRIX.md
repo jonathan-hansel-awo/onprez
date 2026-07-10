@@ -281,3 +281,5 @@ publicRateLimit(request, key)
    | `/api/appointments/check-availability` | Public availability check with protected exclusions | Public for normal checks; excludeAppointmentId requires business access | Reviewed | Service must be active and belong to business. |
    | `/api/appointments/multi-day` | Business-scoped read/write | Requires authenticated business access; create requires owner/admin/manager/staff | Reviewed | Removed raw verifyToken usage. |
    | `/api/appointments/[id]/series` | Appointment-scoped read/write | GET requires appointment access; DELETE requires owner/admin/manager/staff | Reviewed | Fixed public series data exposure. |
+   | `/api/service-categories` | Business-scoped read/write | GET requires business access; POST requires owner/admin/manager | Reviewed | Replaced owner-only lookup with shared business authorization. |
+   | `/api/service-categories/[id]` | Category-scoped read/write | GET requires access to category business; PUT/DELETE require owner/admin/manager | Reviewed | Authorizes through category.businessId and uses scoped deleteMany. |
