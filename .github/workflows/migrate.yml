@@ -1,0 +1,94 @@
+name: Deploy database migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment to migrate
+        required: true
+        default: preview
+        type: choice
+        options:
+          - preview
+          - production
+
+permissions:
+  contents: read
+
+# Never allow two migration runs to modify the databases concurrently.
+concurrency:
+  group: database-migrations
+  cancel-in-progress: false
+
+jobs:
+  preview-migration:
+    name: Migrate preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: preview
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+    steps:
+      - name: Require main for production releases
+        if: inputs.target == 'production'
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Production migrations must be run from main."
+            exit 1
+          fi
+
+      - name: Check out selected revision
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npm run db:validate
+
+      - name: Deploy migrations to preview
+        run: npm run db:migrate:deploy
+
+      - name: Verify preview migration status
+        run: npm run db:migrate:status
+
+  production-migration:
+    name: Migrate production
+    if: inputs.target == 'production'
+    needs: preview-migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+    steps:
+      - name: Check out the preview-verified revision
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npm run db:validate
+
+      - name: Deploy preview-verified migrations to production
+        run: npm run db:migrate:deploy
+
+      - name: Verify production migration status
+        run: npm run db:migrate:status
