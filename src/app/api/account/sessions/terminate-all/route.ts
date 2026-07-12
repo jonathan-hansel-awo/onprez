@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 import { logSecurityEvent } from '@/lib/services/security-logging'
+import { hashSessionToken } from '@/lib/auth/token-hash'
 
 const terminateAllSchema = z.object({
   keepCurrent: z.boolean().optional().default(true),
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
         ? await prisma.session.deleteMany({
             where: {
               userId: user.id,
-              token: { not: currentToken },
+              token: { not: hashSessionToken(currentToken) },
             },
           })
         : await prisma.session.deleteMany({

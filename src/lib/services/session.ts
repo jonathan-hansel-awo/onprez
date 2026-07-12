@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from '@/lib/prisma'
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt'
+import { hashSessionToken } from '@/lib/auth/token-hash'
 
 interface CreateSessionParams {
   userId: string
@@ -58,8 +59,8 @@ export async function createSession({
     await prisma.session.create({
       data: {
         userId,
-        token: accessToken,
-        refreshToken,
+        token: hashSessionToken(accessToken),
+        refreshToken: hashSessionToken(refreshToken),
         expiresAt,
         userAgent,
         ipAddress,
@@ -89,7 +90,7 @@ export async function createSession({
 export async function deleteSession(token: string): Promise<boolean> {
   try {
     await prisma.session.delete({
-      where: { token },
+      where: { token: hashSessionToken(token) },
     })
     return true
   } catch (error) {
@@ -123,7 +124,7 @@ export async function validateSession(token: string): Promise<{
 }> {
   try {
     const session = await prisma.session.findUnique({
-      where: { token },
+      where: { token: hashSessionToken(token) },
       include: { user: true },
     })
 

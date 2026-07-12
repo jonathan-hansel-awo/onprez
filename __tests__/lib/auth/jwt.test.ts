@@ -78,6 +78,13 @@ describe('JWT Utilities', () => {
 
       expect(decoded?.type).toBe('refresh')
     })
+
+    it('generates a unique token for same-second rotation', () => {
+      const first = generateRefreshToken(mockPayload)
+      const second = generateRefreshToken(mockPayload)
+
+      expect(second).not.toBe(first)
+    })
   })
 
   describe('generateTokenPair', () => {

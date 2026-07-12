@@ -17,7 +17,7 @@ export interface SessionData {
   id: string
   userId: string
   token: string
-  refreshToken: string
+  refreshToken?: string
   deviceInfo?: DeviceInfo
   ipAddress?: string
   userAgent?: string

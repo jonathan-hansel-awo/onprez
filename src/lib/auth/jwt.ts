@@ -1,4 +1,5 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
+import { randomUUID } from 'crypto'
 import type { TokenPayload, TokenPair, VerifiedToken, TokenOptions } from './types'
 import { env } from '@/lib/config/env'
 
@@ -51,6 +52,7 @@ export function generateAccessToken(
       expiresIn: (options?.expiresIn || JWT_CONFIG.accessTokenExpiry) as number,
       issuer: options?.issuer || JWT_CONFIG.issuer,
       audience: options?.audience || JWT_CONFIG.audience,
+      jwtid: randomUUID(),
     }
 
     const token = jwt.sign(tokenPayload, JWT_CONFIG.secret, signOptions)
@@ -81,6 +83,7 @@ export function generateRefreshToken(
       expiresIn: (options?.expiresIn || JWT_CONFIG.refreshTokenExpiry) as number,
       issuer: options?.issuer || JWT_CONFIG.issuer,
       audience: options?.audience || JWT_CONFIG.audience,
+      jwtid: randomUUID(),
     }
 
     const token = jwt.sign(tokenPayload, JWT_CONFIG.secret, signOptions)

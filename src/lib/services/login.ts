@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyPassword } from '@/lib/auth/password'
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt'
 import { logSecurityEvent } from '@/lib/services/security-logging'
+import { hashSessionToken } from '@/lib/auth/token-hash'
 import { sendNewDeviceAlert } from '@/lib/services/email'
 import { generateToken } from '../utils/token'
 import { hashMfaTempToken } from './mfa-challenge'
@@ -245,8 +246,8 @@ export async function loginUser(
     await prisma.session.create({
       data: {
         userId: user.id,
-        token: accessToken,
-        refreshToken,
+        token: hashSessionToken(accessToken),
+        refreshToken: hashSessionToken(refreshToken),
         expiresAt,
         userAgent,
         ipAddress,

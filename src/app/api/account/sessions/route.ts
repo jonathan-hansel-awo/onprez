@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
+import { hashSessionToken } from '@/lib/auth/token-hash'
 
 export async function GET() {
   try {
@@ -35,7 +36,7 @@ export async function GET() {
 
     const safeSessions = sessions.map(({ token, ...session }) => ({
       ...session,
-      isCurrent: Boolean(currentToken && token === currentToken),
+      isCurrent: Boolean(currentToken && token === hashSessionToken(currentToken)),
     }))
 
     return NextResponse.json({

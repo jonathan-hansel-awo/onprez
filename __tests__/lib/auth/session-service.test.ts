@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Session Service Tests
  */
@@ -24,6 +23,8 @@ import {
 } from '@/lib/auth/session-service'
 import { generateTokenPair } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
+import { hashSessionToken } from '@/lib/auth/token-hash'
+import { logSecurityEvent } from '@/lib/services/security-logging'
 
 // Mock Prisma
 jest.mock('@/lib/prisma', () => ({
@@ -32,6 +33,7 @@ jest.mock('@/lib/prisma', () => ({
       create: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
       findMany: jest.fn(),
@@ -40,6 +42,10 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: jest.fn(),
     },
   },
+}))
+
+jest.mock('@/lib/services/security-logging', () => ({
+  logSecurityEvent: jest.fn(),
 }))
 
 describe('Session Service', () => {
@@ -91,6 +97,11 @@ describe('Session Service', () => {
       expect(result.accessToken).toBeDefined()
       expect(result.refreshToken).toBeDefined()
       expect(mockPrisma.session.create).toHaveBeenCalled()
+      const createCall = mockPrisma.session.create.mock.calls[0][0]
+      expect(createCall.data.token).toBe(hashSessionToken(result.accessToken))
+      expect(createCall.data.refreshToken).toBe(hashSessionToken(result.refreshToken))
+      expect(createCall.data.token).not.toBe(result.accessToken)
+      expect(createCall.data.refreshToken).not.toBe(result.refreshToken)
     })
 
     it('should create session with remember me option', async () => {
@@ -210,30 +221,36 @@ describe('Session Service', () => {
         refreshToken: tokens.refreshToken,
         user: mockUser,
       })
-      mockPrisma.session.update.mockResolvedValue({
-        ...mockSessionData,
-        token: 'new-access-token',
-        refreshToken: 'new-refresh-token',
-      })
+      mockPrisma.session.updateMany.mockResolvedValue({ count: 1 })
 
       const result = await refreshSession(tokens.refreshToken)
 
       expect(result.session).toBeDefined()
       expect(result.accessToken).toBeDefined()
       expect(result.refreshToken).toBeDefined()
-      expect(mockPrisma.session.update).toHaveBeenCalled()
+      expect(mockPrisma.session.updateMany).toHaveBeenCalled()
     })
 
-    it('should throw error for non-existent session', async () => {
+    it('revokes all sessions and logs reuse when a valid refresh token is no longer current', async () => {
       const tokens = generateTokenPair({
         userId: mockUser.id,
         email: mockUser.email,
       })
 
       mockPrisma.session.findUnique.mockResolvedValue(null)
+      mockPrisma.session.deleteMany.mockResolvedValue({ count: 2 })
+      const mockedLogSecurityEvent = logSecurityEvent as jest.Mock
+      mockedLogSecurityEvent.mockResolvedValue(undefined)
 
-      await expect(refreshSession(tokens.refreshToken)).rejects.toThrow(SessionError)
-      await expect(refreshSession(tokens.refreshToken)).rejects.toThrow('not found')
+      await expect(refreshSession(tokens.refreshToken)).rejects.toThrow('reuse detected')
+      expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({ where: { userId: mockUser.id } })
+      expect(logSecurityEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: mockUser.id,
+          action: 'refresh_token_reuse_detected',
+          severity: 'critical',
+        })
+      )
     })
 
     it('should throw error for expired session', async () => {
@@ -264,7 +281,7 @@ describe('Session Service', () => {
       await deleteSession('token-123')
 
       expect(mockPrisma.session.delete).toHaveBeenCalledWith({
-        where: { token: 'token-123' },
+        where: { token: hashSessionToken('token-123') },
       })
     })
 
@@ -290,13 +307,14 @@ describe('Session Service', () => {
 
   describe('getUserSessions', () => {
     it('should get all active sessions for a user', async () => {
+      const currentToken = 'current-access-token'
       const sessions = [
-        mockSessionData,
+        { ...mockSessionData, token: hashSessionToken(currentToken) },
         { ...mockSessionData, id: 'session-456', token: 'different-token' },
       ]
       mockPrisma.session.findMany.mockResolvedValue(sessions)
 
-      const result = await getUserSessions(mockUser.id, mockSessionData.token)
+      const result = await getUserSessions(mockUser.id, currentToken)
 
       expect(result).toHaveLength(2)
       expect(result[0].isCurrent).toBe(true)

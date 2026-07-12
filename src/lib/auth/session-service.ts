@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from '@/lib/prisma'
 import { generateTokenPair, verifyToken, JWTError } from './jwt'
+import { hashSessionToken } from './token-hash'
+import { logSecurityEvent } from '@/lib/services/security-logging'
 import type {
   CreateSessionParams,
   SessionData,
@@ -64,8 +66,8 @@ export async function createSession(params: CreateSessionParams): Promise<{
     const session = await prisma.session.create({
       data: {
         userId: params.userId,
-        token: accessToken,
-        refreshToken: refreshToken,
+        token: hashSessionToken(accessToken),
+        refreshToken: hashSessionToken(refreshToken),
         deviceInfo: params.deviceInfo as any,
         ipAddress: params.ipAddress,
         userAgent: params.userAgent,
@@ -78,8 +80,8 @@ export async function createSession(params: CreateSessionParams): Promise<{
       session: {
         id: session.id,
         userId: session.userId,
-        token: session.token,
-        refreshToken: session.refreshToken!,
+        token: accessToken,
+        refreshToken,
         deviceInfo: session.deviceInfo as DeviceInfo | undefined,
         ipAddress: session.ipAddress || undefined,
         userAgent: session.userAgent || undefined,
@@ -114,7 +116,7 @@ export async function validateSession(token: string): Promise<SessionValidation>
 
     // Find session in database
     const session = await prisma.session.findUnique({
-      where: { token },
+      where: { token: hashSessionToken(token) },
     })
 
     if (!session) {
@@ -148,8 +150,7 @@ export async function validateSession(token: string): Promise<SessionValidation>
       session: {
         id: session.id,
         userId: session.userId,
-        token: session.token,
-        refreshToken: session.refreshToken!,
+        token,
         deviceInfo: session.deviceInfo as DeviceInfo | undefined,
         ipAddress: session.ipAddress || undefined,
         userAgent: session.userAgent || undefined,
@@ -189,13 +190,15 @@ export async function refreshSession(refreshToken: string): Promise<{
     }
 
     // Find session in database
+    const currentRefreshTokenHash = hashSessionToken(refreshToken)
     const session = await prisma.session.findUnique({
-      where: { refreshToken },
+      where: { refreshToken: currentRefreshTokenHash },
       include: { user: true },
     })
 
     if (!session) {
-      throw new SessionError('Session not found', 'SESSION_NOT_FOUND')
+      await revokeSessionsForRefreshTokenReuse(verified.userId)
+      throw new SessionError('Refresh token reuse detected', 'INVALID_TOKEN')
     }
 
     // Check if session is expired
@@ -215,27 +218,32 @@ export async function refreshSession(refreshToken: string): Promise<{
     })
 
     // Update session with new tokens
-    const updatedSession = await prisma.session.update({
-      where: { id: session.id },
+    const rotation = await prisma.session.updateMany({
+      where: { id: session.id, refreshToken: currentRefreshTokenHash },
       data: {
-        token: newAccessToken,
-        refreshToken: newRefreshToken,
+        token: hashSessionToken(newAccessToken),
+        refreshToken: hashSessionToken(newRefreshToken),
         lastActivityAt: new Date(),
       },
     })
 
+    if (rotation.count !== 1) {
+      await revokeSessionsForRefreshTokenReuse(session.userId)
+      throw new SessionError('Refresh token reuse detected', 'INVALID_TOKEN')
+    }
+
     return {
       session: {
-        id: updatedSession.id,
-        userId: updatedSession.userId,
-        token: updatedSession.token,
-        refreshToken: updatedSession.refreshToken!,
-        deviceInfo: updatedSession.deviceInfo as DeviceInfo | undefined,
-        ipAddress: updatedSession.ipAddress || undefined,
-        userAgent: updatedSession.userAgent || undefined,
-        lastActivity: updatedSession.lastActivityAt,
-        expiresAt: updatedSession.expiresAt,
-        createdAt: updatedSession.createdAt,
+        id: session.id,
+        userId: session.userId,
+        token: newAccessToken,
+        refreshToken: newRefreshToken,
+        deviceInfo: session.deviceInfo as DeviceInfo | undefined,
+        ipAddress: session.ipAddress || undefined,
+        userAgent: session.userAgent || undefined,
+        lastActivity: new Date(),
+        expiresAt: session.expiresAt,
+        createdAt: session.createdAt,
       },
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
@@ -248,6 +256,17 @@ export async function refreshSession(refreshToken: string): Promise<{
   }
 }
 
+async function revokeSessionsForRefreshTokenReuse(userId: string): Promise<void> {
+  await prisma.session.deleteMany({ where: { userId } })
+  await logSecurityEvent({
+    userId,
+    action: 'refresh_token_reuse_detected',
+    details: { allSessionsRevoked: true },
+    ipAddress: 'unknown',
+    severity: 'critical',
+  })
+}
+
 /**
  * Delete a session (logout)
  * @param token - Session token to delete
@@ -255,7 +274,7 @@ export async function refreshSession(refreshToken: string): Promise<{
 export async function deleteSession(token: string): Promise<void> {
   try {
     await prisma.session.delete({
-      where: { token },
+      where: { token: hashSessionToken(token) },
     })
   } catch (error) {
     // Ignore if session doesn't exist
@@ -312,7 +331,7 @@ export async function getUserSessions(
       ipAddress: session.ipAddress || undefined,
       lastActivity: session.lastActivityAt,
       createdAt: session.createdAt,
-      isCurrent: session.token === currentToken,
+      isCurrent: Boolean(currentToken && session.token === hashSessionToken(currentToken)),
     }))
   } catch (error) {
     throw new SessionError(`Failed to get user sessions: ${error}`, 'SESSION_NOT_FOUND')
