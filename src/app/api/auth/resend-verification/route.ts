@@ -3,6 +3,7 @@ import { resendVerificationEmail } from '@/lib/services/email-verification'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { z } from 'zod'
 import { createHash } from 'crypto'
+import { apiError, logApiError } from '@/lib/api/error-response'
 
 const resendVerificationSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -32,17 +33,12 @@ export async function POST(request: NextRequest) {
     const validation = resendVerificationSchema.safeParse(body)
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid input',
-          errors: validation.error.issues.map(err => ({
-            field: err.path[0],
-            message: err.message,
-          })),
-        },
-        { status: 400 }
-      )
+      return apiError('VALIDATION_ERROR', 'Invalid input', 400, {
+        details: validation.error.issues.map(err => ({
+          field: err.path[0],
+          message: err.message,
+        })),
+      })
     }
 
     const email = validation.data.email.toLowerCase().trim()
@@ -55,13 +51,11 @@ export async function POST(request: NextRequest) {
     if (!rateLimit.allowed) {
       const resetInSeconds = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
 
-      return NextResponse.json(
+      return apiError(
+        'RATE_LIMITED',
+        'Too many verification requests. Please try again later.',
+        429,
         {
-          success: false,
-          message: 'Too many verification requests. Please try again later.',
-        },
-        {
-          status: 429,
           headers: {
             'X-RateLimit-Limit': rateLimit.limit.toString(),
             'X-RateLimit-Remaining': rateLimit.remaining.toString(),
@@ -76,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     return genericResponse()
   } catch (error) {
-    console.error('Resend verification API error:', error)
+    logApiError('resend-verification-api', error)
 
     // Still generic to avoid making email-delivery/account-state probing easy.
     return genericResponse()

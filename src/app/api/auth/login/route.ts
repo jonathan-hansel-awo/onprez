@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { loginUser, parseUserAgent } from '@/lib/services/login'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { z } from 'zod'
+import { apiError, logApiError } from '@/lib/api/error-response'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -62,17 +63,12 @@ export async function POST(request: NextRequest) {
     const validation = loginSchema.safeParse(body)
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid input',
-          errors: validation.error.issues.map(err => ({
-            field: err.path[0],
-            message: err.message,
-          })),
-        },
-        { status: 400 }
-      )
+      return apiError('VALIDATION_ERROR', 'Invalid input', 400, {
+        details: validation.error.issues.map(err => ({
+          field: err.path[0],
+          message: err.message,
+        })),
+      })
     }
 
     const { email, password, rememberMe } = validation.data
@@ -88,13 +84,11 @@ export async function POST(request: NextRequest) {
       const resetInSeconds = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
       const resetInMinutes = Math.ceil(resetInSeconds / 60)
 
-      return NextResponse.json(
+      return apiError(
+        'RATE_LIMITED',
+        `Too many login attempts. Please try again in ${resetInMinutes} minute${resetInMinutes > 1 ? 's' : ''}.`,
+        429,
         {
-          success: false,
-          message: `Too many login attempts. Please try again in ${resetInMinutes} minute${resetInMinutes > 1 ? 's' : ''}.`,
-        },
-        {
-          status: 429,
           headers: {
             'X-RateLimit-Limit': rateLimit.limit.toString(),
             'X-RateLimit-Remaining': rateLimit.remaining.toString(),
@@ -122,13 +116,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: getSafeLoginFailureMessage(result.error),
-        },
-        { status: 401 }
-      )
+      return apiError('INVALID_CREDENTIALS', getSafeLoginFailureMessage(result.error), 401)
     }
 
     if (result.requiresMfa && result.mfaToken) {
@@ -142,13 +130,7 @@ export async function POST(request: NextRequest) {
     if (!result.accessToken || !result.refreshToken) {
       console.error('Login succeeded without tokens')
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Login failed',
-        },
-        { status: 500 }
-      )
+      return apiError('INTERNAL_ERROR', 'Login failed', 500)
     }
 
     const response = NextResponse.json({
@@ -174,14 +156,7 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error('Login API error:', error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'An error occurred during login',
-      },
-      { status: 500 }
-    )
+    logApiError('login-api', error)
+    return apiError('INTERNAL_ERROR', 'An error occurred during login', 500)
   }
 }

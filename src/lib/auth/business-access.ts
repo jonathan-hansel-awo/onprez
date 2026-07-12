@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { apiError } from '@/lib/api/error-response'
 
 export type BusinessRole = 'OWNER' | 'ADMIN' | 'MANAGER' | 'STAFF' | 'VIEWER' | 'MEMBER'
 
@@ -220,13 +220,8 @@ export async function requireDefaultBusinessContext(
 
 export function businessAuthErrorResponse(error: unknown) {
   if (error instanceof BusinessAuthError) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message,
-      },
-      { status: error.status }
-    )
+    const code = error.code === 'BUSINESS_NOT_FOUND' ? 'NOT_FOUND' : error.code
+    return apiError(code, error.message, error.status)
   }
 
   return undefined

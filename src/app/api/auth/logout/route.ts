@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import { hashSessionToken } from '@/lib/auth/token-hash'
+import { apiError, logApiError } from '@/lib/api/error-response'
 
 function createLogoutResponse(message = 'Logged out successfully') {
   const response = NextResponse.json({
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     return createLogoutResponse()
   } catch (error) {
-    console.error('Logout API error:', error)
-    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
+    logApiError('logout-api', error)
+    return apiError('INTERNAL_ERROR', 'Internal server error', 500)
   }
 }

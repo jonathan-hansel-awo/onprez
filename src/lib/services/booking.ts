@@ -1,9 +1,7 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import {
-  generateDayAvailability,
   isSlotAvailable,
-  timeToMinutes,
-  minutesToTime,
   SlotGenerationConfig,
   DEFAULT_SLOT_CONFIG,
 } from '@/lib/utils/availability'
@@ -28,6 +26,47 @@ export interface BookingResult {
   conflicts?: ConflictCheckResult['conflicts']
 }
 
+const BLOCKING_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED'] as const
+const BOOKING_LOCK_NAMESPACE = 1
+
+type BookingDbClient = typeof prisma | Prisma.TransactionClient
+
+/** Convert a business-local date and time to the corresponding UTC instant. */
+export function zonedDateTimeToUtc(date: string, time: string, timezone: string): Date {
+  const [year, month, day] = date.split('-').map(Number)
+  const [hour, minute] = time.split(':').map(Number)
+  const targetAsUtc = Date.UTC(year, month - 1, day, hour, minute)
+  let candidate = targetAsUtc
+
+  // A second pass handles offset changes around daylight-saving transitions.
+  for (let pass = 0; pass < 2; pass += 1) {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date(candidate))
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]))
+    const representedAsUtc = Date.UTC(
+      Number(values.year),
+      Number(values.month) - 1,
+      Number(values.day),
+      Number(values.hour),
+      Number(values.minute)
+    )
+    candidate += targetAsUtc - representedAsUtc
+  }
+
+  return new Date(candidate)
+}
+
+async function lockBusinessBookingSchedule(tx: Prisma.TransactionClient, businessId: string) {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${businessId}, ${BOOKING_LOCK_NAMESPACE}))`
+}
+
 /**
  * Check for booking conflicts
  */
@@ -38,24 +77,24 @@ export async function checkBookingConflicts(
   duration: number,
   bufferTime: number,
   timezone: string,
-  excludeAppointmentId?: string
+  excludeAppointmentId?: string,
+  db: BookingDbClient = prisma
 ): Promise<ConflictCheckResult> {
-  const startMinutes = timeToMinutes(startTime)
-  const endMinutes = startMinutes + duration
+  const requestedStart = zonedDateTimeToUtc(date, startTime, timezone)
+  const requestedEnd = new Date(requestedStart.getTime() + duration * 60_000)
+  const searchStart = new Date(requestedStart.getTime() - 24 * 60 * 60_000)
+  const searchEnd = new Date(requestedEnd.getTime() + 24 * 60 * 60_000)
 
-  // Get appointments for the day
-  const dayStart = new Date(date + 'T00:00:00')
-  const dayEnd = new Date(date + 'T23:59:59')
-
-  const existingAppointments = await prisma.appointment.findMany({
+  const existingAppointments = await db.appointment.findMany({
     where: {
       businessId,
-      startTime: { gte: dayStart, lte: dayEnd },
-      status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+      startTime: { lt: searchEnd },
+      endTime: { gt: searchStart },
+      status: { in: [...BLOCKING_APPOINTMENT_STATUSES] },
       ...(excludeAppointmentId && { id: { not: excludeAppointmentId } }),
     },
     include: {
-      service: { select: { name: true } },
+      service: { select: { name: true, bufferTime: true } },
     },
   })
 
@@ -76,18 +115,12 @@ export async function checkBookingConflicts(
       hour12: false,
     }).format(appt.endTime)
 
-    const apptStart = timeToMinutes(apptStartTime)
-    const apptEnd = timeToMinutes(apptEndTime)
+    const requiredBuffer = Math.max(bufferTime, appt.service.bufferTime || 0) * 60_000
+    const overlaps =
+      requestedStart.getTime() < appt.endTime.getTime() + requiredBuffer &&
+      requestedEnd.getTime() + requiredBuffer > appt.startTime.getTime()
 
-    // Check direct overlap
-    const hasDirectOverlap = startMinutes < apptEnd && endMinutes > apptStart
-
-    // Check buffer overlap
-    const startWithBuffer = startMinutes - bufferTime
-    const endWithBuffer = endMinutes + bufferTime
-    const hasBufferOverlap = startWithBuffer < apptEnd && endWithBuffer > apptStart
-
-    if (hasDirectOverlap || hasBufferOverlap) {
+    if (overlaps) {
       conflicts.push({
         appointmentId: appt.id,
         startTime: apptStartTime,
@@ -237,123 +270,120 @@ export async function createBooking(
     return { success: false, error: timeValidation.reason }
   }
 
-  // Check for conflicts (unless skipped)
-  if (!options?.skipConflictCheck) {
-    const conflictCheck = await checkBookingConflicts(
-      businessId,
-      date,
-      startTime,
-      service.duration,
-      bufferTime,
-      timezone
-    )
+  return prisma.$transaction(async tx => {
+    await lockBusinessBookingSchedule(tx, businessId)
 
-    if (!conflictCheck.available) {
-      return {
-        success: false,
-        error: conflictCheck.reason,
-        conflicts: conflictCheck.conflicts,
+    if (!options?.skipConflictCheck) {
+      const conflictCheck = await checkBookingConflicts(
+        businessId,
+        date,
+        startTime,
+        service.duration,
+        bufferTime,
+        timezone,
+        undefined,
+        tx
+      )
+
+      if (!conflictCheck.available) {
+        return {
+          success: false,
+          error: conflictCheck.reason,
+          conflicts: conflictCheck.conflicts,
+        }
       }
     }
-  }
 
-  // Calculate end time
-  const startMinutes = timeToMinutes(startTime)
-  const endMinutes = startMinutes + service.duration
-  const endTime = minutesToTime(endMinutes)
+    const startDateTime = zonedDateTimeToUtc(date, startTime, timezone)
+    const endDateTime = new Date(startDateTime.getTime() + service.duration * 60_000)
+    let customerId = options?.customerId
 
-  // Create start and end DateTime
-  const startDateTime = new Date(`${date}T${startTime}:00`)
-  const endDateTime = new Date(`${date}T${endTime}:00`)
+    if (!customerId) {
+      const existingCustomer = await tx.customer.findUnique({
+        where: {
+          businessId_email: {
+            businessId,
+            email: customerData.email,
+          },
+        },
+      })
 
-  // Find or create customer
-  let customerId = options?.customerId
+      if (existingCustomer) {
+        customerId = existingCustomer.id
 
-  if (!customerId) {
-    const existingCustomer = await prisma.customer.findUnique({
-      where: {
-        businessId_email: {
-          businessId,
-          email: customerData.email,
+        // Update customer info if needed
+        await tx.customer.update({
+          where: { id: customerId },
+          data: {
+            name: customerData.name,
+            phone: customerData.phone || existingCustomer.phone,
+            totalBookings: { increment: 1 },
+          },
+        })
+      } else {
+        const newCustomer = await tx.customer.create({
+          data: {
+            businessId,
+            email: customerData.email,
+            name: customerData.name,
+            phone: customerData.phone,
+            totalBookings: 1,
+            firstBookingAt: new Date(),
+          },
+        })
+        customerId = newCustomer.id
+      }
+    }
+
+    // Determine initial status
+    const requiresApproval = service.requiresApproval || settings.requireApproval
+    const status = options?.status || (requiresApproval ? 'PENDING' : 'CONFIRMED')
+
+    // Create appointment
+    const appointment = await tx.appointment.create({
+      data: {
+        businessId,
+        serviceId,
+        customerId,
+        startTime: startDateTime,
+        endTime: endDateTime,
+        duration: service.duration,
+        timezone,
+        status,
+        customerName: customerData.name,
+        customerEmail: customerData.email,
+        customerPhone: customerData.phone,
+        customerNotes: customerData.notes,
+        businessNotes: options?.businessNotes,
+        totalAmount: service.price,
+        requiresDeposit: service.requiresDeposit,
+        depositAmount: service.depositAmount,
+        bookingSource: options?.bookingSource || 'website',
+        bookingIp: options?.bookingIp,
+        confirmedAt: status === 'CONFIRMED' ? new Date() : null,
+      },
+      include: {
+        service: true,
+        customer: true,
+        business: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            timezone: true,
+          },
         },
       },
     })
 
-    if (existingCustomer) {
-      customerId = existingCustomer.id
+    // Update customer's last booking date
+    await tx.customer.update({
+      where: { id: customerId },
+      data: { lastBookingAt: new Date() },
+    })
 
-      // Update customer info if needed
-      await prisma.customer.update({
-        where: { id: customerId },
-        data: {
-          name: customerData.name,
-          phone: customerData.phone || existingCustomer.phone,
-          totalBookings: { increment: 1 },
-        },
-      })
-    } else {
-      const newCustomer = await prisma.customer.create({
-        data: {
-          businessId,
-          email: customerData.email,
-          name: customerData.name,
-          phone: customerData.phone,
-          totalBookings: 1,
-          firstBookingAt: new Date(),
-        },
-      })
-      customerId = newCustomer.id
-    }
-  }
-
-  // Determine initial status
-  const requiresApproval = service.requiresApproval || settings.requireApproval
-  const status = options?.status || (requiresApproval ? 'PENDING' : 'CONFIRMED')
-
-  // Create appointment
-  const appointment = await prisma.appointment.create({
-    data: {
-      businessId,
-      serviceId,
-      customerId,
-      startTime: startDateTime,
-      endTime: endDateTime,
-      duration: service.duration,
-      timezone,
-      status,
-      customerName: customerData.name,
-      customerEmail: customerData.email,
-      customerPhone: customerData.phone,
-      customerNotes: customerData.notes,
-      businessNotes: options?.businessNotes,
-      totalAmount: service.price,
-      requiresDeposit: service.requiresDeposit,
-      depositAmount: service.depositAmount,
-      bookingSource: options?.bookingSource || 'website',
-      bookingIp: options?.bookingIp,
-      confirmedAt: status === 'CONFIRMED' ? new Date() : null,
-    },
-    include: {
-      service: true,
-      customer: true,
-      business: {
-        select: {
-          name: true,
-          email: true,
-          phone: true,
-          timezone: true,
-        },
-      },
-    },
+    return { success: true, appointment }
   })
-
-  // Update customer's last booking date
-  await prisma.customer.update({
-    where: { id: customerId },
-    data: { lastBookingAt: new Date() },
-  })
-
-  return { success: true, appointment }
 }
 
 /**
@@ -364,7 +394,8 @@ export async function rescheduleAppointment(
   businessId: string,
   newDate: string,
   newStartTime: string,
-  reason?: string
+  reason?: string,
+  rescheduledBy?: string
 ): Promise<BookingResult> {
   const appointment = await prisma.appointment.findFirst({
     where: { id: appointmentId, businessId },
@@ -403,63 +434,60 @@ export async function rescheduleAppointment(
     return { success: false, error: timeValidation.reason }
   }
 
-  // Check for conflicts (excluding current appointment)
-  const conflictCheck = await checkBookingConflicts(
-    businessId,
-    newDate,
-    newStartTime,
-    appointment.duration,
-    bufferTime,
-    timezone,
-    appointmentId
-  )
+  return prisma.$transaction(async tx => {
+    await lockBusinessBookingSchedule(tx, businessId)
+    const conflictCheck = await checkBookingConflicts(
+      businessId,
+      newDate,
+      newStartTime,
+      appointment.duration,
+      bufferTime,
+      timezone,
+      appointmentId,
+      tx
+    )
 
-  if (!conflictCheck.available) {
-    return {
-      success: false,
-      error: conflictCheck.reason,
-      conflicts: conflictCheck.conflicts,
+    if (!conflictCheck.available) {
+      return {
+        success: false,
+        error: conflictCheck.reason,
+        conflicts: conflictCheck.conflicts,
+      }
     }
-  }
 
-  // Calculate new end time
-  const startMinutes = timeToMinutes(newStartTime)
-  const endMinutes = startMinutes + appointment.duration
-  const newEndTime = minutesToTime(endMinutes)
+    const newStartDateTime = zonedDateTimeToUtc(newDate, newStartTime, timezone)
+    const newEndDateTime = new Date(newStartDateTime.getTime() + appointment.duration * 60_000)
+    const originalStartTime = appointment.startTime.toISOString()
 
-  const newStartDateTime = new Date(`${newDate}T${newStartTime}:00`)
-  const newEndDateTime = new Date(`${newDate}T${newEndTime}:00`)
-
-  // Store original time for reference
-  const originalStartTime = appointment.startTime.toISOString()
-
-  // Update appointment
-  const updatedAppointment = await prisma.appointment.update({
-    where: { id: appointmentId },
-    data: {
-      startTime: newStartDateTime,
-      endTime: newEndDateTime,
-      status: 'CONFIRMED',
-      previousStatus: appointment.status,
-      rescheduledFrom: originalStartTime,
-      rescheduledAt: new Date(),
-      rescheduleReason: reason,
-    },
-    include: {
-      service: true,
-      customer: true,
-      business: {
-        select: {
-          name: true,
-          email: true,
-          phone: true,
-          timezone: true,
+    const updatedAppointment = await tx.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        startTime: newStartDateTime,
+        endTime: newEndDateTime,
+        status: 'CONFIRMED',
+        previousStatus: appointment.status,
+        rescheduledFrom: originalStartTime,
+        rescheduledTo: newStartDateTime.toISOString(),
+        rescheduledBy,
+        rescheduledAt: new Date(),
+        rescheduleReason: reason,
+      },
+      include: {
+        service: true,
+        customer: true,
+        business: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            timezone: true,
+          },
         },
       },
-    },
-  })
+    })
 
-  return { success: true, appointment: updatedAppointment }
+    return { success: true, appointment: updatedAppointment }
+  })
 }
 
 /**
