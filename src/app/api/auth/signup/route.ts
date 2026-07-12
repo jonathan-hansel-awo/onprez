@@ -2,6 +2,7 @@ import { checkRateLimit } from '@/lib/services/rate-limit'
 import { signupUser } from '@/lib/services/signup'
 import { signupSchema } from '@/lib/validation/auth'
 import { NextRequest, NextResponse } from 'next/server'
+import { apiError, logApiError } from '@/lib/api/error-response'
 
 function getClientIp(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -42,38 +43,26 @@ export async function POST(request: NextRequest) {
     if (!rateLimit.allowed) {
       const resetInSeconds = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Too many signup attempts. Please try again later.',
+      return apiError('RATE_LIMITED', 'Too many signup attempts. Please try again later.', 429, {
+        headers: {
+          'X-RateLimit-Limit': rateLimit.limit.toString(),
+          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+          'X-RateLimit-Reset': Math.floor(rateLimit.resetAt.getTime() / 1000).toString(),
+          'Retry-After': (rateLimit.retryAfter || resetInSeconds).toString(),
         },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': rateLimit.limit.toString(),
-            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-            'X-RateLimit-Reset': Math.floor(rateLimit.resetAt.getTime() / 1000).toString(),
-            'Retry-After': (rateLimit.retryAfter || resetInSeconds).toString(),
-          },
-        }
-      )
+      })
     }
 
     const body = await request.json()
     const validation = signupSchema.safeParse(body)
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Validation failed',
-          errors: validation.error.issues.map(err => ({
-            field: err.path.join('.'),
-            message: err.message,
-          })),
-        },
-        { status: 400 }
-      )
+      return apiError('VALIDATION_ERROR', 'Validation failed', 400, {
+        details: validation.error.issues.map(err => ({
+          field: err.path.join('.'),
+          message: err.message,
+        })),
+      })
     }
 
     const userAgent = request.headers.get('user-agent') || undefined
@@ -81,13 +70,7 @@ export async function POST(request: NextRequest) {
     const result = await signupUser(validation.data, ipAddress, userAgent)
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: safeSignupFailureMessage(result.error),
-        },
-        { status: 400 }
-      )
+      return apiError('BAD_REQUEST', safeSignupFailureMessage(result.error), 400)
     }
 
     return NextResponse.json(
@@ -103,14 +86,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Signup API error:', error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'An error occurred during signup. Please try again.',
-      },
-      { status: 500 }
-    )
+    logApiError('signup-api', error)
+    return apiError('INTERNAL_ERROR', 'An error occurred during signup. Please try again.', 500)
   }
 }

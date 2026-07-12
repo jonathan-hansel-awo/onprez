@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from './get-user'
 import type { AuthUser, AuthRequirement } from '@/types/auth'
+import { apiError, logApiError } from '@/lib/api/error-response'
 
 interface ProtectedHandlerContext {
   user: AuthUser
@@ -24,7 +25,7 @@ export function withAuth(handler: ProtectedHandler, requirements: AuthRequiremen
 
       // Check if auth is required
       if (requirements.requireAuth !== false && !user) {
-        return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+        return apiError('UNAUTHORIZED', 'Unauthorized', 401)
       }
 
       // If no user and auth not required, continue without user
@@ -34,33 +35,24 @@ export function withAuth(handler: ProtectedHandler, requirements: AuthRequiremen
 
       // Check email verification
       if (requirements.requireEmailVerified && !user.emailVerified) {
-        return NextResponse.json(
-          { success: false, message: 'Email verification required' },
-          { status: 403 }
-        )
+        return apiError('FORBIDDEN', 'Email verification required', 403)
       }
 
       // Check MFA requirement
       if (requirements.requireMfa && !user.mfaEnabled) {
-        return NextResponse.json({ success: false, message: 'MFA required' }, { status: 403 })
+        return apiError('FORBIDDEN', 'MFA required', 403)
       }
 
       // Check role requirement
       if (requirements.allowedRoles && !requirements.allowedRoles.includes(user.role)) {
-        return NextResponse.json(
-          { success: false, message: 'Insufficient permissions' },
-          { status: 403 }
-        )
+        return apiError('FORBIDDEN', 'Insufficient permissions', 403)
       }
 
       // All checks passed, call handler
       return handler({ user, request })
     } catch (error) {
-      console.error('Auth wrapper error:', error)
-      return NextResponse.json(
-        { success: false, message: 'Internal server error' },
-        { status: 500 }
-      )
+      logApiError('auth-wrapper', error)
+      return apiError('INTERNAL_ERROR', 'Internal server error', 500)
     }
   }
 }

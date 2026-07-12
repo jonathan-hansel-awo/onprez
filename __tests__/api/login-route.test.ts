@@ -113,6 +113,10 @@ describe('POST /api/auth/login', () => {
     expect(json).toEqual({
       success: false,
       message: 'Invalid email or password',
+      error: {
+        code: 'INVALID_CREDENTIALS',
+        message: 'Invalid email or password',
+      },
     })
   })
 

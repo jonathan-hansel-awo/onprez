@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { apiError, logApiError } from '@/lib/api/error-response'
 
 export async function GET() {
   try {
     const user = await getCurrentUser()
 
     if (!user) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+      return apiError('UNAUTHORIZED', 'Unauthorized', 401)
     }
 
     return NextResponse.json({
@@ -18,7 +19,7 @@ export async function GET() {
       },
     })
   } catch (error) {
-    console.error('Get current user API error:', error)
-    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })
+    logApiError('current-user-api', error)
+    return apiError('INTERNAL_ERROR', 'Internal server error', 500)
   }
 }

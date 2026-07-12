@@ -3,6 +3,7 @@ import { completePasswordReset } from '@/lib/services/password-reset'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { z } from 'zod'
 import { createHash } from 'crypto'
+import { apiError, logApiError } from '@/lib/api/error-response'
 
 const passwordSchema = z
   .string()
@@ -34,17 +35,12 @@ export async function POST(request: NextRequest) {
     const validation = completeResetSchema.safeParse(body)
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid input',
-          errors: validation.error.issues.map(err => ({
-            field: err.path[0],
-            message: err.message,
-          })),
-        },
-        { status: 400 }
-      )
+      return apiError('VALIDATION_ERROR', 'Invalid input', 400, {
+        details: validation.error.issues.map(err => ({
+          field: err.path[0],
+          message: err.message,
+        })),
+      })
     }
 
     const { token, newPassword } = validation.data
@@ -58,13 +54,11 @@ export async function POST(request: NextRequest) {
     if (!rateLimit.allowed) {
       const resetInSeconds = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
 
-      return NextResponse.json(
+      return apiError(
+        'RATE_LIMITED',
+        'Too many password reset attempts. Please try again later.',
+        429,
         {
-          success: false,
-          message: 'Too many password reset attempts. Please try again later.',
-        },
-        {
-          status: 429,
           headers: {
             'X-RateLimit-Limit': rateLimit.limit.toString(),
             'X-RateLimit-Remaining': rateLimit.remaining.toString(),
@@ -78,13 +72,7 @@ export async function POST(request: NextRequest) {
     const result = await completePasswordReset({ token, newPassword }, ipAddress, userAgent)
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Password reset failed or the reset link has expired.',
-        },
-        { status: 400 }
-      )
+      return apiError('BAD_REQUEST', 'Password reset failed or the reset link has expired.', 400)
     }
 
     return NextResponse.json({
@@ -92,14 +80,7 @@ export async function POST(request: NextRequest) {
       message: 'Password reset successfully. You can now log in with your new password.',
     })
   } catch (error) {
-    console.error('Password reset completion API error:', error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'An error occurred. Please try again.',
-      },
-      { status: 500 }
-    )
+    logApiError('password-reset-complete-api', error)
+    return apiError('INTERNAL_ERROR', 'An error occurred. Please try again.', 500)
   }
 }
