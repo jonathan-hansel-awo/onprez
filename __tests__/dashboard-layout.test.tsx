@@ -1,12 +1,7 @@
 import React from 'react'
 import DashboardLayout from '@/app/dashboard/layout'
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { validateSession } from '@/lib/auth/session-service'
-
-jest.mock('next/headers', () => ({
-  cookies: jest.fn(),
-}))
+import { getCurrentUser } from '@/lib/auth/get-user'
 
 jest.mock('next/navigation', () => ({
   redirect: jest.fn((url: string) => {
@@ -14,33 +9,26 @@ jest.mock('next/navigation', () => ({
   }),
 }))
 
-jest.mock('@/lib/auth/session-service', () => ({
-  validateSession: jest.fn(),
+jest.mock('@/lib/auth/get-user', () => ({
+  getCurrentUser: jest.fn(),
 }))
 
 jest.mock('@/components/dashboard/DashboardShell', () => ({
-  DashboardShell: ({ children }: { children: React.ReactNode }) => (
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dashboard-shell">{children}</div>
   ),
 }))
 
-const mockedCookies = cookies as jest.Mock
 const mockedRedirect = redirect as unknown as jest.Mock
-const mockedValidateSession = validateSession as jest.Mock
+const mockedGetCurrentUser = getCurrentUser as jest.Mock
 
-function mockAccessToken(value?: string) {
-  mockedCookies.mockResolvedValue({
-    get: jest.fn((name: string) => {
-      if (name !== 'accessToken' || !value) {
-        return undefined
-      }
-
-      return {
-        name: 'accessToken',
-        value,
-      }
-    }),
-  })
+const user = {
+  id: 'user-1',
+  email: 'user@example.com',
+  emailVerified: true,
+  mfaEnabled: false,
+  role: 'USER',
 }
 
 describe('DashboardLayout auth guard', () => {
@@ -48,8 +36,8 @@ describe('DashboardLayout auth guard', () => {
     jest.clearAllMocks()
   })
 
-  it('redirects to login when there is no accessToken cookie', async () => {
-    mockAccessToken(undefined)
+  it('redirects to login when the canonical server auth check finds no user', async () => {
+    mockedGetCurrentUser.mockResolvedValue(null)
 
     await expect(
       DashboardLayout({
@@ -57,50 +45,19 @@ describe('DashboardLayout auth guard', () => {
       })
     ).rejects.toThrow('NEXT_REDIRECT:/login?redirect=/dashboard')
 
-    expect(mockedValidateSession).not.toHaveBeenCalled()
+    expect(mockedGetCurrentUser).toHaveBeenCalledTimes(1)
     expect(mockedRedirect).toHaveBeenCalledWith('/login?redirect=/dashboard')
   })
 
-  it('redirects to login when accessToken is invalid', async () => {
-    mockAccessToken('fake-token')
-
-    mockedValidateSession.mockResolvedValue({
-      valid: false,
-      reason: 'invalid_token',
-    })
-
-    await expect(
-      DashboardLayout({
-        children: <div>Protected content</div>,
-      })
-    ).rejects.toThrow('NEXT_REDIRECT:/login?redirect=/dashboard')
-
-    expect(mockedValidateSession).toHaveBeenCalledWith('fake-token')
-    expect(mockedRedirect).toHaveBeenCalledWith('/login?redirect=/dashboard')
-  })
-
-  it('renders the dashboard shell when session is valid', async () => {
-    mockAccessToken('valid-token')
-
-    mockedValidateSession.mockResolvedValue({
-      valid: true,
-      session: {
-        id: 'session-1',
-        userId: 'user-1',
-        token: 'valid-token',
-        refreshToken: 'refresh-token',
-        lastActivity: new Date(),
-        expiresAt: new Date(Date.now() + 60_000),
-        createdAt: new Date(),
-      },
-    })
+  it('renders the dashboard shell when the server resolves an authenticated user', async () => {
+    mockedGetCurrentUser.mockResolvedValue(user)
 
     const result = await DashboardLayout({
       children: <div>Protected content</div>,
     })
 
     expect(React.isValidElement(result)).toBe(true)
-    expect(mockedValidateSession).toHaveBeenCalledWith('valid-token')
+    expect(mockedGetCurrentUser).toHaveBeenCalledTimes(1)
     expect(mockedRedirect).not.toHaveBeenCalled()
   })
 })
