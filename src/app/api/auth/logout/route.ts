@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 import { logSecurityEvent } from '@/lib/services/security-logging'
+import { hashSessionToken } from '@/lib/auth/token-hash'
 
 function createLogoutResponse(message = 'Logged out successfully') {
   const response = NextResponse.json({
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       await prisma.session.deleteMany({
         where: {
           userId: user.id,
-          token: accessToken,
+          token: hashSessionToken(accessToken),
         },
       })
     }

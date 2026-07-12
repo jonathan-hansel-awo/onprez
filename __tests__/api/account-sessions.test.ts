@@ -9,6 +9,7 @@ import { POST as terminateAllSessions } from '@/app/api/account/sessions/termina
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { prisma } from '@/lib/prisma'
 import { logSecurityEvent } from '@/lib/services/security-logging'
+import { hashSessionToken } from '@/lib/auth/token-hash'
 
 jest.mock('@/lib/auth/get-user', () => ({
   getCurrentUser: jest.fn(),
@@ -79,7 +80,7 @@ describe('account session API routes', () => {
     mockedPrisma.session.findMany.mockResolvedValue([
       {
         id: 'session-1',
-        token: 'current-token',
+        token: hashSessionToken('current-token'),
         deviceInfo: { browser: 'Chrome' },
         userAgent: 'test-agent',
         ipAddress: '127.0.0.1',
@@ -181,7 +182,7 @@ describe('account session API routes', () => {
     expect(mockedPrisma.session.deleteMany).toHaveBeenCalledWith({
       where: {
         userId: 'user-1',
-        token: { not: 'current-token' },
+        token: { not: hashSessionToken('current-token') },
       },
     })
   })

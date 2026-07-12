@@ -10,6 +10,7 @@ import { generateToken } from '@/lib/utils/token'
 import { hashMfaTempToken } from '@/lib/services/mfa-challenge'
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import { sendNewDeviceAlert } from '@/lib/services/email'
+import { hashSessionToken } from '@/lib/auth/token-hash'
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
@@ -314,8 +315,8 @@ describe('loginUser', () => {
     expect(mockedPrisma.session.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: 'user-1',
-        token: 'access-token',
-        refreshToken: 'refresh-token',
+        token: hashSessionToken('access-token'),
+        refreshToken: hashSessionToken('refresh-token'),
         userAgent: 'test-agent',
         ipAddress: '127.0.0.1',
       }),
