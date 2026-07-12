@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's business - check ownership first, then membership
     // Check if user owns a business
-    const context = await resolveReadableBusinessContext(user.id)
+    const context = await resolveReadableBusinessContext(user.id, request)
     const businessId = context.businessId
     const businessSlug = context.business.slug
 

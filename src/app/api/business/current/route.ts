@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { resolveReadableBusinessContext } from '@/lib/auth/business-route-utils'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
 
@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const context = await resolveReadableBusinessContext(user.id)
+    const context = await resolveReadableBusinessContext(user.id, request)
 
     const business = await prisma.business.findUnique({
       where: { id: context.businessId },

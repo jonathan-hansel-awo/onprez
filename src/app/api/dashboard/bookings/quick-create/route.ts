@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const context = await resolveWritableBusinessContext(user.id, undefined, [
+    const context = await resolveWritableBusinessContext(user.id, request, [
       'ADMIN',
       'MANAGER',
       'STAFF',

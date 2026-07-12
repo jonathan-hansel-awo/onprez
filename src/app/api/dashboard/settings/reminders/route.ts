@@ -26,7 +26,7 @@ const defaultReminders = {
   defaultMessage: '',
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
 
@@ -34,7 +34,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const context = await resolveReadableBusinessContext(user.id)
+    const context = await resolveReadableBusinessContext(user.id, request)
 
     const business = await prisma.business.findUnique({
       where: { id: context.businessId },
@@ -82,7 +82,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const context = await resolveWritableBusinessContext(user.id)
+    const context = await resolveWritableBusinessContext(user.id, request)
 
     const business = await prisma.business.findUnique({
       where: { id: context.businessId },

@@ -192,9 +192,11 @@ describe('team API authorization', () => {
       expect(json.success).toBe(true)
       expect(json.data.members).toHaveLength(2)
 
-      expect(mockedResolveWritableBusinessContext).toHaveBeenCalledWith('user-1', undefined, [
-        'ADMIN',
-      ])
+      expect(mockedResolveWritableBusinessContext).toHaveBeenCalledWith(
+        'user-1',
+        expect.any(NextRequest),
+        ['ADMIN']
+      )
 
       expect(mockedPrisma.businessMember.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -341,9 +343,11 @@ describe('team API authorization', () => {
 
       expect(response.status).toBe(200)
 
-      expect(mockedResolveWritableBusinessContext).toHaveBeenCalledWith('user-1', undefined, [
-        'ADMIN',
-      ])
+      expect(mockedResolveWritableBusinessContext).toHaveBeenCalledWith(
+        'user-1',
+        expect.any(NextRequest),
+        ['ADMIN']
+      )
 
       expect(mockedPrisma.teamInvitation.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -399,9 +403,11 @@ describe('team API authorization', () => {
       expect(response.status).toBe(201)
       expect(json.success).toBe(true)
 
-      expect(mockedResolveWritableBusinessContext).toHaveBeenCalledWith('user-1', undefined, [
-        'ADMIN',
-      ])
+      expect(mockedResolveWritableBusinessContext).toHaveBeenCalledWith(
+        'user-1',
+        expect.any(NextRequest),
+        ['ADMIN']
+      )
 
       expect(mockedPrisma.businessMember.findUnique).toHaveBeenCalledWith({
         where: {

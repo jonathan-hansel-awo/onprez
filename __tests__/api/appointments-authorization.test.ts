@@ -378,7 +378,10 @@ describe('appointments API authorization', () => {
       expect(response.status).toBe(200)
       expect(json.success).toBe(true)
 
-      expect(mockedResolveReadableBusinessContext).toHaveBeenCalledWith('user-1')
+      expect(mockedResolveReadableBusinessContext).toHaveBeenCalledWith(
+        'user-1',
+        expect.any(NextRequest)
+      )
 
       expect(mockedPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -424,11 +427,11 @@ describe('appointments API authorization', () => {
       expect(response.status).toBe(201)
       expect(json.success).toBe(true)
 
-      expect(mockedResolveWritableBusinessContext).toHaveBeenCalledWith('user-1', undefined, [
-        'ADMIN',
-        'MANAGER',
-        'STAFF',
-      ])
+      expect(mockedResolveWritableBusinessContext).toHaveBeenCalledWith(
+        'user-1',
+        expect.any(NextRequest),
+        ['ADMIN', 'MANAGER', 'STAFF']
+      )
 
       expect(mockedPrisma.service.findFirst).toHaveBeenCalledWith({
         where: {
