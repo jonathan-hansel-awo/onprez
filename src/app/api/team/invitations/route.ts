@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const context = await resolveWritableBusinessContext(user.id, undefined, ['ADMIN'])
+    const context = await resolveWritableBusinessContext(user.id, request, ['ADMIN'])
 
     const invitations = await prisma.teamInvitation.findMany({
       where: {
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     const email = validation.data.email.toLowerCase()
     const role = validation.data.role
 
-    const context = await resolveWritableBusinessContext(user.id, undefined, ['ADMIN'])
+    const context = await resolveWritableBusinessContext(user.id, request, ['ADMIN'])
 
     if (role === 'ADMIN' && !context.isOwner) {
       return NextResponse.json(

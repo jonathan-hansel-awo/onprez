@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const context = await resolveReadableBusinessContext(user.id)
+    const context = await resolveReadableBusinessContext(user.id, request)
     const businessId = context.businessId
 
     const searchParams = request.nextUrl.searchParams

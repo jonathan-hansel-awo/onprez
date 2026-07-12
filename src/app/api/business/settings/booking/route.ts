@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const businessId = searchParams.get('businessId')
 
-    const context = await resolveReadableBusinessContext(user.id, businessId)
+    const context = await resolveReadableBusinessContext(user.id, businessId || request)
 
     const business = await prisma.business.findUnique({
       where: { id: context.businessId },
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const context = await resolveWritableBusinessContext(user.id, businessId)
+    const context = await resolveWritableBusinessContext(user.id, businessId || request)
 
     const business = await prisma.business.findUnique({
       where: { id: context.businessId },

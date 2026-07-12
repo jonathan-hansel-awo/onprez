@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const context = await resolveWritableBusinessContext(user.id, undefined, ['ADMIN'])
+    const context = await resolveWritableBusinessContext(user.id, request, ['ADMIN'])
 
     const business = await prisma.business.findUnique({
       where: { id: context.businessId },

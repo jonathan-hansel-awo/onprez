@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const context = await resolveReadableBusinessContext(user.id)
+    const context = await resolveReadableBusinessContext(user.id, request)
     const businessId = context.businessId
 
     const { searchParams } = new URL(request.url)
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const context = await resolveWritableBusinessContext(user.id, undefined, [
+    const context = await resolveWritableBusinessContext(user.id, request, [
       'ADMIN',
       'MANAGER',
       'STAFF',

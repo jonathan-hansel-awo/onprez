@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid year' }, { status: 400 })
     }
 
-    const context = await resolveReadableBusinessContext(user.id, businessId)
+    const context = await resolveReadableBusinessContext(user.id, businessId || request)
 
     const whereClause: Prisma.SpecialDateWhereInput = {
       businessId: context.businessId,
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const context = await resolveWritableBusinessContext(user.id, businessId)
+    const context = await resolveWritableBusinessContext(user.id, businessId || request)
 
     const { date, name, isClosed, openTime, closeTime, notes, isRecurring } = validation.data
     const specialDateDate = new Date(date)

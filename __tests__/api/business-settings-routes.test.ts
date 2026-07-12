@@ -170,7 +170,9 @@ describe('business settings routes', () => {
   it('GET /api/business/current returns 401 when unauthenticated', async () => {
     mockedGetCurrentUser.mockResolvedValue(null)
 
-    const response = await getCurrentBusiness()
+    const response = await getCurrentBusiness(
+      createRequest('/api/business/current', undefined, { method: 'GET' })
+    )
     const json = await response.json()
 
     expect(response.status).toBe(401)
@@ -206,12 +208,17 @@ describe('business settings routes', () => {
       updatedAt: new Date(),
     })
 
-    const response = await getCurrentBusiness()
+    const response = await getCurrentBusiness(
+      createRequest('/api/business/current', undefined, { method: 'GET' })
+    )
     const json = await response.json()
 
     expect(response.status).toBe(200)
     expect(json.success).toBe(true)
-    expect(mockedResolveReadableBusinessContext).toHaveBeenCalledWith('user-1')
+    expect(mockedResolveReadableBusinessContext).toHaveBeenCalledWith(
+      'user-1',
+      expect.any(NextRequest)
+    )
     expect(mockedPrisma.business.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'business-1' },

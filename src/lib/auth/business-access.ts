@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export type BusinessRole = 'OWNER' | 'ADMIN' | 'MANAGER' | 'STAFF' | 'MEMBER'
+export type BusinessRole = 'OWNER' | 'ADMIN' | 'MANAGER' | 'STAFF' | 'VIEWER' | 'MEMBER'
 
 export type BusinessAccessContext = {
   userId: string
@@ -29,9 +29,11 @@ export class BusinessAuthError extends Error {
 }
 
 function normalizeRole(role: unknown): BusinessRole {
+  if (role === 'OWNER') return 'OWNER'
   if (role === 'ADMIN') return 'ADMIN'
   if (role === 'MANAGER') return 'MANAGER'
   if (role === 'STAFF') return 'STAFF'
+  if (role === 'VIEWER') return 'VIEWER'
   if (role === 'MEMBER') return 'MEMBER'
 
   return 'MEMBER'
@@ -135,56 +137,73 @@ export async function requireBusinessRole(
 export async function getDefaultBusinessContext(
   userId: string
 ): Promise<BusinessAccessContext | null> {
-  const ownedBusiness = await prisma.business.findFirst({
-    where: { ownerId: userId },
-    orderBy: { createdAt: 'asc' },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      ownerId: true,
-      settings: true,
-    },
-  })
+  const contexts = await getUserBusinessContexts(userId)
+  return contexts[0] ?? null
+}
 
-  if (ownedBusiness) {
-    return {
+export async function getUserBusinessContexts(userId: string): Promise<BusinessAccessContext[]> {
+  const [ownedBusinesses, memberships] = await Promise.all([
+    prisma.business.findMany({
+      where: { ownerId: userId },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        ownerId: true,
+        settings: true,
+        createdAt: true,
+      },
+    }),
+    prisma.businessMember.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        role: true,
+        createdAt: true,
+        business: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            ownerId: true,
+            settings: true,
+            createdAt: true,
+          },
+        },
+      },
+    }),
+  ])
+
+  const contexts = new Map<string, BusinessAccessContext & { selectedAt: Date }>()
+
+  for (const business of ownedBusinesses) {
+    contexts.set(business.id, {
       userId,
-      businessId: ownedBusiness.id,
+      businessId: business.id,
       role: 'OWNER',
       isOwner: true,
-      business: ownedBusiness,
+      business,
+      selectedAt: business.createdAt,
+    })
+  }
+
+  for (const membership of memberships) {
+    if (!contexts.has(membership.business.id)) {
+      contexts.set(membership.business.id, {
+        userId,
+        businessId: membership.business.id,
+        role: normalizeRole(membership.role),
+        isOwner: false,
+        business: membership.business,
+        selectedAt: membership.createdAt,
+      })
     }
   }
 
-  const membership = await prisma.businessMember.findFirst({
-    where: { userId },
-    orderBy: { createdAt: 'asc' },
-    select: {
-      role: true,
-      business: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          ownerId: true,
-          settings: true,
-        },
-      },
-    },
-  })
-
-  if (!membership) {
-    return null
-  }
-
-  return {
-    userId,
-    businessId: membership.business.id,
-    role: normalizeRole(membership.role),
-    isOwner: false,
-    business: membership.business,
-  }
+  return [...contexts.values()]
+    .sort((left, right) => left.selectedAt.getTime() - right.selectedAt.getTime())
+    .map(({ selectedAt: _selectedAt, ...context }) => context)
 }
 
 export async function requireDefaultBusinessContext(
