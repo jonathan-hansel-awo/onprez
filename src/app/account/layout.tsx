@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { AccountSidebar } from '@/components/account'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
 

@@ -1,19 +1,13 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import DashboardShell from '@/components/dashboard/DashboardShell'
-import { validateSession } from '@/lib/auth/session-service'
+import { getCurrentUser } from '@/lib/auth/get-user'
+
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('accessToken')?.value?.trim()
+  const user = await getCurrentUser()
 
-  if (!accessToken) {
-    redirect('/login?redirect=/dashboard')
-  }
-
-  const validation = await validateSession(accessToken)
-
-  if (!validation.valid) {
+  if (!user) {
     redirect('/login?redirect=/dashboard')
   }
 
