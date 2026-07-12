@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client'
+import { createHash } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import {
   isSlotAvailable,
@@ -24,12 +25,19 @@ export interface BookingResult {
   appointment?: Awaited<ReturnType<typeof prisma.appointment.create>>
   error?: string
   conflicts?: ConflictCheckResult['conflicts']
+  replayed?: boolean
+  idempotencyConflict?: boolean
 }
 
 const BLOCKING_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED'] as const
 const BOOKING_LOCK_NAMESPACE = 1
+const IDEMPOTENCY_WINDOW_MS = 24 * 60 * 60 * 1000
 
 type BookingDbClient = typeof prisma | Prisma.TransactionClient
+
+export function bookingRequestHash(input: unknown): string {
+  return createHash('sha256').update(JSON.stringify(input)).digest('hex')
+}
 
 /** Convert a business-local date and time to the corresponding UTC instant. */
 export function zonedDateTimeToUtc(date: string, time: string, timezone: string): Date {
@@ -239,6 +247,7 @@ export async function createBooking(
     status?: 'PENDING' | 'CONFIRMED'
     bookingSource?: string
     bookingIp?: string
+    idempotencyKey?: string
   }
 ): Promise<BookingResult> {
   // Get service details
@@ -275,6 +284,59 @@ export async function createBooking(
 
   return prisma.$transaction(async tx => {
     await lockBusinessBookingSchedule(tx, businessId)
+
+    const requestHash = options?.idempotencyKey
+      ? bookingRequestHash({
+          businessId,
+          serviceId,
+          date,
+          startTime,
+          customerId: options.customerId || null,
+          customerEmail: customerData.email.toLowerCase(),
+          customerName: customerData.name,
+          customerPhone: customerData.phone || null,
+          customerNotes: customerData.notes || null,
+          businessNotes: options.businessNotes || null,
+          status: options.status || null,
+        })
+      : null
+
+    if (options?.idempotencyKey && requestHash) {
+      await tx.bookingIdempotencyKey.deleteMany({
+        where: {
+          businessId,
+          key: options.idempotencyKey,
+          expiresAt: { lte: new Date() },
+        },
+      })
+
+      const existingKey = await tx.bookingIdempotencyKey.findUnique({
+        where: { businessId_key: { businessId, key: options.idempotencyKey } },
+        include: {
+          appointment: {
+            include: {
+              service: true,
+              customer: true,
+              business: {
+                select: { name: true, email: true, phone: true, timezone: true },
+              },
+            },
+          },
+        },
+      })
+
+      if (existingKey) {
+        if (existingKey.requestHash !== requestHash) {
+          return {
+            success: false,
+            error: 'Idempotency key has already been used for a different booking request',
+            idempotencyConflict: true,
+          }
+        }
+
+        return { success: true, appointment: existingKey.appointment, replayed: true }
+      }
+    }
 
     const conflictCheck = await checkBookingConflicts(
       businessId,
@@ -376,6 +438,18 @@ export async function createBooking(
         },
       },
     })
+
+    if (options?.idempotencyKey && requestHash) {
+      await tx.bookingIdempotencyKey.create({
+        data: {
+          businessId,
+          key: options.idempotencyKey,
+          requestHash,
+          appointmentId: appointment.id,
+          expiresAt: new Date(Date.now() + IDEMPOTENCY_WINDOW_MS),
+        },
+      })
+    }
 
     // Update customer's last booking date
     await tx.customer.update({

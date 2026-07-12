@@ -6,6 +6,7 @@ import {
 } from '@/lib/validation/multi-day-appointment'
 import { Prisma } from '@prisma/client'
 import {
+  bookingRequestHash,
   checkBookingConflicts,
   lockBusinessBookingSchedule,
   zonedDateTimeToUtc,
@@ -204,11 +205,16 @@ export async function checkMultiDayAvailability(
 /**
  * Create multi-day appointment (creates linked appointments)
  */
-export async function createMultiDayAppointment(data: CreateMultiDayAppointment): Promise<{
+export async function createMultiDayAppointment(
+  data: CreateMultiDayAppointment,
+  idempotencyKey?: string
+): Promise<{
   success: boolean
   appointments?: Array<{ id: string; date: string; startTime: string }>
   error?: string
   conflicts?: { date: string; reason: string }[]
+  replayed?: boolean
+  idempotencyConflict?: boolean
 }> {
   // Validate input
   const validation = createMultiDayAppointmentSchema.safeParse(data)
@@ -254,6 +260,45 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
   // same transaction. The preview above is only an early user-facing check.
   const result = await prisma.$transaction(async tx => {
     await lockBusinessBookingSchedule(tx, data.businessId)
+
+    const requestHash = idempotencyKey ? bookingRequestHash(data) : null
+    if (idempotencyKey && requestHash) {
+      await tx.bookingIdempotencyKey.deleteMany({
+        where: { businessId: data.businessId, key: idempotencyKey, expiresAt: { lte: new Date() } },
+      })
+      const existingKey = await tx.bookingIdempotencyKey.findUnique({
+        where: { businessId_key: { businessId: data.businessId, key: idempotencyKey } },
+      })
+
+      if (existingKey) {
+        if (existingKey.requestHash !== requestHash) {
+          return { appointments: null, conflicts: [], idempotencyConflict: true }
+        }
+
+        const existingSeries = await tx.appointment.findMany({
+          where: {
+            OR: [{ id: existingKey.appointmentId }, { parentId: existingKey.appointmentId }],
+          },
+          orderBy: { startTime: 'asc' },
+        })
+        return {
+          appointments: existingSeries.map(appointment => ({
+            id: appointment.id,
+            date: new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(
+              appointment.startTime
+            ),
+            startTime: new Intl.DateTimeFormat('en-GB', {
+              timeZone: timezone,
+              hour: '2-digit',
+              minute: '2-digit',
+              hourCycle: 'h23',
+            }).format(appointment.startTime),
+          })),
+          conflicts: [],
+          replayed: true,
+        }
+      }
+    }
 
     const conflicts: { date: string; reason: string }[] = []
     for (const slot of slots) {
@@ -357,8 +402,28 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
       },
     })
 
-    return { appointments, conflicts: [] }
+    if (idempotencyKey && requestHash && parentId) {
+      await tx.bookingIdempotencyKey.create({
+        data: {
+          businessId: data.businessId,
+          key: idempotencyKey,
+          requestHash,
+          appointmentId: parentId,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      })
+    }
+
+    return { appointments, conflicts: [], replayed: false }
   })
+
+  if (result.idempotencyConflict) {
+    return {
+      success: false,
+      error: 'Idempotency key has already been used for a different booking request',
+      idempotencyConflict: true,
+    }
+  }
 
   if (!result.appointments) {
     return {
@@ -368,7 +433,7 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
     }
   }
 
-  return { success: true, appointments: result.appointments }
+  return { success: true, appointments: result.appointments, replayed: result.replayed }
 }
 
 /**

@@ -96,6 +96,14 @@ function serializeAppointment(appointment: {
 
 export async function POST(request: NextRequest) {
   try {
+    const idempotencyKey = request.headers.get('idempotency-key')?.trim()
+    if (idempotencyKey && !/^[A-Za-z0-9_-]{16,128}$/.test(idempotencyKey)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Idempotency-Key header' },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
 
     const validationResult = createBookingSchema.safeParse(body)
@@ -201,6 +209,7 @@ export async function POST(request: NextRequest) {
         status: service.requiresApproval ? 'PENDING' : 'CONFIRMED',
         bookingSource: 'WEBSITE',
         bookingIp: getClientIp(request),
+        idempotencyKey,
       }
     )
 
@@ -211,7 +220,7 @@ export async function POST(request: NextRequest) {
           error: result.error || 'Failed to create booking',
           conflicts: result.conflicts,
         },
-        { status: result.conflicts ? 409 : 400 }
+        { status: result.conflicts || result.idempotencyConflict ? 409 : 400 }
       )
     }
 
@@ -264,7 +273,10 @@ export async function POST(request: NextRequest) {
         success: true,
         data: serializeAppointment(appointment),
       },
-      { status: 201 }
+      {
+        status: result.replayed ? 200 : 201,
+        headers: result.replayed ? { 'Idempotency-Replayed': 'true' } : undefined,
+      }
     )
   } catch (error) {
     console.error('Error creating booking:', error)

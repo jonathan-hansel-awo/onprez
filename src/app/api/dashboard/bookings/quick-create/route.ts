@@ -25,6 +25,14 @@ const quickCreateSchema = z
 
 export async function POST(request: NextRequest) {
   try {
+    const idempotencyKey = request.headers.get('idempotency-key')?.trim()
+    if (idempotencyKey && !/^[A-Za-z0-9_-]{16,128}$/.test(idempotencyKey)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Idempotency-Key header' },
+        { status: 400 }
+      )
+    }
+
     const user = await getCurrentUser()
 
     if (!user) {
@@ -110,6 +118,7 @@ export async function POST(request: NextRequest) {
         businessNotes: fullBusinessNotes,
         status: 'CONFIRMED',
         bookingSource: 'dashboard',
+        idempotencyKey,
       }
     )
 
@@ -120,18 +129,24 @@ export async function POST(request: NextRequest) {
           error: result.error || 'Failed to create booking',
           conflicts: result.conflicts,
         },
-        { status: result.conflicts ? 409 : 400 }
+        { status: result.conflicts || result.idempotencyConflict ? 409 : 400 }
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        appointment: result.appointment,
-        isNewCustomer: !customerId,
-        confirmationSent: sendConfirmation,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          appointment: result.appointment,
+          isNewCustomer: !customerId,
+          confirmationSent: sendConfirmation,
+        },
       },
-    })
+      {
+        status: 200,
+        headers: result.replayed ? { 'Idempotency-Replayed': 'true' } : undefined,
+      }
+    )
   } catch (error) {
     const authResponse = businessAuthErrorResponse(error)
     if (authResponse) return authResponse

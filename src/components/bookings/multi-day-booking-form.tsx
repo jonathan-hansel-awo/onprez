@@ -37,6 +37,7 @@ export function MultiDayBookingForm({
   onSuccess,
   onCancel,
 }: MultiDayBookingFormProps) {
+  const idempotencyRef = React.useRef<{ fingerprint: string; key: string } | null>(null)
   const [formData, setFormData] = useState({
     serviceId: services[0]?.id || '',
     customerName: '',
@@ -123,27 +124,36 @@ export function MultiDayBookingForm({
     setIsLoading(true)
 
     try {
+      const requestBody = {
+        businessId,
+        serviceId: formData.serviceId,
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerPhone: formData.customerPhone || undefined,
+        startDate: formData.startDate,
+        startTime: formData.startTime,
+        pattern: {
+          type: formData.patternType,
+          consecutiveDays:
+            formData.patternType === 'consecutive' ? formData.consecutiveDays : undefined,
+          weeklyDays: formData.patternType === 'weekly' ? formData.weeklyDays : undefined,
+          weekCount: formData.patternType === 'weekly' ? formData.weekCount : undefined,
+          customDates: formData.patternType === 'custom' ? formData.customDates : undefined,
+        },
+        customerNotes: formData.customerNotes || undefined,
+      }
+      const fingerprint = JSON.stringify(requestBody)
+      if (idempotencyRef.current?.fingerprint !== fingerprint) {
+        idempotencyRef.current = { fingerprint, key: crypto.randomUUID() }
+      }
+
       const response = await fetch('/api/appointments/multi-day', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessId,
-          serviceId: formData.serviceId,
-          customerName: formData.customerName,
-          customerEmail: formData.customerEmail,
-          customerPhone: formData.customerPhone || undefined,
-          startDate: formData.startDate,
-          startTime: formData.startTime,
-          pattern: {
-            type: formData.patternType,
-            consecutiveDays:
-              formData.patternType === 'consecutive' ? formData.consecutiveDays : undefined,
-            weeklyDays: formData.patternType === 'weekly' ? formData.weeklyDays : undefined,
-            weekCount: formData.patternType === 'weekly' ? formData.weekCount : undefined,
-            customDates: formData.patternType === 'custom' ? formData.customDates : undefined,
-          },
-          customerNotes: formData.customerNotes || undefined,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyRef.current.key,
+        },
+        body: JSON.stringify(requestBody),
       })
 
       const result = await response.json()

@@ -43,13 +43,19 @@ function createRequest(path: string, init?: ConstructorParameters<typeof NextReq
   return new NextRequest(`http://localhost:3000${path}`, init)
 }
 
-function jsonRequest(path: string, body: unknown, method = 'POST') {
+function jsonRequest(
+  path: string,
+  body: unknown,
+  method = 'POST',
+  headers: Record<string, string> = {}
+) {
   return createRequest(path, {
     method,
     body: JSON.stringify(body),
     headers: {
       'content-type': 'application/json',
       'x-forwarded-for': '203.0.113.10',
+      ...headers,
     },
   })
 }
@@ -224,6 +230,55 @@ describe('public bookings API', () => {
         expect.objectContaining({
           status: 'PENDING',
         })
+      )
+    })
+
+    it('returns the original booking when an idempotency key is replayed', async () => {
+      mockedPrisma.business.findUnique.mockResolvedValue({
+        id: 'business-1',
+        name: 'Test Business',
+        timezone: 'Europe/London',
+        email: 'business@example.com',
+        address: '123 Test Street',
+      })
+      mockedPrisma.service.findFirst.mockResolvedValue({
+        id: 'service-1',
+        name: 'Haircut',
+        duration: 30,
+        requiresApproval: false,
+      })
+      mockedCreateBooking.mockResolvedValue({
+        success: true,
+        replayed: true,
+        appointment: { id: mockAppointment.id },
+      })
+      mockedPrisma.appointment.findFirst.mockResolvedValue(mockAppointment)
+
+      const response = await POST(
+        jsonRequest(
+          '/api/bookings',
+          {
+            businessId: 'business-1',
+            serviceId: 'service-1',
+            date: '2026-08-01',
+            startTime: '10:00',
+            customerName: 'John Customer',
+            customerEmail: 'john@example.com',
+          },
+          'POST',
+          { 'idempotency-key': 'booking_key_1234567890' }
+        )
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('Idempotency-Replayed')).toBe('true')
+      expect(mockedCreateBooking).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({ idempotencyKey: 'booking_key_1234567890' })
       )
     })
 

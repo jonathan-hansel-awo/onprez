@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Modal, ModalBody, ModalFooter } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -106,6 +106,7 @@ export function QuickCreateBookingModal({
   const [step, setStep] = useState<Step>('service')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const idempotencyRef = useRef<{ fingerprint: string; key: string } | null>(null)
 
   // Services state
   const [services, setServices] = useState<Service[]>([])
@@ -149,6 +150,7 @@ export function QuickCreateBookingModal({
   const resetForm = () => {
     setStep('service')
     setError(null)
+    idempotencyRef.current = null
     setSelectedService(null)
     setCustomerMode('search')
     setCustomerSearch('')
@@ -255,21 +257,30 @@ export function QuickCreateBookingModal({
     setError(null)
 
     try {
+      const requestBody = {
+        serviceId: selectedService.id,
+        date: formatDate(selectedDate),
+        startTime: selectedSlot.startTime,
+        customerId: selectedCustomer?.id,
+        customerName: customerMode === 'new' ? newCustomer.name : undefined,
+        customerEmail: customerMode === 'new' ? newCustomer.email : undefined,
+        customerPhone: customerMode === 'new' ? newCustomer.phone : undefined,
+        customerNotes: customerNotes || undefined,
+        businessNotes: businessNotes || undefined,
+        sendConfirmation,
+      }
+      const fingerprint = JSON.stringify(requestBody)
+      if (idempotencyRef.current?.fingerprint !== fingerprint) {
+        idempotencyRef.current = { fingerprint, key: crypto.randomUUID() }
+      }
+
       const response = await fetch('/api/dashboard/bookings/quick-create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceId: selectedService.id,
-          date: formatDate(selectedDate),
-          startTime: selectedSlot.startTime,
-          customerId: selectedCustomer?.id,
-          customerName: customerMode === 'new' ? newCustomer.name : undefined,
-          customerEmail: customerMode === 'new' ? newCustomer.email : undefined,
-          customerPhone: customerMode === 'new' ? newCustomer.phone : undefined,
-          customerNotes: customerNotes || undefined,
-          businessNotes: businessNotes || undefined,
-          sendConfirmation,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyRef.current.key,
+        },
+        body: JSON.stringify(requestBody),
       })
 
       const result = await response.json()
