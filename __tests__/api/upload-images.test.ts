@@ -81,7 +81,7 @@ const authUser = {
 
 describe('POST /api/upload/images', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
+    jest.clearAllMocks()
 
     mockedGetCurrentUser.mockResolvedValue(authUser)
     mockedRequireBusinessRole.mockResolvedValue({

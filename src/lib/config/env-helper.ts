@@ -1,4 +1,3 @@
-import { get } from 'http'
 import { env } from './env'
 import { getAppUrl } from '../utils/get-app-url'
 
@@ -45,8 +44,8 @@ export function hasDatabaseConfigured(): boolean {
 export function hasSupabaseConfigured(): boolean {
   return Boolean(
     env.NEXT_PUBLIC_SUPABASE_URL &&
-      env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-      env.SUPABASE_SERVICE_ROLE_KEY
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+    env.SUPABASE_SERVICE_ROLE_KEY
   )
 }
 

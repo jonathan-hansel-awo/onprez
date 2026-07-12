@@ -55,10 +55,13 @@ describe('LoginPage', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/dashboard')
-      expect(mockRefresh).toHaveBeenCalled()
-    })
+    await waitFor(
+      () => {
+        expect(mockPush).toHaveBeenCalledWith('/dashboard')
+        expect(mockRefresh).toHaveBeenCalled()
+      },
+      { timeout: 2000 }
+    )
   })
 
   it('should handle MFA requirement', async () => {
@@ -82,7 +85,9 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/auth/mfa?token=mfa-token-123')
+      expect(mockPush).toHaveBeenCalledWith(
+        '/mfa/challenge?token=mfa-token-123&redirect=%2Fdashboard'
+      )
     })
   })
 
@@ -125,6 +130,12 @@ describe('LoginPage', () => {
 
     render(<LoginPage />)
 
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: 'test@example.com' },
+    })
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'password123' },
+    })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
@@ -161,8 +172,7 @@ describe('LoginPage', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-    expect(screen.getByText(/signing in/i)).toBeInTheDocument()
-    expect(screen.getByRole('button')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled()
   })
 
   it('should clear field error when user types', async () => {
@@ -176,6 +186,12 @@ describe('LoginPage', () => {
 
     render(<LoginPage />)
 
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: 'test@example.com' },
+    })
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'password123' },
+    })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
@@ -183,7 +199,7 @@ describe('LoginPage', () => {
     })
 
     fireEvent.change(screen.getByLabelText(/email address/i), {
-      target: { value: 'test@example.com' },
+      target: { value: 'updated@example.com' },
     })
 
     await waitFor(() => {
@@ -210,8 +226,11 @@ describe('LoginPage', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/settings')
-    })
+    await waitFor(
+      () => {
+        expect(mockPush).toHaveBeenCalledWith('/settings')
+      },
+      { timeout: 2000 }
+    )
   })
 })

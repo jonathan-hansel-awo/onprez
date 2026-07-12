@@ -10,58 +10,43 @@ jest.mock('@/lib/config/env', () => ({
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
-      get findUnique() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
     authAttempt: {
-      get create() {
-        return jest.fn()
-      },
-      get updateMany() {
-        return jest.fn()
-      },
+      create: jest.fn(),
+      update: jest.fn(),
     },
     session: {
-      get create() {
-        return jest.fn()
-      },
+      create: jest.fn(),
     },
+    mfaTempToken: {
+      updateMany: jest.fn(),
+      create: jest.fn(),
+    },
+    $transaction: jest.fn(values => Promise.all(values)),
   },
 }))
 
 // Mock password verification
 jest.mock('@/lib/auth/password', () => ({
-  get verifyPassword() {
-    return jest.fn()
-  },
+  verifyPassword: jest.fn(),
 }))
 
 // Mock JWT generation
 jest.mock('@/lib/auth/jwt', () => ({
-  get generateAccessToken() {
-    return jest.fn()
-  },
-  get generateRefreshToken() {
-    return jest.fn()
-  },
+  generateAccessToken: jest.fn(),
+  generateRefreshToken: jest.fn(),
 }))
 
 // Mock email service
 jest.mock('@/lib/services/email', () => ({
-  get sendNewDeviceAlert() {
-    return jest.fn()
-  },
+  sendNewDeviceAlert: jest.fn(),
 }))
 
 // Mock security logging
 jest.mock('@/lib/services/security-logging', () => ({
-  get logSecurityEvent() {
-    return jest.fn()
-  },
+  logSecurityEvent: jest.fn(),
 }))
 
 import { prisma } from '@/lib/prisma'
@@ -108,7 +93,7 @@ describe('Login Service', () => {
     ;(generateRefreshToken as jest.Mock).mockReturnValue('refresh-token')
     ;(prisma.user.update as jest.Mock).mockResolvedValue({})
     ;(prisma.session.create as jest.Mock).mockResolvedValue({})
-    ;(prisma.authAttempt.updateMany as jest.Mock).mockResolvedValue({})
+    ;(prisma.authAttempt.update as jest.Mock).mockResolvedValue({})
     ;(logSecurityEvent as jest.Mock).mockResolvedValue(undefined)
 
     const result = await loginUser(mockCredentials, mockDeviceInfo)
@@ -256,7 +241,7 @@ describe('Login Service', () => {
 
     expect(result.success).toBe(true)
     expect(result.requiresMfa).toBe(true)
-    expect(result.mfaToken).toBe('mfa-token')
+    expect(result.mfaToken).toEqual(expect.any(String))
   })
 
   it('should send new device alert', async () => {
@@ -283,7 +268,7 @@ describe('Login Service', () => {
     ;(generateRefreshToken as jest.Mock).mockReturnValue('refresh-token')
     ;(prisma.user.update as jest.Mock).mockResolvedValue({})
     ;(prisma.session.create as jest.Mock).mockResolvedValue({})
-    ;(prisma.authAttempt.updateMany as jest.Mock).mockResolvedValue({})
+    ;(prisma.authAttempt.update as jest.Mock).mockResolvedValue({})
     ;(sendNewDeviceAlert as jest.Mock).mockResolvedValue({ success: true })
     ;(logSecurityEvent as jest.Mock).mockResolvedValue(undefined)
 

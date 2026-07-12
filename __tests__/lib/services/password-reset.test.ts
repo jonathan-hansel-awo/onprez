@@ -10,33 +10,23 @@ jest.mock('@/lib/config/env', () => ({
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
-      get findUnique() {
-        return jest.fn()
-      },
+      findUnique: jest.fn(),
     },
     passwordResetToken: {
-      get deleteMany() {
-        return jest.fn()
-      },
-      get create() {
-        return jest.fn()
-      },
+      deleteMany: jest.fn(),
+      create: jest.fn(),
     },
   },
 }))
 
 // Mock email service
 jest.mock('@/lib/services/email', () => ({
-  get sendPasswordResetEmail() {
-    return jest.fn()
-  },
+  sendPasswordResetEmail: jest.fn(),
 }))
 
 // Mock security logging
 jest.mock('@/lib/services/security-logging', () => ({
-  get logSecurityEvent() {
-    return jest.fn()
-  },
+  logSecurityEvent: jest.fn(),
 }))
 
 import { prisma } from '@/lib/prisma'

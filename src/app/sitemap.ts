@@ -33,23 +33,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Dynamic presence pages
-  const businesses = await prisma.business.findMany({
-    where: {
-      isPublished: true,
-    },
-    select: {
-      slug: true,
-      updatedAt: true,
-    },
-  })
+  let presenceRoutes: MetadataRoute.Sitemap = []
 
-  const presenceRoutes: MetadataRoute.Sitemap = businesses.map(business => ({
-    url: `${baseUrl}/${business.slug}`,
-    lastModified: business.updatedAt,
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }))
+  try {
+    const businesses = await prisma.business.findMany({
+      where: {
+        isPublished: true,
+      },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+    })
+
+    presenceRoutes = businesses.map(business => ({
+      url: `${baseUrl}/${business.slug}`,
+      lastModified: business.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }))
+  } catch (error) {
+    // Keep the static sitemap available during builds or transient database outages.
+    console.warn('Dynamic sitemap entries are temporarily unavailable.', error)
+  }
 
   return [...staticRoutes, ...presenceRoutes]
 }

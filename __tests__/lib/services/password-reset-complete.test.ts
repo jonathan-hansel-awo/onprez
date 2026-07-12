@@ -9,45 +9,29 @@ jest.mock('@/lib/config/env', () => ({
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     passwordResetToken: {
-      get findUnique() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
+      findFirst: jest.fn(),
+      update: jest.fn(),
     },
     user: {
-      get update() {
-        return jest.fn()
-      },
+      update: jest.fn(),
     },
     session: {
-      get deleteMany() {
-        return jest.fn()
-      },
+      deleteMany: jest.fn(),
     },
-    get $transaction() {
-      return jest.fn()
-    },
+    $transaction: jest.fn(),
   },
 }))
 
 jest.mock('@/lib/auth/password', () => ({
-  get hashPassword() {
-    return jest.fn()
-  },
+  hashPassword: jest.fn(),
 }))
 
 jest.mock('@/lib/services/email', () => ({
-  get sendPasswordChangedEmail() {
-    return jest.fn()
-  },
+  sendPasswordChangedEmail: jest.fn(),
 }))
 
 jest.mock('@/lib/services/security-logging', () => ({
-  get logSecurityEvent() {
-    return jest.fn()
-  },
+  logSecurityEvent: jest.fn(),
 }))
 
 import { prisma } from '@/lib/prisma'
@@ -75,12 +59,12 @@ describe('Complete Password Reset', () => {
       },
     }
 
-    ;(prisma.passwordResetToken.findUnique as jest.Mock).mockResolvedValue(mockToken)
+    ;(prisma.passwordResetToken.findFirst as jest.Mock).mockResolvedValue(mockToken)
     ;(hashPassword as jest.Mock).mockResolvedValue('hashed-password')
     ;(prisma.$transaction as jest.Mock).mockImplementation(async callback => {
       const mockTx = {
         user: { update: jest.fn().mockResolvedValue({}) },
-        passwordResetToken: { update: jest.fn().mockResolvedValue({}) },
+        passwordResetToken: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
         session: { deleteMany: jest.fn().mockResolvedValue({ count: 2 }) },
       }
       return callback(mockTx)
@@ -99,7 +83,7 @@ describe('Complete Password Reset', () => {
   })
 
   it('should fail for invalid token', async () => {
-    ;(prisma.passwordResetToken.findUnique as jest.Mock).mockResolvedValue(null)
+    ;(prisma.passwordResetToken.findFirst as jest.Mock).mockResolvedValue(null)
 
     const result = await completePasswordReset(
       { token: 'invalid-token', newPassword: 'NewPass123!' },
@@ -120,7 +104,7 @@ describe('Complete Password Reset', () => {
       user: { id: 'user-123', email: 'test@example.com', businesses: [] },
     }
 
-    ;(prisma.passwordResetToken.findUnique as jest.Mock).mockResolvedValue(mockToken)
+    ;(prisma.passwordResetToken.findFirst as jest.Mock).mockResolvedValue(mockToken)
 
     const result = await completePasswordReset(
       { token: 'used-token', newPassword: 'NewPass123!' },
@@ -141,7 +125,7 @@ describe('Complete Password Reset', () => {
       user: { id: 'user-123', email: 'test@example.com', businesses: [] },
     }
 
-    ;(prisma.passwordResetToken.findUnique as jest.Mock).mockResolvedValue(mockToken)
+    ;(prisma.passwordResetToken.findFirst as jest.Mock).mockResolvedValue(mockToken)
 
     const result = await completePasswordReset(
       { token: 'expired-token', newPassword: 'NewPass123!' },
@@ -162,7 +146,7 @@ describe('Complete Password Reset', () => {
       user: { id: 'user-123', email: 'test@example.com', businesses: [] },
     }
 
-    ;(prisma.passwordResetToken.findUnique as jest.Mock).mockResolvedValue(mockToken)
+    ;(prisma.passwordResetToken.findFirst as jest.Mock).mockResolvedValue(mockToken)
 
     const result = await completePasswordReset(
       { token: 'valid-token', newPassword: 'weak' },

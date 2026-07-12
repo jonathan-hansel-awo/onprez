@@ -85,6 +85,9 @@ describe('Signup Service', () => {
               name: 'Test Business',
             }),
           },
+          page: {
+            create: jest.fn().mockResolvedValue({ id: 'page-123' }),
+          },
         }
 
         return callback(mockTx)
@@ -165,6 +168,7 @@ describe('Signup Service', () => {
       expect(result.reason).toBeUndefined()
       expect(prisma.business.findUnique).toHaveBeenCalledWith({
         where: { slug: 'new-handle' },
+        select: { id: true },
       })
     })
 
@@ -187,6 +191,7 @@ describe('Signup Service', () => {
 
       expect(prisma.business.findUnique).toHaveBeenCalledWith({
         where: { slug: 'test-handle' },
+        select: { id: true },
       })
     })
   })

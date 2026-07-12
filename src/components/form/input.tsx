@@ -71,6 +71,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {/* Floating Label */}
           {label && (
             <motion.label
+              htmlFor={props.id}
               className={cn(
                 'absolute pointer-events-none transition-all duration-200',
                 leftIcon ? 'left-11' : 'left-4',
@@ -105,6 +106,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <AnimatePresence>
           {(error || helperText) && (
             <motion.p
+              id={props.id ? `${props.id}-${error ? 'error' : 'description'}` : undefined}
+              role={error ? 'alert' : undefined}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}

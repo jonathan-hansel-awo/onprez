@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/services/email'
-import { generateReminderEmailHtml, generateReminderEmailText } from '@/lib/email/templates/appointment-reminder'
+import {
+  generateReminderEmailHtml,
+  generateReminderEmailText,
+} from '@/lib/email/templates/appointment-reminder'
 import { format } from 'date-fns'
 
 interface ReminderSettings {
@@ -53,7 +56,7 @@ export async function sendAppointmentReminder(
       return { success: false, error: 'No customer email' }
     }
 
-    const settings = appointment.business.settings as Record<string, unknown> || {}
+    const settings = (appointment.business.settings as Record<string, unknown>) || {}
     const reminderSettings = settings.reminders as ReminderSettings | undefined
 
     const emailData = {

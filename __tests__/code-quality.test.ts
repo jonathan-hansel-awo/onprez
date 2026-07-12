@@ -11,8 +11,8 @@ describe('Code Quality Setup', () => {
   })
 
   it('should have ESLint configuration', () => {
-    const eslintrcPath = path.join(projectRoot, '.eslintrc.json')
-    expect(fs.existsSync(eslintrcPath)).toBe(true)
+    const eslintConfigPath = path.join(projectRoot, 'eslint.config.mjs')
+    expect(fs.existsSync(eslintConfigPath)).toBe(true)
   })
 
   it('should have lint-staged configuration', () => {

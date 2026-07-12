@@ -3,7 +3,6 @@ import { env } from '@/lib/config/env'
 
 // Lazy initialization - only create Resend instance when needed
 let resendInstance: Resend | null = null
-const resend = getResendInstance()
 
 function getResendInstance(): Resend {
   if (!resendInstance) {
@@ -107,6 +106,7 @@ export async function sendPasswordResetEmail(
   businessName: string
 ): Promise<EmailResult> {
   try {
+    const resend = getResendInstance()
     const { data, error } = await resend.emails.send({
       from: `${env.FROM_NAME} <${env.FROM_EMAIL}>`,
       to: email,
@@ -195,6 +195,7 @@ export async function sendPasswordChangedEmail(
   businessName: string
 ): Promise<EmailResult> {
   try {
+    const resend = getResendInstance()
     const { data, error } = await resend.emails.send({
       from: `${env.FROM_NAME} <${env.FROM_EMAIL}>`,
       to: email,
