@@ -3,9 +3,7 @@ import path from 'path'
 
 describe('Deployment safety', () => {
   const projectRoot = process.cwd()
-  const packageJson = JSON.parse(
-    fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')
-  )
+  const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'))
 
   it('keeps database migrations out of the application build', () => {
     expect(packageJson.scripts.build).toBe('next build')
