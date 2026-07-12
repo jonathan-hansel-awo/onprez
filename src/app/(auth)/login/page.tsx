@@ -131,10 +131,10 @@ function LoginForm() {
         return
       }
 
-      if (result.requiresMfa && result.tempToken) {
+      if (result.requiresMfa && result.mfaToken) {
         // Redirect to MFA challenge
         router.push(
-          `/mfa/challenge?token=${result.tempToken}&redirect=${encodeURIComponent(redirectTo)}`
+          `/mfa/challenge?token=${result.mfaToken}&redirect=${encodeURIComponent(redirectTo)}`
         )
         return
       }

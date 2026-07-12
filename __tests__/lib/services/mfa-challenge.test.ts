@@ -10,37 +10,25 @@ import { createSession } from '@/lib/services/session'
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     mfaTempToken: {
-      get findUnique() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
-      get create() {
-        return jest.fn()
-      },
+      findFirst: jest.fn(),
+      updateMany: jest.fn(),
+      update: jest.fn(),
+      create: jest.fn(),
     },
     user: {
-      get update() {
-        return jest.fn()
-      },
+      update: jest.fn(),
     },
     trustedDevice: {
-      get create() {
-        return jest.fn()
-      },
-      get findFirst() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
     },
     $transaction: jest.fn(callback => callback(prisma)),
   },
 }))
 
 jest.mock('@/lib/services/mfa')
+jest.mock('@/lib/services/session', () => ({ createSession: jest.fn() }))
 jest.mock('@/lib/services/security-logging')
 
 const mockMfaTempToken = {
@@ -65,7 +53,7 @@ describe('MFA Challenge Service', () => {
 
   describe('verifyMfaChallenge', () => {
     it('should successfully verify TOTP code', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue(mockMfaTempToken)
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue(mockMfaTempToken)
       ;(verifyMfaToken as jest.Mock).mockResolvedValue({ success: true })
       ;(createSession as jest.Mock).mockResolvedValue({
         success: true,
@@ -74,7 +62,7 @@ describe('MFA Challenge Service', () => {
           refreshToken: 'refresh-token',
         },
       })
-      ;(prisma.mfaTempToken.update as jest.Mock).mockResolvedValue(mockMfaTempToken)
+      ;(prisma.mfaTempToken.updateMany as jest.Mock).mockResolvedValue({ count: 1 })
       ;(prisma.user.update as jest.Mock).mockResolvedValue({})
 
       const result = await verifyMfaChallenge({
@@ -92,7 +80,7 @@ describe('MFA Challenge Service', () => {
     })
 
     it('should successfully verify backup code', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue(mockMfaTempToken)
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue(mockMfaTempToken)
       ;(verifyBackupCode as jest.Mock).mockResolvedValue({ success: true })
       ;(createSession as jest.Mock).mockResolvedValue({
         success: true,
@@ -101,7 +89,7 @@ describe('MFA Challenge Service', () => {
           refreshToken: 'refresh-token',
         },
       })
-      ;(prisma.mfaTempToken.update as jest.Mock).mockResolvedValue(mockMfaTempToken)
+      ;(prisma.mfaTempToken.updateMany as jest.Mock).mockResolvedValue({ count: 1 })
       ;(prisma.user.update as jest.Mock).mockResolvedValue({})
 
       const result = await verifyMfaChallenge({
@@ -118,7 +106,7 @@ describe('MFA Challenge Service', () => {
     })
 
     it('should create trusted device when requested', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue(mockMfaTempToken)
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue(mockMfaTempToken)
       ;(verifyMfaToken as jest.Mock).mockResolvedValue({ success: true })
       ;(createSession as jest.Mock).mockResolvedValue({
         success: true,
@@ -128,7 +116,7 @@ describe('MFA Challenge Service', () => {
         },
       })
       ;(prisma.trustedDevice.create as jest.Mock).mockResolvedValue({})
-      ;(prisma.mfaTempToken.update as jest.Mock).mockResolvedValue(mockMfaTempToken)
+      ;(prisma.mfaTempToken.updateMany as jest.Mock).mockResolvedValue({ count: 1 })
       ;(prisma.user.update as jest.Mock).mockResolvedValue({})
 
       const result = await verifyMfaChallenge({
@@ -146,7 +134,7 @@ describe('MFA Challenge Service', () => {
     })
 
     it('should return error for invalid temp token', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue(null)
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue(null)
 
       const result = await verifyMfaChallenge({
         tempToken: 'invalid-token',
@@ -160,7 +148,7 @@ describe('MFA Challenge Service', () => {
     })
 
     it('should return error for expired temp token', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue({
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue({
         ...mockMfaTempToken,
         expiresAt: new Date(Date.now() - 1000),
       })
@@ -177,7 +165,7 @@ describe('MFA Challenge Service', () => {
     })
 
     it('should return error for already used temp token', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue({
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue({
         ...mockMfaTempToken,
         usedAt: new Date(),
       })
@@ -194,7 +182,7 @@ describe('MFA Challenge Service', () => {
     })
 
     it('should track failed attempts', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue(mockMfaTempToken)
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue(mockMfaTempToken)
       ;(verifyMfaToken as jest.Mock).mockResolvedValue({
         success: false,
         message: 'Invalid token',
@@ -244,7 +232,7 @@ describe('MFA Challenge Service', () => {
 
   describe('resendMfaChallenge', () => {
     it('should generate new temp token', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue(mockMfaTempToken)
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue(mockMfaTempToken)
       ;(prisma.$transaction as jest.Mock).mockResolvedValue([{}, {}])
 
       const result = await resendMfaChallenge('temp-token-123', '127.0.0.1', 'Mozilla/5.0')
@@ -254,7 +242,7 @@ describe('MFA Challenge Service', () => {
     })
 
     it('should return error for expired token', async () => {
-      ;(prisma.mfaTempToken.findUnique as jest.Mock).mockResolvedValue({
+      ;(prisma.mfaTempToken.findFirst as jest.Mock).mockResolvedValue({
         ...mockMfaTempToken,
         expiresAt: new Date(Date.now() - 1000),
       })

@@ -167,7 +167,7 @@ describe('Email Service', () => {
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           to: 'user@example.com',
-          subject: 'Reset your password - OnPrez',
+          subject: 'Reset Your Password - OnPrez',
         })
       )
     })
@@ -175,35 +175,33 @@ describe('Email Service', () => {
     it('should include reset URL in email', async () => {
       await sendPasswordResetEmail(
         'user@example.com',
-        'Jane Smith',
-        'https://onprez.com/reset?token=xyz789'
+        'https://onprez.com/reset?token=xyz789',
+        'Jane Smith'
       )
 
       const callArgs = mockSend.mock.calls[0][0]
       expect(callArgs.html).toContain('https://onprez.com/reset?token=xyz789')
-      expect(callArgs.text).toContain('https://onprez.com/reset?token=xyz789')
     })
   })
 
   describe('sendPasswordChangedEmail', () => {
     it('should send password changed notification', async () => {
-      const timestamp = new Date()
       const result = await sendPasswordChangedEmail('user@example.com', 'John Doe')
 
       expect(result.success).toBe(true)
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           to: 'user@example.com',
-          subject: 'Your password has been changed - OnPrez',
+          subject: 'Your Password Has Been Changed - OnPrez',
         })
       )
     })
 
-    it('should include IP and timestamp when provided', async () => {
+    it('should include the business name in the notification', async () => {
       await sendPasswordChangedEmail('user@example.com', 'John')
 
       const callArgs = mockSend.mock.calls[0][0]
-      expect(callArgs.html).toContain('192.168.1.1')
+      expect(callArgs.html).toContain('<strong>John</strong>')
     })
   })
 

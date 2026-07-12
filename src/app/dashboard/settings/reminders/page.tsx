@@ -87,9 +87,7 @@ export default function ReminderSettingsPage() {
           <Bell className="w-7 h-7 text-blue-500" />
           Reminder Settings
         </h1>
-        <p className="text-gray-600 mt-2">
-          Configure reminder emails for your customers
-        </p>
+        <p className="text-gray-600 mt-2">Configure reminder emails for your customers</p>
       </div>
 
       {error && (
@@ -164,7 +162,7 @@ export default function ReminderSettingsPage() {
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
               <h3 className="font-semibold text-blue-900 mb-2">How to send reminders</h3>
               <p className="text-sm text-blue-800">
-                Open any booking from your calendar or bookings list, then click the 
+                Open any booking from your calendar or bookings list, then click the
                 <span className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 bg-blue-100 rounded text-blue-700 font-medium">
                   <Bell className="w-3 h-3" /> Send Reminder
                 </span>
@@ -174,15 +172,13 @@ export default function ReminderSettingsPage() {
 
             {/* Custom Message */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                Custom Message
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">Custom Message</h2>
               <p className="text-sm text-gray-600 mb-4">
                 Add a personal note to include in reminder emails (optional)
               </p>
               <textarea
                 value={settings.defaultMessage}
-                onChange={(e) => setSettings({ ...settings, defaultMessage: e.target.value })}
+                onChange={e => setSettings({ ...settings, defaultMessage: e.target.value })}
                 rows={3}
                 maxLength={500}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors resize-none"

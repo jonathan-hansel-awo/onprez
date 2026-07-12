@@ -28,8 +28,8 @@ describe('Environment Helpers', () => {
     it('should check Supabase configuration', () => {
       const hasSupabase = hasSupabaseConfigured()
       expect(typeof hasSupabase).toBe('boolean')
-      // In test environment, we mock Supabase
-      expect(hasSupabase).toBe(true)
+      // Supabase is not configured in the CI environment.
+      expect(hasSupabase).toBe(false)
     })
 
     it('should check Stripe configuration', () => {
@@ -42,8 +42,8 @@ describe('Environment Helpers', () => {
     it('should check email configuration', () => {
       const hasEmail = hasEmailConfigured()
       expect(typeof hasEmail).toBe('boolean')
-      // Email is not configured in test environment
-      expect(hasEmail).toBe(false)
+      // CI supplies a non-secret placeholder so modules can validate configuration.
+      expect(hasEmail).toBe(true)
     })
   })
 

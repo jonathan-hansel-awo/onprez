@@ -9,38 +9,25 @@ import {
 import { prisma } from '@/lib/prisma'
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import * as speakeasy from 'speakeasy'
+import { createCipheriv, createHash } from 'crypto'
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
-      get findUnique() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
     mfaSecret: {
-      get create() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
-      get delete() {
-        return jest.fn()
-      },
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
     mfaBackupCode: {
-      get createMany() {
-        return jest.fn()
-      },
-      get deleteMany() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+      findFirst: jest.fn(),
+      updateMany: jest.fn(),
+      count: jest.fn(),
     },
     $transaction: jest.fn(callback => callback(prisma)),
   },
@@ -70,11 +57,21 @@ const mockUser = {
   mfaBackupCodes: [],
 }
 
+const testEncryptionKey = createHash('sha256')
+  .update(process.env.JWT_SECRET || 'development-only-mfa-key')
+  .digest()
+const testIv = Buffer.alloc(12)
+const testCipher = createCipheriv('aes-256-gcm', testEncryptionKey, testIv)
+const testCiphertext = Buffer.concat([
+  testCipher.update('JBSWY3DPEHPK3PXP', 'utf8'),
+  testCipher.final(),
+])
+
 const mockMfaSecret = {
   id: 'secret-123',
   userId: 'user-123',
-  encryptedSecret: 'encrypted-secret',
-  iv: 'iv-string',
+  encryptedSecret: `${testCiphertext.toString('hex')}:${testCipher.getAuthTag().toString('hex')}`,
+  iv: testIv.toString('hex'),
   verified: false,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -234,10 +231,8 @@ describe('MFA Service', () => {
         mfaEnabled: true,
         mfaBackupCodes: [mockBackupCode],
       })
-      ;(prisma.mfaBackupCode.update as jest.Mock).mockResolvedValue({
-        ...mockBackupCode,
-        usedAt: new Date(),
-      })
+      ;(prisma.mfaBackupCode.findFirst as jest.Mock).mockResolvedValue(mockBackupCode)
+      ;(prisma.mfaBackupCode.updateMany as jest.Mock).mockResolvedValue({ count: 1 })
 
       const result = await verifyBackupCode(
         'user-123',
@@ -260,6 +255,7 @@ describe('MFA Service', () => {
         mfaEnabled: true,
         mfaBackupCodes: [],
       })
+      ;(prisma.mfaBackupCode.findFirst as jest.Mock).mockResolvedValue(null)
 
       const result = await verifyBackupCode('user-123', 'INVALID-CODE', '127.0.0.1', 'Mozilla/5.0')
 
@@ -275,6 +271,7 @@ describe('MFA Service', () => {
         mfaEnabled: true,
         mfaBackupCodes: [{}, {}, {}],
       })
+      ;(prisma.mfaBackupCode.count as jest.Mock).mockResolvedValue(3)
 
       const result = await getMfaStatus('user-123')
 

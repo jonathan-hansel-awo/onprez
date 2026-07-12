@@ -291,9 +291,7 @@ export default function SpecialDatesPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Special Dates</h1>
-          <p className="text-gray-600 mt-2">
-            Manage holidays, closures, and special hours
-          </p>
+          <p className="text-gray-600 mt-2">Manage holidays, closures, and special hours</p>
         </div>
         {!showForm && (
           <Button variant="primary" onClick={() => setShowForm(true)}>
@@ -558,4 +556,4 @@ export default function SpecialDatesPage() {
       </Card>
     </div>
   )
-      }
+}

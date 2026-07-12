@@ -10,45 +10,27 @@ jest.mock('@/lib/config/env', () => ({
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
-      get findUnique() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
     emailVerificationToken: {
-      get findUnique() {
-        return jest.fn()
-      },
-      get update() {
-        return jest.fn()
-      },
-      get create() {
-        return jest.fn()
-      },
-      get deleteMany() {
-        return jest.fn()
-      },
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      create: jest.fn(),
+      deleteMany: jest.fn(),
     },
-    get $transaction() {
-      return jest.fn()
-    },
+    $transaction: jest.fn(),
   },
 }))
 
 // Mock email service with factory function
 jest.mock('@/lib/services/email', () => ({
-  get sendVerificationEmail() {
-    return jest.fn()
-  },
+  sendVerificationEmail: jest.fn(),
 }))
 
 // Mock security logging with factory function
 jest.mock('@/lib/services/security-logging', () => ({
-  get logSecurityEvent() {
-    return jest.fn()
-  },
+  logSecurityEvent: jest.fn(),
 }))
 
 // NOW import after all mocks
@@ -75,11 +57,11 @@ describe('Email Verification Service', () => {
         user: { id: 'user-123', email: 'test@example.com' },
       }
 
-      ;(prisma.emailVerificationToken.findUnique as jest.Mock).mockResolvedValue(mockToken)
+      ;(prisma.emailVerificationToken.findFirst as jest.Mock).mockResolvedValue(mockToken)
       ;(prisma.$transaction as jest.Mock).mockImplementation(async callback => {
         const mockTx = {
           emailVerificationToken: {
-            update: jest.fn().mockResolvedValue({}),
+            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
           },
           user: {
             update: jest.fn().mockResolvedValue({}),
@@ -101,7 +83,7 @@ describe('Email Verification Service', () => {
     })
 
     it('should fail for invalid token', async () => {
-      ;(prisma.emailVerificationToken.findUnique as jest.Mock).mockResolvedValue(null)
+      ;(prisma.emailVerificationToken.findFirst as jest.Mock).mockResolvedValue(null)
 
       const result = await verifyEmail('invalid-token', '127.0.0.1')
 
@@ -121,7 +103,7 @@ describe('Email Verification Service', () => {
         user: { id: 'user-123', email: 'test@example.com' },
       }
 
-      ;(prisma.emailVerificationToken.findUnique as jest.Mock).mockResolvedValue(mockToken)
+      ;(prisma.emailVerificationToken.findFirst as jest.Mock).mockResolvedValue(mockToken)
 
       const result = await verifyEmail('expired-token', '127.0.0.1')
 
@@ -141,7 +123,7 @@ describe('Email Verification Service', () => {
         user: { id: 'user-123', email: 'test@example.com' },
       }
 
-      ;(prisma.emailVerificationToken.findUnique as jest.Mock).mockResolvedValue(mockToken)
+      ;(prisma.emailVerificationToken.findFirst as jest.Mock).mockResolvedValue(mockToken)
 
       const result = await verifyEmail('verified-token', '127.0.0.1')
 
@@ -198,8 +180,9 @@ describe('Email Verification Service', () => {
 
       const result = await resendVerificationEmail('test@example.com', '127.0.0.1')
 
-      expect(result.success).toBe(false)
-      expect(result.message).toContain('already verified')
+      // Keep the response indistinguishable to prevent account enumeration.
+      expect(result.success).toBe(true)
+      expect(result.message).toContain('If an account')
     })
   })
 })
