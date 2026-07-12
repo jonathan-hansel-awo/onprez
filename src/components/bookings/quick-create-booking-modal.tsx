@@ -137,7 +137,6 @@ export function QuickCreateBookingModal({
   const [customerNotes, setCustomerNotes] = useState('')
   const [businessNotes, setBusinessNotes] = useState('')
   const [sendConfirmation, setSendConfirmation] = useState(true)
-  const [skipConflictCheck, setSkipConflictCheck] = useState(false)
 
   // Fetch services on mount
   useEffect(() => {
@@ -161,7 +160,6 @@ export function QuickCreateBookingModal({
     setCustomerNotes('')
     setBusinessNotes('')
     setSendConfirmation(true)
-    setSkipConflictCheck(false)
     setViewMonth(today.getMonth())
     setViewYear(today.getFullYear())
   }
@@ -271,7 +269,6 @@ export function QuickCreateBookingModal({
           customerNotes: customerNotes || undefined,
           businessNotes: businessNotes || undefined,
           sendConfirmation,
-          skipConflictCheck,
         }),
       })
 
@@ -732,18 +729,6 @@ export function QuickCreateBookingModal({
                   className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Send confirmation email to customer</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={skipConflictCheck}
-                  onChange={e => setSkipConflictCheck(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">
-                  Allow double-booking (override conflicts)
-                </span>
               </label>
             </div>
           </div>

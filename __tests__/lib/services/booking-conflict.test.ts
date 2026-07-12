@@ -47,7 +47,7 @@ describe('transaction-safe booking conflicts', () => {
       '2030-01-01',
       '10:00',
       20,
-      0,
+      15,
       'Europe/London'
     )
 

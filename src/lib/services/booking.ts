@@ -63,7 +63,10 @@ export function zonedDateTimeToUtc(date: string, time: string, timezone: string)
   return new Date(candidate)
 }
 
-async function lockBusinessBookingSchedule(tx: Prisma.TransactionClient, businessId: string) {
+export async function lockBusinessBookingSchedule(
+  tx: Prisma.TransactionClient,
+  businessId: string
+) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${businessId}, ${BOOKING_LOCK_NAMESPACE}))`
 }
 
@@ -115,10 +118,11 @@ export async function checkBookingConflicts(
       hour12: false,
     }).format(appt.endTime)
 
-    const requiredBuffer = Math.max(bufferTime, appt.service.bufferTime || 0) * 60_000
+    const requestedBuffer = bufferTime * 60_000
+    const existingBuffer = (appt.service.bufferTime || 0) * 60_000
     const overlaps =
-      requestedStart.getTime() < appt.endTime.getTime() + requiredBuffer &&
-      requestedEnd.getTime() + requiredBuffer > appt.startTime.getTime()
+      requestedStart.getTime() < appt.endTime.getTime() + existingBuffer &&
+      requestedEnd.getTime() + requestedBuffer > appt.startTime.getTime()
 
     if (overlaps) {
       conflicts.push({
@@ -233,7 +237,6 @@ export async function createBooking(
     customerId?: string
     businessNotes?: string | null
     status?: 'PENDING' | 'CONFIRMED'
-    skipConflictCheck?: boolean
     bookingSource?: string
     bookingIp?: string
   }
@@ -273,24 +276,22 @@ export async function createBooking(
   return prisma.$transaction(async tx => {
     await lockBusinessBookingSchedule(tx, businessId)
 
-    if (!options?.skipConflictCheck) {
-      const conflictCheck = await checkBookingConflicts(
-        businessId,
-        date,
-        startTime,
-        service.duration,
-        bufferTime,
-        timezone,
-        undefined,
-        tx
-      )
+    const conflictCheck = await checkBookingConflicts(
+      businessId,
+      date,
+      startTime,
+      service.duration,
+      bufferTime,
+      timezone,
+      undefined,
+      tx
+    )
 
-      if (!conflictCheck.available) {
-        return {
-          success: false,
-          error: conflictCheck.reason,
-          conflicts: conflictCheck.conflicts,
-        }
+    if (!conflictCheck.available) {
+      return {
+        success: false,
+        error: conflictCheck.reason,
+        conflicts: conflictCheck.conflicts,
       }
     }
 

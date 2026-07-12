@@ -17,7 +17,6 @@ const quickCreateSchema = z
     customerPhone: z.string().max(20).optional(),
     customerNotes: z.string().max(1000).optional(),
     businessNotes: z.string().max(1000).optional(),
-    skipConflictCheck: z.boolean().default(false),
     sendConfirmation: z.boolean().default(true),
   })
   .refine(data => data.customerId || (data.customerName && data.customerEmail), {
@@ -73,7 +72,6 @@ export async function POST(request: NextRequest) {
       customerPhone,
       customerNotes,
       businessNotes,
-      skipConflictCheck,
       sendConfirmation,
     } = validation.data
 
@@ -111,7 +109,6 @@ export async function POST(request: NextRequest) {
         customerId,
         businessNotes: fullBusinessNotes,
         status: 'CONFIRMED',
-        skipConflictCheck,
         bookingSource: 'dashboard',
       }
     )
