@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth/get-user'
 import { z } from 'zod'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireAppointmentRole } from '@/lib/auth/appointment-access'
+import { rescheduleAppointment, zonedDateTimeToUtc } from '@/lib/services/booking'
 
 const rescheduleSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
@@ -74,8 +75,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Parse new date/time
-    const newStartTime = new Date(`${date}T${startTime}:00`)
-    const newEndTime = new Date(`${date}T${endTime}:00`)
+    const timezone = appointment.timezone || 'Europe/London'
+    const newStartTime = zonedDateTimeToUtc(date, startTime, timezone)
+    const newEndTime = zonedDateTimeToUtc(date, endTime, timezone)
 
     // Validate new time is in the future
     if (newStartTime <= new Date()) {
@@ -93,83 +95,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       )
     }
 
-    // Check for conflicts with other appointments
-    const conflictingAppointment = await prisma.appointment.findFirst({
-      where: {
-        businessId,
-        id: { not: id }, // Exclude current appointment
-        status: { in: ['PENDING', 'CONFIRMED'] },
-        OR: [
-          {
-            // New appointment starts during existing
-            startTime: { lte: newStartTime },
-            endTime: { gt: newStartTime },
-          },
-          {
-            // New appointment ends during existing
-            startTime: { lt: newEndTime },
-            endTime: { gte: newEndTime },
-          },
-          {
-            // New appointment contains existing
-            startTime: { gte: newStartTime },
-            endTime: { lte: newEndTime },
-          },
-        ],
-      },
-    })
-
-    if (conflictingAppointment) {
+    const suppliedDuration = Math.round((newEndTime.getTime() - newStartTime.getTime()) / 60_000)
+    if (suppliedDuration !== appointment.duration) {
       return NextResponse.json(
-        { success: false, error: 'The selected time slot conflicts with another appointment' },
-        { status: 409 }
+        { success: false, error: 'End time does not match the service duration' },
+        { status: 400 }
       )
     }
 
-    // Store old times for history
     const oldStartTime = appointment.startTime
     const oldEndTime = appointment.endTime
+    const result = await rescheduleAppointment(id, businessId, date, startTime, reason, user.id)
 
-    // Calculate new duration
-    const newDuration = Math.round((newEndTime.getTime() - newStartTime.getTime()) / 1000 / 60)
+    if (!result.success || !result.appointment) {
+      return NextResponse.json(
+        { success: false, error: result.error, conflicts: result.conflicts },
+        { status: result.conflicts ? 409 : 400 }
+      )
+    }
 
-    // Update the appointment
-    const now = new Date()
-    const updatedAppointment = await prisma.appointment.update({
-      where: { id },
-      data: {
-        startTime: newStartTime,
-        endTime: newEndTime,
-        duration: newDuration,
-        status: 'CONFIRMED',
-        previousStatus: appointment.status,
-        rescheduledAt: now,
-        rescheduledFrom: oldStartTime.toISOString(),
-        rescheduleReason: reason || null,
-        // Add reschedule note to business notes
-        businessNotes: appointment.businessNotes
-          ? `${appointment.businessNotes}\n\n[${now.toISOString()}] Rescheduled by ${user.email} from ${oldStartTime.toISOString()} to ${newStartTime.toISOString()}${reason ? `. Reason: ${reason}` : ''}`
-          : `[${now.toISOString()}] Rescheduled by ${user.email} from ${oldStartTime.toISOString()} to ${newStartTime.toISOString()}${reason ? `. Reason: ${reason}` : ''}`,
-      },
-      include: {
-        service: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            duration: true,
-          },
-        },
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
-    })
+    const updatedAppointment = result.appointment
 
     // TODO: Send notification email to customer if notifyCustomer is true (Milestone 9.10)
     if (notifyCustomer) {
@@ -186,8 +131,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         duration: updatedAppointment.duration,
         previousStartTime: oldStartTime,
         previousEndTime: oldEndTime,
-        service: updatedAppointment.service,
-        customer: updatedAppointment.customer,
+        service: appointment.service,
+        customer: appointment.customer,
       },
     })
   } catch (error) {
