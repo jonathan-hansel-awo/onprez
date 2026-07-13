@@ -263,7 +263,7 @@ model Business {
   country                String?                 @default("UK")
   latitude               Float?
   longitude              Float?
-  timezone               String                  @default("BST/LONDON")
+  timezone               String                  @default("Europe/London")
   logoUrl                String?
   coverImageUrl          String?
   socialLinks            Json?

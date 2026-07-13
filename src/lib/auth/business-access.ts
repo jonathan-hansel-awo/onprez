@@ -13,6 +13,7 @@ export type BusinessAccessContext = {
     name: string
     slug: string
     ownerId: string
+    timezone: string
     settings?: unknown
   }
 }
@@ -53,6 +54,7 @@ export async function getBusinessAccess(
       name: true,
       slug: true,
       ownerId: true,
+      timezone: true,
       settings: true,
     },
   })
@@ -80,6 +82,7 @@ export async function getBusinessAccess(
           name: true,
           slug: true,
           ownerId: true,
+          timezone: true,
           settings: true,
         },
       },
@@ -151,6 +154,7 @@ export async function getUserBusinessContexts(userId: string): Promise<BusinessA
         name: true,
         slug: true,
         ownerId: true,
+        timezone: true,
         settings: true,
         createdAt: true,
       },
@@ -167,6 +171,7 @@ export async function getUserBusinessContexts(userId: string): Promise<BusinessA
             name: true,
             slug: true,
             ownerId: true,
+            timezone: true,
             settings: true,
             createdAt: true,
           },

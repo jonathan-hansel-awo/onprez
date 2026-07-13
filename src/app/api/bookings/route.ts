@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createBooking } from '@/lib/services/booking'
+import { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 import { z } from 'zod'
 
 const createBookingSchema = z.object({
@@ -37,10 +38,6 @@ function getClientIp(request: NextRequest) {
   const realIp = request.headers.get('x-real-ip')
 
   return forwardedFor?.split(',')[0]?.trim() || realIp || 'unknown'
-}
-
-function parseDateTime(date: string, time: string) {
-  return new Date(`${date}T${time}:00`)
 }
 
 function serializeAppointment(appointment: {
@@ -158,11 +155,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const startDateTime = parseDateTime(data.date, data.startTime)
-
-    if (Number.isNaN(startDateTime.getTime())) {
+    let startDateTime: Date
+    try {
+      startDateTime = zonedDateTimeToUtc(data.date, data.startTime, business.timezone)
+    } catch (error) {
       return NextResponse.json(
-        { success: false, error: 'Invalid date or time format' },
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Invalid date or time',
+        },
         { status: 400 }
       )
     }
@@ -175,11 +176,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (data.endTime) {
-      const suppliedEndDateTime = parseDateTime(data.date, data.endTime)
-
-      if (Number.isNaN(suppliedEndDateTime.getTime())) {
+      let suppliedEndDateTime: Date
+      try {
+        suppliedEndDateTime = zonedDateTimeToUtc(data.date, data.endTime, business.timezone)
+      } catch (error) {
         return NextResponse.json(
-          { success: false, error: 'Invalid end time format' },
+          {
+            success: false,
+            error: error instanceof Error ? error.message : 'Invalid end time',
+          },
           { status: 400 }
         )
       }

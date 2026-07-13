@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { resolveReadableBusinessContext } from '@/lib/auth/business-route-utils'
+import { DEFAULT_TIMEZONE, getDateInTimezone, getUtcDayRange } from '@/lib/utils/timezone'
 
 function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -19,20 +20,6 @@ function getBusinessHours(settings: unknown): Record<string, unknown> | null {
     : null
 }
 
-function parseDateParam(dateParam: string | null) {
-  if (!dateParam) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return today
-  }
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-    return null
-  }
-
-  return new Date(`${dateParam}T00:00:00`)
-}
-
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -44,26 +31,23 @@ export async function GET(request: NextRequest) {
     const context = await resolveReadableBusinessContext(user.id, request)
     const businessId = context.businessId
     const businessHours = getBusinessHours(context.business.settings)
+    const timezone = context.business.timezone || DEFAULT_TIMEZONE
 
     const { searchParams } = new URL(request.url)
-    const targetDate = parseDateParam(searchParams.get('date'))
+    const targetDate = searchParams.get('date') || getDateInTimezone(new Date(), timezone)
 
-    if (!targetDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
       return NextResponse.json({ success: false, error: 'Invalid date format' }, { status: 400 })
     }
 
-    const startOfDay = new Date(targetDate)
-    startOfDay.setHours(0, 0, 0, 0)
-
-    const endOfDay = new Date(targetDate)
-    endOfDay.setHours(23, 59, 59, 999)
+    const { start: startOfDay, end: endOfDay } = getUtcDayRange(targetDate, timezone)
 
     const bookings = await prisma.appointment.findMany({
       where: {
         businessId,
         startTime: {
           gte: startOfDay,
-          lte: endOfDay,
+          lt: endOfDay,
         },
       },
       select: {
@@ -103,7 +87,7 @@ export async function GET(request: NextRequest) {
     })
 
     const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-    const dayOfWeek = dayNames[targetDate.getDay()]
+    const dayOfWeek = dayNames[new Date(`${targetDate}T00:00:00.000Z`).getUTCDay()]
 
     const stats = {
       total: bookings.length,
@@ -116,7 +100,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        date: targetDate.toISOString().split('T')[0],
+        date: targetDate,
         dayOfWeek,
         businessHours: businessHours?.[dayOfWeek] || null,
         bookings: bookings.map(booking => ({

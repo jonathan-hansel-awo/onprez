@@ -233,6 +233,40 @@ describe('public bookings API', () => {
       )
     })
 
+    it('rejects a local time that does not exist during the DST jump', async () => {
+      mockedPrisma.business.findUnique.mockResolvedValue({
+        id: 'business-1',
+        name: 'Test Business',
+        timezone: 'Europe/London',
+        email: 'business@example.com',
+        address: '123 Test Street',
+      })
+      mockedPrisma.service.findFirst.mockResolvedValue({
+        id: 'service-1',
+        name: 'Consultation',
+        duration: 30,
+        requiresApproval: false,
+      })
+
+      const response = await POST(
+        jsonRequest('/api/bookings', {
+          businessId: 'business-1',
+          serviceId: 'service-1',
+          date: '2030-03-31',
+          startTime: '01:30',
+          customerName: 'John Customer',
+          customerEmail: 'john@example.com',
+        })
+      )
+
+      expect(response.status).toBe(400)
+      await expect(response.json()).resolves.toMatchObject({
+        success: false,
+        error: expect.stringContaining('does not exist'),
+      })
+      expect(mockedCreateBooking).not.toHaveBeenCalled()
+    })
+
     it('returns the original booking when an idempotency key is replayed', async () => {
       mockedPrisma.business.findUnique.mockResolvedValue({
         id: 'business-1',

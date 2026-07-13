@@ -3,7 +3,12 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { resolveReadableBusinessContext } from '@/lib/auth/business-route-utils'
-import { startOfWeek, endOfWeek, addDays, format } from 'date-fns'
+import {
+  addCalendarDays,
+  DEFAULT_TIMEZONE,
+  getDateInTimezone,
+  zonedDateTimeToUtc,
+} from '@/lib/utils/timezone'
 
 function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -20,18 +25,6 @@ function getBusinessHours(settings: unknown): Record<string, unknown> | null {
     : null
 }
 
-function parseDateParam(dateParam: string | null) {
-  if (!dateParam) {
-    return new Date()
-  }
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-    return null
-  }
-
-  return new Date(`${dateParam}T00:00:00`)
-}
-
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -43,24 +36,27 @@ export async function GET(request: NextRequest) {
     const context = await resolveReadableBusinessContext(user.id, request)
     const businessId = context.businessId
     const businessHours = getBusinessHours(context.business.settings)
+    const timezone = context.business.timezone || DEFAULT_TIMEZONE
 
     const { searchParams } = new URL(request.url)
-    const targetDate = parseDateParam(searchParams.get('date'))
+    const targetDate = searchParams.get('date') || getDateInTimezone(new Date(), timezone)
 
-    if (!targetDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
       return NextResponse.json({ success: false, error: 'Invalid date format' }, { status: 400 })
     }
 
-    const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 })
-    const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 })
-    weekEnd.setHours(23, 59, 59, 999)
+    const targetDay = new Date(`${targetDate}T00:00:00.000Z`).getUTCDay()
+    const weekStart = addCalendarDays(targetDate, -(targetDay === 0 ? 6 : targetDay - 1))
+    const weekEnd = addCalendarDays(weekStart, 6)
+    const rangeStart = zonedDateTimeToUtc(weekStart, '00:00', timezone)
+    const rangeEnd = zonedDateTimeToUtc(addCalendarDays(weekEnd, 1), '00:00', timezone)
 
     const bookings = await prisma.appointment.findMany({
       where: {
         businessId,
         startTime: {
-          gte: weekStart,
-          lte: weekEnd,
+          gte: rangeStart,
+          lt: rangeEnd,
         },
       },
       select: {
@@ -112,13 +108,12 @@ export async function GET(request: NextRequest) {
     const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
     for (let i = 0; i < 7; i++) {
-      const day = addDays(weekStart, i)
-      const dateKey = format(day, 'yyyy-MM-dd')
+      const dateKey = addCalendarDays(weekStart, i)
       bookingsByDay[dateKey] = []
     }
 
     formattedBookings.forEach(booking => {
-      const dateKey = format(new Date(booking.startTime), 'yyyy-MM-dd')
+      const dateKey = getDateInTimezone(new Date(booking.startTime), timezone)
 
       if (bookingsByDay[dateKey]) {
         bookingsByDay[dateKey].push(booking)
@@ -128,17 +123,19 @@ export async function GET(request: NextRequest) {
     const days = []
 
     for (let i = 0; i < 7; i++) {
-      const day = addDays(weekStart, i)
-      const dateKey = format(day, 'yyyy-MM-dd')
-      const dayOfWeek = dayNames[day.getDay()]
+      const dateKey = addCalendarDays(weekStart, i)
+      const day = new Date(`${dateKey}T00:00:00.000Z`)
+      const dayOfWeek = dayNames[day.getUTCDay()]
       const dayBookings = bookingsByDay[dateKey] || []
 
       days.push({
         date: dateKey,
         dayOfWeek,
-        dayName: format(day, 'EEE'),
-        dayNumber: format(day, 'd'),
-        isToday: format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'),
+        dayName: new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'UTC' }).format(
+          day
+        ),
+        dayNumber: String(day.getUTCDate()),
+        isToday: dateKey === getDateInTimezone(new Date(), timezone),
         businessHours: businessHours?.[dayOfWeek] || null,
         bookings: dayBookings,
         stats: {
@@ -160,8 +157,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        weekStart: format(weekStart, 'yyyy-MM-dd'),
-        weekEnd: format(weekEnd, 'yyyy-MM-dd'),
+        weekStart,
+        weekEnd,
         days,
         stats,
       },

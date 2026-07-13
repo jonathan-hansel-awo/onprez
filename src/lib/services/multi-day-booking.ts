@@ -12,6 +12,7 @@ import {
   zonedDateTimeToUtc,
 } from '@/lib/services/booking'
 import { DEFAULT_BUSINESS_SETTINGS } from '@/types/business'
+import { DEFAULT_TIMEZONE, getUtcDayRange } from '@/lib/utils/timezone'
 
 interface GeneratedSlot {
   date: string
@@ -121,6 +122,8 @@ export async function checkMultiDayAvailability(
     return { available: false, conflicts: [{ date: 'all', reason: 'Business not found' }] }
   }
 
+  const timezone = business.timezone || DEFAULT_TIMEZONE
+
   for (const slot of slots) {
     const slotDate = new Date(slot.date)
     const dayOfWeek = slotDate.getDay()
@@ -170,12 +173,23 @@ export async function checkMultiDayAvailability(
     }
 
     // Check existing appointments
+    let dayRange: ReturnType<typeof getUtcDayRange>
+    try {
+      dayRange = getUtcDayRange(slot.date, timezone)
+    } catch (error) {
+      conflicts.push({
+        date: slot.date,
+        reason: error instanceof Error ? error.message : 'Invalid booking date',
+      })
+      continue
+    }
+
     const existingAppointments = await prisma.appointment.findMany({
       where: {
         businessId,
         startTime: {
-          gte: new Date(`${slot.date}T00:00:00`),
-          lt: new Date(`${slot.date}T23:59:59`),
+          gte: dayRange.start,
+          lt: dayRange.end,
         },
         status: {
           in: ['PENDING', 'CONFIRMED'],
@@ -183,8 +197,16 @@ export async function checkMultiDayAvailability(
       },
     })
 
-    const timezone = business.timezone || 'Europe/London'
-    const slotStartTime = zonedDateTimeToUtc(slot.date, slot.startTime, timezone)
+    let slotStartTime: Date
+    try {
+      slotStartTime = zonedDateTimeToUtc(slot.date, slot.startTime, timezone)
+    } catch (error) {
+      conflicts.push({
+        date: slot.date,
+        reason: error instanceof Error ? error.message : 'Invalid booking time',
+      })
+      continue
+    }
     const slotDuration = timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime)
     const slotEndTime = new Date(slotStartTime.getTime() + slotDuration * 60_000)
 

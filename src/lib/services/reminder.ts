@@ -4,7 +4,11 @@ import {
   generateReminderEmailHtml,
   generateReminderEmailText,
 } from '@/lib/email/templates/appointment-reminder'
-import { format } from 'date-fns'
+import {
+  DEFAULT_TIMEZONE,
+  formatLongDateInTimezone,
+  formatTimeInTimezone,
+} from '@/lib/utils/timezone'
 
 interface ReminderSettings {
   enabled: boolean
@@ -28,6 +32,7 @@ export async function sendAppointmentReminder(
             phone: true,
             address: true,
             settings: true,
+            timezone: true,
           },
         },
         customer: {
@@ -59,12 +64,14 @@ export async function sendAppointmentReminder(
     const settings = (appointment.business.settings as Record<string, unknown>) || {}
     const reminderSettings = settings.reminders as ReminderSettings | undefined
 
+    const timezone = appointment.business.timezone || DEFAULT_TIMEZONE
+    const appointmentStart = new Date(appointment.startTime)
     const emailData = {
       customerName: customerName || 'Customer',
       businessName: appointment.business.name,
       serviceName: appointment.service.name,
-      appointmentDate: new Date(appointment.startTime),
-      appointmentTime: format(new Date(appointment.startTime), 'h:mm a'),
+      appointmentDate: formatLongDateInTimezone(appointmentStart, timezone),
+      appointmentTime: `${formatTimeInTimezone(appointmentStart, timezone)} (${timezone})`,
       duration: appointment.duration,
       businessPhone: appointment.business.phone || undefined,
       businessEmail: appointment.business.email || undefined,

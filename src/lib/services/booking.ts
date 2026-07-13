@@ -7,6 +7,14 @@ import {
   DEFAULT_SLOT_CONFIG,
 } from '@/lib/utils/availability'
 import { DEFAULT_BUSINESS_SETTINGS } from '@/types/business'
+import {
+  addCalendarDays,
+  DEFAULT_TIMEZONE,
+  getDateInTimezone,
+  zonedDateTimeToUtc,
+} from '@/lib/utils/timezone'
+
+export { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 
 export interface ConflictCheckResult {
   available: boolean
@@ -37,38 +45,6 @@ type BookingDbClient = typeof prisma | Prisma.TransactionClient
 
 export function bookingRequestHash(input: unknown): string {
   return createHash('sha256').update(JSON.stringify(input)).digest('hex')
-}
-
-/** Convert a business-local date and time to the corresponding UTC instant. */
-export function zonedDateTimeToUtc(date: string, time: string, timezone: string): Date {
-  const [year, month, day] = date.split('-').map(Number)
-  const [hour, minute] = time.split(':').map(Number)
-  const targetAsUtc = Date.UTC(year, month - 1, day, hour, minute)
-  let candidate = targetAsUtc
-
-  // A second pass handles offset changes around daylight-saving transitions.
-  for (let pass = 0; pass < 2; pass += 1) {
-    const parts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-    }).formatToParts(new Date(candidate))
-    const values = Object.fromEntries(parts.map(part => [part.type, part.value]))
-    const representedAsUtc = Date.UTC(
-      Number(values.year),
-      Number(values.month) - 1,
-      Number(values.day),
-      Number(values.hour),
-      Number(values.minute)
-    )
-    candidate += targetAsUtc - representedAsUtc
-  }
-
-  return new Date(candidate)
 }
 
 export async function lockBusinessBookingSchedule(
@@ -179,7 +155,7 @@ export async function validateBookingTime(
   }
 
   const settings = { ...DEFAULT_BUSINESS_SETTINGS, ...((business.settings as object) || {}) }
-  const timezone = business.timezone || 'Europe/London'
+  const timezone = business.timezone || DEFAULT_TIMEZONE
 
   const config: SlotGenerationConfig = {
     serviceDuration: duration,
@@ -192,15 +168,14 @@ export async function validateBookingTime(
 
   // Check if date is within booking window
   const today = new Date()
-  const bookingDate = new Date(date)
-  const maxDate = new Date()
-  maxDate.setDate(maxDate.getDate() + config.advanceBookingDays)
+  const todayString = getDateInTimezone(today, timezone)
+  const maxDateString = addCalendarDays(todayString, config.advanceBookingDays)
 
-  if (bookingDate < today) {
+  if (date < todayString) {
     return { valid: false, reason: 'Cannot book in the past' }
   }
 
-  if (bookingDate > maxDate) {
+  if (date > maxDateString) {
     return {
       valid: false,
       reason: `Cannot book more than ${config.advanceBookingDays} days in advance`,
@@ -208,12 +183,20 @@ export async function validateBookingTime(
   }
 
   // Check same-day booking
-  const todayString = today.toISOString().split('T')[0]
   if (date === todayString && !config.sameDayBooking) {
     return { valid: false, reason: 'Same-day booking is not available' }
   }
 
   // Check slot availability using existing utility
+  try {
+    zonedDateTimeToUtc(date, startTime, timezone)
+  } catch (error) {
+    return {
+      valid: false,
+      reason: error instanceof Error ? error.message : 'Invalid booking time',
+    }
+  }
+
   const result = isSlotAvailable(
     date,
     startTime,
