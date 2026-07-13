@@ -1,16 +1,14 @@
 import { prisma } from '@/lib/prisma'
 import {
   checkRateLimit,
-  resetRateLimit,
   cleanupExpiredRateLimits,
-  getRateLimitStats,
-  blockKey,
   calculateProgressiveDelay,
 } from '@/lib/services/rate-limit'
 
 // Mock Prisma
 jest.mock('@/lib/prisma', () => ({
   prisma: {
+    $queryRaw: jest.fn(),
     rateLimit: {
       findUnique: jest.fn(),
       upsert: jest.fn(),
@@ -31,51 +29,51 @@ describe('Rate Limit Service', () => {
       const key = 'ip:192.168.1.1'
       const endpoint = 'auth:login'
 
-      ;(prisma.rateLimit.findUnique as jest.Mock).mockResolvedValue(null)
-      ;(prisma.rateLimit.upsert as jest.Mock).mockResolvedValue({
-        id: 'test-id',
-        key,
-        endpoint,
-        count: 1,
-        windowStart: new Date(),
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-        userAgent: null,
-        metadata: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
+      ;(prisma.$queryRaw as jest.Mock).mockResolvedValue([
+        {
+          count: 1,
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        },
+      ])
 
       const result = await checkRateLimit(key, endpoint)
 
       expect(result.allowed).toBe(true)
       expect(result.limit).toBe(5)
       expect(result.remaining).toBe(4)
-      expect(prisma.rateLimit.upsert).toHaveBeenCalledTimes(1)
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(1)
     })
 
     it('should block when limit is exceeded', async () => {
       const key = 'ip:192.168.1.1'
       const endpoint = 'auth:login'
-      const existingRecord = {
-        id: 'test-id',
-        key,
-        endpoint,
-        count: 5,
-        windowStart: new Date(),
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-        userAgent: null,
-        metadata: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-
-      ;(prisma.rateLimit.findUnique as jest.Mock).mockResolvedValue(existingRecord)
+      ;(prisma.$queryRaw as jest.Mock).mockResolvedValue([
+        {
+          count: 6,
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        },
+      ])
 
       const result = await checkRateLimit(key, endpoint)
 
       expect(result.allowed).toBe(false)
       expect(result.remaining).toBe(0)
       expect(result.retryAfter).toBeGreaterThan(0)
+    })
+
+    it('blocks the first request beyond the configured maximum', async () => {
+      ;(prisma.$queryRaw as jest.Mock).mockResolvedValue([
+        {
+          count: 11,
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        },
+      ])
+
+      const result = await checkRateLimit('ip:192.168.1.2', 'booking:create')
+
+      expect(result.allowed).toBe(false)
+      expect(result.limit).toBe(10)
+      expect(result.remaining).toBe(0)
     })
   })
 

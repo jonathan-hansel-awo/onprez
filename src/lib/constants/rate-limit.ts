@@ -98,6 +98,20 @@ export const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
     message: 'Too many booking attempts. Please try again later.',
   },
 
+  'inquiry:create': {
+    endpoint: 'inquiry:create',
+    maxAttempts: 5,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    message: 'Too many inquiry submissions. Please try again later.',
+  },
+
+  'upload:image': {
+    endpoint: 'upload:image',
+    maxAttempts: 30,
+    windowMs: 60 * 60 * 1000, // 1 hour
+    message: 'Too many image uploads. Please try again later.',
+  },
+
   'booking:cancel': {
     endpoint: 'booking:cancel',
     maxAttempts: 5,
@@ -178,18 +192,3 @@ export const RATE_LIMIT_HEADERS = {
   RESET: 'X-RateLimit-Reset',
   RETRY_AFTER: 'Retry-After',
 } as const
-
-/**
- * Rate limit bypass keys (for testing/admin)
- */
-export const RATE_LIMIT_BYPASS_KEYS = [
-  'test-bypass-key',
-  // Add more bypass keys as needed
-] as const
-
-/**
- * Check if key should bypass rate limiting
- */
-export function shouldBypassRateLimit(key: string): boolean {
-  return RATE_LIMIT_BYPASS_KEYS.includes(key as never)
-}

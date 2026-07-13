@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { createBooking } from '@/lib/services/booking'
+import { checkRateLimit } from '@/lib/services/rate-limit'
 
 import { GET, POST } from '@/app/api/bookings/route'
 
@@ -25,6 +26,10 @@ jest.mock('@/lib/services/booking', () => ({
   createBooking: jest.fn(),
 }))
 
+jest.mock('@/lib/services/rate-limit', () => ({
+  checkRateLimit: jest.fn(),
+}))
+
 const mockedPrisma = prisma as unknown as {
   business: {
     findUnique: jest.Mock
@@ -38,6 +43,7 @@ const mockedPrisma = prisma as unknown as {
 }
 
 const mockedCreateBooking = createBooking as jest.Mock
+const mockedCheckRateLimit = checkRateLimit as jest.Mock
 
 function createRequest(path: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
   return new NextRequest(`http://localhost:3000${path}`, init)
@@ -88,9 +94,46 @@ const mockAppointment = {
 describe('public bookings API', () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: true,
+      limit: 10,
+      remaining: 9,
+      resetAt: new Date(Date.now() + 60_000),
+    })
   })
 
   describe('POST /api/bookings', () => {
+    it('returns retry information when booking creation is rate limited', async () => {
+      mockedCheckRateLimit.mockResolvedValue({
+        allowed: false,
+        limit: 10,
+        remaining: 0,
+        resetAt: new Date(Date.now() + 120_000),
+        retryAfter: 120,
+      })
+
+      const response = await POST(
+        jsonRequest('/api/bookings', {
+          businessId: 'business-1',
+          serviceId: 'service-1',
+          date: '2026-08-01',
+          startTime: '10:00',
+          customerName: 'John Customer',
+          customerEmail: 'john@example.com',
+        })
+      )
+
+      expect(response.status).toBe(429)
+      expect(response.headers.get('Retry-After')).toBe('120')
+      expect(response.headers.get('X-RateLimit-Limit')).toBe('10')
+      expect(mockedCheckRateLimit).toHaveBeenCalledWith(
+        'booking-create:203.0.113.10:business-1',
+        'booking:create'
+      )
+      expect(mockedPrisma.business.findUnique).not.toHaveBeenCalled()
+      expect(mockedCreateBooking).not.toHaveBeenCalled()
+    })
+
     it('creates a public booking only for an active service in the requested business', async () => {
       mockedPrisma.business.findUnique.mockResolvedValue({
         id: 'business-1',

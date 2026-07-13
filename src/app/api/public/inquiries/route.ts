@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/services/rate-limit'
 import { z } from 'zod'
-
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 
 const inquirySchema = z.object({
   businessId: z.string().min(1).max(128),
@@ -13,23 +12,6 @@ const inquirySchema = z.object({
   message: z.string().trim().min(10).max(2000),
   preferredContact: z.enum(['EMAIL', 'PHONE', 'EITHER']).optional().default('EMAIL'),
 })
-
-function checkRateLimit(ip: string, limit = 5, windowMs = 60_000) {
-  const now = Date.now()
-  const record = rateLimitMap.get(ip)
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs })
-    return true
-  }
-
-  if (record.count >= limit) {
-    return false
-  }
-
-  record.count += 1
-  return true
-}
 
 function getClientIp(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -47,11 +29,25 @@ function getSettingsRecord(settings: unknown): Record<string, unknown> {
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request)
+    const rateLimit = await checkRateLimit(`inquiry-create:${ip}`, 'inquiry:create')
 
-    if (!checkRateLimit(ip, 5, 60_000)) {
+    if (!rateLimit.allowed) {
+      const resetInSeconds = Math.max(
+        1,
+        Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
+      )
+
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please try again later.' },
-        { status: 429 }
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+            'X-RateLimit-Reset': Math.floor(rateLimit.resetAt.getTime() / 1000).toString(),
+            'Retry-After': (rateLimit.retryAfter || resetInSeconds).toString(),
+          },
+        }
       )
     }
 

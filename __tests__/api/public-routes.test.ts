@@ -3,6 +3,7 @@
 import { NextRequest } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/services/rate-limit'
 
 import { GET as publicFaqsGET } from '@/app/api/public/businesses/[handle]/faqs/route'
 import { GET as publicServicesGET } from '@/app/api/public/businesses/[handle]/services/route'
@@ -32,6 +33,10 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
+jest.mock('@/lib/services/rate-limit', () => ({
+  checkRateLimit: jest.fn(),
+}))
+
 const mockedPrisma = prisma as unknown as {
   business: {
     findUnique: jest.Mock
@@ -53,6 +58,7 @@ const mockedPrisma = prisma as unknown as {
     create: jest.Mock
   }
 }
+const mockedCheckRateLimit = checkRateLimit as jest.Mock
 
 function createRequest(path: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
   return new NextRequest(`http://localhost:3000${path}`, init)
@@ -73,6 +79,12 @@ function jsonRequest(path: string, body: unknown, ip = '203.0.113.10') {
 describe('public business routes', () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: true,
+      limit: 5,
+      remaining: 4,
+      resetAt: new Date(Date.now() + 60_000),
+    })
   })
 
   describe('GET /api/public/businesses/[handle]/faqs', () => {
@@ -541,24 +553,12 @@ describe('public business routes', () => {
     })
 
     it('rate-limits repeated inquiry submissions from the same IP', async () => {
-      mockedPrisma.business.findUnique.mockResolvedValue({
-        id: 'business-1',
-        name: 'Test Business',
-        email: 'business@example.com',
-        settings: {},
-        isPublished: true,
-      })
-
-      mockedPrisma.customer.findFirst.mockResolvedValue({
-        id: 'customer-1',
-        name: 'John Customer',
-        phone: null,
-      })
-
-      mockedPrisma.inquiry.create.mockResolvedValue({
-        id: 'inquiry-1',
-        status: 'PENDING',
-        createdAt: new Date('2026-08-01T10:00:00.000Z'),
+      mockedCheckRateLimit.mockResolvedValue({
+        allowed: false,
+        limit: 5,
+        remaining: 0,
+        resetAt: new Date(Date.now() + 75_000),
+        retryAfter: 75,
       })
 
       const body = {
@@ -569,19 +569,18 @@ describe('public business routes', () => {
         message: 'I would like to ask about availability next week.',
       }
 
-      const ip = '203.0.113.250'
-
-      for (let index = 0; index < 5; index += 1) {
-        const response = await publicInquiriesPOST(jsonRequest('/api/public/inquiries', body, ip))
-
-        expect(response.status).toBe(201)
-      }
-
       const limitedResponse = await publicInquiriesPOST(
-        jsonRequest('/api/public/inquiries', body, ip)
+        jsonRequest('/api/public/inquiries', body, '203.0.113.250')
       )
 
       expect(limitedResponse.status).toBe(429)
+      expect(limitedResponse.headers.get('Retry-After')).toBe('75')
+      expect(limitedResponse.headers.get('X-RateLimit-Limit')).toBe('5')
+      expect(mockedCheckRateLimit).toHaveBeenCalledWith(
+        'inquiry-create:203.0.113.250',
+        'inquiry:create'
+      )
+      expect(mockedPrisma.business.findUnique).not.toHaveBeenCalled()
     })
   })
 })

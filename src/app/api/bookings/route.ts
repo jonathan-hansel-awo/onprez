@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createBooking } from '@/lib/services/booking'
+import { checkRateLimit } from '@/lib/services/rate-limit'
 import { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 import { z } from 'zod'
 
@@ -118,6 +119,31 @@ export async function POST(request: NextRequest) {
 
     const data = validationResult.data
     const customerEmail = data.customerEmail.toLowerCase()
+    const clientIp = getClientIp(request)
+    const rateLimit = await checkRateLimit(
+      `booking-create:${clientIp}:${data.businessId}`,
+      'booking:create'
+    )
+
+    if (!rateLimit.allowed) {
+      const resetInSeconds = Math.max(
+        1,
+        Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
+      )
+
+      return NextResponse.json(
+        { success: false, error: 'Too many booking attempts. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+            'X-RateLimit-Reset': Math.floor(rateLimit.resetAt.getTime() / 1000).toString(),
+            'Retry-After': (rateLimit.retryAfter || resetInSeconds).toString(),
+          },
+        }
+      )
+    }
 
     const business = await prisma.business.findUnique({
       where: { id: data.businessId },
@@ -213,7 +239,7 @@ export async function POST(request: NextRequest) {
       {
         status: service.requiresApproval ? 'PENDING' : 'CONFIRMED',
         bookingSource: 'WEBSITE',
-        bookingIp: getClientIp(request),
+        bookingIp: clientIp,
         idempotencyKey,
       }
     )
