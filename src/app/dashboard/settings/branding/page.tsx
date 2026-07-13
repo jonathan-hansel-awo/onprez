@@ -21,6 +21,7 @@ export default function BrandingSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [businessId, setBusinessId] = useState<string | null>(null)
 
   const [branding, setBranding] = useState({
     primaryColor: '#3B82F6',
@@ -41,6 +42,7 @@ export default function BrandingSettingsPage() {
       const data = await response.json()
 
       if (data.success) {
+        setBusinessId(data.data.businessId)
         setBranding({ ...branding, ...data.data.branding })
       }
     } catch (err) {
@@ -156,6 +158,8 @@ export default function BrandingSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <ImageUpload
+              businessId={businessId}
+              purpose="business-logo"
               label="Logo"
               value={branding.logoUrl}
               onChange={url => setBranding({ ...branding, logoUrl: url })}
@@ -164,12 +168,14 @@ export default function BrandingSettingsPage() {
               maxSize={2}
             />
             <ImageUpload
+              businessId={businessId}
+              purpose="business-cover"
               label="Cover Image"
               value={branding.coverImageUrl}
               onChange={url => setBranding({ ...branding, coverImageUrl: url })}
               onRemove={() => setBranding({ ...branding, coverImageUrl: '' })}
               aspect="landscape"
-              maxSize={5}
+              maxSize={4}
             />
           </CardContent>
         </Card>

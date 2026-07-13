@@ -4,18 +4,11 @@ import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireBusinessRole } from '@/lib/auth/business-access'
 import { checkRateLimit } from '@/lib/services/rate-limit'
+import { ImageUploadValidationError, sanitizeImageUpload } from '@/lib/uploads/image-security'
 
-const MAX_IMAGE_SIZE_BYTES = 4 * 1024 * 1024
-
-const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
-
-const ALLOWED_PURPOSES = new Set([
-  'profile',
-  'business-logo',
-  'business-cover',
-  'service',
-  'gallery',
-])
+const PERSONAL_PURPOSES = new Set(['profile'])
+const BUSINESS_PURPOSES = new Set(['business-logo', 'business-cover', 'service', 'gallery'])
+const BUSINESS_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -29,44 +22,6 @@ function getStringFormValue(formData: FormData, key: string) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
-function detectImageMimeType(buffer: Buffer) {
-  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-    return 'image/jpeg'
-  }
-
-  if (
-    buffer.length >= 8 &&
-    buffer[0] === 0x89 &&
-    buffer[1] === 0x50 &&
-    buffer[2] === 0x4e &&
-    buffer[3] === 0x47 &&
-    buffer[4] === 0x0d &&
-    buffer[5] === 0x0a &&
-    buffer[6] === 0x1a &&
-    buffer[7] === 0x0a
-  ) {
-    return 'image/png'
-  }
-
-  if (
-    buffer.length >= 12 &&
-    buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
-    buffer.subarray(8, 12).toString('ascii') === 'WEBP'
-  ) {
-    return 'image/webp'
-  }
-
-  if (
-    buffer.length >= 6 &&
-    (buffer.subarray(0, 6).toString('ascii') === 'GIF87a' ||
-      buffer.subarray(0, 6).toString('ascii') === 'GIF89a')
-  ) {
-    return 'image/gif'
-  }
-
-  return null
-}
-
 function uploadToCloudinary(buffer: Buffer, folder: string, mimeType: string) {
   return new Promise<UploadApiResponse>((resolve, reject) => {
     cloudinary.uploader
@@ -74,7 +29,7 @@ function uploadToCloudinary(buffer: Buffer, folder: string, mimeType: string) {
         {
           folder,
           resource_type: 'image',
-          allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+          allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
           overwrite: false,
           unique_filename: true,
           use_filename: false,
@@ -138,49 +93,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 })
     }
 
-    if (fileValue.size <= 0) {
-      return NextResponse.json({ success: false, error: 'File is empty' }, { status: 400 })
-    }
-
-    if (fileValue.size > MAX_IMAGE_SIZE_BYTES) {
-      return NextResponse.json(
-        { success: false, error: 'File too large. Maximum size is 4MB.' },
-        { status: 400 }
-      )
-    }
-
-    if (!ALLOWED_MIME_TYPES.has(fileValue.type)) {
-      return NextResponse.json(
-        { success: false, error: 'Only JPEG, PNG, WEBP, and GIF images are allowed' },
-        { status: 400 }
-      )
-    }
-
-    const bytes = await fileValue.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    const detectedMimeType = detectImageMimeType(buffer)
-
-    if (!detectedMimeType || detectedMimeType !== fileValue.type) {
-      return NextResponse.json(
-        { success: false, error: 'File content does not match an allowed image type' },
-        { status: 400 }
-      )
-    }
-
     const businessId = getStringFormValue(formData, 'businessId')
-    const requestedPurpose = getStringFormValue(formData, 'purpose') || 'profile'
-    const purpose = ALLOWED_PURPOSES.has(requestedPurpose) ? requestedPurpose : 'profile'
+    const purpose = getStringFormValue(formData, 'purpose') || 'profile'
+    const isPersonalPurpose = PERSONAL_PURPOSES.has(purpose)
+    const isBusinessPurpose = BUSINESS_PURPOSES.has(purpose)
+
+    if (!isPersonalPurpose && !isBusinessPurpose) {
+      return NextResponse.json({ success: false, error: 'Invalid upload purpose' }, { status: 400 })
+    }
+
+    if (isBusinessPurpose && (!businessId || !BUSINESS_ID_PATTERN.test(businessId))) {
+      return NextResponse.json(
+        { success: false, error: 'A valid business context is required for this upload' },
+        { status: 400 }
+      )
+    }
+
+    if (isPersonalPurpose && businessId) {
+      return NextResponse.json(
+        { success: false, error: 'Personal uploads cannot target a business folder' },
+        { status: 400 }
+      )
+    }
 
     let folder = `onprez/users/${user.id}/${purpose}`
 
-    if (businessId) {
+    if (isBusinessPurpose && businessId) {
+      // Authorize the destination before performing expensive image decoding.
       await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
 
       folder = `onprez/businesses/${businessId}/${purpose}`
     }
 
-    const result = await uploadToCloudinary(buffer, folder, detectedMimeType)
+    const sanitizedImage = await sanitizeImageUpload(fileValue)
+    const result = await uploadToCloudinary(sanitizedImage.buffer, folder, sanitizedImage.mimeType)
 
     return NextResponse.json({
       success: true,
@@ -196,6 +142,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const authResponse = businessAuthErrorResponse(error)
     if (authResponse) return authResponse
+
+    if (error instanceof ImageUploadValidationError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 })
+    }
 
     console.error('Upload image error:', error)
     return NextResponse.json({ success: false, error: 'Upload failed' }, { status: 500 })

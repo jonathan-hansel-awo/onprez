@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Upload, X, Loader2 } from 'lucide-react'
+import { Upload, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import Image from 'next/image'
 
 export interface ImageUploadProps {
+  businessId: string | null
+  purpose: 'business-logo' | 'business-cover' | 'service' | 'gallery'
   label?: string
   value?: string
   onChange: (url: string) => void
@@ -16,6 +18,8 @@ export interface ImageUploadProps {
 }
 
 export function ImageUpload({
+  businessId,
+  purpose,
   label,
   value,
   onChange,
@@ -43,8 +47,15 @@ export function ImageUpload({
       return
     }
 
-    if (file.size > maxSize * 1024 * 1024) {
-      setError(`File size must be less than ${maxSize}MB`)
+    const effectiveMaxSize = Math.min(maxSize, 4)
+
+    if (file.size > effectiveMaxSize * 1024 * 1024) {
+      setError(`File size must be less than ${effectiveMaxSize}MB`)
+      return
+    }
+
+    if (!businessId) {
+      setError('Business context is unavailable. Please refresh and try again.')
       return
     }
 
@@ -54,6 +65,8 @@ export function ImageUpload({
     try {
       const formData = new FormData()
       formData.append('file', file)
+      formData.append('businessId', businessId)
+      formData.append('purpose', purpose)
 
       const response = await fetch('/api/upload/image', {
         method: 'POST',
@@ -132,7 +145,9 @@ export function ImageUpload({
               <>
                 <Upload className="w-8 h-8 text-gray-400" />
                 <p className="text-sm text-gray-600">Click to upload</p>
-                <p className="text-xs text-gray-400">PNG, JPG, WebP (max {maxSize}MB)</p>
+                <p className="text-xs text-gray-400">
+                  PNG, JPG, WebP (max {Math.min(maxSize, 4)}MB)
+                </p>
               </>
             )}
           </div>
@@ -142,7 +157,7 @@ export function ImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept=".jpg,.jpeg,.png,.webp"
         onChange={handleFileChange}
         className="hidden"
         disabled={uploading}

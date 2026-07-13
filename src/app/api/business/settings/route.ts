@@ -140,6 +140,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        businessId: context.businessId,
         ...responseData,
         access: {
           role: context.role,

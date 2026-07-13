@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react/no-unescaped-entities */
+
 'use client'
 
 import { useState, useEffect, use } from 'react'
@@ -74,6 +74,7 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
   const [deleting, setDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([])
+  const [businessId, setBusinessId] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [variants, setVariants] = useState<Variant[]>([])
   const [showVariantForm, setShowVariantForm] = useState(false)
@@ -127,6 +128,7 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
       }
 
       const service = serviceData.data.service
+      setBusinessId(service.businessId)
       setUseBusinessHours(service.useBusinessHours ?? true)
       setAvailableDays(service.availableDays || [0, 1, 2, 3, 4, 5, 6])
       setCustomAvailability(service.customAvailability)
@@ -587,6 +589,8 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
           </CardHeader>
           <CardContent>
             <ImageUpload
+              businessId={businessId}
+              purpose="service"
               value={formData.imageUrl}
               onChange={url => handleChange('imageUrl', url)}
               onRemove={() => handleChange('imageUrl', '')}
