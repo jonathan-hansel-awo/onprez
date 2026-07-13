@@ -117,11 +117,24 @@ describe('transaction-safe booking conflicts', () => {
 
     const result = await createBooking('business-1', 'service-1', '2030-01-01', '10:00', {
       name: 'Customer',
-      email: 'customer@example.com',
+      email: ' Customer@Example.COM ',
     })
 
     expect(result.success).toBe(true)
     expect(calls).toEqual(['lock', 'check', 'create'])
+    expect(tx.customer.findUnique).toHaveBeenCalledWith({
+      where: {
+        businessId_email: {
+          businessId: 'business-1',
+          email: 'customer@example.com',
+        },
+      },
+    })
+    expect(tx.appointment.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ customerEmail: 'customer@example.com' }),
+      })
+    )
     expect(mockedPrisma.$transaction).toHaveBeenCalledTimes(1)
   })
 
