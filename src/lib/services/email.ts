@@ -1,5 +1,7 @@
 import { Resend } from 'resend'
+import { AppointmentStatus } from '@prisma/client'
 import { env } from '@/lib/config/env'
+import { formatLongDateInTimezone, formatTimeInTimezone } from '@/lib/utils/timezone'
 
 // Lazy initialization - only create Resend instance when needed
 let resendInstance: Resend | null = null
@@ -73,6 +75,70 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
       error: error.message || 'Failed to send email',
     }
   }
+}
+
+export interface AppointmentStatusEmailInput {
+  to: string
+  customerName: string
+  businessName: string
+  serviceName: string
+  startTime: Date
+  timezone: string
+  fromStatus: AppointmentStatus
+  toStatus: AppointmentStatus
+  reason?: string
+}
+
+const appointmentStatusLabels: Record<AppointmentStatus, string> = {
+  PENDING: 'pending approval',
+  CONFIRMED: 'confirmed',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+  NO_SHOW: 'marked as a no-show',
+  RESCHEDULED: 'rescheduled',
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+}
+
+export function renderAppointmentStatusEmail(input: AppointmentStatusEmailInput) {
+  const statusLabel = appointmentStatusLabels[input.toStatus]
+  const localDate = formatLongDateInTimezone(input.startTime, input.timezone)
+  const localTime = formatTimeInTimezone(input.startTime, input.timezone)
+  const subject = `Appointment ${statusLabel} - ${input.businessName}`
+  const reasonText = input.reason ? `\nReason: ${input.reason}` : ''
+  const text = `Hi ${input.customerName},\n\nYour ${input.serviceName} appointment with ${input.businessName} is now ${statusLabel}.\n\nDate: ${localDate}\nTime: ${localTime} (${input.timezone})${reasonText}\n\nThis message reflects the change from ${input.fromStatus} to ${input.toStatus}.`
+  const reasonHtml = input.reason
+    ? `<p><strong>Reason:</strong> ${escapeHtml(input.reason)}</p>`
+    : ''
+
+  return {
+    subject,
+    text,
+    html: `
+      <h1>Appointment ${escapeHtml(statusLabel)}</h1>
+      <p>Hi ${escapeHtml(input.customerName)},</p>
+      <p>Your <strong>${escapeHtml(input.serviceName)}</strong> appointment with ${escapeHtml(input.businessName)} is now <strong>${escapeHtml(statusLabel)}</strong>.</p>
+      <p><strong>Date:</strong> ${escapeHtml(localDate)}<br><strong>Time:</strong> ${escapeHtml(localTime)} (${escapeHtml(input.timezone)})</p>
+      ${reasonHtml}
+      <p>This notification reflects the ${input.fromStatus} → ${input.toStatus} status change.</p>
+    `.trim(),
+  }
+}
+
+export async function sendAppointmentStatusEmail(
+  input: AppointmentStatusEmailInput
+): Promise<EmailResult> {
+  return sendEmail({
+    to: input.to,
+    ...renderAppointmentStatusEmail(input),
+  })
 }
 
 /**

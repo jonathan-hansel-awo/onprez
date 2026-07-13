@@ -13,6 +13,7 @@ import {
   getDateInTimezone,
   zonedDateTimeToUtc,
 } from '@/lib/utils/timezone'
+import { AppointmentTransitionError, transitionAppointment } from '@/lib/services/appointment-state'
 
 export { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 
@@ -464,7 +465,7 @@ export async function rescheduleAppointment(
     return { success: false, error: 'Appointment not found' }
   }
 
-  if (['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.status)) {
+  if (['COMPLETED', 'CANCELLED', 'NO_SHOW', 'RESCHEDULED'].includes(appointment.status)) {
     return { success: false, error: 'Cannot reschedule a completed or cancelled appointment' }
   }
 
@@ -522,8 +523,6 @@ export async function rescheduleAppointment(
       data: {
         startTime: newStartDateTime,
         endTime: newEndDateTime,
-        status: 'CONFIRMED',
-        previousStatus: appointment.status,
         rescheduledFrom: originalStartTime,
         rescheduledTo: newStartDateTime.toISOString(),
         rescheduledBy,
@@ -555,49 +554,27 @@ export async function cancelAppointment(
   appointmentId: string,
   businessId: string,
   cancelledBy: 'CUSTOMER' | 'BUSINESS' | 'SYSTEM',
-  reason?: string
+  reason?: string,
+  actorId?: string
 ): Promise<BookingResult> {
-  const appointment = await prisma.appointment.findFirst({
-    where: { id: appointmentId, businessId },
-  })
-
-  if (!appointment) {
-    return { success: false, error: 'Appointment not found' }
-  }
-
-  if (['COMPLETED', 'CANCELLED'].includes(appointment.status)) {
-    return { success: false, error: 'Appointment is already completed or cancelled' }
-  }
-
-  const updatedAppointment = await prisma.appointment.update({
-    where: { id: appointmentId },
-    data: {
-      status: 'CANCELLED',
-      previousStatus: appointment.status,
-      cancelledAt: new Date(),
+  try {
+    const result = await transitionAppointment({
+      appointmentId,
+      businessId,
+      toStatus: 'CANCELLED',
+      changedBy: actorId,
+      changedByType:
+        cancelledBy === 'CUSTOMER' ? 'CUSTOMER' : cancelledBy === 'SYSTEM' ? 'SYSTEM' : 'USER',
+      reason,
       cancellationSource: cancelledBy,
-      cancellationReason: reason,
-    },
-    include: {
-      service: true,
-      customer: true,
-      business: {
-        select: {
-          name: true,
-          email: true,
-          timezone: true,
-        },
-      },
-    },
-  })
+      notifyCustomer: true,
+    })
 
-  // Update customer stats
-  await prisma.customer.update({
-    where: { id: appointment.customerId },
-    data: {
-      cancelledBookings: { increment: 1 },
-    },
-  })
-
-  return { success: true, appointment: updatedAppointment }
+    return { success: true, appointment: result.appointment }
+  } catch (error) {
+    if (error instanceof AppointmentTransitionError) {
+      return { success: false, error: error.message }
+    }
+    throw error
+  }
 }

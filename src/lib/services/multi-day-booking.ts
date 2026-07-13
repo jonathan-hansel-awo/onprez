@@ -13,6 +13,7 @@ import {
 } from '@/lib/services/booking'
 import { DEFAULT_BUSINESS_SETTINGS } from '@/types/business'
 import { DEFAULT_TIMEZONE, getUtcDayRange } from '@/lib/utils/timezone'
+import { canTransitionAppointment, transitionAppointment } from '@/lib/services/appointment-state'
 
 interface GeneratedSlot {
   date: string
@@ -522,22 +523,27 @@ export async function cancelAppointmentSeries(
     return { success: false, cancelled: 0, error: 'Appointment not found' }
   }
 
-  // Cancel all appointments in the series
-  const result = await prisma.appointment.updateMany({
-    where: {
-      OR: [{ id: series.parentId }, { parentId: series.parentId }],
-      status: { notIn: ['CANCELLED', 'COMPLETED'] },
-    },
-    data: {
-      status: 'CANCELLED',
-      cancelledAt: new Date(),
-      cancellationReason: reason,
-      cancelledBy: cancelledBy,
-      cancellationSource: 'BUSINESS',
-    },
-  })
+  const cancellableAppointments = series.appointments.filter(appointment =>
+    canTransitionAppointment(appointment.status, 'CANCELLED')
+  )
 
-  return { success: true, cancelled: result.count }
+  await Promise.all(
+    cancellableAppointments.map(appointment =>
+      transitionAppointment({
+        appointmentId: appointment.id,
+        businessId: appointment.businessId,
+        toStatus: 'CANCELLED',
+        changedBy: cancelledBy,
+        changedByType: cancelledBy ? 'USER' : 'SYSTEM',
+        reason,
+        cancellationSource: 'BUSINESS',
+        notifyCustomer: false,
+        metadata: { seriesParentId: series.parentId },
+      })
+    )
+  )
+
+  return { success: true, cancelled: cancellableAppointments.length }
 }
 
 // Helper

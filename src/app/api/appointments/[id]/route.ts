@@ -6,6 +6,7 @@ import { updateAppointmentSchema } from '@/lib/validation/booking'
 import { cancelAppointment } from '@/lib/services/booking'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireAppointmentAccess, requireAppointmentRole } from '@/lib/auth/appointment-access'
+import { AppointmentTransitionError, transitionAppointment } from '@/lib/services/appointment-state'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -106,6 +107,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const updateData = { ...validation.data } as Prisma.AppointmentUpdateInput
     const v = validation.data as any
+    let transitionedAppointment:
+      | Awaited<ReturnType<typeof transitionAppointment>>['appointment']
+      | undefined
+    delete (updateData as Record<string, unknown>).status
+    delete (updateData as Record<string, unknown>).cancellationReason
 
     if (v.serviceId) {
       const service = await prisma.service.findFirst({
@@ -136,50 +142,37 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     if (v.status) {
-      const statusUpdateData: Prisma.AppointmentUpdateInput = {
-        status: v.status,
-        previousStatus: existingAppointment.status,
-      }
-
-      if (v.status === 'CONFIRMED' && existingAppointment.status === 'PENDING') {
-        statusUpdateData.confirmedAt = new Date()
-        statusUpdateData.confirmedBy = user.id
-      }
-
-      if (v.status === 'COMPLETED') {
-        statusUpdateData.completedAt = new Date()
-      }
-
-      if (v.status === 'CANCELLED') {
-        statusUpdateData.cancelledAt = new Date()
-        statusUpdateData.cancelledBy = user.id
-        statusUpdateData.cancellationSource = 'BUSINESS'
-        statusUpdateData.cancellationReason = v.cancellationReason || null
-      }
-
-      if (v.status === 'NO_SHOW') {
-        await prisma.customer.updateMany({
-          where: {
-            id: existingAppointment.customerId,
-            businessId: appointmentAccess.businessId,
-          },
-          data: {
-            noShowCount: { increment: 1 },
-          },
-        })
-      }
-
-      Object.assign(updateData, statusUpdateData)
+      const transition = await transitionAppointment({
+        appointmentId: id,
+        businessId: appointmentAccess.businessId,
+        toStatus: v.status,
+        changedBy: user.id,
+        changedByType: 'USER',
+        reason: v.cancellationReason,
+        cancellationSource: 'BUSINESS',
+        notifyCustomer: true,
+      })
+      transitionedAppointment = transition.appointment
     }
 
-    const updatedAppointment = await prisma.appointment.update({
-      where: { id },
-      data: updateData,
-      include: {
-        service: true,
-        customer: true,
-      },
-    })
+    const updatedAppointment =
+      Object.keys(updateData).length > 0
+        ? await prisma.appointment.update({
+            where: { id },
+            data: updateData,
+            include: {
+              service: true,
+              customer: true,
+            },
+          })
+        : transitionedAppointment
+
+    if (!updatedAppointment) {
+      return NextResponse.json(
+        { success: false, error: 'No appointment changes supplied' },
+        { status: 400 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
@@ -196,6 +189,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
   } catch (error) {
+    if (error instanceof AppointmentTransitionError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        {
+          status: error.code === 'NOT_FOUND' ? 404 : error.code === 'CONCURRENT_UPDATE' ? 409 : 400,
+        }
+      )
+    }
+
     const authResponse = businessAuthErrorResponse(error)
     if (authResponse) return authResponse
 
@@ -225,7 +227,7 @@ export async function DELETE(
     const { searchParams } = new URL(request.url)
     const reason = searchParams.get('reason') || undefined
 
-    const result = await cancelAppointment(id, appointment.businessId, 'BUSINESS', reason)
+    const result = await cancelAppointment(id, appointment.businessId, 'BUSINESS', reason, user.id)
 
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 400 })
