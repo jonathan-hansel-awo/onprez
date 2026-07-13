@@ -47,7 +47,7 @@ describe('transaction-safe booking conflicts', () => {
       '2030-01-01',
       '10:00',
       20,
-      0,
+      15,
       'Europe/London'
     )
 
@@ -123,5 +123,118 @@ describe('transaction-safe booking conflicts', () => {
     expect(result.success).toBe(true)
     expect(calls).toEqual(['lock', 'check', 'create'])
     expect(mockedPrisma.$transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns the original appointment for a repeated idempotency key', async () => {
+    let storedKey: { requestHash: string; appointment: Record<string, unknown> } | null = null
+    const appointment = { id: 'appointment-1', startTime: new Date(), endTime: new Date() }
+    const tx = {
+      $executeRaw: jest.fn(),
+      bookingIdempotencyKey: {
+        deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+        findUnique: jest.fn(async () => storedKey),
+        create: jest.fn(async ({ data }) => {
+          storedKey = { requestHash: data.requestHash, appointment }
+          return data
+        }),
+      },
+      appointment: {
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockResolvedValue(appointment),
+      },
+      customer: {
+        findUnique: jest.fn().mockResolvedValue({ id: 'customer-1', phone: null }),
+        update: jest.fn().mockResolvedValue({}),
+        create: jest.fn(),
+      },
+    }
+
+    mockedPrisma.service.findUnique.mockResolvedValue({
+      id: 'service-1',
+      businessId: 'business-1',
+      active: true,
+      duration: 30,
+      bufferTime: 0,
+      requiresApproval: false,
+      requiresDeposit: false,
+      depositAmount: null,
+      price: 25,
+    })
+    mockedPrisma.business.findUnique.mockResolvedValue({
+      id: 'business-1',
+      timezone: 'Europe/London',
+      settings: { advanceBookingDays: 5000, sameDayBooking: true },
+      businessHours: [{ dayOfWeek: 2, openTime: '09:00', closeTime: '17:00', isClosed: false }],
+      specialDates: [],
+    })
+    mockedPrisma.$transaction.mockImplementation(async callback => callback(tx))
+
+    const args = [
+      'business-1',
+      'service-1',
+      '2030-01-01',
+      '10:00',
+      { name: 'Customer', email: 'customer@example.com' },
+      { idempotencyKey: 'booking_key_1234567890' },
+    ] as const
+
+    const first = await createBooking(...args)
+    const replay = await createBooking(...args)
+
+    expect(first).toMatchObject({ success: true })
+    expect(replay).toMatchObject({ success: true, replayed: true, appointment })
+    expect(tx.appointment.create).toHaveBeenCalledTimes(1)
+    expect(tx.bookingIdempotencyKey.create).toHaveBeenCalledTimes(1)
+    expect(tx.bookingIdempotencyKey.deleteMany).toHaveBeenCalledWith({
+      where: {
+        businessId: 'business-1',
+        key: 'booking_key_1234567890',
+        expiresAt: { lte: expect.any(Date) },
+      },
+    })
+  })
+
+  it('rejects reuse of a key for a different request without creating another appointment', async () => {
+    const tx = {
+      $executeRaw: jest.fn(),
+      bookingIdempotencyKey: {
+        deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+        findUnique: jest.fn().mockResolvedValue({
+          requestHash: 'a-different-request-hash',
+          appointment: { id: 'appointment-1' },
+        }),
+        create: jest.fn(),
+      },
+      appointment: { findMany: jest.fn(), create: jest.fn() },
+      customer: { findUnique: jest.fn(), update: jest.fn(), create: jest.fn() },
+    }
+
+    mockedPrisma.service.findUnique.mockResolvedValue({
+      id: 'service-1',
+      businessId: 'business-1',
+      active: true,
+      duration: 30,
+      bufferTime: 0,
+    })
+    mockedPrisma.business.findUnique.mockResolvedValue({
+      id: 'business-1',
+      timezone: 'Europe/London',
+      settings: { advanceBookingDays: 5000, sameDayBooking: true },
+      businessHours: [{ dayOfWeek: 2, openTime: '09:00', closeTime: '17:00', isClosed: false }],
+      specialDates: [],
+    })
+    mockedPrisma.$transaction.mockImplementation(async callback => callback(tx))
+
+    const result = await createBooking(
+      'business-1',
+      'service-1',
+      '2030-01-01',
+      '10:00',
+      { name: 'Different customer', email: 'different@example.com' },
+      { idempotencyKey: 'booking_key_1234567890' }
+    )
+
+    expect(result).toMatchObject({ success: false, idempotencyConflict: true })
+    expect(tx.appointment.create).not.toHaveBeenCalled()
   })
 })

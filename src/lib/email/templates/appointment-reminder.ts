@@ -1,10 +1,8 @@
-import { format } from 'date-fns'
-
 interface ReminderEmailData {
   customerName: string
   businessName: string
   serviceName: string
-  appointmentDate: Date
+  appointmentDate: string
   appointmentTime: string
   duration: number
   businessPhone?: string
@@ -16,8 +14,6 @@ interface ReminderEmailData {
 }
 
 export function generateReminderEmailHtml(data: ReminderEmailData): string {
-  const formattedDate = format(data.appointmentDate, 'EEEE, d MMMM yyyy')
-
   return `
 <!DOCTYPE html>
 <html>
@@ -70,7 +66,7 @@ export function generateReminderEmailHtml(data: ReminderEmailData): string {
                       <tr>
                         <td style="padding: 8px 0;">
                           <span style="color: #6b7280; font-size: 14px;">Date</span><br>
-                          <span style="color: #111827; font-size: 16px; font-weight: 600;">${formattedDate}</span>
+                          <span style="color: #111827; font-size: 16px; font-weight: 600;">${data.appointmentDate}</span>
                         </td>
                       </tr>
                       <tr>
@@ -174,8 +170,6 @@ export function generateReminderEmailHtml(data: ReminderEmailData): string {
 }
 
 export function generateReminderEmailText(data: ReminderEmailData): string {
-  const formattedDate = format(data.appointmentDate, 'EEEE, d MMMM yyyy')
-
   return `
 APPOINTMENT REMINDER
 
@@ -186,7 +180,7 @@ This is a friendly reminder about your upcoming appointment at ${data.businessNa
 APPOINTMENT DETAILS
 -------------------
 Service: ${data.serviceName}
-Date: ${formattedDate}
+Date: ${data.appointmentDate}
 Time: ${data.appointmentTime}
 Duration: ${data.duration} minutes
 

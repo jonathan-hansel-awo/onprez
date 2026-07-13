@@ -915,7 +915,8 @@ describe('appointments API authorization', () => {
         expect.objectContaining({
           businessId: 'business-1',
           serviceId: 'service-1',
-        })
+        }),
+        undefined
       )
     })
   })

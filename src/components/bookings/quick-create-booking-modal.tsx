@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Modal, ModalBody, ModalFooter } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -106,6 +106,7 @@ export function QuickCreateBookingModal({
   const [step, setStep] = useState<Step>('service')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const idempotencyRef = useRef<{ fingerprint: string; key: string } | null>(null)
 
   // Services state
   const [services, setServices] = useState<Service[]>([])
@@ -137,7 +138,6 @@ export function QuickCreateBookingModal({
   const [customerNotes, setCustomerNotes] = useState('')
   const [businessNotes, setBusinessNotes] = useState('')
   const [sendConfirmation, setSendConfirmation] = useState(true)
-  const [skipConflictCheck, setSkipConflictCheck] = useState(false)
 
   // Fetch services on mount
   useEffect(() => {
@@ -150,6 +150,7 @@ export function QuickCreateBookingModal({
   const resetForm = () => {
     setStep('service')
     setError(null)
+    idempotencyRef.current = null
     setSelectedService(null)
     setCustomerMode('search')
     setCustomerSearch('')
@@ -161,7 +162,6 @@ export function QuickCreateBookingModal({
     setCustomerNotes('')
     setBusinessNotes('')
     setSendConfirmation(true)
-    setSkipConflictCheck(false)
     setViewMonth(today.getMonth())
     setViewYear(today.getFullYear())
   }
@@ -257,22 +257,30 @@ export function QuickCreateBookingModal({
     setError(null)
 
     try {
+      const requestBody = {
+        serviceId: selectedService.id,
+        date: formatDate(selectedDate),
+        startTime: selectedSlot.startTime,
+        customerId: selectedCustomer?.id,
+        customerName: customerMode === 'new' ? newCustomer.name : undefined,
+        customerEmail: customerMode === 'new' ? newCustomer.email : undefined,
+        customerPhone: customerMode === 'new' ? newCustomer.phone : undefined,
+        customerNotes: customerNotes || undefined,
+        businessNotes: businessNotes || undefined,
+        sendConfirmation,
+      }
+      const fingerprint = JSON.stringify(requestBody)
+      if (idempotencyRef.current?.fingerprint !== fingerprint) {
+        idempotencyRef.current = { fingerprint, key: crypto.randomUUID() }
+      }
+
       const response = await fetch('/api/dashboard/bookings/quick-create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceId: selectedService.id,
-          date: formatDate(selectedDate),
-          startTime: selectedSlot.startTime,
-          customerId: selectedCustomer?.id,
-          customerName: customerMode === 'new' ? newCustomer.name : undefined,
-          customerEmail: customerMode === 'new' ? newCustomer.email : undefined,
-          customerPhone: customerMode === 'new' ? newCustomer.phone : undefined,
-          customerNotes: customerNotes || undefined,
-          businessNotes: businessNotes || undefined,
-          sendConfirmation,
-          skipConflictCheck,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyRef.current.key,
+        },
+        body: JSON.stringify(requestBody),
       })
 
       const result = await response.json()
@@ -732,18 +740,6 @@ export function QuickCreateBookingModal({
                   className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Send confirmation email to customer</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={skipConflictCheck}
-                  onChange={e => setSkipConflictCheck(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">
-                  Allow double-booking (override conflicts)
-                </span>
               </label>
             </div>
           </div>

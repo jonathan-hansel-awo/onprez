@@ -30,7 +30,6 @@ export const createAppointmentAdminSchema = createAppointmentSchema.extend({
   customerId: z.string().cuid().optional(),
   businessNotes: z.string().max(1000).optional().nullable(),
   status: z.enum(['PENDING', 'CONFIRMED']).optional(),
-  skipConflictCheck: z.boolean().optional(),
 })
 
 export type CreateAppointmentAdminInput = z.infer<typeof createAppointmentAdminSchema>

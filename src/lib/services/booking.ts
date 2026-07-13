@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client'
+import { createHash } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import {
   isSlotAvailable,
@@ -6,6 +7,14 @@ import {
   DEFAULT_SLOT_CONFIG,
 } from '@/lib/utils/availability'
 import { DEFAULT_BUSINESS_SETTINGS } from '@/types/business'
+import {
+  addCalendarDays,
+  DEFAULT_TIMEZONE,
+  getDateInTimezone,
+  zonedDateTimeToUtc,
+} from '@/lib/utils/timezone'
+
+export { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 
 export interface ConflictCheckResult {
   available: boolean
@@ -24,46 +33,24 @@ export interface BookingResult {
   appointment?: Awaited<ReturnType<typeof prisma.appointment.create>>
   error?: string
   conflicts?: ConflictCheckResult['conflicts']
+  replayed?: boolean
+  idempotencyConflict?: boolean
 }
 
 const BLOCKING_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED'] as const
 const BOOKING_LOCK_NAMESPACE = 1
+const IDEMPOTENCY_WINDOW_MS = 24 * 60 * 60 * 1000
 
 type BookingDbClient = typeof prisma | Prisma.TransactionClient
 
-/** Convert a business-local date and time to the corresponding UTC instant. */
-export function zonedDateTimeToUtc(date: string, time: string, timezone: string): Date {
-  const [year, month, day] = date.split('-').map(Number)
-  const [hour, minute] = time.split(':').map(Number)
-  const targetAsUtc = Date.UTC(year, month - 1, day, hour, minute)
-  let candidate = targetAsUtc
-
-  // A second pass handles offset changes around daylight-saving transitions.
-  for (let pass = 0; pass < 2; pass += 1) {
-    const parts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-    }).formatToParts(new Date(candidate))
-    const values = Object.fromEntries(parts.map(part => [part.type, part.value]))
-    const representedAsUtc = Date.UTC(
-      Number(values.year),
-      Number(values.month) - 1,
-      Number(values.day),
-      Number(values.hour),
-      Number(values.minute)
-    )
-    candidate += targetAsUtc - representedAsUtc
-  }
-
-  return new Date(candidate)
+export function bookingRequestHash(input: unknown): string {
+  return createHash('sha256').update(JSON.stringify(input)).digest('hex')
 }
 
-async function lockBusinessBookingSchedule(tx: Prisma.TransactionClient, businessId: string) {
+export async function lockBusinessBookingSchedule(
+  tx: Prisma.TransactionClient,
+  businessId: string
+) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${businessId}, ${BOOKING_LOCK_NAMESPACE}))`
 }
 
@@ -115,10 +102,11 @@ export async function checkBookingConflicts(
       hour12: false,
     }).format(appt.endTime)
 
-    const requiredBuffer = Math.max(bufferTime, appt.service.bufferTime || 0) * 60_000
+    const requestedBuffer = bufferTime * 60_000
+    const existingBuffer = (appt.service.bufferTime || 0) * 60_000
     const overlaps =
-      requestedStart.getTime() < appt.endTime.getTime() + requiredBuffer &&
-      requestedEnd.getTime() + requiredBuffer > appt.startTime.getTime()
+      requestedStart.getTime() < appt.endTime.getTime() + existingBuffer &&
+      requestedEnd.getTime() + requestedBuffer > appt.startTime.getTime()
 
     if (overlaps) {
       conflicts.push({
@@ -167,7 +155,7 @@ export async function validateBookingTime(
   }
 
   const settings = { ...DEFAULT_BUSINESS_SETTINGS, ...((business.settings as object) || {}) }
-  const timezone = business.timezone || 'Europe/London'
+  const timezone = business.timezone || DEFAULT_TIMEZONE
 
   const config: SlotGenerationConfig = {
     serviceDuration: duration,
@@ -180,15 +168,14 @@ export async function validateBookingTime(
 
   // Check if date is within booking window
   const today = new Date()
-  const bookingDate = new Date(date)
-  const maxDate = new Date()
-  maxDate.setDate(maxDate.getDate() + config.advanceBookingDays)
+  const todayString = getDateInTimezone(today, timezone)
+  const maxDateString = addCalendarDays(todayString, config.advanceBookingDays)
 
-  if (bookingDate < today) {
+  if (date < todayString) {
     return { valid: false, reason: 'Cannot book in the past' }
   }
 
-  if (bookingDate > maxDate) {
+  if (date > maxDateString) {
     return {
       valid: false,
       reason: `Cannot book more than ${config.advanceBookingDays} days in advance`,
@@ -196,12 +183,20 @@ export async function validateBookingTime(
   }
 
   // Check same-day booking
-  const todayString = today.toISOString().split('T')[0]
   if (date === todayString && !config.sameDayBooking) {
     return { valid: false, reason: 'Same-day booking is not available' }
   }
 
   // Check slot availability using existing utility
+  try {
+    zonedDateTimeToUtc(date, startTime, timezone)
+  } catch (error) {
+    return {
+      valid: false,
+      reason: error instanceof Error ? error.message : 'Invalid booking time',
+    }
+  }
+
   const result = isSlotAvailable(
     date,
     startTime,
@@ -233,9 +228,9 @@ export async function createBooking(
     customerId?: string
     businessNotes?: string | null
     status?: 'PENDING' | 'CONFIRMED'
-    skipConflictCheck?: boolean
     bookingSource?: string
     bookingIp?: string
+    idempotencyKey?: string
   }
 ): Promise<BookingResult> {
   // Get service details
@@ -273,24 +268,75 @@ export async function createBooking(
   return prisma.$transaction(async tx => {
     await lockBusinessBookingSchedule(tx, businessId)
 
-    if (!options?.skipConflictCheck) {
-      const conflictCheck = await checkBookingConflicts(
-        businessId,
-        date,
-        startTime,
-        service.duration,
-        bufferTime,
-        timezone,
-        undefined,
-        tx
-      )
+    const requestHash = options?.idempotencyKey
+      ? bookingRequestHash({
+          businessId,
+          serviceId,
+          date,
+          startTime,
+          customerId: options.customerId || null,
+          customerEmail: customerData.email.toLowerCase(),
+          customerName: customerData.name,
+          customerPhone: customerData.phone || null,
+          customerNotes: customerData.notes || null,
+          businessNotes: options.businessNotes || null,
+          status: options.status || null,
+        })
+      : null
 
-      if (!conflictCheck.available) {
-        return {
-          success: false,
-          error: conflictCheck.reason,
-          conflicts: conflictCheck.conflicts,
+    if (options?.idempotencyKey && requestHash) {
+      await tx.bookingIdempotencyKey.deleteMany({
+        where: {
+          businessId,
+          key: options.idempotencyKey,
+          expiresAt: { lte: new Date() },
+        },
+      })
+
+      const existingKey = await tx.bookingIdempotencyKey.findUnique({
+        where: { businessId_key: { businessId, key: options.idempotencyKey } },
+        include: {
+          appointment: {
+            include: {
+              service: true,
+              customer: true,
+              business: {
+                select: { name: true, email: true, phone: true, timezone: true },
+              },
+            },
+          },
+        },
+      })
+
+      if (existingKey) {
+        if (existingKey.requestHash !== requestHash) {
+          return {
+            success: false,
+            error: 'Idempotency key has already been used for a different booking request',
+            idempotencyConflict: true,
+          }
         }
+
+        return { success: true, appointment: existingKey.appointment, replayed: true }
+      }
+    }
+
+    const conflictCheck = await checkBookingConflicts(
+      businessId,
+      date,
+      startTime,
+      service.duration,
+      bufferTime,
+      timezone,
+      undefined,
+      tx
+    )
+
+    if (!conflictCheck.available) {
+      return {
+        success: false,
+        error: conflictCheck.reason,
+        conflicts: conflictCheck.conflicts,
       }
     }
 
@@ -375,6 +421,18 @@ export async function createBooking(
         },
       },
     })
+
+    if (options?.idempotencyKey && requestHash) {
+      await tx.bookingIdempotencyKey.create({
+        data: {
+          businessId,
+          key: options.idempotencyKey,
+          requestHash,
+          appointmentId: appointment.id,
+          expiresAt: new Date(Date.now() + IDEMPOTENCY_WINDOW_MS),
+        },
+      })
+    }
 
     // Update customer's last booking date
     await tx.customer.update({

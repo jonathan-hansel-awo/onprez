@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 interface BookingPayload {
   businessId: string
@@ -45,6 +45,7 @@ interface UseCreateBookingReturn {
 export function useCreateBooking(): UseCreateBookingReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const idempotencyRef = useRef<{ fingerprint: string; key: string } | null>(null)
 
   const reset = useCallback(() => {
     setError(null)
@@ -56,10 +57,16 @@ export function useCreateBooking(): UseCreateBookingReturn {
       setError(null)
 
       try {
+        const fingerprint = JSON.stringify(payload)
+        if (idempotencyRef.current?.fingerprint !== fingerprint) {
+          idempotencyRef.current = { fingerprint, key: crypto.randomUUID() }
+        }
+
         const response = await fetch('/api/bookings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyRef.current.key,
           },
           body: JSON.stringify(payload),
         })

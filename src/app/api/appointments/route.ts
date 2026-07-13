@@ -9,6 +9,7 @@ import {
   resolveReadableBusinessContext,
   resolveWritableBusinessContext,
 } from '@/lib/auth/business-route-utils'
+import { addCalendarDays, DEFAULT_TIMEZONE, zonedDateTimeToUtc } from '@/lib/utils/timezone'
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
 
     const context = await resolveReadableBusinessContext(user.id, request)
     const businessId = context.businessId
+    const timezone = context.business.timezone || DEFAULT_TIMEZONE
 
     const { searchParams } = new URL(request.url)
 
@@ -56,8 +58,10 @@ export async function GET(request: NextRequest) {
 
     if (startDate || endDate) {
       where.startTime = {
-        ...(startDate && { gte: new Date(startDate) }),
-        ...(endDate && { lte: new Date(`${endDate}T23:59:59`) }),
+        ...(startDate && { gte: zonedDateTimeToUtc(startDate, '00:00', timezone) }),
+        ...(endDate && {
+          lt: zonedDateTimeToUtc(addCalendarDays(endDate, 1), '00:00', timezone),
+        }),
       }
     }
 

@@ -40,19 +40,19 @@ model User {
 }
 
 model TeamInvitation {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   businessId    String
   email         String
   role          BusinessRole @default(STAFF)
-  token         String    @unique
-  status        String    @default("PENDING")
+  token         String       @unique
+  status        String       @default("PENDING")
   invitedBy     String
   expiresAt     DateTime
   acceptedAt    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  invitedByUser User      @relation("InvitedInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  business      Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invitedByUser User         @relation("InvitedInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
 
   @@unique([businessId, email])
   @@index([email])
@@ -62,20 +62,20 @@ model TeamInvitation {
 }
 
 model BusinessMember {
-  id         String   @id @default(cuid())
+  id         String       @id @default(cuid())
   businessId String
   userId     String
   role       BusinessRole @default(STAFF)
-  
+
   // Timestamps
-  joinedAt   DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([businessId, userId])
   @@index([businessId])
   @@index([userId])
@@ -246,51 +246,52 @@ model RateLimitConfig {
 }
 
 model Business {
-  id                String            @id @default(cuid())
-  ownerId           String
-  name              String
-  slug              String            @unique
-  category          BusinessCategory
-  description       String?
-  tagline           String?
-  email             String?
-  phone             String?
-  website           String?
-  address           String?
-  city              String?
-  state             String?
-  zipCode           String?
-  country           String?           @default("UK")
-  latitude          Float?
-  longitude         Float?
-  timezone          String            @default("BST/LONDON")
-  logoUrl           String?
-  coverImageUrl     String?
-  socialLinks       Json?
-  settings          Json?
-  branding          Json?
-  isPublished       Boolean           @default(false)
-  isPremium         Boolean           @default(false)
-  isActive          Boolean           @default(true)
-  seoTitle          String?
-  seoDescription    String?
-  seoKeywords       String[]
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  publishedAt       DateTime?
-  appointments      Appointment[]
-  businessHours     BusinessHours[]
-  specialDates     SpecialDate[]
-  owner             User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  customers         Customer[]
-  faqs              FAQ[]
-  inquiries         Inquiry[]
-  reviews           Review[]
-  serviceCategories ServiceCategory[]
-  services          Service[]
-  teamInvitations   TeamInvitation[]
-  members           BusinessMember[]
-  pages       Page[]
+  id                     String                  @id @default(cuid())
+  ownerId                String
+  name                   String
+  slug                   String                  @unique
+  category               BusinessCategory
+  description            String?
+  tagline                String?
+  email                  String?
+  phone                  String?
+  website                String?
+  address                String?
+  city                   String?
+  state                  String?
+  zipCode                String?
+  country                String?                 @default("UK")
+  latitude               Float?
+  longitude              Float?
+  timezone               String                  @default("Europe/London")
+  logoUrl                String?
+  coverImageUrl          String?
+  socialLinks            Json?
+  settings               Json?
+  branding               Json?
+  isPublished            Boolean                 @default(false)
+  isPremium              Boolean                 @default(false)
+  isActive               Boolean                 @default(true)
+  seoTitle               String?
+  seoDescription         String?
+  seoKeywords            String[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  publishedAt            DateTime?
+  appointments           Appointment[]
+  bookingIdempotencyKeys BookingIdempotencyKey[]
+  businessHours          BusinessHours[]
+  specialDates           SpecialDate[]
+  owner                  User                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  customers              Customer[]
+  faqs                   FAQ[]
+  inquiries              Inquiry[]
+  reviews                Review[]
+  serviceCategories      ServiceCategory[]
+  services               Service[]
+  teamInvitations        TeamInvitation[]
+  members                BusinessMember[]
+  pages                  Page[]
 
   @@index([ownerId])
   @@index([slug])
@@ -301,37 +302,36 @@ model Business {
 }
 
 model Page {
-  id          String   @id @default(cuid())
-  businessId  String
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  
-  slug        String   // e.g., "home", "about", "services"
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  slug        String // e.g., "home", "about", "services"
   title       String
-  isPublished Boolean  @default(false)
-  order       Int      @default(0)
-  
+  isPublished Boolean @default(false)
+  order       Int     @default(0)
+
   // Flexible content structure stored as JSONB
-  content     Json     @default("[]") // Array of section objects
-  
+  content Json @default("[]") // Array of section objects
+
   // SEO
   metaTitle       String?
   metaDescription String?
 
-    // NEW FIELDS - Add these
-  publishedContent Json?    // Last published version
+  // NEW FIELDS - Add these
+  publishedContent Json? // Last published version
   publishedAt      DateTime?
-  lastPublishedBy  String?   // User ID who published
-  version          Int      @default(1) // Auto-increment on publish
-  
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  lastPublishedBy  String? // User ID who published
+  version          Int       @default(1) // Auto-increment on publish
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([businessId, slug])
   @@index([businessId])
   @@index([businessId, isPublished])
 }
- 
+
 enum SectionType {
   HERO
   ABOUT
@@ -381,43 +381,42 @@ model SpecialDate {
 }
 
 model Service {
-  id                    String           @id @default(cuid())
-  businessId            String
-  name                  String
-  description           String?
-  tagline               String?
-  price                 Decimal          @db.Decimal(10, 2)
-  priceType             PriceType        @default(FIXED)
-  priceRangeMin         Decimal?         @db.Decimal(10, 2)
-  priceRangeMax         Decimal?         @db.Decimal(10, 2)
-  currency              String           @default("GBP")
-  duration              Int
-  bufferTime            Int              @default(0)
-  categoryId            String?
-  imageUrl              String?
-  galleryImages         String[]
-  requiresApproval      Boolean          @default(false)
-  requiresDeposit       Boolean          @default(false)
-  depositAmount         Decimal?         @db.Decimal(10, 2)
-  useBusinessHours      Boolean          @default(true)
-  customAvailability    Json?            // { monday: { enabled: true, slots: [{start: '09:00', end: '17:00'}] } }
-  availableDays         Int[]            @default([0,1,2,3,4,5,6]) // 0=Sunday, 6=Saturday
-  featured              Boolean          @default(false)
-  active                Boolean          @default(true)
-  order                 Int              @default(0)
-  seoTitle              String?
-  seoDescription        String?
-  preparationNotes      String?
-  aftercareNotes        String?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  appointments          Appointment[]
-  business              Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  category              ServiceCategory? @relation(fields: [categoryId], references: [id])
-  variants              ServiceVariant[]
-  maxAdvanceBookingDays  Int?      // null = use business default, -1 = no limit
-  minAdvanceBookingHours Int?      // null = use business default
-
+  id                     String           @id @default(cuid())
+  businessId             String
+  name                   String
+  description            String?
+  tagline                String?
+  price                  Decimal          @db.Decimal(10, 2)
+  priceType              PriceType        @default(FIXED)
+  priceRangeMin          Decimal?         @db.Decimal(10, 2)
+  priceRangeMax          Decimal?         @db.Decimal(10, 2)
+  currency               String           @default("GBP")
+  duration               Int
+  bufferTime             Int              @default(0)
+  categoryId             String?
+  imageUrl               String?
+  galleryImages          String[]
+  requiresApproval       Boolean          @default(false)
+  requiresDeposit        Boolean          @default(false)
+  depositAmount          Decimal?         @db.Decimal(10, 2)
+  useBusinessHours       Boolean          @default(true)
+  customAvailability     Json? // { monday: { enabled: true, slots: [{start: '09:00', end: '17:00'}] } }
+  availableDays          Int[]            @default([0, 1, 2, 3, 4, 5, 6]) // 0=Sunday, 6=Saturday
+  featured               Boolean          @default(false)
+  active                 Boolean          @default(true)
+  order                  Int              @default(0)
+  seoTitle               String?
+  seoDescription         String?
+  preparationNotes       String?
+  aftercareNotes         String?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  appointments           Appointment[]
+  business               Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category               ServiceCategory? @relation(fields: [categoryId], references: [id])
+  variants               ServiceVariant[]
+  maxAdvanceBookingDays  Int? // null = use business default, -1 = no limit
+  minAdvanceBookingHours Int? // null = use business default
 
   @@index([businessId])
   @@index([categoryId])
@@ -446,58 +445,59 @@ model ServiceCategory {
 }
 
 model Appointment {
-  id                 String              @id @default(cuid())
-  businessId         String
-  serviceId          String
-  customerId         String
-  startTime          DateTime
-  endTime            DateTime
-  duration           Int
-  timezone           String
-  status             AppointmentStatus   @default(PENDING)
-  previousStatus     AppointmentStatus?
-  confirmedAt        DateTime?
-  confirmedBy        String?
-  completedAt        DateTime?
-  cancelledAt        DateTime?
-  cancellationSource CancellationSource?
-  cancellationReason String?
+  id                  String                  @id @default(cuid())
+  businessId          String
+  serviceId           String
+  customerId          String
+  startTime           DateTime
+  endTime             DateTime
+  duration            Int
+  timezone            String
+  status              AppointmentStatus       @default(PENDING)
+  previousStatus      AppointmentStatus?
+  confirmedAt         DateTime?
+  confirmedBy         String?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  cancellationSource  CancellationSource?
+  cancellationReason  String?
   cancellationDetails String?
-  cancelledBy        String?
-  rescheduledFrom    String?
-  rescheduledTo      String?
-  rescheduledBy      String?
-  rescheduledAt      DateTime?
-  rescheduleReason   String?
-  customerName       String
-  customerEmail      String
-  customerPhone      String?
-  customerNotes      String?
-  businessNotes      String?
-  reminders     ReminderLog[]
-  isMultiDay        Boolean   @default(false)
-  endDate           DateTime? // For multi-day: the final day
-  recurrencePattern Json?     // For recurring: { type: 'daily'|'weekly', count: number, days?: number[] }
-  parentId          String?   // Link to parent appointment for series
-  parent            Appointment?  @relation("AppointmentSeries", fields: [parentId], references: [id])
-  children          Appointment[] @relation("AppointmentSeries")
-  requiresDeposit    Boolean             @default(false)
-  depositAmount      Decimal?            @db.Decimal(10, 2)
-  depositPaid        Boolean             @default(false)
-  depositPaidAt      DateTime?
-  totalAmount        Decimal             @db.Decimal(10, 2)
-  paymentStatus      PaymentStatus       @default(UNPAID)
-  paidAt             DateTime?
-  reminderSentAt     DateTime?
-  reminderCount      Int                 @default(0)
-  bookingSource      String?
-  bookingIp          String?
-  metadata           Json?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  business           Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer           Customer            @relation(fields: [customerId], references: [id])
-  service            Service             @relation(fields: [serviceId], references: [id])
+  cancelledBy         String?
+  rescheduledFrom     String?
+  rescheduledTo       String?
+  rescheduledBy       String?
+  rescheduledAt       DateTime?
+  rescheduleReason    String?
+  customerName        String
+  customerEmail       String
+  customerPhone       String?
+  customerNotes       String?
+  businessNotes       String?
+  reminders           ReminderLog[]
+  isMultiDay          Boolean                 @default(false)
+  endDate             DateTime? // For multi-day: the final day
+  recurrencePattern   Json? // For recurring: { type: 'daily'|'weekly', count: number, days?: number[] }
+  parentId            String? // Link to parent appointment for series
+  parent              Appointment?            @relation("AppointmentSeries", fields: [parentId], references: [id])
+  children            Appointment[]           @relation("AppointmentSeries")
+  requiresDeposit     Boolean                 @default(false)
+  depositAmount       Decimal?                @db.Decimal(10, 2)
+  depositPaid         Boolean                 @default(false)
+  depositPaidAt       DateTime?
+  totalAmount         Decimal                 @db.Decimal(10, 2)
+  paymentStatus       PaymentStatus           @default(UNPAID)
+  paidAt              DateTime?
+  reminderSentAt      DateTime?
+  reminderCount       Int                     @default(0)
+  bookingSource       String?
+  bookingIp           String?
+  metadata            Json?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  business            Business                @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer            Customer                @relation(fields: [customerId], references: [id])
+  service             Service                 @relation(fields: [serviceId], references: [id])
+  idempotencyKeys     BookingIdempotencyKey[]
 
   @@index([businessId])
   @@index([serviceId])
@@ -509,16 +509,33 @@ model Appointment {
   @@map("appointments")
 }
 
+model BookingIdempotencyKey {
+  id            String      @id @default(cuid())
+  businessId    String
+  key           String
+  requestHash   String
+  appointmentId String
+  expiresAt     DateTime
+  createdAt     DateTime    @default(now())
+  business      Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, key])
+  @@index([expiresAt])
+  @@index([appointmentId])
+  @@map("booking_idempotency_keys")
+}
+
 model ReminderLog {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   appointmentId String
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  reminderType  String   // "24h", "2h", "manual"
-  channel       String   // "email", "sms"
-  sentAt        DateTime @default(now())
-  status        String   @default("sent") // "sent", "failed"
+  reminderType  String // "24h", "2h", "manual"
+  channel       String // "email", "sms"
+  sentAt        DateTime    @default(now())
+  status        String      @default("sent") // "sent", "failed"
   error         String?
-  
+
   @@index([appointmentId])
   @@index([sentAt])
 }
@@ -762,27 +779,27 @@ enum InquiryPriority {
 }
 
 model ServiceVariant {
-  id          String   @id @default(cuid())
-  serviceId   String
-  name        String
-  description String?
-  priceAdjustment Decimal @db.Decimal(10, 2) // Can be positive or negative
-  durationAdjustment Int @default(0) // Minutes to add/subtract
-  type        VariantType @default(OPTION)
-  isDefault   Boolean  @default(false)
-  order       Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  
+  id                 String      @id @default(cuid())
+  serviceId          String
+  name               String
+  description        String?
+  priceAdjustment    Decimal     @db.Decimal(10, 2) // Can be positive or negative
+  durationAdjustment Int         @default(0) // Minutes to add/subtract
+  type               VariantType @default(OPTION)
+  isDefault          Boolean     @default(false)
+  order              Int         @default(0)
+  active             Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
   @@index([serviceId])
   @@index([serviceId, order])
   @@map("service_variants")
 }
 
 enum VariantType {
-  OPTION      // Choice variants (e.g., Short/Medium/Long hair)
-  ADDON       // Optional add-ons (e.g., Deep conditioning)
+  OPTION // Choice variants (e.g., Short/Medium/Long hair)
+  ADDON // Optional add-ons (e.g., Deep conditioning)
 }

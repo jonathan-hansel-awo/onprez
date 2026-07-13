@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createBooking } from '@/lib/services/booking'
+import { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 import { z } from 'zod'
 
 const createBookingSchema = z.object({
@@ -37,10 +38,6 @@ function getClientIp(request: NextRequest) {
   const realIp = request.headers.get('x-real-ip')
 
   return forwardedFor?.split(',')[0]?.trim() || realIp || 'unknown'
-}
-
-function parseDateTime(date: string, time: string) {
-  return new Date(`${date}T${time}:00`)
 }
 
 function serializeAppointment(appointment: {
@@ -96,6 +93,14 @@ function serializeAppointment(appointment: {
 
 export async function POST(request: NextRequest) {
   try {
+    const idempotencyKey = request.headers.get('idempotency-key')?.trim()
+    if (idempotencyKey && !/^[A-Za-z0-9_-]{16,128}$/.test(idempotencyKey)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid Idempotency-Key header' },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
 
     const validationResult = createBookingSchema.safeParse(body)
@@ -150,11 +155,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const startDateTime = parseDateTime(data.date, data.startTime)
-
-    if (Number.isNaN(startDateTime.getTime())) {
+    let startDateTime: Date
+    try {
+      startDateTime = zonedDateTimeToUtc(data.date, data.startTime, business.timezone)
+    } catch (error) {
       return NextResponse.json(
-        { success: false, error: 'Invalid date or time format' },
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Invalid date or time',
+        },
         { status: 400 }
       )
     }
@@ -167,11 +176,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (data.endTime) {
-      const suppliedEndDateTime = parseDateTime(data.date, data.endTime)
-
-      if (Number.isNaN(suppliedEndDateTime.getTime())) {
+      let suppliedEndDateTime: Date
+      try {
+        suppliedEndDateTime = zonedDateTimeToUtc(data.date, data.endTime, business.timezone)
+      } catch (error) {
         return NextResponse.json(
-          { success: false, error: 'Invalid end time format' },
+          {
+            success: false,
+            error: error instanceof Error ? error.message : 'Invalid end time',
+          },
           { status: 400 }
         )
       }
@@ -201,6 +214,7 @@ export async function POST(request: NextRequest) {
         status: service.requiresApproval ? 'PENDING' : 'CONFIRMED',
         bookingSource: 'WEBSITE',
         bookingIp: getClientIp(request),
+        idempotencyKey,
       }
     )
 
@@ -211,7 +225,7 @@ export async function POST(request: NextRequest) {
           error: result.error || 'Failed to create booking',
           conflicts: result.conflicts,
         },
-        { status: result.conflicts ? 409 : 400 }
+        { status: result.conflicts || result.idempotencyConflict ? 409 : 400 }
       )
     }
 
@@ -264,7 +278,10 @@ export async function POST(request: NextRequest) {
         success: true,
         data: serializeAppointment(appointment),
       },
-      { status: 201 }
+      {
+        status: result.replayed ? 200 : 201,
+        headers: result.replayed ? { 'Idempotency-Replayed': 'true' } : undefined,
+      }
     )
   } catch (error) {
     console.error('Error creating booking:', error)

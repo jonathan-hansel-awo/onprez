@@ -5,6 +5,14 @@ import {
   createMultiDayAppointmentSchema,
 } from '@/lib/validation/multi-day-appointment'
 import { Prisma } from '@prisma/client'
+import {
+  bookingRequestHash,
+  checkBookingConflicts,
+  lockBusinessBookingSchedule,
+  zonedDateTimeToUtc,
+} from '@/lib/services/booking'
+import { DEFAULT_BUSINESS_SETTINGS } from '@/types/business'
+import { DEFAULT_TIMEZONE, getUtcDayRange } from '@/lib/utils/timezone'
 
 interface GeneratedSlot {
   date: string
@@ -114,6 +122,8 @@ export async function checkMultiDayAvailability(
     return { available: false, conflicts: [{ date: 'all', reason: 'Business not found' }] }
   }
 
+  const timezone = business.timezone || DEFAULT_TIMEZONE
+
   for (const slot of slots) {
     const slotDate = new Date(slot.date)
     const dayOfWeek = slotDate.getDay()
@@ -163,21 +173,42 @@ export async function checkMultiDayAvailability(
     }
 
     // Check existing appointments
+    let dayRange: ReturnType<typeof getUtcDayRange>
+    try {
+      dayRange = getUtcDayRange(slot.date, timezone)
+    } catch (error) {
+      conflicts.push({
+        date: slot.date,
+        reason: error instanceof Error ? error.message : 'Invalid booking date',
+      })
+      continue
+    }
+
     const existingAppointments = await prisma.appointment.findMany({
       where: {
         businessId,
         startTime: {
-          gte: new Date(`${slot.date}T00:00:00`),
-          lt: new Date(`${slot.date}T23:59:59`),
+          gte: dayRange.start,
+          lt: dayRange.end,
         },
         status: {
-          notIn: ['CANCELLED', 'NO_SHOW'],
+          in: ['PENDING', 'CONFIRMED'],
         },
       },
     })
 
-    const slotStartTime = new Date(`${slot.date}T${slot.startTime}:00`)
-    const slotEndTime = new Date(`${slot.date}T${slot.endTime}:00`)
+    let slotStartTime: Date
+    try {
+      slotStartTime = zonedDateTimeToUtc(slot.date, slot.startTime, timezone)
+    } catch (error) {
+      conflicts.push({
+        date: slot.date,
+        reason: error instanceof Error ? error.message : 'Invalid booking time',
+      })
+      continue
+    }
+    const slotDuration = timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime)
+    const slotEndTime = new Date(slotStartTime.getTime() + slotDuration * 60_000)
 
     for (const apt of existingAppointments) {
       if (slotStartTime < apt.endTime && slotEndTime > apt.startTime) {
@@ -196,11 +227,16 @@ export async function checkMultiDayAvailability(
 /**
  * Create multi-day appointment (creates linked appointments)
  */
-export async function createMultiDayAppointment(data: CreateMultiDayAppointment): Promise<{
+export async function createMultiDayAppointment(
+  data: CreateMultiDayAppointment,
+  idempotencyKey?: string
+): Promise<{
   success: boolean
   appointments?: Array<{ id: string; date: string; startTime: string }>
   error?: string
   conflicts?: { date: string; reason: string }[]
+  replayed?: boolean
+  idempotencyConflict?: boolean
 }> {
   // Validate input
   const validation = createMultiDayAppointmentSchema.safeParse(data)
@@ -210,7 +246,7 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
 
   // Get service for duration
   const service = await prisma.service.findUnique({
-    where: { id: data.serviceId },
+    where: { id: data.serviceId, businessId: data.businessId },
   })
 
   if (!service) {
@@ -235,41 +271,103 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
     }
   }
 
-  // Get or create customer
-  let customerId = data.customerId
+  const business = await prisma.business.findUnique({ where: { id: data.businessId } })
+  if (!business) return { success: false, error: 'Business not found' }
 
-  if (!customerId) {
-    const existingCustomer = await prisma.customer.findFirst({
-      where: {
-        businessId: data.businessId,
-        email: data.customerEmail,
-      },
-    })
+  const settings = { ...DEFAULT_BUSINESS_SETTINGS, ...((business.settings as object) || {}) }
+  const timezone = business.timezone || 'Europe/London'
+  const bufferTime = service.bufferTime || settings.bufferTime || 0
 
-    if (existingCustomer) {
-      customerId = existingCustomer.id
-    } else {
-      const newCustomer = await prisma.customer.create({
-        data: {
-          businessId: data.businessId,
-          email: data.customerEmail,
-          name: data.customerName,
-          phone: data.customerPhone,
-        },
-      })
-      customerId = newCustomer.id
-    }
-  }
-
-  // Create appointments in a transaction
+  // Serialize all writes for this business, then recheck every slot inside the
+  // same transaction. The preview above is only an early user-facing check.
   const result = await prisma.$transaction(async tx => {
+    await lockBusinessBookingSchedule(tx, data.businessId)
+
+    const requestHash = idempotencyKey ? bookingRequestHash(data) : null
+    if (idempotencyKey && requestHash) {
+      await tx.bookingIdempotencyKey.deleteMany({
+        where: { businessId: data.businessId, key: idempotencyKey, expiresAt: { lte: new Date() } },
+      })
+      const existingKey = await tx.bookingIdempotencyKey.findUnique({
+        where: { businessId_key: { businessId: data.businessId, key: idempotencyKey } },
+      })
+
+      if (existingKey) {
+        if (existingKey.requestHash !== requestHash) {
+          return { appointments: null, conflicts: [], idempotencyConflict: true }
+        }
+
+        const existingSeries = await tx.appointment.findMany({
+          where: {
+            OR: [{ id: existingKey.appointmentId }, { parentId: existingKey.appointmentId }],
+          },
+          orderBy: { startTime: 'asc' },
+        })
+        return {
+          appointments: existingSeries.map(appointment => ({
+            id: appointment.id,
+            date: new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(
+              appointment.startTime
+            ),
+            startTime: new Intl.DateTimeFormat('en-GB', {
+              timeZone: timezone,
+              hour: '2-digit',
+              minute: '2-digit',
+              hourCycle: 'h23',
+            }).format(appointment.startTime),
+          })),
+          conflicts: [],
+          replayed: true,
+        }
+      }
+    }
+
+    const conflicts: { date: string; reason: string }[] = []
+    for (const slot of slots) {
+      const conflict = await checkBookingConflicts(
+        data.businessId,
+        slot.date,
+        slot.startTime,
+        service.duration,
+        bufferTime,
+        timezone,
+        undefined,
+        tx
+      )
+      if (!conflict.available) {
+        conflicts.push({ date: slot.date, reason: conflict.reason || 'Slot is unavailable' })
+      }
+    }
+
+    if (conflicts.length > 0) return { appointments: null, conflicts }
+
+    let customerId = data.customerId
+    if (!customerId) {
+      const existingCustomer = await tx.customer.findFirst({
+        where: { businessId: data.businessId, email: data.customerEmail },
+      })
+      if (existingCustomer) {
+        customerId = existingCustomer.id
+      } else {
+        const newCustomer = await tx.customer.create({
+          data: {
+            businessId: data.businessId,
+            email: data.customerEmail,
+            name: data.customerName,
+            phone: data.customerPhone,
+          },
+        })
+        customerId = newCustomer.id
+      }
+    }
+
     const appointments: Array<{ id: string; date: string; startTime: string }> = []
     let parentId: string | null = null
 
     for (let i = 0; i < slots.length; i++) {
       const slot = slots[i]
-      const startDateTime = new Date(`${slot.date}T${slot.startTime}:00`)
-      const endDateTime = new Date(`${slot.date}T${slot.endTime}:00`)
+      const startDateTime = zonedDateTimeToUtc(slot.date, slot.startTime, timezone)
+      const endDateTime = new Date(startDateTime.getTime() + service.duration * 60_000)
 
       const appointment: Awaited<ReturnType<typeof tx.appointment.create>> =
         await tx.appointment.create({
@@ -280,7 +378,7 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
             startTime: startDateTime,
             endTime: endDateTime,
             duration: service.duration,
-            timezone: 'Europe/London', // TODO: Get from business
+            timezone,
             status: 'PENDING',
             customerName: data.customerName,
             customerEmail: data.customerEmail,
@@ -291,7 +389,14 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
             isMultiDay: true,
             endDate:
               slots.length > 1
-                ? new Date(`${slots[slots.length - 1].date}T${slots[slots.length - 1].endTime}:00`)
+                ? new Date(
+                    zonedDateTimeToUtc(
+                      slots[slots.length - 1].date,
+                      slots[slots.length - 1].startTime,
+                      timezone
+                    ).getTime() +
+                      service.duration * 60_000
+                  )
                 : null,
             parentId: i > 0 ? parentId : null,
             recurrencePattern: i === 0 ? data.pattern : Prisma.JsonNull,
@@ -319,10 +424,38 @@ export async function createMultiDayAppointment(data: CreateMultiDayAppointment)
       },
     })
 
-    return appointments
+    if (idempotencyKey && requestHash && parentId) {
+      await tx.bookingIdempotencyKey.create({
+        data: {
+          businessId: data.businessId,
+          key: idempotencyKey,
+          requestHash,
+          appointmentId: parentId,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      })
+    }
+
+    return { appointments, conflicts: [], replayed: false }
   })
 
-  return { success: true, appointments: result }
+  if (result.idempotencyConflict) {
+    return {
+      success: false,
+      error: 'Idempotency key has already been used for a different booking request',
+      idempotencyConflict: true,
+    }
+  }
+
+  if (!result.appointments) {
+    return {
+      success: false,
+      error: 'Some dates are no longer available',
+      conflicts: result.conflicts,
+    }
+  }
+
+  return { success: true, appointments: result.appointments, replayed: result.replayed }
 }
 
 /**
