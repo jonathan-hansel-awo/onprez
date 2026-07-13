@@ -259,6 +259,7 @@ export async function createBooking(
   const settings = { ...DEFAULT_BUSINESS_SETTINGS, ...((business.settings as object) || {}) }
   const timezone = business.timezone || 'Europe/London'
   const bufferTime = service.bufferTime || settings.bufferTime || 0
+  const normalizedCustomerEmail = customerData.email.toLowerCase().trim()
 
   // Validate booking time
   const timeValidation = await validateBookingTime(businessId, date, startTime, service.duration)
@@ -276,7 +277,7 @@ export async function createBooking(
           date,
           startTime,
           customerId: options.customerId || null,
-          customerEmail: customerData.email.toLowerCase(),
+          customerEmail: normalizedCustomerEmail,
           customerName: customerData.name,
           customerPhone: customerData.phone || null,
           customerNotes: customerData.notes || null,
@@ -350,7 +351,7 @@ export async function createBooking(
         where: {
           businessId_email: {
             businessId,
-            email: customerData.email,
+            email: normalizedCustomerEmail,
           },
         },
       })
@@ -371,7 +372,7 @@ export async function createBooking(
         const newCustomer = await tx.customer.create({
           data: {
             businessId,
-            email: customerData.email,
+            email: normalizedCustomerEmail,
             name: customerData.name,
             phone: customerData.phone,
             totalBookings: 1,
@@ -398,7 +399,7 @@ export async function createBooking(
         timezone,
         status,
         customerName: customerData.name,
-        customerEmail: customerData.email,
+        customerEmail: normalizedCustomerEmail,
         customerPhone: customerData.phone,
         customerNotes: customerData.notes,
         businessNotes: options?.businessNotes,

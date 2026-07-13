@@ -278,13 +278,16 @@ export async function createMultiDayAppointment(
   const settings = { ...DEFAULT_BUSINESS_SETTINGS, ...((business.settings as object) || {}) }
   const timezone = business.timezone || 'Europe/London'
   const bufferTime = service.bufferTime || settings.bufferTime || 0
+  const normalizedCustomerEmail = data.customerEmail.toLowerCase().trim()
 
   // Serialize all writes for this business, then recheck every slot inside the
   // same transaction. The preview above is only an early user-facing check.
   const result = await prisma.$transaction(async tx => {
     await lockBusinessBookingSchedule(tx, data.businessId)
 
-    const requestHash = idempotencyKey ? bookingRequestHash(data) : null
+    const requestHash = idempotencyKey
+      ? bookingRequestHash({ ...data, customerEmail: normalizedCustomerEmail })
+      : null
     if (idempotencyKey && requestHash) {
       await tx.bookingIdempotencyKey.deleteMany({
         where: { businessId: data.businessId, key: idempotencyKey, expiresAt: { lte: new Date() } },
@@ -345,7 +348,7 @@ export async function createMultiDayAppointment(
     let customerId = data.customerId
     if (!customerId) {
       const existingCustomer = await tx.customer.findFirst({
-        where: { businessId: data.businessId, email: data.customerEmail },
+        where: { businessId: data.businessId, email: normalizedCustomerEmail },
       })
       if (existingCustomer) {
         customerId = existingCustomer.id
@@ -353,7 +356,7 @@ export async function createMultiDayAppointment(
         const newCustomer = await tx.customer.create({
           data: {
             businessId: data.businessId,
-            email: data.customerEmail,
+            email: normalizedCustomerEmail,
             name: data.customerName,
             phone: data.customerPhone,
           },
@@ -382,7 +385,7 @@ export async function createMultiDayAppointment(
             timezone,
             status: 'PENDING',
             customerName: data.customerName,
-            customerEmail: data.customerEmail,
+            customerEmail: normalizedCustomerEmail,
             customerPhone: data.customerPhone,
             customerNotes: data.customerNotes,
             businessNotes: data.businessNotes,

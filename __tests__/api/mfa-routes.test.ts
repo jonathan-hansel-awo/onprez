@@ -5,6 +5,7 @@
 import { NextRequest } from 'next/server'
 import { POST as setupMfaRoute } from '@/app/api/auth/mfa/setup/route'
 import { POST as verifySetupRoute } from '@/app/api/auth/mfa/verify-setup/route'
+import { POST as mfaChallengeRoute } from '@/app/api/auth/mfa/challenge/route'
 import { POST as backupCodesRoute } from '@/app/api/auth/mfa/backup-codes/route'
 import { POST as regenerateCodesRoute } from '@/app/api/auth/mfa/regenerate-codes/route'
 import { POST as disableMfaRoute } from '@/app/api/auth/mfa/disable/route'
@@ -15,6 +16,7 @@ import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { setupMfa, verifyMfaSetup, regenerateBackupCodes, getMfaStatus } from '@/lib/services/mfa'
 import { logSecurityEvent } from '@/lib/services/security-logging'
+import { verifyMfaChallenge } from '@/lib/services/mfa-challenge'
 
 jest.mock('@/lib/auth/get-user', () => ({
   getCurrentUser: jest.fn(),
@@ -59,6 +61,10 @@ jest.mock('@/lib/services/security-logging', () => ({
   logSecurityEvent: jest.fn(),
 }))
 
+jest.mock('@/lib/services/mfa-challenge', () => ({
+  verifyMfaChallenge: jest.fn(),
+}))
+
 const mockedGetCurrentUser = getCurrentUser as jest.Mock
 const mockedVerifyPassword = verifyPassword as jest.Mock
 const mockedCheckRateLimit = checkRateLimit as jest.Mock
@@ -67,6 +73,7 @@ const mockedVerifyMfaSetup = verifyMfaSetup as jest.Mock
 const mockedRegenerateBackupCodes = regenerateBackupCodes as jest.Mock
 const mockedGetMfaStatus = getMfaStatus as jest.Mock
 const mockedLogSecurityEvent = logSecurityEvent as jest.Mock
+const mockedVerifyMfaChallenge = verifyMfaChallenge as jest.Mock
 
 const mockedPrisma = prisma as unknown as {
   user: {
@@ -189,6 +196,52 @@ describe('MFA API routes', () => {
       expect.any(String),
       expect.any(String)
     )
+  })
+
+  it('POST /api/auth/mfa/verify-setup returns retry information when rate limited', async () => {
+    mockedGetCurrentUser.mockResolvedValue({
+      id: 'user-1',
+      email: 'real@example.com',
+      mfaEnabled: false,
+    })
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: false,
+      limit: 5,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 60_000),
+      retryAfter: 60,
+    })
+
+    const response = await verifySetupRoute(
+      createRequest('/api/auth/mfa/verify-setup', { token: '123456' })
+    )
+
+    expect(response.status).toBe(429)
+    expect(response.headers.get('Retry-After')).toBe('60')
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('5')
+    expect(mockedVerifyMfaSetup).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/auth/mfa/challenge returns retry information when rate limited', async () => {
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: false,
+      limit: 5,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 60_000),
+      retryAfter: 60,
+    })
+
+    const response = await mfaChallengeRoute(
+      createRequest('/api/auth/mfa/challenge', {
+        tempToken: 'temporary-token',
+        code: '123456',
+      })
+    )
+
+    expect(response.status).toBe(429)
+    expect(response.headers.get('Retry-After')).toBe('60')
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('5')
+    expect(mockedVerifyMfaChallenge).not.toHaveBeenCalled()
   })
 
   it('POST /api/auth/mfa/backup-codes returns 401 when unauthenticated', async () => {

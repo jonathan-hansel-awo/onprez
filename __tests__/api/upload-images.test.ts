@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { requireBusinessRole } from '@/lib/auth/business-access'
+import { checkRateLimit } from '@/lib/services/rate-limit'
 import { POST } from '@/app/api/upload/image/route'
 
 const mockUploadStreamEnd = jest.fn()
@@ -28,6 +29,10 @@ jest.mock('@/lib/auth/get-user', () => ({
   getCurrentUser: jest.fn(),
 }))
 
+jest.mock('@/lib/services/rate-limit', () => ({
+  checkRateLimit: jest.fn(),
+}))
+
 jest.mock('@/lib/auth/business-access', () => ({
   requireBusinessRole: jest.fn(),
   businessAuthErrorResponse: jest.fn(() => undefined),
@@ -45,6 +50,7 @@ jest.mock('@/lib/auth/business-access', () => ({
 
 const mockedGetCurrentUser = getCurrentUser as jest.Mock
 const mockedRequireBusinessRole = requireBusinessRole as jest.Mock
+const mockedCheckRateLimit = checkRateLimit as jest.Mock
 
 function createPngFile(name = 'image.png') {
   const pngBytes = new Uint8Array([
@@ -84,6 +90,12 @@ describe('POST /api/upload/images', () => {
     jest.clearAllMocks()
 
     mockedGetCurrentUser.mockResolvedValue(authUser)
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: true,
+      limit: 30,
+      remaining: 29,
+      resetAt: new Date(Date.now() + 60_000),
+    })
     mockedRequireBusinessRole.mockResolvedValue({
       userId: 'user-1',
       businessId: 'business-1',
@@ -115,6 +127,26 @@ describe('POST /api/upload/images', () => {
     const response = await POST(createRequestWithFormData(formData))
 
     expect(response.status).toBe(401)
+    expect(mockUploadStreamEnd).not.toHaveBeenCalled()
+  })
+
+  it('returns retry information before parsing a rate-limited upload', async () => {
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: false,
+      limit: 30,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 90_000),
+      retryAfter: 90,
+    })
+
+    const formData = new FormData()
+    formData.append('file', createPngFile())
+
+    const response = await POST(createRequestWithFormData(formData))
+
+    expect(response.status).toBe(429)
+    expect(response.headers.get('Retry-After')).toBe('90')
+    expect(mockedCheckRateLimit).toHaveBeenCalledWith('upload-image:user-1', 'upload:image')
     expect(mockUploadStreamEnd).not.toHaveBeenCalled()
   })
 

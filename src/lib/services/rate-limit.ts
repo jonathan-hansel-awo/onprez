@@ -1,11 +1,8 @@
 import { getRateLimitRule } from '@/lib/constants/rate-limit'
 import { prisma } from '@/lib/prisma'
-import {
-  RateLimitCheckResult,
-  isRateLimitExpired,
-  calculateResetTime,
-  calculateRetryAfter,
-} from '@/types/rate-limit'
+import { Prisma } from '@prisma/client'
+import { randomUUID } from 'crypto'
+import { RateLimitCheckResult, calculateResetTime, calculateRetryAfter } from '@/types/rate-limit'
 
 /**
  * Check rate limit for a key and endpoint
@@ -13,82 +10,50 @@ import {
 export async function checkRateLimit(key: string, endpoint: string): Promise<RateLimitCheckResult> {
   const rule = getRateLimitRule(endpoint)
   const now = new Date()
+  const nextResetAt = calculateResetTime(now, rule.windowMs)
 
-  // Find or create rate limit record
-  let rateLimit = await prisma.rateLimit.findUnique({
-    where: {
-      key_endpoint: {
-        key,
-        endpoint,
-      },
-    },
-  })
+  // One database statement both creates/resets and increments the counter.
+  // This prevents concurrent requests from all observing the same old count
+  // and slipping through before separate update calls complete.
+  const [rateLimit] = await prisma.$queryRaw<Array<{ count: number; expiresAt: Date }>>(
+    Prisma.sql`
+      INSERT INTO "rate_limits" (
+        "id", "key", "endpoint", "count", "windowStart", "expiresAt", "createdAt", "updatedAt"
+      )
+      VALUES (
+        ${randomUUID()}, ${key}, ${endpoint}, 1, ${now}, ${nextResetAt}, ${now}, ${now}
+      )
+      ON CONFLICT ("key", "endpoint") DO UPDATE
+      SET
+        "count" = CASE
+          WHEN "rate_limits"."expiresAt" <= ${now} THEN 1
+          ELSE "rate_limits"."count" + 1
+        END,
+        "windowStart" = CASE
+          WHEN "rate_limits"."expiresAt" <= ${now} THEN ${now}
+          ELSE "rate_limits"."windowStart"
+        END,
+        "expiresAt" = CASE
+          WHEN "rate_limits"."expiresAt" <= ${now} THEN ${nextResetAt}
+          ELSE "rate_limits"."expiresAt"
+        END,
+        "updatedAt" = ${now}
+      RETURNING "count", "expiresAt"
+    `
+  )
 
-  // If no record or expired, create/reset
-  if (!rateLimit || isRateLimitExpired(rateLimit.expiresAt)) {
-    const windowStart = now
-    const expiresAt = calculateResetTime(windowStart, rule.windowMs)
-
-    rateLimit = await prisma.rateLimit.upsert({
-      where: {
-        key_endpoint: {
-          key,
-          endpoint,
-        },
-      },
-      create: {
-        key,
-        endpoint,
-        count: 1,
-        windowStart,
-        expiresAt,
-      },
-      update: {
-        count: 1,
-        windowStart,
-        expiresAt,
-      },
-    })
-
-    return {
-      allowed: true,
-      limit: rule.maxAttempts,
-      remaining: rule.maxAttempts - 1,
-      resetAt: expiresAt,
-    }
+  if (!rateLimit) {
+    throw new Error('Rate limit counter update returned no record')
   }
 
-  // Check if limit exceeded
-  if (rateLimit.count >= rule.maxAttempts) {
-    return {
-      allowed: false,
-      limit: rule.maxAttempts,
-      remaining: 0,
-      resetAt: rateLimit.expiresAt,
-      retryAfter: calculateRetryAfter(rateLimit.expiresAt),
-    }
-  }
-
-  // Increment counter
-  rateLimit = await prisma.rateLimit.update({
-    where: {
-      key_endpoint: {
-        key,
-        endpoint,
-      },
-    },
-    data: {
-      count: {
-        increment: 1,
-      },
-    },
-  })
+  const allowed = rateLimit.count <= rule.maxAttempts
 
   return {
-    allowed: true,
+    allowed,
     limit: rule.maxAttempts,
-    remaining: rule.maxAttempts - rateLimit.count,
+    remaining: Math.max(0, rule.maxAttempts - rateLimit.count),
     resetAt: rateLimit.expiresAt,
+    ...(!allowed && { retryAfter: calculateRetryAfter(rateLimit.expiresAt) }),
   }
 }
 

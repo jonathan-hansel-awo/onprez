@@ -63,17 +63,35 @@ export async function PUT(request: NextRequest) {
     const businessId = businessIds[0]
     await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
 
-    await prisma.$transaction(
-      serviceIds.map((id, index) =>
+    const allServices = await prisma.service.findMany({
+      where: { businessId },
+      select: { id: true, order: true },
+      orderBy: [{ order: 'asc' }, { id: 'asc' }],
+    })
+    const selectedIds = new Set(serviceIds)
+    const finalServiceIds = [
+      ...serviceIds,
+      ...allServices.filter(service => !selectedIds.has(service.id)).map(service => service.id),
+    ]
+    const temporaryOrderStart =
+      Math.max(-1, ...allServices.map(service => service.order)) + finalServiceIds.length + 1
+
+    // Move every item to a distinct temporary position first so the database's
+    // per-business unique ordering constraint is never violated mid-reorder.
+    await prisma.$transaction([
+      ...finalServiceIds.map((id, index) =>
         prisma.service.updateMany({
-          where: {
-            id,
-            businessId,
-          },
+          where: { id, businessId },
+          data: { order: temporaryOrderStart + index },
+        })
+      ),
+      ...finalServiceIds.map((id, index) =>
+        prisma.service.updateMany({
+          where: { id, businessId },
           data: { order: index },
         })
-      )
-    )
+      ),
+    ])
 
     return NextResponse.json({ success: true })
   } catch (error) {

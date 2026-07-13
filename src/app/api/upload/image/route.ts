@@ -3,6 +3,7 @@ import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireBusinessRole } from '@/lib/auth/business-access'
+import { checkRateLimit } from '@/lib/services/rate-limit'
 
 const MAX_IMAGE_SIZE_BYTES = 4 * 1024 * 1024
 
@@ -106,6 +107,28 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rateLimit = await checkRateLimit(`upload-image:${user.id}`, 'upload:image')
+
+    if (!rateLimit.allowed) {
+      const resetInSeconds = Math.max(
+        1,
+        Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
+      )
+
+      return NextResponse.json(
+        { success: false, error: 'Too many image uploads. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+            'X-RateLimit-Reset': Math.floor(rateLimit.resetAt.getTime() / 1000).toString(),
+            'Retry-After': (rateLimit.retryAfter || resetInSeconds).toString(),
+          },
+        }
+      )
     }
 
     const formData = await request.formData()

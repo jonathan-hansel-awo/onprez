@@ -590,16 +590,22 @@ describe('services API authorization', () => {
     })
 
     it('requires writable business role and scopes each reorder update', async () => {
-      mockedPrisma.service.findMany.mockResolvedValue([
-        {
-          id: 'service-1',
-          businessId: 'business-1',
-        },
-        {
-          id: 'service-2',
-          businessId: 'business-1',
-        },
-      ])
+      mockedPrisma.service.findMany
+        .mockResolvedValueOnce([
+          {
+            id: 'service-1',
+            businessId: 'business-1',
+          },
+          {
+            id: 'service-2',
+            businessId: 'business-1',
+          },
+        ])
+        .mockResolvedValueOnce([
+          { id: 'service-1', order: 0 },
+          { id: 'service-2', order: 1 },
+          { id: 'service-3', order: 2 },
+        ])
 
       mockedRequireBusinessRole.mockResolvedValue({ businessId: 'business-1' })
       mockedPrisma.service.updateMany.mockReturnValue({})
@@ -626,7 +632,7 @@ describe('services API authorization', () => {
           id: 'service-1',
           businessId: 'business-1',
         },
-        data: { order: 0 },
+        data: { order: 6 },
       })
 
       expect(mockedPrisma.service.updateMany).toHaveBeenNthCalledWith(2, {
@@ -634,7 +640,39 @@ describe('services API authorization', () => {
           id: 'service-2',
           businessId: 'business-1',
         },
+        data: { order: 7 },
+      })
+
+      expect(mockedPrisma.service.updateMany).toHaveBeenNthCalledWith(3, {
+        where: {
+          id: 'service-3',
+          businessId: 'business-1',
+        },
+        data: { order: 8 },
+      })
+
+      expect(mockedPrisma.service.updateMany).toHaveBeenNthCalledWith(4, {
+        where: {
+          id: 'service-1',
+          businessId: 'business-1',
+        },
+        data: { order: 0 },
+      })
+
+      expect(mockedPrisma.service.updateMany).toHaveBeenNthCalledWith(5, {
+        where: {
+          id: 'service-2',
+          businessId: 'business-1',
+        },
         data: { order: 1 },
+      })
+
+      expect(mockedPrisma.service.updateMany).toHaveBeenNthCalledWith(6, {
+        where: {
+          id: 'service-3',
+          businessId: 'business-1',
+        },
+        data: { order: 2 },
       })
 
       expect(mockedPrisma.$transaction).toHaveBeenCalled()

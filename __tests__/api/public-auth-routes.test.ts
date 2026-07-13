@@ -132,6 +132,25 @@ describe('public auth API routes', () => {
     expect(mockedCheckHandleAvailability).toHaveBeenCalledWith('my-handle')
   })
 
+  it('GET /api/auth/check-handle returns retry information when rate limited', async () => {
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: false,
+      limit: 20,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 45_000),
+      retryAfter: 45,
+    })
+
+    const response = await checkHandleRoute(
+      createGetRequest('/api/auth/check-handle?handle=my-handle')
+    )
+
+    expect(response.status).toBe(429)
+    expect(response.headers.get('Retry-After')).toBe('45')
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('20')
+    expect(mockedCheckHandleAvailability).not.toHaveBeenCalled()
+  })
+
   it('GET /api/auth/check-handle does not leak raw errors', async () => {
     mockedCheckHandleAvailability.mockRejectedValue(new Error('database secret'))
 
@@ -213,6 +232,27 @@ describe('public auth API routes', () => {
     expect(JSON.stringify(json)).not.toContain('No account found')
   })
 
+  it('POST /api/auth/password-reset/request returns retry information when rate limited', async () => {
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: false,
+      limit: 3,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 180_000),
+      retryAfter: 180,
+    })
+
+    const response = await passwordResetRequestRoute(
+      createJsonRequest('/api/auth/password-reset/request', {
+        email: 'user@example.com',
+      })
+    )
+
+    expect(response.status).toBe(429)
+    expect(response.headers.get('Retry-After')).toBe('180')
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('3')
+    expect(mockedRequestPasswordReset).not.toHaveBeenCalled()
+  })
+
   it('POST /api/auth/password-reset/complete hides raw service failure', async () => {
     mockedCompletePasswordReset.mockResolvedValue({
       success: false,
@@ -232,6 +272,28 @@ describe('public auth API routes', () => {
     expect(json.success).toBe(false)
     expect(json.message).toBe('Password reset failed or the reset link has expired.')
     expect(JSON.stringify(json)).not.toContain('user@example.com')
+  })
+
+  it('POST /api/auth/password-reset/complete returns retry information when rate limited', async () => {
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: false,
+      limit: 5,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 90_000),
+      retryAfter: 90,
+    })
+
+    const response = await passwordResetCompleteRoute(
+      createJsonRequest('/api/auth/password-reset/complete', {
+        token: 'a'.repeat(32),
+        newPassword: 'Password123',
+      })
+    )
+
+    expect(response.status).toBe(429)
+    expect(response.headers.get('Retry-After')).toBe('90')
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('5')
+    expect(mockedCompletePasswordReset).not.toHaveBeenCalled()
   })
 
   it('POST /api/auth/signup does not expose userId or businessId', async () => {
@@ -260,6 +322,29 @@ describe('public auth API routes', () => {
     expect(json.data.handle).toBe('my-handle')
     expect(json.data.userId).toBeUndefined()
     expect(json.data.businessId).toBeUndefined()
+  })
+
+  it('POST /api/auth/signup returns retry information when rate limited', async () => {
+    mockedCheckRateLimit.mockResolvedValue({
+      allowed: false,
+      limit: 10,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 300_000),
+      retryAfter: 300,
+    })
+
+    const response = await signupRoute(
+      createJsonRequest('/api/auth/signup', {
+        email: 'user@example.com',
+        password: 'Password123',
+        handle: 'my-handle',
+      })
+    )
+
+    expect(response.status).toBe(429)
+    expect(response.headers.get('Retry-After')).toBe('300')
+    expect(response.headers.get('X-RateLimit-Limit')).toBe('10')
+    expect(mockedSignupUser).not.toHaveBeenCalled()
   })
 
   it('POST /api/auth/signup maps raw service errors to safe messages', async () => {

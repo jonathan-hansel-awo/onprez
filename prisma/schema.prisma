@@ -295,9 +295,9 @@ model Business {
   pages                  Page[]
 
   @@index([ownerId])
-  @@index([slug])
   @@index([category])
   @@index([isPublished])
+  @@index([isPublished, isActive, slug])
   @@index([city, state])
   @@map("businesses")
 }
@@ -419,11 +419,12 @@ model Service {
   maxAdvanceBookingDays  Int? // null = use business default, -1 = no limit
   minAdvanceBookingHours Int? // null = use business default
 
-  @@index([businessId])
+  @@unique([businessId, order])
+  @@unique([id, businessId])
   @@index([categoryId])
-  @@index([active])
-  @@index([featured])
-  @@index([order])
+  @@index([businessId, active, order])
+  @@index([businessId, active, featured, order])
+  @@index([businessId, categoryId, active, order])
   @@map("services")
 }
 
@@ -441,7 +442,7 @@ model ServiceCategory {
   services    Service[]
 
   @@unique([businessId, name])
-  @@index([businessId])
+  @@unique([businessId, order])
   @@map("service_categories")
 }
 
@@ -496,18 +497,17 @@ model Appointment {
   createdAt           DateTime                      @default(now())
   updatedAt           DateTime                      @updatedAt
   business            Business                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer            Customer                      @relation(fields: [customerId], references: [id])
-  service             Service                       @relation(fields: [serviceId], references: [id])
+  customer            Customer                      @relation(fields: [customerId, businessId], references: [id, businessId])
+  service             Service                       @relation(fields: [serviceId, businessId], references: [id, businessId])
   idempotencyKeys     BookingIdempotencyKey[]
   statusTransitions   AppointmentStatusTransition[]
 
-  @@index([businessId])
   @@index([serviceId])
   @@index([customerId])
-  @@index([startTime])
-  @@index([status])
-  @@index([customerEmail])
-  @@index([createdAt])
+  @@index([businessId, startTime])
+  @@index([businessId, status, startTime])
+  @@index([businessId, createdAt])
+  @@index([businessId, customerEmail])
   @@map("appointments")
 }
 
@@ -609,12 +609,13 @@ model Customer {
   reviews           Review[]
 
   @@unique([businessId, email])
-  @@index([businessId])
+  @@unique([id, businessId])
   @@index([email])
   @@index([phone])
   @@index([tags])
-  @@index([isVip])
-  @@index([lastBookingAt])
+  @@index([businessId, isVip])
+  @@index([businessId, lastBookingAt])
+  @@index([businessId, totalBookings, lastBookingAt])
   @@map("customers")
 }
 
