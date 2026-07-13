@@ -10,9 +10,10 @@ import { useState } from 'react'
 interface HeroSectionEditorProps {
   section: HeroSection
   onUpdate: (section: HeroSection) => void
+  businessId: string | null
 }
 
-export function HeroSectionEditor({ section, onUpdate }: HeroSectionEditorProps) {
+export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSectionEditorProps) {
   function updateData<K extends keyof HeroSection['data']>(
     field: K,
     value: HeroSection['data'][K]
@@ -118,6 +119,8 @@ export function HeroSectionEditor({ section, onUpdate }: HeroSectionEditorProps)
           <div>
             <Label className="mb-2">Background Image</Label>
             <ImageUpload
+              businessId={businessId}
+              purpose="business-cover"
               value={section.data.backgroundImage}
               onChange={url => updateData('backgroundImage', url)}
               onRemove={() => updateData('backgroundImage', undefined)}

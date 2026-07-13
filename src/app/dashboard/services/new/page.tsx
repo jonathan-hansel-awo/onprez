@@ -363,6 +363,8 @@ export default function NewServicePage() {
           </CardHeader>
           <CardContent>
             <ImageUpload
+              businessId={businessId}
+              purpose="service"
               value={formData.imageUrl}
               onChange={url => handleChange('imageUrl', url)}
               onRemove={() => handleChange('imageUrl', '')}

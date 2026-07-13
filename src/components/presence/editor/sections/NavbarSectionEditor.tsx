@@ -15,9 +15,10 @@ import { useState } from 'react'
 interface NavbarSectionEditorProps {
   section: NavbarSection
   onUpdate: (section: NavbarSection) => void
+  businessId: string | null
 }
 
-export function NavbarSectionEditor({ section, onUpdate }: NavbarSectionEditorProps) {
+export function NavbarSectionEditor({ section, onUpdate, businessId }: NavbarSectionEditorProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   function updateData<K extends keyof NavbarSection['data']>(
@@ -104,6 +105,8 @@ export function NavbarSectionEditor({ section, onUpdate }: NavbarSectionEditorPr
             <div>
               <Label className="mb-2">Logo Image</Label>
               <ImageUpload
+                businessId={businessId}
+                purpose="business-logo"
                 value={section.data.logo}
                 onChange={url => updateData('logo', url)}
                 onRemove={() => updateData('logo', undefined)}

@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 'use client'
 
 import { AboutSection } from '@/types/page-sections'
@@ -15,9 +14,10 @@ import { Bold, Italic, List, ListOrdered, Link as LinkIcon } from 'lucide-react'
 interface AboutSectionEditorProps {
   section: AboutSection
   onUpdate: (section: AboutSection) => void
+  businessId: string | null
 }
 
-export function AboutSectionEditor({ section, onUpdate }: AboutSectionEditorProps) {
+export function AboutSectionEditor({ section, onUpdate, businessId }: AboutSectionEditorProps) {
   const [isRichTextMode, setIsRichTextMode] = useState(false)
 
   function updateData<K extends keyof AboutSection['data']>(
@@ -247,6 +247,8 @@ export function AboutSectionEditor({ section, onUpdate }: AboutSectionEditorProp
           <div>
             <Label className="mb-2">Section Image</Label>
             <ImageUpload
+              businessId={businessId}
+              purpose="gallery"
               value={section.data.image}
               onChange={url => updateData('image', url)}
               onRemove={() => updateData('image', undefined)}

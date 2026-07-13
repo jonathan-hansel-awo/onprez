@@ -26,13 +26,13 @@ export function SectionEditorPanel({
   function renderEditor() {
     switch (section.type) {
       case 'NAVBAR':
-        return <NavbarSectionEditor section={section} onUpdate={onUpdate} />
+        return <NavbarSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
 
       case 'HERO':
-        return <HeroSectionEditor section={section} onUpdate={onUpdate} />
+        return <HeroSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
 
       case 'ABOUT':
-        return <AboutSectionEditor section={section} onUpdate={onUpdate} />
+        return <AboutSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
 
       case 'SERVICES':
         return (
@@ -40,7 +40,9 @@ export function SectionEditorPanel({
         )
 
       case 'GALLERY':
-        return <GallerySectionEditor section={section} onUpdate={onUpdate} />
+        return (
+          <GallerySectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
+        )
 
       case 'CONTACT':
         return (

@@ -14,9 +14,10 @@ import Image from 'next/image'
 interface GallerySectionEditorProps {
   section: GallerySection
   onUpdate: (section: GallerySection) => void
+  businessId: string | null
 }
 
-export function GallerySectionEditor({ section, onUpdate }: GallerySectionEditorProps) {
+export function GallerySectionEditor({ section, onUpdate, businessId }: GallerySectionEditorProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [editingImageIndex, setEditingImageIndex] = useState<number | null>(null)
 
@@ -143,6 +144,8 @@ export function GallerySectionEditor({ section, onUpdate }: GallerySectionEditor
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Images</h3>
 
         <ImageUpload
+          businessId={businessId}
+          purpose="gallery"
           value=""
           onChange={url => addImage(url)}
           onRemove={() => {}}
