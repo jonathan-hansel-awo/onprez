@@ -30,6 +30,7 @@ import {
   getAppointmentSeries,
   cancelAppointmentSeries,
 } from '@/lib/services/multi-day-booking'
+import { transitionAppointment } from '@/lib/services/appointment-state'
 
 import {
   appointmentQuerySchema,
@@ -126,6 +127,11 @@ jest.mock('@/lib/services/multi-day-booking', () => ({
   cancelAppointmentSeries: jest.fn(),
 }))
 
+jest.mock('@/lib/services/appointment-state', () => ({
+  transitionAppointment: jest.fn(),
+  AppointmentTransitionError: class AppointmentTransitionError extends Error {},
+}))
+
 jest.mock('@/lib/validation/booking', () => ({
   appointmentQuerySchema: {
     safeParse: jest.fn(),
@@ -186,6 +192,7 @@ const mockedGenerateMultiDaySlots = generateMultiDaySlots as jest.Mock
 const mockedCheckMultiDayAvailability = checkMultiDayAvailability as jest.Mock
 const mockedGetAppointmentSeries = getAppointmentSeries as jest.Mock
 const mockedCancelAppointmentSeries = cancelAppointmentSeries as jest.Mock
+const mockedTransitionAppointment = transitionAppointment as jest.Mock
 
 const mockedAppointmentQuerySchema = appointmentQuerySchema as unknown as {
   safeParse: jest.Mock
@@ -277,6 +284,17 @@ describe('appointments API authorization', () => {
     mockedRequireAppointmentRole.mockResolvedValue({
       appointment: appointmentAccess,
       context: writableBusinessContext,
+    })
+
+    mockedTransitionAppointment.mockResolvedValue({
+      appointment: {
+        ...appointmentAccess,
+        status: 'NO_SHOW',
+        previousStatus: 'CONFIRMED',
+        service: { id: 'service-1', name: 'Haircut', price: 25 },
+        customer: { id: 'customer-1', name: 'John Customer' },
+      },
+      notificationSent: true,
     })
 
     mockedAppointmentQuerySchema.safeParse.mockReturnValue({
@@ -520,7 +538,7 @@ describe('appointments API authorization', () => {
   })
 
   describe('PUT /api/appointments/[id]', () => {
-    it('requires appointment role and scopes customer stat updates to the appointment business', async () => {
+    it('requires appointment role and delegates status changes to the state machine', async () => {
       mockedPrisma.appointment.findFirst.mockResolvedValue({
         id: 'appointment-1',
         businessId: 'business-1',
@@ -543,8 +561,6 @@ describe('appointments API authorization', () => {
         },
       })
 
-      mockedPrisma.customer.updateMany.mockResolvedValue({ count: 1 })
-
       const response = await appointmentPUT(
         jsonRequest('/api/appointments/appointment-1', { status: 'NO_SHOW' }, 'PUT'),
         {
@@ -560,25 +576,18 @@ describe('appointments API authorization', () => {
         'STAFF',
       ])
 
-      expect(mockedPrisma.customer.updateMany).toHaveBeenCalledWith({
-        where: {
-          id: 'customer-1',
-          businessId: 'business-1',
-        },
-        data: {
-          noShowCount: { increment: 1 },
-        },
+      expect(mockedTransitionAppointment).toHaveBeenCalledWith({
+        appointmentId: 'appointment-1',
+        businessId: 'business-1',
+        toStatus: 'NO_SHOW',
+        changedBy: 'user-1',
+        changedByType: 'USER',
+        reason: undefined,
+        cancellationSource: 'BUSINESS',
+        notifyCustomer: true,
       })
 
-      expect(mockedPrisma.appointment.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'appointment-1' },
-          data: expect.objectContaining({
-            status: 'NO_SHOW',
-            previousStatus: 'CONFIRMED',
-          }),
-        })
-      )
+      expect(mockedPrisma.appointment.update).not.toHaveBeenCalled()
     })
 
     it('rejects service changes when the new service is outside the appointment business', async () => {
@@ -663,7 +672,8 @@ describe('appointments API authorization', () => {
         'appointment-1',
         'business-1',
         'BUSINESS',
-        'Customer request'
+        'Customer request',
+        'user-1'
       )
     })
   })

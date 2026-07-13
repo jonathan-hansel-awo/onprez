@@ -246,10 +246,10 @@ model RateLimitConfig {
 }
 
 model Business {
-  id                     String                  @id @default(cuid())
+  id                     String                        @id @default(cuid())
   ownerId                String
   name                   String
-  slug                   String                  @unique
+  slug                   String                        @unique
   category               BusinessCategory
   description            String?
   tagline                String?
@@ -260,29 +260,30 @@ model Business {
   city                   String?
   state                  String?
   zipCode                String?
-  country                String?                 @default("UK")
+  country                String?                       @default("UK")
   latitude               Float?
   longitude              Float?
-  timezone               String                  @default("Europe/London")
+  timezone               String                        @default("Europe/London")
   logoUrl                String?
   coverImageUrl          String?
   socialLinks            Json?
   settings               Json?
   branding               Json?
-  isPublished            Boolean                 @default(false)
-  isPremium              Boolean                 @default(false)
-  isActive               Boolean                 @default(true)
+  isPublished            Boolean                       @default(false)
+  isPremium              Boolean                       @default(false)
+  isActive               Boolean                       @default(true)
   seoTitle               String?
   seoDescription         String?
   seoKeywords            String[]
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
+  createdAt              DateTime                      @default(now())
+  updatedAt              DateTime                      @updatedAt
   publishedAt            DateTime?
   appointments           Appointment[]
+  appointmentTransitions AppointmentStatusTransition[]
   bookingIdempotencyKeys BookingIdempotencyKey[]
   businessHours          BusinessHours[]
   specialDates           SpecialDate[]
-  owner                  User                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner                  User                          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   customers              Customer[]
   faqs                   FAQ[]
   inquiries              Inquiry[]
@@ -445,7 +446,7 @@ model ServiceCategory {
 }
 
 model Appointment {
-  id                  String                  @id @default(cuid())
+  id                  String                        @id @default(cuid())
   businessId          String
   serviceId           String
   customerId          String
@@ -453,7 +454,7 @@ model Appointment {
   endTime             DateTime
   duration            Int
   timezone            String
-  status              AppointmentStatus       @default(PENDING)
+  status              AppointmentStatus             @default(PENDING)
   previousStatus      AppointmentStatus?
   confirmedAt         DateTime?
   confirmedBy         String?
@@ -474,30 +475,31 @@ model Appointment {
   customerNotes       String?
   businessNotes       String?
   reminders           ReminderLog[]
-  isMultiDay          Boolean                 @default(false)
+  isMultiDay          Boolean                       @default(false)
   endDate             DateTime? // For multi-day: the final day
   recurrencePattern   Json? // For recurring: { type: 'daily'|'weekly', count: number, days?: number[] }
   parentId            String? // Link to parent appointment for series
-  parent              Appointment?            @relation("AppointmentSeries", fields: [parentId], references: [id])
-  children            Appointment[]           @relation("AppointmentSeries")
-  requiresDeposit     Boolean                 @default(false)
-  depositAmount       Decimal?                @db.Decimal(10, 2)
-  depositPaid         Boolean                 @default(false)
+  parent              Appointment?                  @relation("AppointmentSeries", fields: [parentId], references: [id])
+  children            Appointment[]                 @relation("AppointmentSeries")
+  requiresDeposit     Boolean                       @default(false)
+  depositAmount       Decimal?                      @db.Decimal(10, 2)
+  depositPaid         Boolean                       @default(false)
   depositPaidAt       DateTime?
-  totalAmount         Decimal                 @db.Decimal(10, 2)
-  paymentStatus       PaymentStatus           @default(UNPAID)
+  totalAmount         Decimal                       @db.Decimal(10, 2)
+  paymentStatus       PaymentStatus                 @default(UNPAID)
   paidAt              DateTime?
   reminderSentAt      DateTime?
-  reminderCount       Int                     @default(0)
+  reminderCount       Int                           @default(0)
   bookingSource       String?
   bookingIp           String?
   metadata            Json?
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @updatedAt
-  business            Business                @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer            Customer                @relation(fields: [customerId], references: [id])
-  service             Service                 @relation(fields: [serviceId], references: [id])
+  createdAt           DateTime                      @default(now())
+  updatedAt           DateTime                      @updatedAt
+  business            Business                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer            Customer                      @relation(fields: [customerId], references: [id])
+  service             Service                       @relation(fields: [serviceId], references: [id])
   idempotencyKeys     BookingIdempotencyKey[]
+  statusTransitions   AppointmentStatusTransition[]
 
   @@index([businessId])
   @@index([serviceId])
@@ -507,6 +509,25 @@ model Appointment {
   @@index([customerEmail])
   @@index([createdAt])
   @@map("appointments")
+}
+
+model AppointmentStatusTransition {
+  id            String            @id @default(cuid())
+  appointmentId String
+  businessId    String
+  fromStatus    AppointmentStatus
+  toStatus      AppointmentStatus
+  changedBy     String?
+  changedByType String
+  reason        String?
+  metadata      Json?
+  changedAt     DateTime          @default(now())
+  appointment   Appointment       @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  business      Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId, changedAt])
+  @@index([businessId, changedAt])
+  @@map("appointment_status_transitions")
 }
 
 model BookingIdempotencyKey {

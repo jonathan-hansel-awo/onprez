@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireAppointmentRole } from '@/lib/auth/appointment-access'
+import { AppointmentTransitionError, transitionAppointment } from '@/lib/services/appointment-state'
 
 const cancelSchema = z.object({
   reason: z.enum([
@@ -60,56 +60,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       'STAFF',
     ])
 
-    const appointment = await prisma.appointment.findFirst({
-      where: {
-        id,
-        businessId: appointmentAccess.businessId,
-      },
-      include: {
-        business: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            settings: true,
-          },
-        },
-        service: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-          },
-        },
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
-    })
-
-    if (!appointment) {
-      return NextResponse.json({ success: false, error: 'Appointment not found' }, { status: 404 })
-    }
-
-    if (appointment.status === 'CANCELLED') {
-      return NextResponse.json(
-        { success: false, error: 'Appointment is already cancelled' },
-        { status: 400 }
-      )
-    }
-
-    if (appointment.status === 'COMPLETED') {
-      return NextResponse.json(
-        { success: false, error: 'Cannot cancel a completed appointment' },
-        { status: 400 }
-      )
-    }
-
     const now = new Date()
 
     const cancellationNote = [
@@ -121,55 +71,36 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .filter(Boolean)
       .join('\n')
 
-    const updatedAppointment = await prisma.appointment.update({
-      where: { id },
-      data: {
-        status: 'CANCELLED',
-        previousStatus: appointment.status,
-        cancelledAt: now,
-        cancelledBy: user.id,
-        cancellationReason: reason,
-        cancellationDetails: customReason || null,
-        cancellationSource: 'BUSINESS',
-        businessNotes: appointment.businessNotes
-          ? `${appointment.businessNotes}\n\n${cancellationNote}`
-          : cancellationNote,
-      },
-      include: {
-        service: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            duration: true,
-          },
-        },
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
-    })
-
-    await prisma.customer.update({
-      where: { id: appointment.customerId },
-      data: {
-        cancelledBookings: { increment: 1 },
-      },
+    const result = await transitionAppointment({
+      appointmentId: id,
+      businessId: appointmentAccess.businessId,
+      toStatus: 'CANCELLED',
+      changedBy: user.id,
+      changedByType: 'USER',
+      reason,
+      cancellationDetails: customReason,
+      cancellationSource: 'BUSINESS',
+      notes: cancellationNote,
+      notifyCustomer,
     })
 
     return NextResponse.json({
       success: true,
       data: {
-        appointment: updatedAppointment,
-        notificationSent: notifyCustomer,
+        appointment: result.appointment,
+        notificationSent: result.notificationSent,
       },
     })
   } catch (error) {
+    if (error instanceof AppointmentTransitionError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        {
+          status: error.code === 'NOT_FOUND' ? 404 : error.code === 'CONCURRENT_UPDATE' ? 409 : 400,
+        }
+      )
+    }
+
     const authResponse = businessAuthErrorResponse(error)
     if (authResponse) return authResponse
 
