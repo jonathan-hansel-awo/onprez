@@ -30,17 +30,17 @@ Neon provides two types of connections:
 1. Copy `.env.example` to `.env.local`
 2. Get connection strings from Neon Console
 3. Set `DATABASE_ENV=preview` for development
-4. Set `DATABASE_ENV=production` for production deployments
+4. Keep production credentials in the hosting platform and protected GitHub environment only
 
-### Switching Between Environments
+### Local Environment
 
 ```bash
 # Development (use preview branch)
 DATABASE_ENV="preview"
-
-# Production (use main branch)
-DATABASE_ENV="production"
 ```
+
+Do not switch a local environment to the production database to run migrations. Use the protected
+GitHub migration workflow instead.
 
 ### Vercel Deployment
 
@@ -120,10 +120,13 @@ const users = await prisma.user.findMany()
 
 ### Environment Switching
 
-The database automatically connects to the right environment based on `DATABASE_ENV`:
+Application runtime configuration selects its database based on `DATABASE_ENV`:
 
 - `DATABASE_ENV=preview` → Uses `PREVIEW_DATABASE_URL`
 - `DATABASE_ENV=production` → Uses `DATABASE_URL`
+
+This runtime setting does not apply or authorise migrations. Production migrations use the
+environment-scoped secrets in `.github/workflows/migrate.yml`.
 
 ## Database Schema
 
@@ -487,13 +490,16 @@ await cleanupExpiredRateLimits()
 
 ```bash
 # Development
-npm run db:migrate        # Apply pending migrations
+npm run db:migrate        # Create/apply migrations to your development database only
 npm run db:studio         # Open database GUI
 npm run db:test           # Test connection
 
 # Create new migration
 npm run db:migrate -- --name description_of_change
 ```
+
+`npm run build` never applies migrations. Preview and production migrations run only through the
+manually triggered GitHub workflow documented in [MIGRATIONS.md](./MIGRATIONS.md).
 
 ## Migration System
 
