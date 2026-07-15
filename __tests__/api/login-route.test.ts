@@ -181,6 +181,8 @@ describe('POST /api/auth/login', () => {
     expect(setCookie).toContain('accessToken=access-token')
     expect(setCookie).toContain('refreshToken=refresh-token')
     expect(setCookie).toContain('HttpOnly')
+    expect(setCookie).toContain('Path=/')
+    expect(setCookie.toLowerCase()).toContain('samesite=lax')
   })
 
   it('passes parsed device and request metadata into loginUser', async () => {
