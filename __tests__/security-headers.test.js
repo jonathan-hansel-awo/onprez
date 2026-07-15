@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-const nextConfig = require('../next.config.js')
+import nextConfig from '../next.config.js'
 
 describe('production security headers', () => {
   let rule
