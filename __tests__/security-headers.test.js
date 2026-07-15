@@ -37,6 +37,7 @@ describe('production security headers', () => {
     expect(policy).toContain("base-uri 'self'")
     expect(policy).toContain("form-action 'self'")
     expect(policy).toContain('https://res.cloudinary.com')
+    expect(policy).toContain('https://i.pravatar.cc')
     expect(policy).toContain('https://api.cloudinary.com')
     expect(policy).toContain('https://www.googletagmanager.com')
     expect(policy).not.toContain("'unsafe-eval'")
