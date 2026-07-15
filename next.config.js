@@ -8,7 +8,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data: https://fonts.gstatic.com",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "img-src 'self' blob: data: https://res.cloudinary.com https://www.google-analytics.com",
+  "img-src 'self' blob: data: https://res.cloudinary.com https://i.pravatar.cc https://www.google-analytics.com",
   "media-src 'self' https://res.cloudinary.com",
   "object-src 'none'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com`,
