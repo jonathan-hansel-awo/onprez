@@ -2,17 +2,33 @@
  * @jest-environment node
  */
 
-import { proxy } from '@/proxy'
+import { config, proxy } from '@/proxy'
 import { NextRequest } from 'next/server'
 
-function createRequest(path: string, cookie?: string) {
-  const headers = new Headers()
+function createRequest(
+  path: string,
+  cookie?: string,
+  init?: ConstructorParameters<typeof NextRequest>[1]
+) {
+  const headers = new Headers(init?.headers)
 
   if (cookie) {
     headers.set('cookie', cookie)
   }
 
   return new NextRequest(`http://localhost:3000${path}`, {
+    ...init,
+    headers,
+  })
+}
+
+function createMutationRequest(
+  path: string,
+  headers?: HeadersInit,
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST'
+) {
+  return createRequest(path, undefined, {
+    method,
     headers,
   })
 }
@@ -81,6 +97,125 @@ describe('proxy route protection', () => {
   it('allows requests with an accessToken cookie through to the server layout for validation', async () => {
     const response = await proxy(createRequest('/dashboard', 'accessToken=fake-token'))
 
+    expectNext(response)
+  })
+})
+
+describe('proxy CSRF protection', () => {
+  it('includes API routes in the proxy matcher', () => {
+    expect(config.matcher.join(' ')).not.toContain('?!api')
+  })
+
+  it.each([
+    '/api/bookings',
+    '/api/account/password',
+    '/api/business/settings',
+    '/api/account/sessions/terminate-all',
+  ])('blocks cross-site mutations to %s', async path => {
+    const response = await proxy(
+      createMutationRequest(path, {
+        origin: 'https://attacker.example',
+        'sec-fetch-site': 'cross-site',
+        'content-type': 'application/x-www-form-urlencoded',
+      })
+    )
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({
+      success: false,
+      error: 'Forbidden',
+    })
+  })
+
+  it('blocks mismatched Origin even when Fetch Metadata is unavailable', async () => {
+    const response = await proxy(
+      createMutationRequest('/api/business/settings', {
+        origin: 'https://attacker.example',
+      })
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  it('blocks opaque origins from sandboxed cross-site documents', async () => {
+    const response = await proxy(
+      createMutationRequest('/api/bookings', {
+        origin: 'null',
+      })
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  it('does not trust sibling subdomains for mutations', async () => {
+    const response = await proxy(
+      createMutationRequest('/api/business/settings', {
+        origin: 'https://untrusted.onprez.com',
+        'sec-fetch-site': 'same-site',
+        'x-forwarded-host': 'onprez.com',
+        'x-forwarded-proto': 'https',
+      })
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE'] as const)(
+    'allows legitimate same-origin %s requests',
+    async method => {
+      const response = await proxy(
+        createMutationRequest(
+          '/api/business/settings',
+          {
+            origin: 'http://localhost:3000',
+            'sec-fetch-site': 'same-origin',
+          },
+          method
+        )
+      )
+
+      expect(response.status).toBe(200)
+      expectNext(response)
+    }
+  )
+
+  it('uses forwarded host and protocol for the production origin', async () => {
+    const response = await proxy(
+      createMutationRequest('/api/bookings', {
+        origin: 'https://onprez.com',
+        'sec-fetch-site': 'same-origin',
+        'x-forwarded-host': 'onprez.com',
+        'x-forwarded-proto': 'https',
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expectNext(response)
+  })
+
+  it('allows non-browser API clients that do not send browser origin metadata', async () => {
+    const response = await proxy(
+      createMutationRequest('/api/business/settings', {
+        authorization: 'Bearer api-token',
+        'content-type': 'application/json',
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expectNext(response)
+  })
+
+  it('does not apply CSRF checks to safe API methods', async () => {
+    const response = await proxy(
+      createRequest('/api/business/settings', undefined, {
+        headers: {
+          origin: 'https://attacker.example',
+          'sec-fetch-site': 'cross-site',
+        },
+      })
+    )
+
+    expect(response.status).toBe(200)
     expectNext(response)
   })
 })
