@@ -14,7 +14,7 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "connect-src 'self' https://api.cloudinary.com https://www.google-analytics.com https://*.google-analytics.com",
-  'upgrade-insecure-requests',
+  ...(isDevelopment ? [] : ['upgrade-insecure-requests']),
 ].join('; ')
 
 const securityHeaders = [
