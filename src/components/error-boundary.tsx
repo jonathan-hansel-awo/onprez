@@ -1,29 +1,41 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { motion } from 'framer-motion'
+import * as Sentry from "@sentry/nextjs";
+import { motion } from "framer-motion";
+import React from "react";
 
 interface ErrorBoundaryProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 interface ErrorBoundaryState {
-  hasError: boolean
-  error?: Error
+  hasError: boolean;
+  error?: Error;
 }
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
+    Sentry.withScope((scope) => {
+      scope.setTag("error.context", "react-error-boundary");
+      scope.setContext("react", { componentStack: errorInfo.componentStack });
+      Sentry.captureException(error);
+    });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error caught by boundary:", error, errorInfo);
+    }
   }
 
   render() {
@@ -36,9 +48,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="text-6xl mb-4">⚠️</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Oops! Something went wrong</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Oops! Something went wrong
+            </h1>
             <p className="text-gray-600 mb-6">
-              We&apos;re sorry for the inconvenience. Please try refreshing the page.
+              We&apos;re sorry for the inconvenience. Please try refreshing the
+              page.
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -48,9 +63,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             </button>
           </motion.div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
