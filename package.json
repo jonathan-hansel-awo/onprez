@@ -39,6 +39,7 @@
     "@prisma/adapter-neon": "^6.17.1",
     "@prisma/client": "^6.17.1",
     "@radix-ui/react-slot": "^1.2.3",
+    "@sentry/nextjs": "^10.65.0",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.8.0",
