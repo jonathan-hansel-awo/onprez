@@ -43,8 +43,12 @@ function getTargetOrigin(request: NextRequest) {
 function getSourceOrigin(request: NextRequest) {
   const source = request.headers.get('origin') || request.headers.get('referer')
 
-  if (!source || source === 'null') {
-    return source
+  if (!source) {
+    return undefined
+  }
+
+  if (source === 'null') {
+    return null
   }
 
   try {
