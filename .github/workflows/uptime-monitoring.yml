@@ -1,0 +1,141 @@
+name: Production uptime monitoring
+
+on:
+  schedule:
+    - cron: '2-59/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: production-uptime-monitoring
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    name: Probe production routes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BASE_URL: ${{ vars.UPTIME_BASE_URL || 'https://onprez.com' }}
+      PUBLIC_HANDLE: ${{ vars.UPTIME_PUBLIC_HANDLE }}
+      RESEND_HEALTHCHECK_API_KEY: ${{ secrets.RESEND_HEALTHCHECK_API_KEY }}
+
+    steps:
+      - name: Check public, protected, database, and email-provider paths
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          failures=()
+
+          probe() {
+            local name="$1"
+            local url="$2"
+            local allowed_codes="$3"
+            local auth_header="${4:-}"
+            local code
+
+            if [[ -n "$auth_header" ]]; then
+              code="$(curl --silent --show-error --output /dev/null --max-time 15 \
+                --header "$auth_header" --write-out '%{http_code}' "$url")" || code="000"
+            else
+              code="$(curl --silent --show-error --output /dev/null --max-time 15 \
+                --write-out '%{http_code}' "$url")" || code="000"
+            fi
+
+            if [[ " $allowed_codes " != *" $code "* ]]; then
+              failures+=("$name returned HTTP $code; expected one of: $allowed_codes")
+            else
+              echo "OK: $name returned HTTP $code"
+            fi
+          }
+
+          probe "Homepage" "$BASE_URL/" "200"
+          probe "Login" "$BASE_URL/login" "200"
+          probe "Protected dashboard" "$BASE_URL/dashboard" "302 307 308"
+          probe "Database-backed health endpoint" "$BASE_URL/api/health" "200"
+
+          if [[ -z "$PUBLIC_HANDLE" ]]; then
+            failures+=("UPTIME_PUBLIC_HANDLE repository variable is not configured")
+          else
+            probe "Public handle" "$BASE_URL/$PUBLIC_HANDLE" "200"
+          fi
+
+          if [[ -n "$RESEND_HEALTHCHECK_API_KEY" ]]; then
+            probe "Resend API and credentials" "https://api.resend.com/domains" "200" \
+              "Authorization: Bearer $RESEND_HEALTHCHECK_API_KEY"
+          else
+            # A prompt 401 confirms provider reachability without exposing credentials.
+            probe "Resend API availability" "https://api.resend.com/domains" "401"
+          fi
+
+          if (( ${#failures[@]} > 0 )); then
+            printf '::error::%s\n' "${failures[@]}"
+            exit 1
+          fi
+
+      - name: Open or update downtime alert
+        if: failure()
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const title = '[uptime] Production monitor failed'
+            const runUrl = context.serverUrl + '/' + context.repo.owner + '/' +
+              context.repo.repo + '/actions/runs/' + context.runId
+            const body = [
+              'One or more production uptime probes failed.',
+              '',
+              'Run: ' + runUrl,
+              'Detected: ' + new Date().toISOString(),
+            ].join('\n')
+            const { data: issues } = await github.rest.issues.listForRepo({
+              ...context.repo,
+              state: 'open',
+              creator: 'github-actions[bot]',
+            })
+            const existing = issues.find(issue => issue.title === title && !issue.pull_request)
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: existing.number,
+                body,
+              })
+            } else {
+              await github.rest.issues.create({
+                ...context.repo,
+                title,
+                body,
+                assignees: [context.repo.owner],
+              })
+            }
+
+      - name: Close downtime alert after recovery
+        if: success()
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const title = '[uptime] Production monitor failed'
+            const { data: issues } = await github.rest.issues.listForRepo({
+              ...context.repo,
+              state: 'open',
+              creator: 'github-actions[bot]',
+            })
+            const existing = issues.find(issue => issue.title === title && !issue.pull_request)
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: existing.number,
+                body: 'All uptime probes recovered at ' + new Date().toISOString() + '.',
+              })
+              await github.rest.issues.update({
+                ...context.repo,
+                issue_number: existing.number,
+                state: 'closed',
+                state_reason: 'completed',
+              })
+            }

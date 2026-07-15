@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom'
 import 'jest-environment-jsdom'
+import { TextDecoder, TextEncoder } from 'util'
+
+Object.assign(global, { TextDecoder, TextEncoder })
 
 // Set up environment variables for tests
 process.env.NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'

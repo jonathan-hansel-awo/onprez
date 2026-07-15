@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { motion } from 'framer-motion'
+import React from 'react'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -23,7 +24,15 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
+    Sentry.withScope(scope => {
+      scope.setTag('error.context', 'react-error-boundary')
+      scope.setContext('react', { componentStack: errorInfo.componentStack })
+      Sentry.captureException(error)
+    })
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error caught by boundary:', error, errorInfo)
+    }
   }
 
   render() {

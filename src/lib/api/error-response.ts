@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+import { captureCaughtException } from '@/lib/monitoring/capture-exception'
+
 export type ApiErrorCode =
   | 'BAD_REQUEST'
   | 'VALIDATION_ERROR'
@@ -40,5 +42,13 @@ export function apiError(
 }
 
 export function logApiError(context: string, error: unknown): void {
+  captureCaughtException(error, context)
+
+  if (process.env.NODE_ENV === 'production') {
+    const errorType = error instanceof Error ? error.name : typeof error
+    console.error(`[${context}] ${errorType}`)
+    return
+  }
+
   console.error(`[${context}]`, error)
 }
