@@ -3,6 +3,7 @@ import { loginUser, parseUserAgent } from '@/lib/services/login'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { z } from 'zod'
 import { apiError, logApiError } from '@/lib/api/error-response'
+import { logger, withRequestLogging } from '@/lib/observability/logger'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -56,13 +57,14 @@ function getSafeLoginFailureMessage(error?: string) {
   return 'Invalid email or password'
 }
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const body = await request.json()
 
     const validation = loginSchema.safeParse(body)
 
     if (!validation.success) {
+      logger.warn('auth.login.rejected', { reason: 'validation_failed' })
       return apiError('VALIDATION_ERROR', 'Invalid input', 400, {
         details: validation.error.issues.map(err => ({
           field: err.path[0],
@@ -81,6 +83,7 @@ export async function POST(request: NextRequest) {
     const rateLimit = await checkRateLimit(rateLimitKey, 'auth:login')
 
     if (!rateLimit.allowed) {
+      logger.warn('auth.login.rejected', { reason: 'rate_limited' })
       const resetInSeconds = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
       const resetInMinutes = Math.ceil(resetInSeconds / 60)
 
@@ -116,10 +119,12 @@ export async function POST(request: NextRequest) {
     )
 
     if (!result.success) {
+      logger.warn('auth.login.rejected', { reason: result.error || 'invalid_credentials' })
       return apiError('INVALID_CREDENTIALS', getSafeLoginFailureMessage(result.error), 401)
     }
 
     if (result.requiresMfa && result.mfaToken) {
+      logger.info('auth.login.mfa_required', { userId: result.user?.id })
       return NextResponse.json({
         success: true,
         requiresMfa: true,
@@ -128,7 +133,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!result.accessToken || !result.refreshToken) {
-      console.error('Login succeeded without tokens')
+      logger.error('auth.login.failed', { reason: 'tokens_missing', userId: result.user?.id })
 
       return apiError('INTERNAL_ERROR', 'Login failed', 500)
     }
@@ -154,9 +159,14 @@ export async function POST(request: NextRequest) {
       path: '/',
     })
 
+    logger.info('auth.login.succeeded', { userId: result.user?.id })
     return response
   } catch (error) {
-    logApiError('login-api', error)
+    logApiError('login-api', error, { area: 'auth' })
     return apiError('INTERNAL_ERROR', 'An error occurred during login', 500)
   }
+}
+
+export function POST(request: NextRequest) {
+  return withRequestLogging(request, () => handlePost(request))
 }

@@ -14,6 +14,7 @@ import {
   zonedDateTimeToUtc,
 } from '@/lib/utils/timezone'
 import { AppointmentTransitionError, transitionAppointment } from '@/lib/services/appointment-state'
+import { logger } from '@/lib/observability/logger'
 
 export { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 
@@ -234,16 +235,20 @@ export async function createBooking(
     idempotencyKey?: string
   }
 ): Promise<BookingResult> {
+  logger.info('booking.creation.started', { businessId, serviceId })
+
   // Get service details
   const service = await prisma.service.findUnique({
     where: { id: serviceId, businessId },
   })
 
   if (!service) {
+    logger.warn('booking.creation.rejected', { businessId, serviceId, reason: 'service_not_found' })
     return { success: false, error: 'Service not found' }
   }
 
   if (!service.active) {
+    logger.warn('booking.creation.rejected', { businessId, serviceId, reason: 'service_inactive' })
     return { success: false, error: 'This service is not currently available' }
   }
 
@@ -253,6 +258,11 @@ export async function createBooking(
   })
 
   if (!business) {
+    logger.warn('booking.creation.rejected', {
+      businessId,
+      serviceId,
+      reason: 'business_not_found',
+    })
     return { success: false, error: 'Business not found' }
   }
 
@@ -264,10 +274,17 @@ export async function createBooking(
   // Validate booking time
   const timeValidation = await validateBookingTime(businessId, date, startTime, service.duration)
   if (!timeValidation.valid) {
+    logger.warn('booking.creation.rejected', {
+      businessId,
+      serviceId,
+      reason: 'time_validation_failed',
+      validationReason: timeValidation.reason,
+    })
     return { success: false, error: timeValidation.reason }
   }
 
   return prisma.$transaction(async tx => {
+    logger.info('booking.database.transaction_started', { businessId, serviceId })
     await lockBusinessBookingSchedule(tx, businessId)
 
     const requestHash = options?.idempotencyKey
@@ -312,6 +329,11 @@ export async function createBooking(
 
       if (existingKey) {
         if (existingKey.requestHash !== requestHash) {
+          logger.warn('booking.creation.rejected', {
+            businessId,
+            serviceId,
+            reason: 'idempotency_conflict',
+          })
           return {
             success: false,
             error: 'Idempotency key has already been used for a different booking request',
@@ -319,6 +341,11 @@ export async function createBooking(
           }
         }
 
+        logger.info('booking.creation.replayed', {
+          businessId,
+          serviceId,
+          bookingId: existingKey.appointment.id,
+        })
         return { success: true, appointment: existingKey.appointment, replayed: true }
       }
     }
@@ -335,6 +362,12 @@ export async function createBooking(
     )
 
     if (!conflictCheck.available) {
+      logger.warn('booking.creation.rejected', {
+        businessId,
+        serviceId,
+        reason: 'schedule_conflict',
+        conflictCount: conflictCheck.conflicts?.length || 0,
+      })
       return {
         success: false,
         error: conflictCheck.reason,
@@ -442,6 +475,11 @@ export async function createBooking(
       data: { lastBookingAt: new Date() },
     })
 
+    logger.info('booking.database.appointment_created', {
+      businessId,
+      serviceId,
+      bookingId: appointment.id,
+    })
     return { success: true, appointment }
   })
 }

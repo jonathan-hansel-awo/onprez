@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 import { AppointmentStatus } from '@prisma/client'
 import { env } from '@/lib/config/env'
 import { formatLongDateInTimezone, formatTimeInTimezone } from '@/lib/utils/timezone'
+import { logger } from '@/lib/observability/logger'
 
 // Lazy initialization - only create Resend instance when needed
 let resendInstance: Resend | null = null
@@ -32,6 +33,9 @@ export interface EmailResult {
  * Send an email using Resend
  */
 export async function sendEmail(options: SendEmailOptions): Promise<EmailResult> {
+  const recipientCount = Array.isArray(options.to) ? options.to.length : 1
+  logger.info('email.send.started', { recipientCount })
+
   try {
     const resend = getResendInstance()
     const from = options.from || `${env.FROM_NAME} <${env.FROM_EMAIL}>`
@@ -47,7 +51,10 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
 
     // Handle Resend API error response
     if (result && result.error) {
-      console.error('Email send error:', result.error)
+      logger.error('email.send.failed', {
+        recipientCount,
+        providerErrorType: result.error.name || 'resend_error',
+      })
       return {
         success: false,
         error: result.error.message || 'Email send failed',
@@ -56,6 +63,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
 
     // Handle successful response
     if (result && result.data) {
+      logger.info('email.send.succeeded', { recipientCount, messageId: result.data.id })
       return {
         success: true,
         messageId: result.data.id,
@@ -63,13 +71,17 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
     }
 
     // Fallback for unexpected response format
+    logger.error('email.send.failed', { recipientCount, reason: 'unexpected_provider_response' })
     return {
       success: false,
       error: 'Unexpected response format from email service',
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.error('Email send exception:', error)
+    logger.error('email.send.failed', {
+      recipientCount,
+      errorType: error instanceof Error ? error.name : typeof error,
+    })
     return {
       success: false,
       error: error.message || 'Failed to send email',
@@ -236,13 +248,17 @@ export async function sendPasswordResetEmail(
     })
 
     if (error) {
-      console.error('Failed to send password reset email:', error)
+      logger.error('email.password_reset.failed', {
+        providerErrorType: error.name || 'resend_error',
+      })
       return { success: false, error: error.message }
     }
 
     return { success: true, messageId: data?.id }
   } catch (error) {
-    console.error('Password reset email error:', error)
+    logger.error('email.password_reset.failed', {
+      errorType: error instanceof Error ? error.name : typeof error,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send email',
@@ -331,13 +347,17 @@ export async function sendPasswordChangedEmail(
     })
 
     if (error) {
-      console.error('Failed to send password changed email:', error)
+      logger.error('email.password_changed.failed', {
+        providerErrorType: error.name || 'resend_error',
+      })
       return { success: false, error: error.message }
     }
 
     return { success: true, messageId: data?.id }
   } catch (error) {
-    console.error('Password changed email error:', error)
+    logger.error('email.password_changed.failed', {
+      errorType: error instanceof Error ? error.name : typeof error,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send email',
@@ -470,13 +490,17 @@ export async function sendNewDeviceAlert(
     })
 
     if (error) {
-      console.error('Failed to send new device alert:', error)
+      logger.error('email.new_device_alert.failed', {
+        providerErrorType: error.name || 'resend_error',
+      })
       return { success: false, error: error.message }
     }
 
     return { success: true, messageId: data?.id }
   } catch (error) {
-    console.error('New device alert error:', error)
+    logger.error('email.new_device_alert.failed', {
+      errorType: error instanceof Error ? error.name : typeof error,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send email',

@@ -49,6 +49,31 @@ function expectNext(response: Response) {
 }
 
 describe('proxy route protection', () => {
+  it('propagates valid request and correlation IDs', async () => {
+    const response = await proxy(
+      createRequest('/', undefined, {
+        headers: {
+          'x-request-id': 'request-12345678',
+          'x-correlation-id': 'booking-flow-12345678',
+        },
+      })
+    )
+
+    expect(response.headers.get('x-request-id')).toBe('request-12345678')
+    expect(response.headers.get('x-correlation-id')).toBe('booking-flow-12345678')
+  })
+
+  it('replaces unsafe trace IDs', async () => {
+    const response = await proxy(
+      createRequest('/', undefined, {
+        headers: { 'x-request-id': 'bad id with spaces' },
+      })
+    )
+
+    expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/)
+    expect(response.headers.get('x-correlation-id')).toBe(response.headers.get('x-request-id'))
+  })
+
   it('allows the homepage through', async () => {
     const response = await proxy(createRequest('/'))
 
