@@ -5,3 +5,4 @@ src/app/templates/\[slug\]/page.tsx
 src/components/landing/examples-carousel.tsx
 src/components/templates/TemplateGallery.tsx
 src/components/templates/LuxuryWellnessPreview.tsx
+src/components/templates/HeavenlyPamperPreview.tsx
