@@ -33,4 +33,14 @@ describe('presence template catalogue', () => {
     expect(getPresenceTemplate(template.slug)).toEqual(template)
     expect(getPresenceTemplate('missing-template')).toBeUndefined()
   })
+
+  it('keeps Heavenly Pamper Palace separate from Serene Wellness', () => {
+    const serene = getPresenceTemplate('serene-wellness')
+    const heavenly = getPresenceTemplate('heavenly-pamper-palace')
+
+    expect(serene?.name).toBe('Serene Wellness')
+    expect(heavenly?.name).toBe('Heavenly Pamper Palace')
+    expect(heavenly?.palette.primary).toBe('#b88a22')
+    expect(heavenly?.preview.services).toHaveLength(3)
+  })
 })

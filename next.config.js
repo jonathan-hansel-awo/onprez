@@ -13,7 +13,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data: https://fonts.gstatic.com",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "img-src 'self' blob: data: https://res.cloudinary.com https://i.pravatar.cc https://www.google-analytics.com",
+  "img-src 'self' blob: data: https://res.cloudinary.com https://i.pravatar.cc https://images.unsplash.com https://www.google-analytics.com",
   "media-src 'self' https://res.cloudinary.com",
   "object-src 'none'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com`,
@@ -51,6 +51,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: '*.cloudinary.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
