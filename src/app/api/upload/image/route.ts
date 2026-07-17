@@ -5,6 +5,8 @@ import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireBusinessRole } from '@/lib/auth/business-access'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { ImageUploadValidationError, sanitizeImageUpload } from '@/lib/uploads/image-security'
+import { logApiError } from '@/lib/api/error-response'
+import { logger, withRequestLogging } from '@/lib/observability/logger'
 
 const PERSONAL_PURPOSES = new Set(['profile'])
 const BUSINESS_PURPOSES = new Set(['business-logo', 'business-cover', 'service', 'gallery'])
@@ -56,7 +58,7 @@ function uploadToCloudinary(buffer: Buffer, folder: string, mimeType: string) {
   })
 }
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const user = await getCurrentUser()
 
@@ -128,6 +130,14 @@ export async function POST(request: NextRequest) {
     const sanitizedImage = await sanitizeImageUpload(fileValue)
     const result = await uploadToCloudinary(sanitizedImage.buffer, folder, sanitizedImage.mimeType)
 
+    logger.info('upload.image.succeeded', {
+      userId: user.id,
+      businessId,
+      purpose,
+      mimeType: sanitizedImage.mimeType,
+      bytes: result.bytes,
+      publicId: result.public_id,
+    })
     return NextResponse.json({
       success: true,
       data: {
@@ -144,10 +154,15 @@ export async function POST(request: NextRequest) {
     if (authResponse) return authResponse
 
     if (error instanceof ImageUploadValidationError) {
+      logger.warn('upload.image.rejected', { reason: error.message })
       return NextResponse.json({ success: false, error: error.message }, { status: 400 })
     }
 
-    console.error('Upload image error:', error)
+    logApiError('upload-image-api', error, { area: 'upload' })
     return NextResponse.json({ success: false, error: 'Upload failed' }, { status: 500 })
   }
+}
+
+export function POST(request: NextRequest) {
+  return withRequestLogging(request, () => handlePost(request))
 }

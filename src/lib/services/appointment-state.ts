@@ -1,6 +1,7 @@
 import { AppointmentStatus, CancellationSource, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { sendAppointmentStatusEmail } from '@/lib/services/email'
+import { logger } from '@/lib/observability/logger'
 
 export const VALID_APPOINTMENT_TRANSITIONS: Readonly<
   Record<AppointmentStatus, readonly AppointmentStatus[]>
@@ -60,6 +61,11 @@ interface TransitionAppointmentInput {
 
 export async function transitionAppointment(input: TransitionAppointmentInput) {
   const changedAt = new Date()
+  logger.info('booking.transition.started', {
+    bookingId: input.appointmentId,
+    businessId: input.businessId,
+    toStatus: input.toStatus,
+  })
 
   const appointment = await prisma.$transaction(async tx => {
     const current = await tx.appointment.findFirst({
@@ -169,8 +175,19 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
     })
   })
 
+  logger.info('booking.transition.database_succeeded', {
+    bookingId: appointment.id,
+    businessId: input.businessId,
+    fromStatus: appointment.previousStatus,
+    toStatus: appointment.status,
+  })
+
   let notificationSent = false
   if (input.notifyCustomer) {
+    logger.info('booking.transition.email_started', {
+      bookingId: appointment.id,
+      businessId: input.businessId,
+    })
     const emailResult = await sendAppointmentStatusEmail({
       to: appointment.customerEmail,
       customerName: appointment.customerName,
@@ -183,7 +200,17 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
       reason: input.reason,
     })
     notificationSent = emailResult.success
+    logger[notificationSent ? 'info' : 'warn']('booking.transition.email_completed', {
+      bookingId: appointment.id,
+      businessId: input.businessId,
+      sent: notificationSent,
+    })
   }
 
+  logger.info('booking.transition.completed', {
+    bookingId: appointment.id,
+    businessId: input.businessId,
+    notificationSent,
+  })
   return { appointment, notificationSent, changedAt }
 }

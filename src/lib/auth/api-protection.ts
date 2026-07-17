@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from './get-user'
 import type { AuthUser, AuthRequirement } from '@/types/auth'
 import { apiError, logApiError } from '@/lib/api/error-response'
+import { withRequestLogging } from '@/lib/observability/logger'
 
 interface ProtectedHandlerContext {
   user: AuthUser
@@ -19,41 +20,43 @@ type ProtectedHandler<T = any> = (
  */
 export function withAuth(handler: ProtectedHandler, requirements: AuthRequirement = {}) {
   return async (request: NextRequest): Promise<NextResponse> => {
-    try {
-      // Get current user
-      const user = await getCurrentUser()
+    return withRequestLogging(request, async () => {
+      try {
+        // Get current user
+        const user = await getCurrentUser()
 
-      // Check if auth is required
-      if (requirements.requireAuth !== false && !user) {
-        return apiError('UNAUTHORIZED', 'Unauthorized', 401)
+        // Check if auth is required
+        if (requirements.requireAuth !== false && !user) {
+          return apiError('UNAUTHORIZED', 'Unauthorized', 401)
+        }
+
+        // If no user and auth not required, continue without user
+        if (!user) {
+          return handler({ user: null as any, request })
+        }
+
+        // Check email verification
+        if (requirements.requireEmailVerified && !user.emailVerified) {
+          return apiError('FORBIDDEN', 'Email verification required', 403)
+        }
+
+        // Check MFA requirement
+        if (requirements.requireMfa && !user.mfaEnabled) {
+          return apiError('FORBIDDEN', 'MFA required', 403)
+        }
+
+        // Check role requirement
+        if (requirements.allowedRoles && !requirements.allowedRoles.includes(user.role)) {
+          return apiError('FORBIDDEN', 'Insufficient permissions', 403)
+        }
+
+        // All checks passed, call handler
+        return handler({ user, request })
+      } catch (error) {
+        logApiError('auth-wrapper', error)
+        return apiError('INTERNAL_ERROR', 'Internal server error', 500)
       }
-
-      // If no user and auth not required, continue without user
-      if (!user) {
-        return handler({ user: null as any, request })
-      }
-
-      // Check email verification
-      if (requirements.requireEmailVerified && !user.emailVerified) {
-        return apiError('FORBIDDEN', 'Email verification required', 403)
-      }
-
-      // Check MFA requirement
-      if (requirements.requireMfa && !user.mfaEnabled) {
-        return apiError('FORBIDDEN', 'MFA required', 403)
-      }
-
-      // Check role requirement
-      if (requirements.allowedRoles && !requirements.allowedRoles.includes(user.role)) {
-        return apiError('FORBIDDEN', 'Insufficient permissions', 403)
-      }
-
-      // All checks passed, call handler
-      return handler({ user, request })
-    } catch (error) {
-      logApiError('auth-wrapper', error)
-      return apiError('INTERNAL_ERROR', 'Internal server error', 500)
-    }
+    })
   }
 }
 

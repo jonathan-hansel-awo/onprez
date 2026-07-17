@@ -3,6 +3,37 @@ import type { NextRequest } from 'next/server'
 
 const protectedRoutes = ['/dashboard', '/account']
 const safeApiMethods = new Set(['GET', 'HEAD', 'OPTIONS'])
+const SAFE_TRACE_ID_PATTERN = /^[A-Za-z0-9._:-]{8,128}$/
+
+function safeTraceId(value: string | null) {
+  const candidate = value?.trim()
+  return candidate && SAFE_TRACE_ID_PATTERN.test(candidate) ? candidate : undefined
+}
+
+function getTraceIds(request: NextRequest) {
+  const requestId = safeTraceId(request.headers.get('x-request-id')) || crypto.randomUUID()
+  const correlationId = safeTraceId(request.headers.get('x-correlation-id')) || requestId
+  return { requestId, correlationId }
+}
+
+function addTraceHeaders(
+  response: NextResponse,
+  trace: { requestId: string; correlationId: string }
+) {
+  response.headers.set('x-request-id', trace.requestId)
+  response.headers.set('x-correlation-id', trace.correlationId)
+  return response
+}
+
+function continueWithTrace(
+  request: NextRequest,
+  trace: { requestId: string; correlationId: string }
+) {
+  const headers = new Headers(request.headers)
+  headers.set('x-request-id', trace.requestId)
+  headers.set('x-correlation-id', trace.correlationId)
+  return addTraceHeaders(NextResponse.next({ request: { headers } }), trace)
+}
 
 function matchesRoute(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(`${route}/`)
@@ -98,10 +129,11 @@ function redirectToLogin(request: NextRequest) {
 
 export async function proxy(request: NextRequest) {
   const stateChangingApiRequest = isStateChangingApiRequest(request)
+  const trace = getTraceIds(request)
 
   try {
     if (stateChangingApiRequest && !isCsrfSafe(request)) {
-      return csrfRejectedResponse()
+      return addTraceHeaders(csrfRejectedResponse(), trace)
     }
 
     const { pathname } = request.nextUrl
@@ -109,32 +141,44 @@ export async function proxy(request: NextRequest) {
     // Only explicitly protected page routes need auth at this proxy layer.
     // API authorization remains the responsibility of each route handler.
     if (!isProtectedRoute(pathname)) {
-      return NextResponse.next()
+      return continueWithTrace(request, trace)
     }
 
     const accessToken = request.cookies.get('accessToken')?.value?.trim()
 
     if (!accessToken) {
-      return redirectToLogin(request)
+      return addTraceHeaders(redirectToLogin(request), trace)
     }
 
     // Important:
     // This only checks that a token exists.
     // The dashboard/account pages must still validate the token server-side.
-    return NextResponse.next()
+    return continueWithTrace(request, trace)
   } catch (error) {
-    console.error('Proxy error:', error)
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'error',
+        service: 'onprez',
+        event: 'proxy.failed',
+        requestId: trace.requestId,
+        correlationId: trace.correlationId,
+        method: request.method,
+        path: request.nextUrl.pathname,
+        errorType: error instanceof Error ? error.name : typeof error,
+      })
+    )
 
     // Fail closed for protected pages and unsafe API mutations.
     if (stateChangingApiRequest) {
-      return csrfRejectedResponse()
+      return addTraceHeaders(csrfRejectedResponse(), trace)
     }
 
     if (isProtectedRoute(request.nextUrl.pathname)) {
-      return redirectToLogin(request)
+      return addTraceHeaders(redirectToLogin(request), trace)
     }
 
-    return NextResponse.next()
+    return continueWithTrace(request, trace)
   }
 }
 

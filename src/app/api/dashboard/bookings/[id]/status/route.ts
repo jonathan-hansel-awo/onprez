@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireAppointmentRole } from '@/lib/auth/appointment-access'
 import { AppointmentTransitionError, transitionAppointment } from '@/lib/services/appointment-state'
+import { logApiError } from '@/lib/api/error-response'
+import { withRequestLogging } from '@/lib/observability/logger'
 
 const statusUpdateSchema = z.object({
   status: z.nativeEnum(AppointmentStatus),
@@ -13,7 +15,7 @@ const statusUpdateSchema = z.object({
   notifyCustomer: z.boolean().default(true),
 })
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handlePatch(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -84,11 +86,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const authResponse = businessAuthErrorResponse(error)
     if (authResponse) return authResponse
 
-    console.error('Update appointment status error:', error)
+    logApiError('booking-status-api', error, { area: 'booking' })
 
     return NextResponse.json(
       { success: false, error: 'Failed to update appointment status' },
       { status: 500 }
     )
   }
+}
+
+export function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  return withRequestLogging(request, () => handlePatch(request, context))
 }

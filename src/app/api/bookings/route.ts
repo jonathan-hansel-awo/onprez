@@ -4,6 +4,8 @@ import { createBooking } from '@/lib/services/booking'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 import { z } from 'zod'
+import { logApiError } from '@/lib/api/error-response'
+import { logger, withRequestLogging } from '@/lib/observability/logger'
 
 const createBookingSchema = z.object({
   businessId: z.string().min(1, 'Business ID is required').max(128),
@@ -92,7 +94,7 @@ function serializeAppointment(appointment: {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const idempotencyKey = request.headers.get('idempotency-key')?.trim()
     if (idempotencyKey && !/^[A-Za-z0-9_-]{16,128}$/.test(idempotencyKey)) {
@@ -245,6 +247,15 @@ export async function POST(request: NextRequest) {
     )
 
     if (!result.success || !result.appointment?.id) {
+      logger.warn('booking.api.rejected', {
+        businessId: data.businessId,
+        serviceId: data.serviceId,
+        reason: result.idempotencyConflict
+          ? 'idempotency_conflict'
+          : result.conflicts
+            ? 'schedule_conflict'
+            : 'creation_failed',
+      })
       return NextResponse.json(
         {
           success: false,
@@ -293,12 +304,22 @@ export async function POST(request: NextRequest) {
     })
 
     if (!appointment) {
+      logger.error('booking.api.retrieval_failed', {
+        businessId: data.businessId,
+        bookingId: result.appointment.id,
+      })
       return NextResponse.json(
         { success: false, error: 'Booking created but could not be retrieved' },
         { status: 500 }
       )
     }
 
+    logger.info('booking.api.succeeded', {
+      businessId: data.businessId,
+      serviceId: data.serviceId,
+      bookingId: appointment.id,
+      replayed: Boolean(result.replayed),
+    })
     return NextResponse.json(
       {
         success: true,
@@ -310,12 +331,12 @@ export async function POST(request: NextRequest) {
       }
     )
   } catch (error) {
-    console.error('Error creating booking:', error)
+    logApiError('booking-create-api', error, { area: 'booking' })
     return NextResponse.json({ success: false, error: 'Failed to create booking' }, { status: 500 })
   }
 }
 
-export async function GET(request: NextRequest) {
+async function handleGet(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
 
@@ -386,7 +407,15 @@ export async function GET(request: NextRequest) {
       data: serializeAppointment(appointment),
     })
   } catch (error) {
-    console.error('Error fetching booking:', error)
+    logApiError('booking-fetch-api', error, { area: 'booking' })
     return NextResponse.json({ success: false, error: 'Failed to fetch booking' }, { status: 500 })
   }
+}
+
+export function POST(request: NextRequest) {
+  return withRequestLogging(request, () => handlePost(request))
+}
+
+export function GET(request: NextRequest) {
+  return withRequestLogging(request, () => handleGet(request))
 }

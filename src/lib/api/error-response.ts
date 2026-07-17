@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { captureCaughtException } from '@/lib/monitoring/capture-exception'
+import { logger, traceHeaders, type LogFields } from '@/lib/observability/logger'
 
 export type ApiErrorCode =
   | 'BAD_REQUEST'
@@ -26,6 +27,9 @@ export function apiError(
   status: ApiErrorStatus,
   options: ApiErrorOptions = {}
 ) {
+  const headers = new Headers(options.headers)
+  for (const [name, value] of Object.entries(traceHeaders())) headers.set(name, value)
+
   return NextResponse.json(
     {
       success: false,
@@ -37,18 +41,11 @@ export function apiError(
         ...(options.details === undefined ? {} : { details: options.details }),
       },
     },
-    { status, headers: options.headers }
+    { status, headers }
   )
 }
 
-export function logApiError(context: string, error: unknown): void {
+export function logApiError(context: string, error: unknown, fields: LogFields = {}): void {
   captureCaughtException(error, context)
-
-  if (process.env.NODE_ENV === 'production') {
-    const errorType = error instanceof Error ? error.name : typeof error
-    console.error(`[${context}] ${errorType}`)
-    return
-  }
-
-  console.error(`[${context}]`, error)
+  logger.error('api.error', { context, error, ...fields })
 }
