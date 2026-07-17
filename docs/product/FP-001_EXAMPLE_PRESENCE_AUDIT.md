@@ -1,16 +1,18 @@
 # FP-001 — Existing Example Presence Experience Audit
 
 **Status:** Complete
+
 **Priority:** P0
+
 **Scope:** Homepage examples, the public presence route, the shared renderer, mobile behaviour, and template-preview readiness.
 
 ## Executive finding
 
 OnPrez does not currently have a functioning example presence-page route.
 
-The homepage examples are animated profile and statistics cards rather than rendered presence pages. The visible **View Live Page** button does not navigate anywhere, and the carousel imports `Lin[...]`
+The homepage examples are animated profile and statistics cards rather than rendered presence pages. The visible **View Live Page** button does not navigate anywhere, and the carousel imports `Link` from `lucide-react` instead of `next/link` for its signup CTA.
 
-The canonical published presence path is `src/app/[handle]/page.tsx`. It renders database-backed business and page data through `ThemeProvider` and `SectionRenderer`. Template previews should use [...]
+The canonical published presence path is `src/app/[handle]/page.tsx`. It renders database-backed business and page data through `ThemeProvider` and `SectionRenderer`. Template previews should use this same rendering path so previews accurately represent published pages.
 
 ## Current implementation
 
@@ -27,7 +29,7 @@ Current flow:
 Homepage
 → ExamplesCarousel
 → ExampleCard
-→ “View Live Page” button
+→ “View Live Page”
 → no navigation
 ```
 
@@ -35,101 +37,92 @@ Homepage
 
 ```text
 /[handle]
-→ fetch published Business
-→ fetch published home Page
-→ use publishedContent or content
+→ published Business
+→ published home Page
 → ThemeProvider
 → SectionRenderer
 ```
 
+The published route already provides the correct architectural foundation for template previews.
+
 ## Key defects and limitations
 
-1. **No working example-page navigation**
-   - The centre-card button has no route or handler.
-   - Side-card clicks only rotate the carousel.
-
-2. **Incorrect signup-link implementation**
-   - `examples-carousel.tsx` imports the Lucide `Link` icon.
-   - It attempts to use that icon as a link wrapper with `href="/signup"`.
-
-3. **Examples are not presence pages**
-   - They do not render services, availability, booking, gallery, contact, FAQs, or real page sections.
-
-4. **The current data model is unsuitable for templates**
-   - It contains names, professions, emoji, gradients, and fabricated-looking statistics.
-   - It has no template metadata, theme defaults, section definitions, customisation rules, services, or booking configuration.
-
-5. **Unverified social-proof claims**
-   - The copy describes the examples as real professionals.
-   - Booking, view, and rating figures appear to be sample values but are not labelled as such.
-
-6. **Limited visual variation**
-   - Templates cannot currently select controlled section variants.
-   - Examples do not demonstrate typography pairings, editorial hierarchy, image treatment, or distinctive service layouts.
-
-7. **Weak mobile presentation**
-   - Cards use fixed dimensions and absolute positioning.
-   - Mobile navigation relies on progress dots and auto-rotation.
-   - The experience does not resemble a realistic mobile presence-page preview.
+1. **The example CTA is inert.** The card does not open a preview or published presence page.
+2. **The signup link is implemented with the wrong component.** It uses the Lucide icon rather than Next.js navigation.
+3. **The examples are not presence pages.** They do not demonstrate services, booking, galleries, FAQs, contact details, or trust content.
+4. **The example data implies unsupported traction.** Demo bookings, views, and ratings are presented as though they belong to real OnPrez customers.
+5. **The data model is too limited.** It cannot represent template metadata, themes, sections, imagery, services, or customisation boundaries.
+6. **The carousel is not mobile-first.** It relies on fixed dimensions, absolute positioning, auto-rotation, and progress dots.
 
 ## Reuse decisions
 
 | Area | Decision | Reason |
 | --- | --- | --- |
-| Homepage examples position | Reuse | It is a suitable entry point into templates. |
-| Current carousel | Replace | It is not suitable as the primary mobile-first gallery. |
-| `ExampleCard` | Replace | It represents statistics rather than a template. |
-| `src/data/examples.ts` | Retire gradually | It must not become the canonical template model. |
-| `src/app/[handle]/page.tsx` | Reuse architecture | It is the canonical published-page path. |
-| `ThemeProvider` | Reuse | Preview and published themes must behave consistently. |
-| `SectionRenderer` | Reuse and extend | Templates should render through the standard section system. |
-| Existing section components | Reuse and extend | Premium variants should be added rather than duplicated. |
-| Booking and service components | Reuse | Previewed booking entry must match the real product. |
-| Unrestricted custom HTML | Do not expand | Controlled React variants are safer and maintainable. |
-| Example traction claims | Remove or relabel | Demo content must be explicit and honest. |
+| Homepage examples position | Reuse | It is a suitable entry point for a future template gallery. |
+| Existing carousel | Replace | It does not provide a realistic or accessible template-browsing experience. |
+| Existing example cards | Replace | They represent statistics rather than complete presence pages. |
+| `src/data/examples.ts` | Retire or retain temporarily | It must not become the canonical template model. |
+| Published presence architecture | Reuse | It is the canonical business-page path. |
+| `ThemeProvider` | Reuse | Preview and published pages should share theme behaviour. |
+| `SectionRenderer` | Reuse and extend | Premium templates should use controlled section variants. |
+| Existing section components | Reuse and extend | They provide the base for FP-003. |
+| Custom HTML | Do not expand | Reusable React sections are safer and maintainable. |
+| Unsupported example metrics | Remove | Sample content must be clearly labelled as demo content. |
 
 ## Target architecture
 
 ```text
 Template catalogue
-→ immutable versioned template definition
-→ demo business data + PageSection[]
+→ versioned template definition
+→ demo business data and PageSection[]
 → shared presence shell
 → ThemeProvider
 → SectionRenderer
-→ standard service and booking components
 ```
 
 Published pages should continue to use:
 
 ```text
-Database business + published page
+Database business and published page
 → shared presence shell
 → ThemeProvider
 → SectionRenderer
 ```
 
-This prevents template previews from drifting away from the pages users ultimately publish.
+This prevents visual drift between template previews and the page a user eventually publishes.
+
+## Mobile direction
+
+The replacement template gallery should provide:
+
+- Responsive grid or horizontal snap navigation
+- Realistic mobile preview thumbnails
+- Explicit **Preview template** and **Use this template** actions
+- Keyboard and touch support
+- No required auto-rotation
+- Clearly labelled sample content
+- A real preview route
 
 ## Follow-on requirements
 
 ### FP-002
 
-Define the canonical template model, including metadata, versioning, theme defaults, page sections, customisation boundaries, protected conversion elements, and copy-on-apply behaviour.
+Define the canonical, versioned template model with metadata, theme defaults, standard `PageSection[]` content, customisation boundaries, and copy-on-apply behaviour.
 
 ### FP-003
 
-Create reusable premium variants for hero, services, practitioner profile, trust content, location and hours, booking CTA, and mobile booking entry.
+Create reusable premium section variants for heroes, introductions, practitioner profiles, services, galleries, testimonials, trust content, contact details, booking calls to action, mobile booking, FAQs, and social links.
 
 ### FP-004
 
-Replace the current carousel with a template gallery and a working preview route. Correct the broken link behaviour during that implementation.
+Replace the examples carousel with a responsive template gallery and working preview routes.
 
-## Acceptance-criteria result
+## Acceptance criteria
 
-- [x] Homepage entry point, components, route assumptions, and data source identified.
-- [x] Canonical published rendering path documented.
-- [x] Reusable components and replacement candidates identified.
-- [x] Visual, content, booking, trust, and mobile limitations documented.
-- [x] A shared preview and published-page architecture defined.
-- [x] FP-001 is complete.
+- [x] Homepage example components and data sources identified.
+- [x] Published presence rendering path documented.
+- [x] Reusable and replaceable components identified.
+- [x] Layout, typography, imagery, booking, trust, and mobile limitations recorded.
+- [x] Shared preview and published-render architecture defined.
+
+**FP-001 is complete.**
