@@ -32,8 +32,8 @@ export function SignupTemplateSelection() {
     <aside className="mx-auto mb-6 w-full max-w-md rounded-2xl border border-onprez-blue/20 bg-blue-50/90 p-4 text-sm text-gray-800 shadow-sm">
       <p className="font-semibold text-gray-900">Selected template: {template.name}</p>
       <p className="mt-1 text-gray-600">
-        We will apply this design as an unpublished draft after your account and business are created.
-        Demo services and prices will not be copied.
+        We will apply this design as an unpublished draft after your account and business are
+        created. Demo services and prices will not be copied.
       </p>
       <Link
         href="/templates"
