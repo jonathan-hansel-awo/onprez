@@ -5,10 +5,8 @@ import { signupSchema } from '@/lib/validation/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { apiError, logApiError } from '@/lib/api/error-response'
 import { prisma } from '@/lib/prisma'
-import {
-  createSignupPresencePageContent,
-  TEMPLATE_SELECTION_COOKIE,
-} from '@/lib/templates/apply-signup-template'
+import { createSignupPresencePageContent } from '@/lib/templates/apply-signup-template'
+import { TEMPLATE_SELECTION_COOKIE } from '@/lib/templates/template-selection'
 
 function getClientIp(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-for')
