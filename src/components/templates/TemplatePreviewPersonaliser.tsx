@@ -32,7 +32,8 @@ export function TemplatePreviewPersonaliser({
     normalisePreviewBusinessName(initialBusinessName) || template.preview.businessName
   )
 
-  const businessName = normalisePreviewBusinessName(businessNameInput) || template.preview.businessName
+  const businessName =
+    normalisePreviewBusinessName(businessNameInput) || template.preview.businessName
   const signupHref = useMemo(
     () => buildTemplateSignupHref(template.slug, businessName),
     [businessName, template.slug]
@@ -88,8 +89,8 @@ export function TemplatePreviewPersonaliser({
               Preview this template with your business name
             </label>
             <p className="mt-1 text-sm text-gray-600">
-              This changes only your browser preview. It does not create an account, claim a name, or
-              publish a page.
+              This changes only your browser preview. It does not create an account, claim a name,
+              or publish a page.
             </p>
           </div>
           <input
@@ -181,8 +182,8 @@ export function TemplatePreviewPersonaliser({
 
       <footer className="px-5 pb-28 pt-10 text-center text-sm text-gray-600 md:pb-10">
         <p>
-          All services, prices, locations, imagery, and claims are fictional demo content. The entered
-          business name is temporary and does not establish ownership.
+          All services, prices, locations, imagery, and claims are fictional demo content. The
+          entered business name is temporary and does not establish ownership.
         </p>
       </footer>
 
