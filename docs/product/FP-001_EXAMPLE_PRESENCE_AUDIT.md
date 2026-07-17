@@ -1,16 +1,16 @@
 # FP-001 — Existing Example Presence Experience Audit
 
-**Status:** Complete  
-**Priority:** P0  
+**Status:** Complete
+**Priority:** P0
 **Scope:** Homepage examples, the public presence route, the shared renderer, mobile behaviour, and template-preview readiness.
 
 ## Executive finding
 
 OnPrez does not currently have a functioning example presence-page route.
 
-The homepage examples are animated profile and statistics cards rather than rendered presence pages. The visible **View Live Page** button does not navigate anywhere, and the carousel imports `Link` from `lucide-react` instead of `next/link` for its signup CTA.
+The homepage examples are animated profile and statistics cards rather than rendered presence pages. The visible **View Live Page** button does not navigate anywhere, and the carousel imports `Lin[...]`
 
-The canonical published presence path is `src/app/[handle]/page.tsx`. It renders database-backed business and page data through `ThemeProvider` and `SectionRenderer`. Template previews should use this same rendering path rather than introducing a parallel visual system.
+The canonical published presence path is `src/app/[handle]/page.tsx`. It renders database-backed business and page data through `ThemeProvider` and `SectionRenderer`. Template previews should use [...]
 
 ## Current implementation
 
@@ -132,5 +132,4 @@ Replace the current carousel with a template gallery and a working preview route
 - [x] Reusable components and replacement candidates identified.
 - [x] Visual, content, booking, trust, and mobile limitations documented.
 - [x] A shared preview and published-page architecture defined.
-
-**FP-001 is complete.**
+- [x] FP-001 is complete.
