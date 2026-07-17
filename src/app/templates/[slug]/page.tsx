@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { CSSProperties } from 'react'
 import {
   BookingCtaBanner,
   EditorialIntroduction,
@@ -53,7 +54,7 @@ export default async function TemplatePreviewPage({ params }: TemplatePreviewPag
     '--theme-primary': template.palette.primary,
     '--theme-text': template.palette.text,
     '--theme-muted-text': template.palette.text,
-  } as React.CSSProperties
+  } as CSSProperties
 
   const services = template.preview.services.map(service => ({
     ...service,
@@ -61,7 +62,10 @@ export default async function TemplatePreviewPage({ params }: TemplatePreviewPag
   }))
 
   return (
-    <main style={themeStyle} className="min-h-screen bg-[var(--theme-background)] text-[var(--theme-text)]">
+    <main
+      style={themeStyle}
+      className="min-h-screen bg-[var(--theme-background)] text-[var(--theme-text)]"
+    >
       <div className="sticky top-0 z-[60] border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="min-w-0">
@@ -162,7 +166,10 @@ export default async function TemplatePreviewPage({ params }: TemplatePreviewPag
       />
 
       <footer className="px-5 pb-28 pt-10 text-center text-sm text-gray-600 md:pb-10">
-        <p>All business names, services, prices, locations, and claims on this page are fictional demo content.</p>
+        <p>
+          All business names, services, prices, locations, and claims on this page are fictional demo
+          content.
+        </p>
       </footer>
 
       <StickyMobileBookingCta
