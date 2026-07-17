@@ -3,8 +3,6 @@ import type { PageSection } from '@/types/page-sections'
 import { getPresenceTemplate } from '@/data/presence-template-catalogue'
 import { createDefaultPresencePageContent } from '@/lib/utils/default-presence-page'
 
-export const TEMPLATE_SELECTION_COOKIE = 'onprez-selected-template'
-
 export interface AppliedSignupTemplate {
   templateSlug?: string
   templateName?: string
