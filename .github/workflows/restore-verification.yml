@@ -1,0 +1,77 @@
+name: Verify database restore
+
+on:
+  workflow_dispatch:
+    inputs:
+      drill_started_utc:
+        description: ISO-8601 UTC time when the restore drill began
+        required: true
+        type: string
+      source_freeze_utc:
+        description: ISO-8601 UTC time when preview writes were frozen
+        required: true
+        type: string
+      restore_point_utc:
+        description: ISO-8601 UTC timestamp selected in Neon
+        required: true
+        type: string
+      confirmation:
+        description: Type VERIFY_PREVIEW_RESTORE (never use production targets)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-restore-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Compare preview source and restored branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: restore-verification
+    env:
+      SOURCE_DATABASE_URL: ${{ secrets.SOURCE_DATABASE_URL }}
+      RESTORED_DATABASE_URL: ${{ secrets.RESTORED_DATABASE_URL }}
+      DRILL_STARTED_UTC: ${{ inputs.drill_started_utc }}
+      SOURCE_FREEZE_UTC: ${{ inputs.source_freeze_utc }}
+      RESTORE_POINT_UTC: ${{ inputs.restore_point_utc }}
+      BACKUP_RPO_TARGET_MINUTES: '5'
+      BACKUP_RTO_TARGET_MINUTES: '120'
+      RESTORE_VERIFICATION_REPORT: restore-verification-report.json
+
+    steps:
+      - name: Require explicit non-production confirmation
+        shell: bash
+        run: |
+          if [[ "${{ inputs.confirmation }}" != "VERIFY_PREVIEW_RESTORE" ]]; then
+            echo "Confirmation did not match VERIFY_PREVIEW_RESTORE."
+            exit 1
+          fi
+
+      - name: Check out selected revision
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Compare source and restored databases
+        run: npm run db:verify-restore
+
+      - name: Upload redacted verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restore-verification-${{ github.run_id }}
+          path: restore-verification-report.json
+          if-no-files-found: warn
+          retention-days: 90

@@ -52,6 +52,9 @@ commit and target environment.
       (`__tests__/deployment-safety.test.ts`).
 - [x] Preview and production migrations use a separate, manually triggered workflow with preview
       verification before production (`.github/workflows/migrate.yml`).
+- [x] Restore drills have a read-only comparison workflow and redacted evidence report
+      (`.github/workflows/restore-verification.yml`). This control does not satisfy DB-05 until a
+      real isolated Neon restore run passes.
 - [x] Public debug/environment endpoints have been removed or reduced to a minimal health response.
 - [x] API route access expectations and the completed authorisation audit are recorded in
       `docs/security/API_ROUTE_ACCESS_MATRIX.md`.

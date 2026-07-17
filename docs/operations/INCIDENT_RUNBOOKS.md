@@ -8,6 +8,7 @@ Use them with:
 
 - [Production uptime monitoring](./UPTIME_MONITORING.md)
 - [Production error monitoring](./ERROR_MONITORING.md)
+- [Backup and restore verification](./BACKUP_RESTORE.md)
 - [Database migrations](../MIGRATIONS.md)
 - [Environment variables](../ENVIRONMENT_VARIABLES.md)
 - [Production readiness checklist](../production/PRODUCTION_READINESS_CHECKLIST.md)
