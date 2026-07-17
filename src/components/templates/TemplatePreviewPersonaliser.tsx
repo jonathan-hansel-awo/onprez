@@ -13,7 +13,7 @@ import {
   StickyMobileBookingCta,
   TrustStrip,
 } from '@/components/presence/premium'
-import { LuxuryWellnessPreview } from '@/components/templates/LuxuryWellnessPreview'
+import { HeavenlyPamperPreview } from '@/components/templates/HeavenlyPamperPreview'
 import type { TemplateCatalogueItem } from '@/data/presence-template-catalogue'
 import {
   buildTemplateSignupHref,
@@ -40,9 +40,9 @@ export function TemplatePreviewPersonaliser({
     [businessName, template.slug]
   )
 
-  if (template.slug === 'serene-wellness') {
+  if (template.slug === 'heavenly-pamper-palace') {
     return (
-      <LuxuryWellnessPreview
+      <HeavenlyPamperPreview
         template={template}
         businessName={businessName}
         businessNameInput={businessNameInput}
