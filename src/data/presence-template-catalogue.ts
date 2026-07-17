@@ -72,6 +72,48 @@ export const presenceTemplateCatalogue: TemplateCatalogueItem[] = [
     },
   },
   {
+    slug: 'heavenly-pamper-palace',
+    name: 'Heavenly Pamper Palace',
+    category: 'WELLNESS',
+    description:
+      'A bright cream-and-gold flagship spa template with glamorous serenity and a guided booking preview.',
+    audience: 'Premium spas, massage studios, facialists, luxury wellness businesses',
+    palette: {
+      background: '#fffaf0',
+      surface: '#f9e9b8',
+      primary: '#b88a22',
+      text: '#513b22',
+    },
+    preview: {
+      eyebrow: 'A brighter kind of serenity',
+      headline: 'Luminous care, polished rituals, and beautifully unhurried moments.',
+      businessName: 'Heavenly Pamper Palace',
+      services: [
+        {
+          id: 'golden-glow',
+          name: 'Golden Glow Ritual',
+          duration: '90 minutes',
+          price: '£95',
+          description: 'A radiant full-body ritual with warm oils and personalised care.',
+        },
+        {
+          id: 'serenity-massage',
+          name: 'Serenity Massage',
+          duration: '60 minutes',
+          price: '£70',
+          description: 'A calming massage designed to release tension and restore ease.',
+        },
+        {
+          id: 'radiance-facial',
+          name: 'Radiance Facial',
+          duration: '60 minutes',
+          price: '£65',
+          description: 'A luminous facial ritual focused on hydration, glow, and relaxation.',
+        },
+      ],
+    },
+  },
+  {
     slug: 'editorial-beauty',
     name: 'Editorial Beauty',
     category: 'BEAUTY',
