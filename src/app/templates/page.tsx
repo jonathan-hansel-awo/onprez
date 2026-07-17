@@ -34,8 +34,8 @@ export default function TemplatesPage() {
                 Start with a presence that already feels like your brand.
               </h1>
               <p className="mt-7 max-w-3xl text-lg leading-8 text-gray-600 sm:text-xl">
-                Explore complete starting points for your business page, personalise the preview, and
-                carry your chosen design directly into OnPrez signup.
+                Explore complete starting points for your business page, personalise the preview,
+                and carry your chosen design directly into OnPrez signup.
               </p>
             </div>
 
@@ -56,8 +56,8 @@ export default function TemplatesPage() {
             </div>
 
             <p className="mt-8 max-w-3xl text-sm leading-6 text-gray-500">
-              Business names, services, prices, testimonials, locations, and imagery shown in template
-              previews are demonstration content unless explicitly stated otherwise.
+              Business names, services, prices, testimonials, locations, and imagery shown in
+              template previews are demonstration content unless explicitly stated otherwise.
             </p>
           </div>
         </section>
