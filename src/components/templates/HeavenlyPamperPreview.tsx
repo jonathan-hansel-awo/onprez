@@ -219,7 +219,9 @@ export function HeavenlyPamperPreview({
                 className="overflow-hidden rounded-[2rem] border border-[#d4ac47]/25 bg-white shadow-xl shadow-[#b88a22]/10"
               >
                 <img
-                  src={index === 0 ? images.treatment : index === 1 ? images.interior : images.facial}
+                  src={
+                    index === 0 ? images.treatment : index === 1 ? images.interior : images.facial
+                  }
                   alt={`${service.name} placeholder`}
                   className="h-64 w-full object-cover"
                 />
@@ -291,9 +293,7 @@ export function HeavenlyPamperPreview({
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b88a22]">
                   Mock booking · step {bookingStep} of 3
                 </p>
-                <h2 className="mt-2 font-serif text-3xl text-[#513b22]">
-                  {selectedService.name}
-                </h2>
+                <h2 className="mt-2 font-serif text-3xl text-[#513b22]">{selectedService.name}</h2>
               </div>
               <button
                 type="button"
@@ -319,9 +319,7 @@ export function HeavenlyPamperPreview({
                       type="button"
                       onClick={() => setSelectedTime(time)}
                       className={`rounded-2xl border p-4 text-left font-semibold ${
-                        selectedTime === time
-                          ? 'border-[#b88a22] bg-[#fff6dc]'
-                          : 'border-gray-200'
+                        selectedTime === time ? 'border-[#b88a22] bg-[#fff6dc]' : 'border-gray-200'
                       }`}
                     >
                       {time}
