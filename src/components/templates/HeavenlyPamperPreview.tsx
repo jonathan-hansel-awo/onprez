@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @next/next/no-img-element -- Remote editorial images are temporary demo placeholders. */
+
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
@@ -106,7 +108,10 @@ export function HeavenlyPamperPreview({
             </p>
             <div className="mt-2 grid gap-3 md:grid-cols-3">
               {services.map(service => (
-                <div key={service.id} className="rounded-2xl border border-[#c7a64c]/25 bg-[#fffdf8] p-3">
+                <div
+                  key={service.id}
+                  className="rounded-2xl border border-[#c7a64c]/25 bg-[#fffdf8] p-3"
+                >
                   <input
                     aria-label={`${service.name} name`}
                     value={service.name}
@@ -127,7 +132,11 @@ export function HeavenlyPamperPreview({
       </section>
 
       <section className="relative min-h-[760px] overflow-hidden">
-        <img src={images.hero} alt="Bright luxury spa interior placeholder" className="absolute inset-0 h-full w-full object-cover" />
+        <img
+          src={images.hero}
+          alt="Bright luxury spa interior placeholder"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 to-white/10" />
         <div className="relative mx-auto flex min-h-[760px] max-w-[1440px] items-center px-6 py-24 sm:px-10 lg:px-16">
           <div className="max-w-2xl">
@@ -148,7 +157,10 @@ export function HeavenlyPamperPreview({
               >
                 Book now
               </button>
-              <a href="#services" className="rounded-full border border-[#b88a22]/40 bg-white/80 px-7 py-3.5 font-semibold text-[#76571d]">
+              <a
+                href="#services"
+                className="rounded-full border border-[#b88a22]/40 bg-white/80 px-7 py-3.5 font-semibold text-[#76571d]"
+              >
                 View treatments
               </a>
             </div>
@@ -160,20 +172,31 @@ export function HeavenlyPamperPreview({
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div className="relative">
             <div className="absolute -left-5 -top-5 h-28 w-28 rounded-full bg-[#f5dc98]/45 blur-2xl" />
-            <p className="relative text-xs font-bold uppercase tracking-[0.28em] text-[#b88a22]">The experience</p>
+            <p className="relative text-xs font-bold uppercase tracking-[0.28em] text-[#b88a22]">
+              The experience
+            </p>
             <h2 className="relative mt-6 font-serif text-5xl leading-tight text-[#513b22] sm:text-6xl">
               Serenity, polished with a touch of glamour.
             </h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2">
-            <img src={images.interior} alt="Spa treatment room placeholder" className="h-[420px] w-full rounded-[2rem] object-cover shadow-2xl" />
+            <img
+              src={images.interior}
+              alt="Spa treatment room placeholder"
+              className="h-[420px] w-full rounded-[2rem] object-cover shadow-2xl"
+            />
             <div className="rounded-[2rem] border border-[#d9b85c]/25 bg-gradient-to-br from-[#fffaf0] to-[#f9e9b8] p-8 shadow-xl">
-              <p className="font-serif text-3xl text-[#5d4727]">Soft light. Thoughtful rituals. Unhurried care.</p>
+              <p className="font-serif text-3xl text-[#5d4727]">
+                Soft light. Thoughtful rituals. Unhurried care.
+              </p>
               <p className="mt-6 leading-8 text-[#77654d]">
-                Replace this demonstration copy with your philosophy, expertise, and the feeling you want every client to take home.
+                Replace this demonstration copy with your philosophy, expertise, and the feeling you
+                want every client to take home.
               </p>
               <div className="mt-10 h-px bg-gradient-to-r from-transparent via-[#c99d32] to-transparent" />
-              <p className="mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-[#a47e21]">Private appointments · Personal attention</p>
+              <p className="mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-[#a47e21]">
+                Private appointments · Personal attention
+              </p>
             </div>
           </div>
         </div>
@@ -182,12 +205,19 @@ export function HeavenlyPamperPreview({
       <section id="services" className="bg-[#fff6dc] px-5 py-24 sm:px-8 md:py-32">
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#b88a22]">Treatment menu</p>
-            <h2 className="mt-5 font-serif text-5xl text-[#513b22] sm:text-6xl">Choose your moment of calm.</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#b88a22]">
+              Treatment menu
+            </p>
+            <h2 className="mt-5 font-serif text-5xl text-[#513b22] sm:text-6xl">
+              Choose your moment of calm.
+            </h2>
           </div>
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {services.map((service, index) => (
-              <article key={service.id} className="overflow-hidden rounded-[2rem] border border-[#d4ac47]/25 bg-white shadow-xl shadow-[#b88a22]/10">
+              <article
+                key={service.id}
+                className="overflow-hidden rounded-[2rem] border border-[#d4ac47]/25 bg-white shadow-xl shadow-[#b88a22]/10"
+              >
                 <img
                   src={index === 0 ? images.treatment : index === 1 ? images.interior : images.facial}
                   alt={`${service.name} placeholder`}
@@ -198,7 +228,9 @@ export function HeavenlyPamperPreview({
                     <h3 className="font-serif text-3xl text-[#513b22]">{service.name}</h3>
                     <p className="shrink-0 text-lg font-bold text-[#b18420]">{service.price}</p>
                   </div>
-                  <p className="mt-3 text-sm text-[#7a6850]">{service.duration} · personalised demonstration treatment</p>
+                  <p className="mt-3 text-sm text-[#7a6850]">
+                    {service.duration} · personalised demonstration treatment
+                  </p>
                   <button
                     type="button"
                     onClick={() => openBooking(service)}
@@ -214,12 +246,23 @@ export function HeavenlyPamperPreview({
       </section>
 
       <section className="relative overflow-hidden px-5 py-28 text-center sm:px-8 md:py-40">
-        <img src={images.facial} alt="Luxury facial treatment placeholder" className="absolute inset-0 h-full w-full object-cover" />
+        <img
+          src={images.facial}
+          alt="Luxury facial treatment placeholder"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
         <div className="absolute inset-0 bg-white/82 backdrop-blur-[2px]" />
         <div className="relative mx-auto max-w-4xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#b88a22]">Ready when you are</p>
-          <h2 className="mt-6 font-serif text-6xl leading-tight text-[#513b22] sm:text-7xl">A brighter kind of serenity.</h2>
-          <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#725f47]">This remains a temporary demonstration until you create an account, add real content, and choose to publish.</p>
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#b88a22]">
+            Ready when you are
+          </p>
+          <h2 className="mt-6 font-serif text-6xl leading-tight text-[#513b22] sm:text-7xl">
+            A brighter kind of serenity.
+          </h2>
+          <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-[#725f47]">
+            This remains a temporary demonstration until you create an account, add real content,
+            and choose to publish.
+          </p>
           <button
             type="button"
             onClick={() => openBooking(services[0])}
@@ -231,43 +274,105 @@ export function HeavenlyPamperPreview({
       </section>
 
       <footer className="bg-[#4b3820] px-5 pb-28 pt-8 text-center text-xs leading-6 text-[#f5e7c5] md:pb-8">
-        Images, services, prices, availability, and claims are demonstration placeholders. No booking is created from this preview.
+        Images, services, prices, availability, and claims are demonstration placeholders. No
+        booking is created from this preview.
       </footer>
 
       {selectedService && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-[#2d2114]/55 p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label="Mock booking">
+        <div
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-[#2d2114]/55 p-4 backdrop-blur-sm sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mock booking"
+        >
           <div className="w-full max-w-xl rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b88a22]">Mock booking · step {bookingStep} of 3</p>
-                <h2 className="mt-2 font-serif text-3xl text-[#513b22]">{selectedService.name}</h2>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b88a22]">
+                  Mock booking · step {bookingStep} of 3
+                </p>
+                <h2 className="mt-2 font-serif text-3xl text-[#513b22]">
+                  {selectedService.name}
+                </h2>
               </div>
-              <button type="button" onClick={() => setSelectedService(null)} className="rounded-full border px-3 py-1.5 text-sm">Close</button>
+              <button
+                type="button"
+                onClick={() => setSelectedService(null)}
+                className="rounded-full border px-3 py-1.5 text-sm"
+              >
+                Close
+              </button>
             </div>
 
             {bookingStep === 1 && (
               <div className="mt-8">
                 <p className="text-[#725f47]">Choose a demonstration appointment time.</p>
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  {['Saturday · 11:30', 'Saturday · 14:00', 'Monday · 10:00', 'Tuesday · 16:30'].map(time => (
-                    <button key={time} type="button" onClick={() => setSelectedTime(time)} className={`rounded-2xl border p-4 text-left font-semibold ${selectedTime === time ? 'border-[#b88a22] bg-[#fff6dc]' : 'border-gray-200'}`}>{time}</button>
+                  {[
+                    'Saturday · 11:30',
+                    'Saturday · 14:00',
+                    'Monday · 10:00',
+                    'Tuesday · 16:30',
+                  ].map(time => (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => setSelectedTime(time)}
+                      className={`rounded-2xl border p-4 text-left font-semibold ${
+                        selectedTime === time
+                          ? 'border-[#b88a22] bg-[#fff6dc]'
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      {time}
+                    </button>
                   ))}
                 </div>
-                <button type="button" onClick={() => setBookingStep(2)} className="mt-7 w-full rounded-full bg-[#b88a22] px-6 py-3 font-bold text-white">Continue</button>
+                <button
+                  type="button"
+                  onClick={() => setBookingStep(2)}
+                  className="mt-7 w-full rounded-full bg-[#b88a22] px-6 py-3 font-bold text-white"
+                >
+                  Continue
+                </button>
               </div>
             )}
 
             {bookingStep === 2 && (
               <div className="mt-8">
-                <p className="text-[#725f47]">Enter demonstration contact details. Nothing is submitted or stored.</p>
+                <p className="text-[#725f47]">
+                  Enter demonstration contact details. Nothing is submitted or stored.
+                </p>
                 <div className="mt-5 grid gap-4">
-                  <input placeholder="Your name" className="min-h-12 rounded-2xl border border-gray-200 px-4" />
-                  <input placeholder="Email address" type="email" className="min-h-12 rounded-2xl border border-gray-200 px-4" />
-                  <input placeholder="Optional note" className="min-h-12 rounded-2xl border border-gray-200 px-4" />
+                  <input
+                    placeholder="Your name"
+                    className="min-h-12 rounded-2xl border border-gray-200 px-4"
+                  />
+                  <input
+                    placeholder="Email address"
+                    type="email"
+                    className="min-h-12 rounded-2xl border border-gray-200 px-4"
+                  />
+                  <input
+                    placeholder="Optional note"
+                    className="min-h-12 rounded-2xl border border-gray-200 px-4"
+                  />
                 </div>
                 <div className="mt-7 flex gap-3">
-                  <button type="button" onClick={() => setBookingStep(1)} className="flex-1 rounded-full border px-6 py-3 font-bold">Back</button>
-                  <button type="button" onClick={() => setBookingStep(3)} className="flex-1 rounded-full bg-[#b88a22] px-6 py-3 font-bold text-white">Review</button>
+                  <button
+                    type="button"
+                    onClick={() => setBookingStep(1)}
+                    className="flex-1 rounded-full border px-6 py-3 font-bold"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBookingStep(3)}
+                    className="flex-1 rounded-full bg-[#b88a22] px-6 py-3 font-bold text-white"
+                  >
+                    Review
+                  </button>
                 </div>
               </div>
             )}
@@ -276,16 +381,42 @@ export function HeavenlyPamperPreview({
               <div className="mt-8">
                 <div className="rounded-2xl bg-[#fff7df] p-5">
                   <dl className="space-y-3 text-sm">
-                    <div className="flex justify-between gap-4"><dt>Business</dt><dd className="font-semibold">{businessName}</dd></div>
-                    <div className="flex justify-between gap-4"><dt>Treatment</dt><dd className="font-semibold">{selectedService.name}</dd></div>
-                    <div className="flex justify-between gap-4"><dt>Time</dt><dd className="font-semibold">{selectedTime}</dd></div>
-                    <div className="flex justify-between gap-4"><dt>Price</dt><dd className="font-semibold">{selectedService.price}</dd></div>
+                    <div className="flex justify-between gap-4">
+                      <dt>Business</dt>
+                      <dd className="font-semibold">{businessName}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt>Treatment</dt>
+                      <dd className="font-semibold">{selectedService.name}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt>Time</dt>
+                      <dd className="font-semibold">{selectedTime}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt>Price</dt>
+                      <dd className="font-semibold">{selectedService.price}</dd>
+                    </div>
                   </dl>
                 </div>
-                <p className="mt-5 text-sm leading-6 text-[#725f47]">Confirming this demonstration takes you to signup. It does not create a real appointment or charge a payment.</p>
+                <p className="mt-5 text-sm leading-6 text-[#725f47]">
+                  Confirming this demonstration takes you to signup. It does not create a real
+                  appointment or charge a payment.
+                </p>
                 <div className="mt-7 flex gap-3">
-                  <button type="button" onClick={() => setBookingStep(2)} className="flex-1 rounded-full border px-6 py-3 font-bold">Back</button>
-                  <Link href={confirmHref} className="flex-1 rounded-full bg-gradient-to-r from-[#b88922] to-[#e4c26f] px-6 py-3 text-center font-bold text-white">Confirm booking</Link>
+                  <button
+                    type="button"
+                    onClick={() => setBookingStep(2)}
+                    className="flex-1 rounded-full border px-6 py-3 font-bold"
+                  >
+                    Back
+                  </button>
+                  <Link
+                    href={confirmHref}
+                    className="flex-1 rounded-full bg-gradient-to-r from-[#b88922] to-[#e4c26f] px-6 py-3 text-center font-bold text-white"
+                  >
+                    Confirm booking
+                  </Link>
                 </div>
               </div>
             )}
