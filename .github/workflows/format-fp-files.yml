@@ -1,0 +1,45 @@
+name: Format FP files
+
+on:
+  push:
+    branches:
+      - feat/fp-001-example-presence-audit
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: ${{ !startsWith(github.event.head_commit.message, 'style: apply repository prettier') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/fp-001-example-presence-audit
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Format affected files
+        run: >-
+          npx prettier --write
+          docs/product/FP-001_EXAMPLE_PRESENCE_AUDIT.md
+          docs/product/FP-003_PREMIUM_SECTION_VARIANTS.md
+          src/components/presence/premium/PremiumSectionVariants.tsx
+
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/product/FP-001_EXAMPLE_PRESENCE_AUDIT.md docs/product/FP-003_PREMIUM_SECTION_VARIANTS.md src/components/presence/premium/PremiumSectionVariants.tsx
+          git commit -m "style: apply repository prettier to FP files"
+          git push origin HEAD:feat/fp-001-example-presence-audit
