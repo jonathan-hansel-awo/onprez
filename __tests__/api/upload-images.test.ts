@@ -286,6 +286,7 @@ describe('POST /api/upload/images', () => {
         folder: 'onprez/users/user-1/profile',
         resource_type: 'image',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        backup: true,
         overwrite: false,
         unique_filename: true,
         use_filename: false,

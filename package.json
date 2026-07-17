@@ -30,6 +30,7 @@
     "db:test:customer": "tsx scripts/test-customer-data.ts",
     "db:test:rate-limit": "tsx scripts/test-rate-limit.ts",
     "db:test:migrations": "tsx scripts/test-migrations.ts",
+    "db:verify-restore": "tsx scripts/verify-database-restore.ts",
     "db:test:seed": "tsx scripts/test-seed-data.ts"
   },
   "dependencies": {
