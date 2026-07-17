@@ -7,6 +7,8 @@ import { ThemeProvider } from '@/contexts/ThemeProvider'
 import { Metadata } from 'next'
 import { StructuredData } from '@/components/seo/structured-data'
 
+export const dynamic = 'force-dynamic'
+
 interface PresencePageProps {
   params: Promise<{
     handle: string
@@ -190,29 +192,5 @@ export async function generateMetadata({ params }: PresencePageProps): Promise<M
         follow: true,
       },
     },
-  }
-}
-
-// Optional: Generate static params for popular handles (improves performance)
-export async function generateStaticParams() {
-  try {
-    // Pre-render popular handles when the database is available. Dynamic handles
-    // continue to render on demand, so builds must not depend on database access.
-    const businesses = await prisma.business.findMany({
-      where: {
-        isPublished: true,
-      },
-      select: {
-        slug: true,
-      },
-      take: 100,
-    })
-
-    return businesses.map(business => ({
-      handle: business.slug,
-    }))
-  } catch (error) {
-    console.warn('Skipping presence-page pre-rendering because the database is unavailable.', error)
-    return []
   }
 }
