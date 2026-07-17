@@ -5,8 +5,8 @@ import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getPresenceTemplate } from '@/data/presence-template-catalogue'
 import { normalisePreviewBusinessName } from '@/lib/templates/preview-personalisation'
+import { TEMPLATE_SELECTION_COOKIE } from '@/lib/templates/template-selection'
 import { sessionStorage } from '@/lib/utils/session-storage'
-import { TEMPLATE_SELECTION_COOKIE } from '@/lib/templates/apply-signup-template'
 
 export function SignupTemplateSelection() {
   const searchParams = useSearchParams()
@@ -20,7 +20,7 @@ export function SignupTemplateSelection() {
     }
 
     if (template) {
-      document.cookie = `${TEMPLATE_SELECTION_COOKIE}=${encodeURIComponent(template.slug)}; Path=/; Max-Age=3600; SameSite=Lax; Secure`
+      document.cookie = `${TEMPLATE_SELECTION_COOKIE}=${encodeURIComponent(template.slug)}; Path=/; Max-Age=3600; SameSite=Lax`
     }
   }, [businessName, template])
 
