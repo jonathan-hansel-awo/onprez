@@ -66,9 +66,17 @@ export function FullBleedHero({
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
       <div className="mx-auto w-full max-w-7xl px-5 pb-16 pt-32 text-white sm:px-8 md:pb-24">
         <div className="max-w-3xl">
-          {eyebrow && <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em]">{eyebrow}</p>}
-          <h1 className="text-5xl font-semibold leading-[0.95] sm:text-6xl lg:text-7xl">{title}</h1>
-          {description && <p className="mt-6 max-w-2xl text-lg text-white/85 sm:text-xl">{description}</p>}
+          {eyebrow && (
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em]">
+              {eyebrow}
+            </p>
+          )}
+          <h1 className="text-5xl font-semibold leading-[0.95] sm:text-6xl lg:text-7xl">
+            {title}
+          </h1>
+          {description && (
+            <p className="mt-6 max-w-2xl text-lg text-white/85 sm:text-xl">{description}</p>
+          )}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ActionLink action={primaryAction} />
             {secondaryAction && <ActionLink action={secondaryAction} secondary />}
@@ -101,7 +109,9 @@ export function SplitHero({
             {title}
           </h1>
           {description && (
-            <p className="mt-6 text-lg leading-8 text-[var(--theme-muted-text,#52525b)]">{description}</p>
+            <p className="mt-6 text-lg leading-8 text-[var(--theme-muted-text,#52525b)]">
+              {description}
+            </p>
           )}
           <div className="mt-8 flex flex-col gap-3 text-[var(--theme-primary)] sm:flex-row">
             <ActionLink action={primaryAction} />
@@ -141,7 +151,9 @@ export function EditorialIntroduction({
             {title}
           </h2>
         </div>
-        <p className="text-lg leading-8 text-[var(--theme-muted-text,#52525b)] sm:text-xl">{body}</p>
+        <p className="text-lg leading-8 text-[var(--theme-muted-text,#52525b)] sm:text-xl">
+          {body}
+        </p>
       </div>
     </section>
   )
@@ -172,9 +184,15 @@ export function PractitionerProfile({
           style={{ backgroundImage: `url(${imageUrl})` }}
         />
         <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--theme-primary)]">{role}</p>
-          <h2 className="mt-3 text-4xl font-semibold text-[var(--theme-text,#18181b)]">{name}</h2>
-          <p className="mt-6 text-lg leading-8 text-[var(--theme-muted-text,#52525b)]">{biography}</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--theme-primary)]">
+            {role}
+          </p>
+          <h2 className="mt-3 text-4xl font-semibold text-[var(--theme-text,#18181b)]">
+            {name}
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-[var(--theme-muted-text,#52525b)]">
+            {biography}
+          </p>
           {credentials.length > 0 && (
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
               {credentials.map(credential => (
@@ -202,14 +220,25 @@ export interface PremiumServiceItem {
   bookingHref: string
 }
 
-export function ImageServiceCards({ title, services }: { title: string; services: PremiumServiceItem[] }) {
+export function ImageServiceCards({
+  title,
+  services,
+}: {
+  title: string
+  services: PremiumServiceItem[]
+}) {
   return (
     <section className="px-5 py-20 sm:px-8 md:py-28">
       <div className="mx-auto max-w-7xl">
-        <h2 className="text-4xl font-semibold text-[var(--theme-text,#18181b)] sm:text-5xl">{title}</h2>
+        <h2 className="text-4xl font-semibold text-[var(--theme-text,#18181b)] sm:text-5xl">
+          {title}
+        </h2>
         <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {services.map(service => (
-            <article key={service.id} className="overflow-hidden rounded-[1.5rem] border bg-white shadow-sm">
+            <article
+              key={service.id}
+              className="overflow-hidden rounded-[1.5rem] border bg-white shadow-sm"
+            >
               {service.imageUrl && (
                 <div
                   role="img"
@@ -221,14 +250,21 @@ export function ImageServiceCards({ title, services }: { title: string; services
               <div className="p-6">
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="text-2xl font-semibold">{service.name}</h3>
-                  <span className="font-semibold text-[var(--theme-primary)]">{service.price}</span>
+                  <span className="font-semibold text-[var(--theme-primary)]">
+                    {service.price}
+                  </span>
                 </div>
-                {service.description && <p className="mt-3 text-sm leading-6 text-zinc-600">{service.description}</p>}
+                {service.description && (
+                  <p className="mt-3 text-sm leading-6 text-zinc-600">{service.description}</p>
+                )}
                 <div className="mt-5 flex items-center justify-between gap-4">
                   <span className="inline-flex items-center gap-2 text-sm text-zinc-600">
                     <Clock3 className="h-4 w-4" /> {service.duration}
                   </span>
-                  <Link href={service.bookingHref} className="font-semibold text-[var(--theme-primary)]">
+                  <Link
+                    href={service.bookingHref}
+                    className="font-semibold text-[var(--theme-primary)]"
+                  >
                     Book now
                   </Link>
                 </div>
@@ -241,24 +277,42 @@ export function ImageServiceCards({ title, services }: { title: string; services
   )
 }
 
-export function CompactServiceList({ title, services }: { title: string; services: PremiumServiceItem[] }) {
+export function CompactServiceList({
+  title,
+  services,
+}: {
+  title: string
+  services: PremiumServiceItem[]
+}) {
   return (
     <section className="px-5 py-20 sm:px-8 md:py-28">
       <div className="mx-auto max-w-4xl">
-        <h2 className="text-4xl font-semibold text-[var(--theme-text,#18181b)] sm:text-5xl">{title}</h2>
+        <h2 className="text-4xl font-semibold text-[var(--theme-text,#18181b)] sm:text-5xl">
+          {title}
+        </h2>
         <div className="mt-10 divide-y border-y">
           {services.map(service => (
-            <article key={service.id} className="grid gap-4 py-6 sm:grid-cols-[1fr_auto] sm:items-center">
+            <article
+              key={service.id}
+              className="grid gap-4 py-6 sm:grid-cols-[1fr_auto] sm:items-center"
+            >
               <div>
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                   <h3 className="text-xl font-semibold">{service.name}</h3>
                   <span className="text-sm text-zinc-500">{service.duration}</span>
                 </div>
-                {service.description && <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">{service.description}</p>}
+                {service.description && (
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+                    {service.description}
+                  </p>
+                )}
               </div>
               <div className="flex items-center justify-between gap-5 sm:justify-end">
                 <span className="font-semibold">{service.price}</span>
-                <Link href={service.bookingHref} className="rounded-full bg-[var(--theme-primary)] px-5 py-2.5 text-sm font-semibold text-white">
+                <Link
+                  href={service.bookingHref}
+                  className="rounded-full bg-[var(--theme-primary)] px-5 py-2.5 text-sm font-semibold text-white"
+                >
                   Book
                 </Link>
               </div>
@@ -307,7 +361,10 @@ export function TestimonialFeature({
         {rating && (
           <div className="mb-7 flex justify-center gap-1" aria-label={`${rating} out of 5 stars`}>
             {Array.from({ length: rating }, (_, index) => (
-              <Star key={index} className="h-5 w-5 fill-current text-[var(--theme-primary)]" />
+              <Star
+                key={index}
+                className="h-5 w-5 fill-current text-[var(--theme-primary)]"
+              />
             ))}
           </div>
         )}
@@ -328,7 +385,10 @@ export function TrustStrip({ items }: { items: Array<{ label: string; icon?: Rea
     <section className="border-y bg-[var(--theme-surface,#fafafa)] px-5 py-6 sm:px-8">
       <ul className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {items.map(item => (
-          <li key={item.label} className="flex items-center justify-center gap-3 text-center text-sm font-semibold">
+          <li
+            key={item.label}
+            className="flex items-center justify-center gap-3 text-center text-sm font-semibold"
+          >
             {item.icon || <ShieldCheck className="h-5 w-5 text-[var(--theme-primary)]" />}
             {item.label}
           </li>
@@ -355,7 +415,10 @@ export function LocationHoursPanel({
           <h2 className="mt-5 text-3xl font-semibold">Visit us</h2>
           <p className="mt-4 leading-7 text-zinc-600">{address}</p>
           {directionsHref && (
-            <Link href={directionsHref} className="mt-6 inline-flex font-semibold text-[var(--theme-primary)]">
+            <Link
+              href={directionsHref}
+              className="mt-6 inline-flex font-semibold text-[var(--theme-primary)]"
+            >
               Get directions
             </Link>
           )}
@@ -393,7 +456,9 @@ export function PremiumFaqAccordion({
             <details key={item.id} className="group py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold">
                 {item.question}
-                <span className="text-2xl font-light transition-transform group-open:rotate-45">+</span>
+                <span className="text-2xl font-light transition-transform group-open:rotate-45">
+                  +
+                </span>
               </summary>
               <p className="max-w-3xl pb-2 pt-4 leading-7 text-zinc-600">{item.answer}</p>
             </details>
@@ -419,11 +484,18 @@ export function BookingCtaBanner({
     <section className="px-5 py-16 sm:px-8">
       <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 rounded-[2rem] bg-[var(--theme-primary)] p-8 text-white sm:p-12 lg:flex-row lg:items-center">
         <div className="max-w-3xl">
-          {eyebrow && <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">{eyebrow}</p>}
+          {eyebrow && (
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">
+              {eyebrow}
+            </p>
+          )}
           <h2 className="mt-3 text-4xl font-semibold sm:text-5xl">{title}</h2>
           {description && <p className="mt-4 text-lg text-white/80">{description}</p>}
         </div>
-        <Link href={action.href} className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-[var(--theme-primary)]">
+        <Link
+          href={action.href}
+          className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-[var(--theme-primary)]"
+        >
           <Calendar className="h-5 w-5" /> {action.label}
         </Link>
       </div>
@@ -434,7 +506,10 @@ export function BookingCtaBanner({
 export function StickyMobileBookingCta({ action }: { action: ActionProps }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur md:hidden">
-      <Link href={action.href} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--theme-primary)] px-5 py-3 font-semibold text-white">
+      <Link
+        href={action.href}
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--theme-primary)] px-5 py-3 font-semibold text-white"
+      >
         <Calendar className="h-5 w-5" /> {action.label}
       </Link>
     </div>
@@ -459,12 +534,17 @@ export function InstagramSocialSection({
           <div>
             <div className="flex items-center gap-3 text-[var(--theme-primary)]">
               <Instagram className="h-6 w-6" />
-              <span className="text-sm font-semibold uppercase tracking-[0.16em]">Instagram</span>
+              <span className="text-sm font-semibold uppercase tracking-[0.16em]">
+                Instagram
+              </span>
             </div>
             <h2 className="mt-4 text-4xl font-semibold sm:text-5xl">{handle}</h2>
             {description && <p className="mt-3 max-w-2xl text-zinc-600">{description}</p>}
           </div>
-          <Link href={href} className="inline-flex items-center gap-2 font-semibold text-[var(--theme-primary)]">
+          <Link
+            href={href}
+            className="inline-flex items-center gap-2 font-semibold text-[var(--theme-primary)]"
+          >
             Follow on Instagram <Sparkles className="h-4 w-4" />
           </Link>
         </div>
@@ -487,8 +567,20 @@ export function InstagramSocialSection({
 }
 
 export const defaultTrustItems = [
-  { label: 'Qualified professional', icon: <Award className="h-5 w-5 text-[var(--theme-primary)]" /> },
-  { label: 'Easy online booking', icon: <Calendar className="h-5 w-5 text-[var(--theme-primary)]" /> },
-  { label: 'Clear service information', icon: <CheckCircle2 className="h-5 w-5 text-[var(--theme-primary)]" /> },
-  { label: 'Customer-first care', icon: <ShieldCheck className="h-5 w-5 text-[var(--theme-primary)]" /> },
+  {
+    label: 'Qualified professional',
+    icon: <Award className="h-5 w-5 text-[var(--theme-primary)]" />,
+  },
+  {
+    label: 'Easy online booking',
+    icon: <Calendar className="h-5 w-5 text-[var(--theme-primary)]" />,
+  },
+  {
+    label: 'Clear service information',
+    icon: <CheckCircle2 className="h-5 w-5 text-[var(--theme-primary)]" />,
+  },
+  {
+    label: 'Customer-first care',
+    icon: <ShieldCheck className="h-5 w-5 text-[var(--theme-primary)]" />,
+  },
 ]
