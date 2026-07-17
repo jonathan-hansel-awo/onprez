@@ -1,3 +1,6 @@
 docs/product/FP-001_EXAMPLE_PRESENCE_AUDIT.md
 docs/product/FP-003_PREMIUM_SECTION_VARIANTS.md
 src/components/presence/premium/PremiumSectionVariants.tsx
+src/app/templates/\[slug\]/page.tsx
+src/components/landing/examples-carousel.tsx
+src/components/templates/TemplateGallery.tsx
