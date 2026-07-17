@@ -87,7 +87,8 @@ export function createSignupPresencePageContent(
       isVisible: true,
       data: {
         title: 'Services',
-        description: 'Add your real services, prices, durations, and availability before publishing.',
+        description:
+          'Add your real services, prices, durations, and availability before publishing.',
         layout: template.category === 'PROFESSIONAL' ? 'list' : 'grid',
         showPrices: true,
       },
