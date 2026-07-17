@@ -13,6 +13,7 @@ import {
   StickyMobileBookingCta,
   TrustStrip,
 } from '@/components/presence/premium'
+import { LuxuryWellnessPreview } from '@/components/templates/LuxuryWellnessPreview'
 import type { TemplateCatalogueItem } from '@/data/presence-template-catalogue'
 import {
   buildTemplateSignupHref,
@@ -38,6 +39,18 @@ export function TemplatePreviewPersonaliser({
     () => buildTemplateSignupHref(template.slug, businessName),
     [businessName, template.slug]
   )
+
+  if (template.slug === 'serene-wellness') {
+    return (
+      <LuxuryWellnessPreview
+        template={template}
+        businessName={businessName}
+        businessNameInput={businessNameInput}
+        setBusinessNameInput={setBusinessNameInput}
+        signupHref={signupHref}
+      />
+    )
+  }
 
   const themeStyle = {
     '--theme-background': template.palette.background,

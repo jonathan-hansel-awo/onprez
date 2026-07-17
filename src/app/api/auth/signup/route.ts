@@ -1,8 +1,12 @@
+import { Prisma } from '@prisma/client'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { signupUser } from '@/lib/services/signup'
 import { signupSchema } from '@/lib/validation/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { apiError, logApiError } from '@/lib/api/error-response'
+import { prisma } from '@/lib/prisma'
+import { createSignupPresencePageContent } from '@/lib/templates/apply-signup-template'
+import { TEMPLATE_SELECTION_COOKIE } from '@/lib/templates/template-selection'
 
 function getClientIp(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -73,7 +77,36 @@ export async function POST(request: NextRequest) {
       return apiError('BAD_REQUEST', safeSignupFailureMessage(result.error), 400)
     }
 
-    return NextResponse.json(
+    const requestedTemplateSlug = request.cookies.get(TEMPLATE_SELECTION_COOKIE)?.value
+    let appliedTemplateName: string | undefined
+
+    if (result.businessId && requestedTemplateSlug) {
+      try {
+        const applied = createSignupPresencePageContent(
+          validation.data.businessName.trim(),
+          validation.data.businessCategory,
+          requestedTemplateSlug
+        )
+
+        if (applied.templateSlug) {
+          await prisma.page.updateMany({
+            where: {
+              businessId: result.businessId,
+              slug: 'home',
+              isPublished: false,
+            },
+            data: {
+              content: applied.sections as unknown as Prisma.InputJsonValue,
+            },
+          })
+          appliedTemplateName = applied.templateName
+        }
+      } catch (error) {
+        logApiError('signup-template-application', error)
+      }
+    }
+
+    const response = NextResponse.json(
       {
         success: true,
         message: 'Account created successfully. Please check your email to verify your account.',
@@ -81,10 +114,20 @@ export async function POST(request: NextRequest) {
           email: result.email,
           handle: result.handle,
           requiresVerification: result.requiresVerification,
+          appliedTemplateName,
         },
       },
       { status: 201 }
     )
+
+    response.cookies.set(TEMPLATE_SELECTION_COOKIE, '', {
+      path: '/',
+      maxAge: 0,
+      sameSite: 'lax',
+      secure: true,
+    })
+
+    return response
   } catch (error) {
     logApiError('signup-api', error)
     return apiError('INTERNAL_ERROR', 'An error occurred during signup. Please try again.', 500)

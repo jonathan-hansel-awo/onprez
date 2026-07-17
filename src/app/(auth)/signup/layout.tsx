@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
+import { SignupTemplateSelection } from '@/components/templates/SignupTemplateSelection'
 
 export const metadata: Metadata = {
   title: 'Create Your Account | OnPrez',
@@ -18,5 +20,12 @@ export const metadata: Metadata = {
 }
 
 export default function SignupLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <>
+      <Suspense fallback={null}>
+        <SignupTemplateSelection />
+      </Suspense>
+      {children}
+    </>
+  )
 }
