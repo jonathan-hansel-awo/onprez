@@ -23,7 +23,6 @@ export function Header() {
     setIsScrolled(latest > 50)
   })
 
-  // Prevent scroll when menu is open
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden'
@@ -36,9 +35,10 @@ export function Header() {
   }, [isMenuOpen])
 
   const navLinks = [
-    { href: '#features', label: 'Features' },
-    { href: '#pricing', label: 'Pricing' },
-    { href: '#examples', label: 'Examples' },
+    { href: '/#features', label: 'Features' },
+    { href: '/#pricing', label: 'Pricing' },
+    { href: '/templates', label: 'Templates' },
+    { href: '/#examples', label: 'Examples' },
   ]
 
   return (
@@ -53,23 +53,20 @@ export function Header() {
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
             <Logo />
 
-            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
               {navLinks.map(link => (
-                <a
+                <Link
                   key={link.href}
                   href={link.href}
                   className="text-gray-700 hover:text-onprez-blue font-medium transition-colors"
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
             </nav>
 
-            {/* Desktop CTA Buttons / User Menu */}
             <div className="hidden md:flex items-center gap-4">
               {!loading && (
                 <>
@@ -100,7 +97,6 @@ export function Header() {
               )}
             </div>
 
-            {/* Mobile Menu Button */}
             <button
               className="md:hidden text-gray-700 hover:text-onprez-blue"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -112,7 +108,6 @@ export function Header() {
         </div>
       </motion.header>
 
-      {/* Mobile Menu */}
       {mounted && (
         <motion.div
           className="fixed inset-0 z-30 md:hidden"
@@ -124,27 +119,28 @@ export function Header() {
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           style={{ pointerEvents: isMenuOpen ? 'auto' : 'none' }}
         >
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setIsMenuOpen(false)}
           />
 
-          {/* Menu Content */}
           <div className="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-2xl p-6">
             <nav className="flex flex-col gap-6 mt-16">
               {navLinks.map((link, index) => (
-                <motion.a
+                <motion.div
                   key={link.href}
-                  href={link.href}
-                  className="text-gray-700 hover:text-onprez-blue font-medium text-lg"
-                  onClick={() => setIsMenuOpen(false)}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  {link.label}
-                </motion.a>
+                  <Link
+                    href={link.href}
+                    className="text-gray-700 hover:text-onprez-blue font-medium text-lg"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </motion.div>
               ))}
 
               <div className="pt-6 border-t border-gray-200 space-y-4">
