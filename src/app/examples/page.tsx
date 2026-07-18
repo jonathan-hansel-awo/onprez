@@ -16,8 +16,19 @@ const examples = [
     description:
       'A luminous cream-and-gold presence with editable treatments and an interactive customer booking journey.',
     href: '/templates/heavenly-pamper-palace?businessName=Heavenly%20Pamper%20Palace&view=client',
+    personaliseHref: '/templates/heavenly-pamper-palace',
     image:
       'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=85',
+  },
+  {
+    name: 'Regent Barber Co.',
+    category: 'Premium barber and grooming',
+    description:
+      'A charcoal-and-copper barber presence with editable services, strong appointment calls to action, and a fast booking journey.',
+    href: '/templates/regent-barber?businessName=Regent%20Barber%20Co.&view=client',
+    personaliseHref: '/templates/regent-barber',
+    image:
+      'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1600&q=85',
   },
 ]
 
@@ -71,7 +82,9 @@ export default function ExamplesPage() {
                   </div>
                   <div className="p-7 sm:p-8">
                     <h2 className="text-3xl font-bold text-gray-900">{example.name}</h2>
-                    <p className="mt-4 max-w-2xl leading-7 text-gray-600">{example.description}</p>
+                    <p className="mt-4 max-w-2xl leading-7 text-gray-600">
+                      {example.description}
+                    </p>
                     <div className="mt-7 flex flex-wrap gap-3">
                       <Link
                         href={example.href}
@@ -80,7 +93,7 @@ export default function ExamplesPage() {
                         View live example
                       </Link>
                       <Link
-                        href="/templates/heavenly-pamper-palace"
+                        href={example.personaliseHref}
                         className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700"
                       >
                         Personalise template
