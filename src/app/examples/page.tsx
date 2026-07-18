@@ -71,9 +71,7 @@ export default function ExamplesPage() {
                   </div>
                   <div className="p-7 sm:p-8">
                     <h2 className="text-3xl font-bold text-gray-900">{example.name}</h2>
-                    <p className="mt-4 max-w-2xl leading-7 text-gray-600">
-                      {example.description}
-                    </p>
+                    <p className="mt-4 max-w-2xl leading-7 text-gray-600">{example.description}</p>
                     <div className="mt-7 flex flex-wrap gap-3">
                       <Link
                         href={example.href}
