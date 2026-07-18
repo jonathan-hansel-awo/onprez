@@ -114,6 +114,48 @@ export const presenceTemplateCatalogue: TemplateCatalogueItem[] = [
     },
   },
   {
+    slug: 'regent-barber',
+    name: 'Regent Barber',
+    category: 'BEAUTY',
+    description:
+      'A premium charcoal-and-copper barber template built around precision, confidence, and fast appointment booking.',
+    audience: 'Barber shops, grooming studios, independent barbers, men’s salons',
+    palette: {
+      background: '#11110f',
+      surface: '#191916',
+      primary: '#c87941',
+      text: '#f5f0e8',
+    },
+    preview: {
+      eyebrow: 'Precision, craft, confidence',
+      headline: 'Sharp cuts, considered detail, and an appointment built around your style.',
+      businessName: 'Regent Barber Co.',
+      services: [
+        {
+          id: 'signature-cut',
+          name: 'Signature Cut',
+          duration: '45 minutes',
+          price: '£28',
+          description: 'A consultation-led cut finished and styled with care.',
+        },
+        {
+          id: 'skin-fade',
+          name: 'Skin Fade',
+          duration: '50 minutes',
+          price: '£32',
+          description: 'A clean, detailed fade tailored to your preferred finish.',
+        },
+        {
+          id: 'cut-beard',
+          name: 'Cut & Beard',
+          duration: '70 minutes',
+          price: '£42',
+          description: 'A complete cut, beard shape, line-up, and finishing service.',
+        },
+      ],
+    },
+  },
+  {
     slug: 'editorial-beauty',
     name: 'Editorial Beauty',
     category: 'BEAUTY',
