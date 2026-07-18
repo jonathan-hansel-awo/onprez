@@ -35,9 +35,6 @@ const examples = [
 export default function ExamplesPage() {
   return (
     <>
-      <a href="#main-content" className="skip-to-main">
-        Skip to main content
-      </a>
       <Header />
       <ScrollProgressEnhanced interactive={true} />
 
