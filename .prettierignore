@@ -6,3 +6,4 @@ src/components/landing/examples-carousel.tsx
 src/components/templates/TemplateGallery.tsx
 src/components/templates/LuxuryWellnessPreview.tsx
 src/components/templates/HeavenlyPamperPreview.tsx
+src/components/templates/RegentBarberPreview.tsx
