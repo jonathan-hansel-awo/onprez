@@ -26,13 +26,13 @@ interface HeavenlyPamperPreviewProps {
 const images = {
   hero: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1800&q=85',
   treatment:
-    'https://unsplash.com/photos/person-holding-white-round-ornament-SMwCQZWayj0',
+    'https://images.unsplash.com/photo-1677682693087-711e24efaa69?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   facial:
     'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=85',
   interior:
     'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1400&q=85',
   owner:
-    'https://unsplash.com/photos/a-woman-covering-her-eyes-with-her-hands-CdX2mUPOFbw',
+    'https://images.unsplash.com/photo-1646831055574-b945ace1b495?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
 }
 
 export function HeavenlyPamperPreview({
