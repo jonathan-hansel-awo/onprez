@@ -42,8 +42,8 @@ export default function ExamplesPage() {
               See what a polished presence can feel like.
             </h1>
             <p className="mt-7 max-w-3xl text-lg leading-8 text-gray-600 sm:text-xl">
-              Explore customer-facing examples, browse services, and try their booking journeys. More
-              industries and visual styles will be added here over time.
+              Explore customer-facing examples, browse services, and try their booking journeys.
+              More industries and visual styles will be added here over time.
             </p>
           </div>
         </section>
@@ -71,7 +71,9 @@ export default function ExamplesPage() {
                   </div>
                   <div className="p-7 sm:p-8">
                     <h2 className="text-3xl font-bold text-gray-900">{example.name}</h2>
-                    <p className="mt-4 max-w-2xl leading-7 text-gray-600">{example.description}</p>
+                    <p className="mt-4 max-w-2xl leading-7 text-gray-600">
+                      {example.description}
+                    </p>
                     <div className="mt-7 flex flex-wrap gap-3">
                       <Link
                         href={example.href}
