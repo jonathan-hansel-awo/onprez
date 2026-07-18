@@ -14,6 +14,7 @@ import {
   TrustStrip,
 } from '@/components/presence/premium'
 import { HeavenlyPamperPreview } from '@/components/templates/HeavenlyPamperPreview'
+import { RegentBarberPreview } from '@/components/templates/RegentBarberPreview'
 import type { TemplateCatalogueItem } from '@/data/presence-template-catalogue'
 import {
   buildTemplateSignupHref,
@@ -45,6 +46,19 @@ export function TemplatePreviewPersonaliser({
   if (template.slug === 'heavenly-pamper-palace') {
     return (
       <HeavenlyPamperPreview
+        template={template}
+        businessName={businessName}
+        businessNameInput={businessNameInput}
+        setBusinessNameInput={setBusinessNameInput}
+        signupHref={signupHref}
+        initialClientView={initialClientView}
+      />
+    )
+  }
+
+  if (template.slug === 'regent-barber') {
+    return (
+      <RegentBarberPreview
         template={template}
         businessName={businessName}
         businessNameInput={businessNameInput}
