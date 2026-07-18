@@ -11,10 +11,6 @@ export const metadata: Metadata = {
 export default function TemplatesPage() {
   return (
     <>
-      <a href="#main-content" className="skip-to-main">
-        Skip to main content
-      </a>
-
       <Header />
       <ScrollProgressEnhanced interactive={true} />
 
