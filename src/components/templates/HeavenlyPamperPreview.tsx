@@ -20,6 +20,7 @@ interface HeavenlyPamperPreviewProps {
   businessNameInput: string
   setBusinessNameInput: Dispatch<SetStateAction<string>>
   signupHref: string
+  initialClientView?: boolean
 }
 
 const images = {
@@ -38,22 +39,26 @@ export function HeavenlyPamperPreview({
   businessNameInput,
   setBusinessNameInput,
   signupHref,
+  initialClientView = false,
 }: HeavenlyPamperPreviewProps) {
   const [services, setServices] = useState<DemoService[]>([
     { id: 'golden-glow', name: 'Golden Glow Ritual', price: '£95', duration: '90 min' },
     { id: 'serenity-massage', name: 'Serenity Massage', price: '£70', duration: '60 min' },
     { id: 'radiance-facial', name: 'Radiance Facial', price: '£65', duration: '60 min' },
   ])
-  const [selectedService, setSelectedService] = useState<DemoService | null>(null)
+  const [selectedServiceId, setSelectedServiceId] = useState('golden-glow')
+  const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [bookingStep, setBookingStep] = useState(1)
   const [selectedTime, setSelectedTime] = useState('Saturday · 11:30')
-  const [isClientView, setIsClientView] = useState(false)
+  const [isClientView, setIsClientView] = useState(initialClientView)
+
+  const selectedService =
+    services.find(service => service.id === selectedServiceId) || services[0]
 
   const confirmHref = useMemo(() => {
-    if (!selectedService) return signupHref
     const separator = signupHref.includes('?') ? '&' : '?'
     return `${signupHref}${separator}demoService=${encodeURIComponent(selectedService.name)}`
-  }, [selectedService, signupHref])
+  }, [selectedService.name, signupHref])
 
   const updateService = (id: string, field: 'name' | 'price', value: string) => {
     setServices(current =>
@@ -61,9 +66,10 @@ export function HeavenlyPamperPreview({
     )
   }
 
-  const openBooking = (service: DemoService) => {
-    setSelectedService(service)
+  const openBooking = (serviceId?: string) => {
+    if (serviceId) setSelectedServiceId(serviceId)
     setBookingStep(1)
+    setIsBookingOpen(true)
   }
 
   return (
@@ -174,7 +180,7 @@ export function HeavenlyPamperPreview({
             <div className="mt-10 flex flex-wrap gap-4">
               <button
                 type="button"
-                onClick={() => openBooking(services[0])}
+                onClick={() => openBooking()}
                 className="rounded-full bg-gradient-to-r from-[#b88922] to-[#e4c26f] px-7 py-3.5 font-bold text-white shadow-xl shadow-[#bb8d2b]/25"
               >
                 Book now
@@ -192,12 +198,11 @@ export function HeavenlyPamperPreview({
 
       <section className="bg-white px-5 py-24 sm:px-8 md:py-32">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-          <div className="relative">
-            <div className="absolute -left-5 -top-5 h-28 w-28 rounded-full bg-[#f5dc98]/45 blur-2xl" />
-            <p className="relative text-xs font-bold uppercase tracking-[0.28em] text-[#b88a22]">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#b88a22]">
               The experience
             </p>
-            <h2 className="relative mt-6 font-serif text-5xl leading-tight text-[#513b22] sm:text-6xl">
+            <h2 className="mt-6 font-serif text-5xl leading-tight text-[#513b22] sm:text-6xl">
               Serenity, polished with a touch of glamour.
             </h2>
           </div>
@@ -214,10 +219,6 @@ export function HeavenlyPamperPreview({
               <p className="mt-6 leading-8 text-[#77654d]">
                 Personalised treatments, careful attention, and a peaceful setting designed around
                 every client.
-              </p>
-              <div className="mt-10 h-px bg-gradient-to-r from-transparent via-[#c99d32] to-transparent" />
-              <p className="mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-[#a47e21]">
-                Private appointments · Personal attention
               </p>
             </div>
           </div>
@@ -253,7 +254,7 @@ export function HeavenlyPamperPreview({
                   <p className="mt-3 text-sm text-[#7a6850]">{service.duration}</p>
                   <button
                     type="button"
-                    onClick={() => openBooking(service)}
+                    onClick={() => openBooking(service.id)}
                     className="mt-7 w-full rounded-full border border-[#b88a22]/35 px-5 py-3 font-bold text-[#8a6518] transition hover:bg-[#b88a22] hover:text-white"
                   >
                     Book now
@@ -284,7 +285,7 @@ export function HeavenlyPamperPreview({
           </p>
           <button
             type="button"
-            onClick={() => openBooking(services[0])}
+            onClick={() => openBooking()}
             className="mt-10 rounded-full bg-gradient-to-r from-[#b88922] to-[#e4c26f] px-8 py-4 font-bold text-white shadow-xl"
           >
             Book a treatment
@@ -299,12 +300,12 @@ export function HeavenlyPamperPreview({
         </footer>
       )}
 
-      {selectedService && (
+      {isBookingOpen && (
         <div
           className="fixed inset-0 z-[100] flex items-end justify-center bg-[#2d2114]/55 p-4 backdrop-blur-sm sm:items-center"
           role="dialog"
           aria-modal="true"
-          aria-label="Mock booking"
+          aria-label="Booking"
         >
           <div className="w-full max-w-xl rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8">
             <div className="flex items-start justify-between gap-4">
@@ -314,11 +315,13 @@ export function HeavenlyPamperPreview({
                     Mock booking · step {bookingStep} of 3
                   </p>
                 )}
-                <h2 className="mt-2 font-serif text-3xl text-[#513b22]">{selectedService.name}</h2>
+                <h2 className="mt-2 font-serif text-3xl text-[#513b22]">
+                  {selectedService.name}
+                </h2>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedService(null)}
+                onClick={() => setIsBookingOpen(false)}
                 className="rounded-full border px-3 py-1.5 text-sm"
               >
                 Close
@@ -326,31 +329,53 @@ export function HeavenlyPamperPreview({
             </div>
 
             {bookingStep === 1 && (
-              <div className="mt-8">
-                <p className="text-[#725f47]">Choose an appointment time.</p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  {[
-                    'Saturday · 11:30',
-                    'Saturday · 14:00',
-                    'Monday · 10:00',
-                    'Tuesday · 16:30',
-                  ].map(time => (
-                    <button
-                      key={time}
-                      type="button"
-                      onClick={() => setSelectedTime(time)}
-                      className={`rounded-2xl border p-4 text-left font-semibold ${
-                        selectedTime === time ? 'border-[#b88a22] bg-[#fff6dc]' : 'border-gray-200'
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
+              <div className="mt-8 space-y-6">
+                <div>
+                  <label
+                    htmlFor="booking-service"
+                    className="text-sm font-semibold text-[#513b22]"
+                  >
+                    Select a treatment
+                  </label>
+                  <select
+                    id="booking-service"
+                    value={selectedServiceId}
+                    onChange={event => setSelectedServiceId(event.target.value)}
+                    className="mt-2 min-h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 font-semibold text-[#513b22]"
+                  >
+                    {services.map(service => (
+                      <option key={service.id} value={service.id}>
+                        {service.name} · {service.duration} · {service.price}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[#725f47]">Choose an appointment time.</p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {[
+                      'Saturday · 11:30',
+                      'Saturday · 14:00',
+                      'Monday · 10:00',
+                      'Tuesday · 16:30',
+                    ].map(time => (
+                      <button
+                        key={time}
+                        type="button"
+                        onClick={() => setSelectedTime(time)}
+                        className={`rounded-2xl border p-4 text-left font-semibold ${
+                          selectedTime === time ? 'border-[#b88a22] bg-[#fff6dc]' : 'border-gray-200'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setBookingStep(2)}
-                  className="mt-7 w-full rounded-full bg-[#b88a22] px-6 py-3 font-bold text-white"
+                  className="w-full rounded-full bg-[#b88a22] px-6 py-3 font-bold text-white"
                 >
                   Continue
                 </button>

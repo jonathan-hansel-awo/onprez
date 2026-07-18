@@ -23,11 +23,13 @@ import {
 interface TemplatePreviewPersonaliserProps {
   template: TemplateCatalogueItem
   initialBusinessName?: string
+  initialClientView?: boolean
 }
 
 export function TemplatePreviewPersonaliser({
   template,
   initialBusinessName,
+  initialClientView = false,
 }: TemplatePreviewPersonaliserProps) {
   const [businessNameInput, setBusinessNameInput] = useState(
     normalisePreviewBusinessName(initialBusinessName) || template.preview.businessName
@@ -48,6 +50,7 @@ export function TemplatePreviewPersonaliser({
         businessNameInput={businessNameInput}
         setBusinessNameInput={setBusinessNameInput}
         signupHref={signupHref}
+        initialClientView={initialClientView}
       />
     )
   }

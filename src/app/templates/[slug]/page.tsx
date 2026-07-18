@@ -9,7 +9,10 @@ import { normalisePreviewBusinessName } from '@/lib/templates/preview-personalis
 
 interface TemplatePreviewPageProps {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ businessName?: string | string[] }>
+  searchParams: Promise<{
+    businessName?: string | string[]
+    view?: string | string[]
+  }>
 }
 
 export function generateStaticParams() {
@@ -45,11 +48,13 @@ export default async function TemplatePreviewPage({
   const requestedBusinessName = Array.isArray(query.businessName)
     ? query.businessName[0]
     : query.businessName
+  const requestedView = Array.isArray(query.view) ? query.view[0] : query.view
 
   return (
     <TemplatePreviewPersonaliser
       template={template}
       initialBusinessName={normalisePreviewBusinessName(requestedBusinessName)}
+      initialClientView={requestedView === 'client'}
     />
   )
 }
