@@ -31,6 +31,8 @@ const images = {
     'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=85',
   interior:
     'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1400&q=85',
+  owner:
+    'https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=1200&q=85',
 }
 
 export function HeavenlyPamperPreview({
@@ -221,6 +223,48 @@ export function HeavenlyPamperPreview({
                 every client.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="overflow-hidden bg-[#4b3820] px-5 py-24 text-[#fff8e8] sm:px-8 md:py-32">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div className="relative mx-auto w-full max-w-xl">
+            <div className="absolute -inset-4 rounded-[2.5rem] border border-[#e0bd64]/30" />
+            <img
+              src={images.owner}
+              alt="Placeholder portrait for the owner of Heavenly Pamper Palace"
+              className="relative aspect-[4/5] w-full rounded-[2rem] object-cover shadow-2xl"
+            />
+            {!isClientView && (
+              <span className="absolute bottom-5 left-5 rounded-full bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#72551d] shadow-lg">
+                Replaceable owner photo
+              </span>
+            )}
+          </div>
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#e2bf67]">
+              Meet the owner
+            </p>
+            <h2 className="mt-6 font-serif text-5xl leading-tight sm:text-6xl">
+              Care that begins with listening.
+            </h2>
+            <p className="mt-7 text-lg leading-8 text-[#f0dfbd]">
+              Welcome to {businessName}. Every appointment is designed to feel personal, unrushed,
+              and centred on what you need from your time here.
+            </p>
+            <p className="mt-5 leading-8 text-[#d9c49e]">
+              Use this space to introduce the owner, share her qualifications and experience, and
+              explain the care and values behind the business. The portrait and biography can be
+              replaced after choosing this template.
+            </p>
+            <button
+              type="button"
+              onClick={() => openBooking()}
+              className="mt-9 rounded-full bg-gradient-to-r from-[#c89a31] to-[#e4c26f] px-7 py-3.5 font-bold text-white shadow-xl"
+            >
+              Book an appointment
+            </button>
           </div>
         </div>
       </section>
