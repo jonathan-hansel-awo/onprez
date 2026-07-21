@@ -5,6 +5,7 @@
 import { NextRequest } from 'next/server'
 import { GET as getNotes, PUT as updateNotes } from '@/app/api/dashboard/bookings/[id]/notes/route'
 import { GET as getStats } from '@/app/api/dashboard/stats/route'
+import { GET as getCustomers } from '@/app/api/dashboard/customers/route'
 import { POST as quickCreateBooking } from '@/app/api/dashboard/bookings/quick-create/route'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import {
@@ -50,6 +51,7 @@ jest.mock('@/lib/prisma', () => ({
     customer: {
       count: jest.fn(),
       findFirst: jest.fn(),
+      findMany: jest.fn(),
     },
     business: {
       findUnique: jest.fn(),
@@ -76,6 +78,7 @@ const mockedPrisma = prisma as unknown as {
   customer: {
     count: jest.Mock
     findFirst: jest.Mock
+    findMany: jest.Mock
   }
   business: {
     findUnique: jest.Mock
@@ -196,6 +199,23 @@ describe('dashboard authorization', () => {
     expect(mockedResolveReadableBusinessContext).toHaveBeenCalledWith(
       'user-1',
       expect.any(NextRequest)
+    )
+  })
+
+  it('GET dashboard customers is tenant-scoped through readable business context', async () => {
+    mockedPrisma.customer.findMany.mockResolvedValue([])
+
+    const response = await getCustomers(createRequest('/api/dashboard/customers'))
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(json.success).toBe(true)
+    expect(mockedResolveReadableBusinessContext).toHaveBeenCalledWith(
+      'user-1',
+      expect.any(NextRequest)
+    )
+    expect(mockedPrisma.customer.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { businessId: 'business-1' } })
     )
   })
 
