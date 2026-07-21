@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Input } from '@/components/form/input'
 import { TextArea } from '@/components/form/text-area'
 import { Select } from '@/components/form/select'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/form/label'
-import { CheckCircle, AlertCircle, Mail, Phone, User, MessageSquare } from 'lucide-react'
+import { CheckCircle, Mail, Phone, User, MessageSquare } from 'lucide-react'
+import { ActionFeedback } from '@/components/ui/action-feedback'
 
 interface InquiryFormProps {
   businessId: string
@@ -28,6 +28,7 @@ export function InquiryForm({ businessId, businessName, className }: InquiryForm
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const submissionInProgressRef = useRef(false)
 
   function updateField(field: keyof typeof formData, value: string) {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -35,6 +36,9 @@ export function InquiryForm({ businessId, businessName, className }: InquiryForm
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (submissionInProgressRef.current) return
+
+    submissionInProgressRef.current = true
     setLoading(true)
     setError(null)
 
@@ -69,9 +73,10 @@ export function InquiryForm({ businessId, businessName, className }: InquiryForm
       } else {
         setError(data.error || 'Failed to send inquiry. Please try again.')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Something went wrong. Please try again later.')
     } finally {
+      submissionInProgressRef.current = false
       setLoading(false)
     }
   }
@@ -110,13 +115,16 @@ export function InquiryForm({ businessId, businessName, className }: InquiryForm
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5" aria-busy={loading}>
         {/* Error Message */}
         {error && (
-          <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
+          <ActionFeedback
+            status="error"
+            title="Inquiry not sent"
+            message={error}
+            actionLabel="Review and try again"
+            onAction={() => setError(null)}
+          />
         )}
 
         {/* Name */}

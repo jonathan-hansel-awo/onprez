@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 export function useAnnounce() {
   const announcerRef = useRef<HTMLDivElement | null>(null)
@@ -19,11 +19,11 @@ export function useAnnounce() {
     }
   }, [])
 
-  const announce = (message: string) => {
+  const announce = useCallback((message: string) => {
     if (announcerRef.current) {
       announcerRef.current.textContent = message
     }
-  }
+  }, [])
 
   return announce
 }

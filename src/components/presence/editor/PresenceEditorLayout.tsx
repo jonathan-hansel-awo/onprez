@@ -78,7 +78,7 @@ export function PresenceEditorLayout({
         setHasUnsavedChanges(false)
         showSaveMessage('success', 'Draft saved')
       } else {
-        showSaveMessage('error', 'Auto-save failed')
+        showSaveMessage('error', 'Auto-save failed. Your edits are still here—use Save to retry.')
       }
 
       setAutoSaving(false)
@@ -119,7 +119,15 @@ export function PresenceEditorLayout({
       if (!confirm('You have unsaved changes. Save before publishing?')) {
         return
       }
-      await handleSave()
+      const saveResult = await onSave(sections)
+      if (!saveResult.success) {
+        showSaveMessage(
+          'error',
+          saveResult.error || 'Changes were not saved. Use Save to retry before publishing.'
+        )
+        return
+      }
+      setHasUnsavedChanges(false)
     }
 
     setPublishing(true)
@@ -134,7 +142,10 @@ export function PresenceEditorLayout({
       // Hide confetti after 3 seconds
       setTimeout(() => setShowConfetti(false), 3000)
     } else {
-      showSaveMessage('error', result.error || 'Failed to publish')
+      showSaveMessage(
+        'error',
+        result.error || 'The page was not published. Your draft is safe—try again.'
+      )
     }
 
     setPublishing(false)
@@ -157,7 +168,7 @@ export function PresenceEditorLayout({
       setIsPublished(false)
       showSaveMessage('success', 'Page unpublished')
     } else {
-      showSaveMessage('error', result.error || 'Failed to unpublish')
+      showSaveMessage('error', result.error || 'The page is still live. Try unpublishing again.')
     }
 
     setPublishing(false)
@@ -252,6 +263,8 @@ export function PresenceEditorLayout({
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
+                  role={saveMessage.type === 'success' ? 'status' : 'alert'}
+                  aria-live={saveMessage.type === 'success' ? 'polite' : 'assertive'}
                   className={`flex items-center gap-2 text-sm ${
                     saveMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
                   }`}
@@ -304,7 +317,12 @@ export function PresenceEditorLayout({
           )}
 
           {/* Save Draft */}
-          <Button variant="ghost" onClick={handleSave} disabled={saving || autoSaving}>
+          <Button
+            variant="ghost"
+            onClick={handleSave}
+            disabled={saving || autoSaving || publishing}
+            aria-busy={saving || autoSaving}
+          >
             <Save className="w-4 h-4 mr-2" />
             {saving ? 'Saving...' : 'Save'}
           </Button>
@@ -314,14 +332,20 @@ export function PresenceEditorLayout({
             <Button
               variant="outline"
               onClick={handleUnpublish}
-              disabled={publishing}
+              disabled={publishing || saving || autoSaving}
+              aria-busy={publishing}
               className="border-red-300 text-red-600 hover:bg-red-50"
             >
               <GlobeIcon className="w-4 h-4 mr-2" />
               {publishing ? 'Unpublishing...' : 'Unpublish'}
             </Button>
           ) : (
-            <Button variant="primary" onClick={handlePublish} disabled={publishing}>
+            <Button
+              variant="primary"
+              onClick={handlePublish}
+              disabled={publishing || saving || autoSaving}
+              aria-busy={publishing}
+            >
               <Sparkles className="w-4 h-4 mr-2" />
               {publishing ? 'Publishing...' : 'Publish'}
             </Button>

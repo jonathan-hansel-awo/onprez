@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { Upload, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import Image from 'next/image'
+import { ActionFeedback } from './action-feedback'
 
 export interface ImageUploadProps {
   businessId: string | null
@@ -30,7 +31,9 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [uploaded, setUploaded] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const uploadInProgressRef = useRef(false)
 
   const aspectClasses = {
     square: 'aspect-square',
@@ -39,6 +42,8 @@ export function ImageUpload({
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (uploadInProgressRef.current) return
+
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -60,7 +65,9 @@ export function ImageUpload({
     }
 
     setError('')
+    setUploaded(false)
     setUploading(true)
+    uploadInProgressRef.current = true
 
     try {
       const formData = new FormData()
@@ -77,14 +84,17 @@ export function ImageUpload({
 
       if (data.success) {
         onChange(data.data.url)
+        setUploaded(true)
       } else {
-        setError(data.error || 'Upload failed')
+        setError(data.error || 'The image could not be uploaded. Check the file and try again.')
       }
     } catch (err) {
       console.error('Upload error:', err)
-      setError('Upload failed')
+      setError('The upload was interrupted. Check your connection and try again.')
     } finally {
       setUploading(false)
+      uploadInProgressRef.current = false
+      e.target.value = ''
     }
   }
 
@@ -163,7 +173,25 @@ export function ImageUpload({
         disabled={uploading}
       />
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {uploaded && (
+        <ActionFeedback
+          status="success"
+          title="Image uploaded"
+          message="The new image is ready. Save your changes to publish it."
+          className="mt-3"
+        />
+      )}
+
+      {error && (
+        <ActionFeedback
+          status="error"
+          title="Upload unsuccessful"
+          message={error}
+          actionLabel="Choose another image"
+          onAction={() => inputRef.current?.click()}
+          className="mt-3"
+        />
+      )}
     </div>
   )
 }

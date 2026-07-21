@@ -46,6 +46,7 @@ export function useCreateBooking(): UseCreateBookingReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const idempotencyRef = useRef<{ fingerprint: string; key: string } | null>(null)
+  const submittingRef = useRef(false)
 
   const reset = useCallback(() => {
     setError(null)
@@ -53,6 +54,9 @@ export function useCreateBooking(): UseCreateBookingReturn {
 
   const createBooking = useCallback(
     async (payload: BookingPayload): Promise<BookingResponse | null> => {
+      if (submittingRef.current) return null
+
+      submittingRef.current = true
       setIsLoading(true)
       setError(null)
 
@@ -74,17 +78,22 @@ export function useCreateBooking(): UseCreateBookingReturn {
         const result = await response.json()
 
         if (!response.ok) {
-          const errorMessage = result.error || 'Failed to create booking'
+          const errorMessage =
+            result.error || 'We could not confirm the booking. Review the details and try again.'
           setError(errorMessage)
           return null
         }
 
         return result.data as BookingResponse
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+        const errorMessage =
+          err instanceof Error
+            ? `${err.message}. Check your connection and try again.`
+            : 'The booking could not be confirmed. Check your connection and try again.'
         setError(errorMessage)
         return null
       } finally {
+        submittingRef.current = false
         setIsLoading(false)
       }
     },

@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -56,6 +56,7 @@ function SignupPageComponent() {
   })
 
   const [isLoading, setIsLoading] = useState(false)
+  const submissionInProgressRef = useRef(false)
   const [loadingStage, setLoadingStage] = useState<'idle' | 'validating' | 'creating' | 'success'>(
     'idle'
   )
@@ -75,6 +76,56 @@ function SignupPageComponent() {
     resetAt?: Date
   } | null>(null)
 
+  const generateSuggestions = useCallback((handle: string) => {
+    const sanitized = handle.toLowerCase().replace(/[^a-z0-9-]/g, '')
+    return [
+      `${sanitized}-pro`,
+      `${sanitized}-studio`,
+      `${sanitized}${Math.floor(Math.random() * 100)}`,
+    ]
+  }, [])
+
+  const checkHandleAvailability = useCallback(
+    async (handle: string) => {
+      if (handle.length < 3) {
+        setIsAvailable(null)
+        setSuggestions([])
+        return
+      }
+
+      setIsChecking(true)
+      announce('Checking handle availability')
+
+      try {
+        const response = await fetch(`/api/auth/check-handle?handle=${handle}`)
+        const data = await response.json()
+
+        // Handle rate limiting
+        if (response.status === 429) {
+          announce('Too many handle checks. Please wait a moment.')
+          setIsChecking(false)
+          return
+        }
+
+        setIsAvailable(data.available)
+
+        if (data.available) {
+          announce(`Handle ${handle} is available`)
+          setSuggestions([])
+        } else {
+          announce(`Handle ${handle} is already taken. Please try another.`)
+          setSuggestions(generateSuggestions(handle))
+        }
+      } catch (error) {
+        console.error('Failed to check handle availability:', error)
+        announce('Error checking handle availability')
+      } finally {
+        setIsChecking(false)
+      }
+    },
+    [announce, generateSuggestions]
+  )
+
   useEffect(() => {
     const handleFromUrl = searchParams.get('handle')
     const saved = sessionStorage.get()
@@ -88,56 +139,9 @@ function SignupPageComponent() {
     }))
 
     if (handleFromUrl) {
-      checkHandleAvailability(handleFromUrl)
+      void checkHandleAvailability(handleFromUrl)
     }
-  }, [searchParams])
-
-  const generateSuggestions = (handle: string) => {
-    const sanitized = handle.toLowerCase().replace(/[^a-z0-9-]/g, '')
-    return [
-      `${sanitized}-pro`,
-      `${sanitized}-studio`,
-      `${sanitized}${Math.floor(Math.random() * 100)}`,
-    ]
-  }
-
-  const checkHandleAvailability = async (handle: string) => {
-    if (handle.length < 3) {
-      setIsAvailable(null)
-      setSuggestions([])
-      return
-    }
-
-    setIsChecking(true)
-    announce('Checking handle availability')
-
-    try {
-      const response = await fetch(`/api/auth/check-handle?handle=${handle}`)
-      const data = await response.json()
-
-      // Handle rate limiting
-      if (response.status === 429) {
-        announce('Too many handle checks. Please wait a moment.')
-        setIsChecking(false)
-        return
-      }
-
-      setIsAvailable(data.available)
-
-      if (data.available) {
-        announce(`Handle ${handle} is available`)
-        setSuggestions([])
-      } else {
-        announce(`Handle ${handle} is already taken. Please try another.`)
-        setSuggestions(generateSuggestions(handle))
-      }
-    } catch (error) {
-      console.error('Failed to check handle availability:', error)
-      announce('Error checking handle availability')
-    } finally {
-      setIsChecking(false)
-    }
-  }
+  }, [checkHandleAvailability, searchParams])
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -163,6 +167,9 @@ function SignupPageComponent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submissionInProgressRef.current) return
+
+    submissionInProgressRef.current = true
 
     setLoadingStage('validating')
     const { isValid, errors: validationErrors } = validateWithZod(formData, signupSchema)
@@ -172,6 +179,7 @@ function SignupPageComponent() {
       setShouldShake(true)
       setTimeout(() => setShouldShake(false), 500)
       setLoadingStage('idle')
+      submissionInProgressRef.current = false
       return
     }
 
@@ -180,6 +188,7 @@ function SignupPageComponent() {
       setShouldShake(true)
       setTimeout(() => setShouldShake(false), 500)
       setLoadingStage('idle')
+      submissionInProgressRef.current = false
       return
     }
 
@@ -241,12 +250,15 @@ function SignupPageComponent() {
       setTimeout(() => {
         router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
       }, 3000)
-    } catch (error) {
-      setErrors({ form: `An unexpected error occurred. Please try again. ${error}` })
+    } catch (_error) {
+      setErrors({
+        form: 'We could not create your account. Check your connection and try again—your details are still here.',
+      })
       setShouldShake(true)
       setTimeout(() => setShouldShake(false), 500)
       setLoadingStage('idle')
     } finally {
+      submissionInProgressRef.current = false
       setIsLoading(false)
     }
   }
@@ -488,7 +500,7 @@ function SignupPageComponent() {
                           dismissible
                           onDismiss={() =>
                             setErrors(prev => {
-                              const { form, ...rest } = prev
+                              const { form: _form, ...rest } = prev
                               return rest
                             })
                           }
