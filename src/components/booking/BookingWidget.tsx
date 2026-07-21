@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, ChevronRight, X } from 'lucide-react'
+import { Check, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
 import {
@@ -13,6 +13,7 @@ import {
   ConfirmationStep,
 } from './steps'
 import { useCreateBooking } from '@/lib/hooks/useCreateBooking'
+import { ActionFeedback } from '@/components/ui/action-feedback'
 
 // Booking flow steps
 type BookingStep = 'service' | 'datetime' | 'details' | 'confirmation'
@@ -361,15 +362,17 @@ export function BookingWidget({
             {currentStep === 'confirmation' && (
               <>
                 {submitError && (
-                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-800">{submitError}</p>
-                    <button
-                      onClick={resetSubmitError}
-                      className="mt-2 text-sm text-red-600 underline hover:no-underline"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
+                  <ActionFeedback
+                    status="error"
+                    title="Booking not confirmed"
+                    message={submitError}
+                    actionLabel="Try confirming again"
+                    onAction={() => {
+                      resetSubmitError()
+                      void handleComplete()
+                    }}
+                    className="mb-4"
+                  />
                 )}
                 <ConfirmationStep
                   businessName={businessName}
@@ -397,18 +400,21 @@ export function BookingWidget({
         </AnimatePresence>
 
         {/* Navigation Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+        <div
+          className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl"
+          aria-busy={isSubmitting}
+        >
           <div className="flex items-center justify-between">
             {/* Back button */}
             <div>
               {currentStepIndex > 0 &&
                 !(currentStep === 'datetime' && dateTimeSubStep === 'time') && (
-                  <Button variant="ghost" onClick={goToPreviousStep}>
+                  <Button variant="ghost" onClick={goToPreviousStep} disabled={isSubmitting}>
                     Back
                   </Button>
                 )}
               {currentStep === 'datetime' && dateTimeSubStep === 'time' && (
-                <Button variant="ghost" onClick={handleBackToDate}>
+                <Button variant="ghost" onClick={handleBackToDate} disabled={isSubmitting}>
                   Back to Date
                 </Button>
               )}

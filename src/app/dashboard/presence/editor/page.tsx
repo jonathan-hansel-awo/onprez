@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PresenceEditorLayout } from '@/components/presence/editor/PresenceEditorLayout'
 import { PageSection } from '@/types/page-sections'
 
@@ -11,6 +11,11 @@ export default function PresenceEditorPage() {
   const [pageId, setPageId] = useState<string | null>(null)
   const [businessSlug, setBusinessSlug] = useState<string | null>(null)
   const [isPublished, setIsPublished] = useState(false)
+  const saveRequestRef = useRef<{
+    fingerprint: string
+    promise: Promise<{ success: boolean; error?: string }>
+  } | null>(null)
+  const publishRequestRef = useRef<Promise<{ success: boolean; error?: string }> | null>(null)
 
   useEffect(() => {
     loadPresencePage()
@@ -44,54 +49,108 @@ export default function PresenceEditorPage() {
     }
   }
 
-  async function handleSave(updatedSections: PageSection[]) {
-    if (!pageId || !businessId) return { success: false, error: 'Missing pageId or businessId' }
-
-    try {
-      const response = await fetch('/api/presence/pages', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pageId: pageId,
-          businessId: businessId,
-          content: updatedSections,
-        }),
+  function handleSave(
+    updatedSections: PageSection[]
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!pageId || !businessId) {
+      return Promise.resolve({
+        success: false,
+        error: 'The page is not ready yet. Refresh and try again.',
       })
-
-      const data = await response.json()
-
-      if (data.success) {
-        setSections(updatedSections)
-        return { success: true }
-      } else {
-        return { success: false, error: data.error || 'Failed to save' }
-      }
-    } catch (error) {
-      console.error('Failed to save:', error)
-      return { success: false, error: 'Failed to save changes' }
     }
+
+    const fingerprint = JSON.stringify(updatedSections)
+    const activeSave = saveRequestRef.current
+
+    if (activeSave?.fingerprint === fingerprint) return activeSave.promise
+    if (activeSave) {
+      return activeSave.promise.then(() => handleSave(updatedSections))
+    }
+
+    const request = (async () => {
+      try {
+        const response = await fetch('/api/presence/pages', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pageId: pageId,
+            businessId: businessId,
+            content: updatedSections,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.success) {
+          setSections(updatedSections)
+          return { success: true }
+        }
+
+        return {
+          success: false,
+          error: data.error || 'Changes were not saved. Your edits are still here—try again.',
+        }
+      } catch (error) {
+        console.error('Failed to save:', error)
+        return {
+          success: false,
+          error: 'Changes were not saved. Check your connection and try again.',
+        }
+      } finally {
+        if (saveRequestRef.current?.fingerprint === fingerprint) {
+          saveRequestRef.current = null
+        }
+      }
+    })()
+
+    saveRequestRef.current = { fingerprint, promise: request }
+    return request
   }
 
-  async function handlePublish(isPublished: boolean) {
-    if (!pageId || !businessId) return
-
-    try {
-      const response = await fetch('/api/presence/pages/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pageId: pageId,
-          businessId: businessId,
-          isPublished: isPublished,
-        }),
+  function handlePublish(isPublished: boolean) {
+    if (!pageId || !businessId) {
+      return Promise.resolve({
+        success: false,
+        error: 'The page is not ready yet. Refresh and try again.',
       })
-
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error('Failed to publish:', error)
-      return { success: false, error: 'Failed to publish page' }
     }
+
+    if (publishRequestRef.current) return publishRequestRef.current
+
+    const request = (async () => {
+      try {
+        const response = await fetch('/api/presence/pages/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pageId: pageId,
+            businessId: businessId,
+            isPublished: isPublished,
+          }),
+        })
+
+        const data = await response.json()
+        if (data.success) return data
+
+        return {
+          success: false,
+          error:
+            data.error ||
+            `The page was not ${isPublished ? 'published' : 'unpublished'}. Try again.`,
+        }
+      } catch (error) {
+        console.error('Failed to publish:', error)
+        return {
+          success: false,
+          error: `The page was not ${isPublished ? 'published' : 'unpublished'}. Check your connection and try again.`,
+        }
+      } finally {
+        publishRequestRef.current = null
+      }
+    })()
+
+    publishRequestRef.current = request
+    return request
   }
 
   if (loading) {

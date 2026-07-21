@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Plus, Eye, Save, Globe } from 'lucide-react'
+import { Plus, Eye, Globe } from 'lucide-react'
 import { TemplateSelector } from '@/components/presence/TemplateSelector'
 import { TemplatePreviewModal } from '@/components/presence/TemplatePreviewModal'
 import { PresenceTemplate } from '@/types/templates'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { ActionFeedback } from '@/components/ui/action-feedback'
 
 export default function PresencePage() {
   const router = useRouter()
@@ -19,6 +20,8 @@ export default function PresencePage() {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false)
   const [previewTemplate, setPreviewTemplate] = useState<PresenceTemplate | null>(null)
   const [applyingTemplate, setApplyingTemplate] = useState(false)
+  const [templateError, setTemplateError] = useState('')
+  const applyingTemplateRef = useRef(false)
 
   useEffect(() => {
     checkPresenceStatus()
@@ -51,9 +54,11 @@ export default function PresencePage() {
   }
 
   async function handleTemplateSelect(template: PresenceTemplate) {
-    if (!businessId) return
+    if (!businessId || applyingTemplateRef.current) return
 
+    applyingTemplateRef.current = true
     setApplyingTemplate(true)
+    setTemplateError('')
     try {
       const response = await fetch('/api/presence/apply-template', {
         method: 'POST',
@@ -70,12 +75,15 @@ export default function PresencePage() {
         // Redirect to editor
         router.push('/dashboard/presence/editor')
       } else {
-        alert(data.error || 'Failed to apply template')
+        setTemplateError(
+          data.error || 'The template could not be applied. Your current page is unchanged.'
+        )
       }
     } catch (error) {
       console.error('Failed to apply template:', error)
-      alert('Failed to apply template')
+      setTemplateError('The template could not be applied. Check your connection and try again.')
     } finally {
+      applyingTemplateRef.current = false
       setApplyingTemplate(false)
     }
   }
@@ -110,6 +118,15 @@ export default function PresencePage() {
               onSelect={handleTemplateSelect}
               onPreview={template => setPreviewTemplate(template)}
             />
+            {templateError && (
+              <ActionFeedback
+                status="error"
+                title="Template not applied"
+                message={templateError}
+                actionLabel="Choose a template and try again"
+                onAction={() => setTemplateError('')}
+              />
+            )}
           </div>
         ) : (
           <Card className="p-12 text-center">
