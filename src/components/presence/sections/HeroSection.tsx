@@ -8,9 +8,10 @@ import Image from 'next/image'
 
 interface HeroSectionProps {
   section: HeroSectionType
+  bookingHref?: string
 }
 
-export function HeroSection({ section }: HeroSectionProps) {
+export function HeroSection({ section, bookingHref }: HeroSectionProps) {
   const {
     title,
     subtitle,
@@ -26,6 +27,7 @@ export function HeroSection({ section }: HeroSectionProps) {
     customTextColor,
     textShadow = true,
   } = section.data
+  const resolvedCtaLink = bookingHref && ctaLink === '#contact' ? bookingHref : ctaLink
 
   // Alignment classes
   const alignmentClasses = {
@@ -130,8 +132,12 @@ export function HeroSection({ section }: HeroSectionProps) {
           )}
 
           {/* CTA Button */}
-          {ctaText && ctaLink && (
-            <motion.a href={ctaLink} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          {ctaText && resolvedCtaLink && (
+            <motion.a
+              href={resolvedCtaLink}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <button
                 className="theme-button-primary inline-flex items-center gap-2 px-6 py-3 font-semibold text-lg"
                 style={{

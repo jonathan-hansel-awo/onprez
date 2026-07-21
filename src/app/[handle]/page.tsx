@@ -6,6 +6,7 @@ import { PageSection } from '@/types/page-sections'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
 import { Metadata } from 'next'
 import { StructuredData } from '@/components/seo/structured-data'
+import type { PresenceTrustSignals } from '@/components/presence/PresenceConversion'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,21 +49,28 @@ export default async function PresencePage({ params }: PresencePageProps) {
   }
 
   // Fetch published page (use publishedContent if available)
-  const page = await prisma.page.findFirst({
-    where: {
-      businessId: business.id,
-      slug: 'home',
-      isPublished: true,
-    },
-    select: {
-      id: true,
-      content: true,
-      publishedContent: true,
-      isPublished: true,
-      publishedAt: true,
-      version: true,
-    },
-  })
+  const [page, reviewSummary] = await Promise.all([
+    prisma.page.findFirst({
+      where: {
+        businessId: business.id,
+        slug: 'home',
+        isPublished: true,
+      },
+      select: {
+        id: true,
+        content: true,
+        publishedContent: true,
+        isPublished: true,
+        publishedAt: true,
+        version: true,
+      },
+    }),
+    prisma.review.aggregate({
+      where: { businessId: business.id, isPublished: true },
+      _avg: { rating: true },
+      _count: { rating: true },
+    }),
+  ])
 
   // 404 if no published page found
   if (!page || !page.isPublished) {
@@ -75,10 +83,27 @@ export default async function PresencePage({ params }: PresencePageProps) {
   const settings = business.settings as any
   const theme = settings?.theme || {}
   const showInquiryForm = settings?.inquiriesEnabled !== false
+  const bookingSettings = settings?.booking || {}
 
   const fullAddress = [business.address, business.city, business.state, business.zipCode]
     .filter(Boolean)
     .join(', ')
+
+  const trustSignals: PresenceTrustSignals = {
+    location: [business.city, business.state].filter(Boolean).join(', ') || undefined,
+    reviewCount: reviewSummary._count.rating || undefined,
+    averageRating: reviewSummary._avg.rating || undefined,
+    cancellationNoticeHours:
+      typeof bookingSettings.cancellationDeadline === 'number'
+        ? bookingSettings.cancellationDeadline
+        : undefined,
+    responseTime: typeof settings?.responseTime === 'string' ? settings.responseTime : undefined,
+    credentials: Array.isArray(settings?.credentials)
+      ? settings.credentials.filter(
+          (credential: unknown): credential is string => typeof credential === 'string'
+        )
+      : undefined,
+  }
 
   return (
     <>
@@ -111,9 +136,11 @@ export default async function PresencePage({ params }: PresencePageProps) {
               phone: business.phone || undefined,
               email: business.email || undefined,
               address: fullAddress || undefined,
-              socialMedia: business.socialLinks as any,
+              website: business.website || undefined,
+              socialLinks: business.socialLinks as any,
             }}
             showInquiryForm={showInquiryForm}
+            trustSignals={trustSignals}
           />
         </div>
       </ThemeProvider>
