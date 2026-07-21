@@ -31,6 +31,7 @@ import { AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { RescheduleModal } from '@/components/bookings/reschedule-modal'
 import { CancelBookingModal } from '@/components/bookings/cancel-booking-modal'
 import { QuickCreateBookingModal } from '@/components/bookings/quick-create-booking-modal'
+import { GuidedEmptyState } from '@/components/dashboard/guided-empty-state'
 import Loading from '@/app/[handle]/loading'
 
 interface BookingListItem {
@@ -651,24 +652,29 @@ function Bookings() {
       )}
 
       {/* Empty State */}
-      {!loading && !error && bookings.length === 0 && (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings found</h3>
-            <p className="text-gray-600 mb-4">
-              {hasActiveFilters
-                ? 'Try adjusting your filters to find more results.'
-                : "You don't have any bookings yet."}
-            </p>
-            {hasActiveFilters && (
+      {!loading &&
+        !error &&
+        bookings.length === 0 &&
+        (hasActiveFilters ? (
+          <Card>
+            <CardContent className="py-16 text-center">
+              <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No matching bookings</h3>
+              <p className="text-gray-600 mb-4">Try adjusting or clearing your filters.</p>
               <Button variant="secondary" onClick={handleClearFilters}>
                 Clear Filters
               </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        ) : (
+          <GuidedEmptyState
+            icon={Calendar}
+            title="Ready for your first booking"
+            description="Bookings made through your presence page will appear here. You can also add one yourself for a phone or walk-in customer."
+            action={{ label: 'Create a booking', onClick: () => setIsQuickCreateOpen(true) }}
+            secondaryAction={{ label: 'Review your services', href: '/dashboard/services' }}
+          />
+        ))}
 
       {/* Bookings List */}
       {!loading && !error && bookings.length > 0 && (

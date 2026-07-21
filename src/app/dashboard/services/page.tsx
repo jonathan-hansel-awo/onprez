@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/form'
 import { ConfirmDialog } from '@/components/ui/dialog'
 import { StatCard } from '@/components/dashboard/stat-card'
+import { GuidedEmptyState } from '@/components/dashboard/guided-empty-state'
 import { toast } from 'sonner'
 import {
   Package,
@@ -257,47 +258,53 @@ function ServicesPageContent() {
   }
 
   // Fetch services
-  const fetchServices = async (busId?: string) => {
-    const id = busId || businessId
-    if (!id) return
+  const fetchServices = useCallback(
+    async (busId?: string) => {
+      const id = busId || businessId
+      if (!id) return
 
-    try {
-      const response = await fetch(`/api/services?businessId=${id}`)
+      try {
+        const response = await fetch(`/api/services?businessId=${id}`)
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch services')
+        if (!response.ok) {
+          throw new Error('Failed to fetch services')
+        }
+
+        const data = await response.json()
+        setServices(data)
+        setFilteredServices(data)
+      } catch (error) {
+        console.error('Fetch services error:', error)
+        setError('Failed to load services')
+        toast.error('Failed to load services')
       }
-
-      const data = await response.json()
-      setServices(data)
-      setFilteredServices(data)
-    } catch (error) {
-      console.error('Fetch services error:', error)
-      setError('Failed to load services')
-      toast.error('Failed to load services')
-    }
-  }
+    },
+    [businessId]
+  )
 
   // Fetch categories
-  const fetchCategories = async (busId?: string) => {
-    const id = busId || businessId
-    if (!id) return
+  const fetchCategories = useCallback(
+    async (busId?: string) => {
+      const id = busId || businessId
+      if (!id) return
 
-    try {
-      const response = await fetch(`/api/service-categories?businessId=${id}`)
+      try {
+        const response = await fetch(`/api/service-categories?businessId=${id}`)
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch categories')
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories')
+        }
+
+        const data = await response.json()
+        setCategories(data)
+      } catch (error) {
+        console.error('Fetch categories error:', error)
+        setError('Failed to load categories')
+        toast.error('Failed to load categories')
       }
-
-      const data = await response.json()
-      setCategories(data)
-    } catch (error) {
-      console.error('Fetch categories error:', error)
-      setError('Failed to load categories')
-      toast.error('Failed to load categories')
-    }
-  }
+    },
+    [businessId]
+  )
 
   // Initial load
   useEffect(() => {
@@ -315,7 +322,7 @@ function ServicesPageContent() {
       }
     }
     loadData()
-  }, [])
+  }, [fetchCategories, fetchServices])
 
   // Search filter
   useEffect(() => {
@@ -490,13 +497,6 @@ function ServicesPageContent() {
   // Stats
   const activeServices = services.filter(s => s.active).length
 
-  console.log('Render state:', {
-    isLoading,
-    error,
-    servicesCount: services.length,
-    categoriesCount: categories.length,
-  })
-
   // Error state
   if (error && !isLoading) {
     return (
@@ -641,25 +641,34 @@ function ServicesPageContent() {
 
           {/* Services List with Drag-and-Drop */}
           {filteredServices.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No services found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchQuery
-                    ? 'Try adjusting your search query'
-                    : 'Get started by creating your first service'}
-                </p>
-                {!searchQuery && (
-                  <Link href="/dashboard/services/new">
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Service
-                    </Button>
-                  </Link>
-                )}
-              </CardContent>
-            </Card>
+            services.length === 0 ? (
+              <GuidedEmptyState
+                icon={Package}
+                title="Create the service customers will book first"
+                description="Add a name, price, duration, and availability for your first service. It will become the starting point for your public booking flow."
+                action={{ label: 'Create your first service', href: '/dashboard/services/new' }}
+                secondaryAction={{ label: 'Preview your presence', href: '/dashboard/presence' }}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No matching services</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Try a different search or choose another status filter.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setActiveFilter('all')
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                </CardContent>
+              </Card>
+            )
           ) : (
             <DndContext
               sensors={sensors}
