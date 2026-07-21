@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/dashboard/stat-card'
+import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist'
 import { Calendar, DollarSign, Users, Clock, Plus, ExternalLink, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -100,6 +101,8 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
+
+      <OnboardingChecklist />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
