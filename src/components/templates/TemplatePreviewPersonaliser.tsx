@@ -14,6 +14,7 @@ import {
   TrustStrip,
 } from '@/components/presence/premium'
 import { HeavenlyPamperPreview } from '@/components/templates/HeavenlyPamperPreview'
+import { HairMakeupDemoPreview } from '@/components/templates/HairMakeupDemoPreview'
 import { RegentBarberPreview } from '@/components/templates/RegentBarberPreview'
 import type { TemplateCatalogueItem } from '@/data/presence-template-catalogue'
 import {
@@ -59,6 +60,19 @@ export function TemplatePreviewPersonaliser({
   if (template.slug === 'regent-barber') {
     return (
       <RegentBarberPreview
+        template={template}
+        businessName={businessName}
+        businessNameInput={businessNameInput}
+        setBusinessNameInput={setBusinessNameInput}
+        signupHref={signupHref}
+        initialClientView={initialClientView}
+      />
+    )
+  }
+
+  if (template.slug === 'editorial-beauty') {
+    return (
+      <HairMakeupDemoPreview
         template={template}
         businessName={businessName}
         businessNameInput={businessNameInput}

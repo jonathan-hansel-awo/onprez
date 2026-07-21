@@ -43,4 +43,12 @@ describe('presence template catalogue', () => {
     expect(heavenly?.palette.primary).toBe('#b88a22')
     expect(heavenly?.preview.services).toHaveLength(5)
   })
+
+  it('uses the complete hair and makeup demo in Editorial Beauty', () => {
+    const editorial = getPresenceTemplate('editorial-beauty')
+
+    expect(editorial?.preview.businessName).toBe('Crown & Canvas Studio')
+    expect(editorial?.preview.services).toHaveLength(6)
+    expect(editorial?.audience).toContain('Textured-hair specialists')
+  })
 })
