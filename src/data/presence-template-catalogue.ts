@@ -1,3 +1,5 @@
+import { realisticDemoBusiness } from '@/data/realistic-demo-business'
+
 export const templateCategories = [
   'ALL',
   'WELLNESS',
@@ -85,32 +87,16 @@ export const presenceTemplateCatalogue: TemplateCatalogueItem[] = [
       text: '#513b22',
     },
     preview: {
-      eyebrow: 'A brighter kind of serenity',
+      eyebrow: realisticDemoBusiness.tagline,
       headline: 'Luminous care, polished rituals, and beautifully unhurried moments.',
-      businessName: 'Heavenly Pamper Palace',
-      services: [
-        {
-          id: 'golden-glow',
-          name: 'Golden Glow Ritual',
-          duration: '90 minutes',
-          price: '£95',
-          description: 'A radiant full-body ritual with warm oils and personalised care.',
-        },
-        {
-          id: 'serenity-massage',
-          name: 'Serenity Massage',
-          duration: '60 minutes',
-          price: '£70',
-          description: 'A calming massage designed to release tension and restore ease.',
-        },
-        {
-          id: 'radiance-facial',
-          name: 'Radiance Facial',
-          duration: '60 minutes',
-          price: '£65',
-          description: 'A luminous facial ritual focused on hydration, glow, and relaxation.',
-        },
-      ],
+      businessName: realisticDemoBusiness.name,
+      services: realisticDemoBusiness.services.map(service => ({
+        id: service.id,
+        name: service.name,
+        duration: service.duration.replace('min', 'minutes'),
+        price: service.price,
+        description: service.description,
+      })),
     },
   },
   {

@@ -41,6 +41,6 @@ describe('presence template catalogue', () => {
     expect(serene?.name).toBe('Serene Wellness')
     expect(heavenly?.name).toBe('Heavenly Pamper Palace')
     expect(heavenly?.palette.primary).toBe('#b88a22')
-    expect(heavenly?.preview.services).toHaveLength(3)
+    expect(heavenly?.preview.services).toHaveLength(5)
   })
 })
