@@ -6,12 +6,15 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { TemplateCatalogueItem } from '@/data/presence-template-catalogue'
+import { realisticDemoBusiness } from '@/data/realistic-demo-business'
 
 interface DemoService {
   id: string
   name: string
   price: string
   duration: string
+  description: string
+  image: keyof typeof realisticDemoBusiness.images
 }
 
 interface HeavenlyPamperPreviewProps {
@@ -23,17 +26,7 @@ interface HeavenlyPamperPreviewProps {
   initialClientView?: boolean
 }
 
-const images = {
-  hero: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1800&q=85',
-  treatment:
-    'https://images.unsplash.com/photo-1677682693087-711e24efaa69?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-  facial:
-    'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=85',
-  interior:
-    'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1400&q=85',
-  owner:
-    'https://images.unsplash.com/photo-1646831055574-b945ace1b495?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-}
+const images = realisticDemoBusiness.images
 
 export function HeavenlyPamperPreview({
   template,
@@ -43,15 +36,11 @@ export function HeavenlyPamperPreview({
   signupHref,
   initialClientView = false,
 }: HeavenlyPamperPreviewProps) {
-  const [services, setServices] = useState<DemoService[]>([
-    { id: 'golden-glow', name: 'Golden Glow Ritual', price: '£95', duration: '90 min' },
-    { id: 'serenity-massage', name: 'Serenity Massage', price: '£70', duration: '60 min' },
-    { id: 'radiance-facial', name: 'Radiance Facial', price: '£65', duration: '60 min' },
-  ])
+  const [services, setServices] = useState<DemoService[]>(realisticDemoBusiness.services)
   const [selectedServiceId, setSelectedServiceId] = useState('golden-glow')
   const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [bookingStep, setBookingStep] = useState(1)
-  const [selectedTime, setSelectedTime] = useState('Saturday · 11:30')
+  const [selectedTime, setSelectedTime] = useState(realisticDemoBusiness.bookingSlots[0])
   const [isClientView, setIsClientView] = useState(initialClientView)
 
   const selectedService =
@@ -177,7 +166,7 @@ export function HeavenlyPamperPreview({
               {businessName}
             </h1>
             <p className="mt-8 max-w-xl text-lg leading-8 text-[#725f47] sm:text-xl">
-              A luminous retreat for calm, confidence, and beautifully considered care.
+              {realisticDemoBusiness.description}
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <button
@@ -233,7 +222,7 @@ export function HeavenlyPamperPreview({
             <div className="absolute -inset-4 rounded-[2.5rem] border border-[#e0bd64]/30" />
             <img
               src={images.owner}
-              alt="Placeholder portrait for the owner of Heavenly Pamper Palace"
+              alt={`${realisticDemoBusiness.owner.name}, ${realisticDemoBusiness.owner.role}`}
               className="relative aspect-[4/5] w-full rounded-[2rem] object-cover shadow-2xl"
             />
             {!isClientView && (
@@ -247,16 +236,13 @@ export function HeavenlyPamperPreview({
               Meet the owner
             </p>
             <h2 className="mt-6 font-serif text-5xl leading-tight sm:text-6xl">
-              Care that begins with listening.
+              Meet {realisticDemoBusiness.owner.name}.
             </h2>
             <p className="mt-7 text-lg leading-8 text-[#f0dfbd]">
-              Welcome to {businessName}. Every appointment is designed to feel personal, unrushed,
-              and centred on what you need from your time here.
+              {realisticDemoBusiness.owner.biography}
             </p>
             <p className="mt-5 leading-8 text-[#d9c49e]">
-              Use this space to introduce the owner, share her qualifications and experience, and
-              explain the care and values behind the business. The portrait and biography can be
-              replaced after choosing this template.
+              {realisticDemoBusiness.owner.credentials.join(' · ')}
             </p>
             <button
               type="button"
@@ -280,14 +266,14 @@ export function HeavenlyPamperPreview({
             </h2>
           </div>
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
-            {services.map((service, index) => (
+            {services.map(service => (
               <article
                 key={service.id}
                 className="overflow-hidden rounded-[2rem] border border-[#d4ac47]/25 bg-white shadow-xl shadow-[#b88a22]/10"
               >
                 <img
-                  src={index === 0 ? images.treatment : index === 1 ? images.interior : images.facial}
-                  alt={`${service.name} placeholder`}
+                  src={images[service.image]}
+                  alt={`${service.name} treatment setting`}
                   className="h-64 w-full object-cover"
                 />
                 <div className="p-7">
@@ -296,6 +282,9 @@ export function HeavenlyPamperPreview({
                     <p className="shrink-0 text-lg font-bold text-[#b18420]">{service.price}</p>
                   </div>
                   <p className="mt-3 text-sm text-[#7a6850]">{service.duration}</p>
+                  <p className="mt-4 min-h-20 leading-7 text-[#725f47]">
+                    {service.description}
+                  </p>
                   <button
                     type="button"
                     onClick={() => openBooking(service.id)}
@@ -305,6 +294,107 @@ export function HeavenlyPamperPreview({
                   </button>
                 </div>
               </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-5 py-24 sm:px-8 md:py-32">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-14 lg:grid-cols-[0.85fr_1.15fr]">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#b88a22]">
+                Visit the studio
+              </p>
+              <h2 className="mt-5 font-serif text-5xl text-[#513b22] sm:text-6xl">
+                Time set aside for you.
+              </h2>
+              <p className="mt-7 text-lg leading-8 text-[#725f47]">
+                {realisticDemoBusiness.location.address}, {realisticDemoBusiness.location.city},{' '}
+                {realisticDemoBusiness.location.postcode}
+              </p>
+              <p className="mt-3 text-[#725f47]">
+                {realisticDemoBusiness.contact.phone} · {realisticDemoBusiness.contact.email}
+              </p>
+              <div className="mt-8 rounded-[2rem] bg-[#fff7df] p-7">
+                <h3 className="font-serif text-2xl text-[#513b22]">Before your appointment</h3>
+                <ul className="mt-5 space-y-3 text-sm leading-6 text-[#725f47]">
+                  {realisticDemoBusiness.policies.map(policy => (
+                    <li key={policy} className="flex gap-3">
+                      <span aria-hidden="true" className="text-[#b88a22]">
+                        ✦
+                      </span>
+                      <span>{policy}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-[2rem] border border-[#d4ac47]/25 bg-[#fffdf8] p-7 shadow-xl sm:p-9">
+              <h3 className="font-serif text-3xl text-[#513b22]">Opening hours</h3>
+              <dl className="mt-6 divide-y divide-[#d4ac47]/20">
+                {realisticDemoBusiness.hours.map(({ day, time }) => (
+                  <div key={day} className="flex justify-between gap-6 py-4">
+                    <dt className="font-semibold text-[#513b22]">{day}</dt>
+                    <dd className="text-right text-[#725f47]">{time}</dd>
+                  </div>
+                ))}
+              </dl>
+              <button
+                type="button"
+                onClick={() => openBooking()}
+                className="mt-7 w-full rounded-full bg-[#b88a22] px-6 py-3 font-bold text-white"
+              >
+                Check available appointments
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#4b3820] px-5 py-24 text-[#fff8e8] sm:px-8 md:py-32">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#e2bf67]">
+              Client notes
+            </p>
+            <h2 className="mt-5 font-serif text-5xl sm:text-6xl">Care people come back to.</h2>
+          </div>
+          <div className="mt-14 grid gap-6 lg:grid-cols-3">
+            {realisticDemoBusiness.reviews.map(review => (
+              <figure key={review.id} className="rounded-[2rem] bg-white/8 p-7 ring-1 ring-white/15">
+                <div aria-label={`${review.rating} out of 5 stars`} className="text-[#e2bf67]">
+                  {'★'.repeat(review.rating)}
+                </div>
+                <blockquote className="mt-5 text-lg leading-8">“{review.quote}”</blockquote>
+                <figcaption className="mt-6 text-sm text-[#e5d2ad]">
+                  <span className="font-bold text-white">{review.name}</span> · {review.treatment}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#fffaf0] px-5 py-24 sm:px-8 md:py-32">
+        <div className="mx-auto max-w-4xl">
+          <p className="text-center text-xs font-bold uppercase tracking-[0.28em] text-[#b88a22]">
+            Good to know
+          </p>
+          <h2 className="mt-5 text-center font-serif text-5xl text-[#513b22] sm:text-6xl">
+            Frequently asked questions.
+          </h2>
+          <div className="mt-12 space-y-4">
+            {realisticDemoBusiness.faqs.map(item => (
+              <details
+                key={item.id}
+                className="group rounded-2xl border border-[#d4ac47]/25 bg-white p-6 open:shadow-lg"
+              >
+                <summary className="cursor-pointer list-none pr-8 text-lg font-bold text-[#513b22]">
+                  {item.question}
+                </summary>
+                <p className="mt-4 max-w-3xl leading-7 text-[#725f47]">{item.answer}</p>
+              </details>
             ))}
           </div>
         </div>
@@ -342,6 +432,18 @@ export function HeavenlyPamperPreview({
           Images, services, prices, availability, and claims are demonstration placeholders. No
           booking is created from this preview.
         </footer>
+      )}
+
+      {isClientView && !isBookingOpen && (
+        <div className="fixed inset-x-0 bottom-0 z-[80] border-t border-[#d4ac47]/30 bg-[#fffdf8]/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(75,56,32,0.16)] backdrop-blur md:hidden">
+          <button
+            type="button"
+            onClick={() => openBooking()}
+            className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#b88922] to-[#e4c26f] px-6 py-3 font-bold text-white shadow-lg"
+          >
+            Book a treatment
+          </button>
+        </div>
       )}
 
       {isBookingOpen && (
@@ -397,12 +499,7 @@ export function HeavenlyPamperPreview({
                 <div>
                   <p className="text-[#725f47]">Choose an appointment time.</p>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {[
-                      'Saturday · 11:30',
-                      'Saturday · 14:00',
-                      'Monday · 10:00',
-                      'Tuesday · 16:30',
-                    ].map(time => (
+                    {realisticDemoBusiness.bookingSlots.map(time => (
                       <button
                         key={time}
                         type="button"

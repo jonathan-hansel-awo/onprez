@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { presenceTemplateCatalogue } from '@/data/presence-template-catalogue'
+import { realisticDemoBusiness, realisticDemoHref } from '@/data/realistic-demo-business'
 
 export function ExamplesCarousel() {
   const featuredTemplates = presenceTemplateCatalogue.slice(0, 3)
@@ -51,15 +52,23 @@ export function ExamplesCarousel() {
               </div>
               <div className="p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                  {template.category}
+                  {template.slug === realisticDemoBusiness.templateSlug
+                    ? 'Full realistic demo'
+                    : template.category}
                 </p>
                 <h3 className="mt-2 text-xl font-bold text-gray-900">{template.name}</h3>
                 <p className="mt-2 text-sm leading-6 text-gray-600">{template.description}</p>
                 <Link
-                  href={`/templates/${template.slug}`}
+                  href={
+                    template.slug === realisticDemoBusiness.templateSlug
+                      ? realisticDemoHref
+                      : `/templates/${template.slug}`
+                  }
                   className="mt-5 inline-flex font-semibold text-onprez-blue"
                 >
-                  Preview template
+                  {template.slug === realisticDemoBusiness.templateSlug
+                    ? 'Explore full demo'
+                    : 'Preview template'}
                 </Link>
               </div>
             </article>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Footer, Header, ScrollProgressEnhanced } from '@/components/navigation'
+import { realisticDemoBusiness, realisticDemoHref } from '@/data/realistic-demo-business'
 
 export const metadata: Metadata = {
   title: 'Live Examples | OnPrez',
@@ -11,14 +12,13 @@ export const metadata: Metadata = {
 
 const examples = [
   {
-    name: 'Heavenly Pamper Palace',
-    category: 'Luxury wellness and beauty',
-    description:
-      'A luminous cream-and-gold presence with editable treatments and an interactive customer booking journey.',
-    href: '/templates/heavenly-pamper-palace?businessName=Heavenly%20Pamper%20Palace&view=client',
+    name: realisticDemoBusiness.name,
+    category: realisticDemoBusiness.category,
+    description: `${realisticDemoBusiness.description} Explore ${realisticDemoBusiness.services.length} services, genuine-length content, opening hours, policies, FAQs and the complete demo booking journey.`,
+    href: realisticDemoHref,
     personaliseHref: '/templates/heavenly-pamper-palace',
-    image:
-      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=85',
+    image: realisticDemoBusiness.images.hero,
+    featured: true,
   },
   {
     name: 'Regent Barber Co.',
@@ -29,6 +29,7 @@ const examples = [
     personaliseHref: '/templates/regent-barber',
     image:
       'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1600&q=85',
+    featured: false,
   },
 ]
 
@@ -74,11 +75,16 @@ export default function ExamplesPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
                     <span className="absolute bottom-5 left-5 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-gray-800 backdrop-blur">
-                      {example.category}
+                      {example.featured ? 'Full realistic demo' : example.category}
                     </span>
                   </div>
                   <div className="p-7 sm:p-8">
                     <h2 className="text-3xl font-bold text-gray-900">{example.name}</h2>
+                    {example.featured && (
+                      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-onprez-blue">
+                        Canonical screenshot and onboarding example
+                      </p>
+                    )}
                     <p className="mt-4 max-w-2xl leading-7 text-gray-600">{example.description}</p>
                     <div className="mt-7 flex flex-wrap gap-3">
                       <Link
