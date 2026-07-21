@@ -2,9 +2,8 @@
 
 import { ServicesSection as ServicesSectionType } from '@/types/page-sections'
 import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
-import { Clock, Calendar } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { Clock, Calendar, CalendarCheck2 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -19,35 +18,128 @@ interface Service {
   description: string
   price: number
   duration: number
-  category?: string
-  image?: string
+  priceType?: 'FIXED' | 'STARTING_AT' | 'RANGE' | 'FREE' | 'CONTACT'
+  priceRangeMin?: number | null
+  priceRangeMax?: number | null
+  currency?: string
+  category?: { name: string } | null
+  imageUrl?: string | null
+}
+
+interface AvailabilitySummary {
+  status: 'loading' | 'available' | 'unavailable'
+  label: string
 }
 
 export function ServicesSection({ section, businessHandle }: ServicesSectionProps) {
   const { title, description, layout, showPrices, serviceIds } = section.data
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
+  const [availability, setAvailability] = useState<Record<string, AvailabilitySummary>>({})
+
+  const fetchServices = useCallback(
+    async (signal: AbortSignal) => {
+      try {
+        const ids = serviceIds?.join(',') || ''
+        const response = await fetch(
+          `/api/public/businesses/${businessHandle}/services?ids=${ids}`,
+          {
+            signal,
+          }
+        )
+        const data = await response.json()
+        if (data.success) {
+          const loadedServices = data.data.services as Service[]
+          setServices(loadedServices)
+          setAvailability(
+            Object.fromEntries(
+              loadedServices.map(service => [
+                service.id,
+                { status: 'loading', label: 'Checking live availability…' },
+              ])
+            )
+          )
+
+          const availabilityResults = await Promise.all(
+            loadedServices.map(async service => {
+              try {
+                const availabilityResponse = await fetch(
+                  `/api/availability/next?slug=${encodeURIComponent(businessHandle)}&serviceId=${encodeURIComponent(service.id)}&maxDays=30`,
+                  { signal }
+                )
+                const availabilityData = await availabilityResponse.json()
+                const nextAvailable = availabilityData?.data?.nextAvailable
+
+                if (availabilityResponse.ok && availabilityData.success && nextAvailable) {
+                  const date = new Date(`${nextAvailable.date}T00:00:00`)
+                  const dateLabel = new Intl.DateTimeFormat('en-GB', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                  }).format(date)
+
+                  return [
+                    service.id,
+                    {
+                      status: 'available',
+                      label: `Next available ${dateLabel} at ${nextAvailable.time}`,
+                    },
+                  ] as const
+                }
+              } catch (error) {
+                if ((error as Error).name === 'AbortError') throw error
+              }
+
+              return [
+                service.id,
+                { status: 'unavailable', label: 'View calendar for availability' },
+              ] as const
+            })
+          )
+
+          setAvailability(Object.fromEntries(availabilityResults))
+        }
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Failed to fetch services:', error)
+        }
+      } finally {
+        setLoading(false)
+      }
+    },
+    [businessHandle, serviceIds]
+  )
 
   useEffect(() => {
-    fetchServices()
-  }, [serviceIds])
-
-  async function fetchServices() {
-    try {
-      const ids = serviceIds?.join(',') || ''
-      const response = await fetch(`/api/public/businesses/${businessHandle}/services?ids=${ids}`)
-      const data = await response.json()
-      if (data.success) {
-        setServices(data.data.services)
-      }
-    } catch (error) {
-      console.error('Failed to fetch services:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+    const controller = new AbortController()
+    fetchServices(controller.signal)
+    return () => controller.abort()
+  }, [fetchServices])
 
   const isGrid = layout === 'grid'
+
+  function formatPrice(service: Service) {
+    if (service.priceType === 'FREE') return 'Free'
+    if (service.priceType === 'CONTACT') return 'Contact for price'
+
+    const formatter = new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: service.currency || 'GBP',
+    })
+
+    if (
+      service.priceType === 'RANGE' &&
+      service.priceRangeMin !== null &&
+      service.priceRangeMin !== undefined &&
+      service.priceRangeMax !== null &&
+      service.priceRangeMax !== undefined
+    ) {
+      return `${formatter.format(service.priceRangeMin)}–${formatter.format(service.priceRangeMax)}`
+    }
+
+    const price = formatter.format(service.price)
+    return service.priceType === 'STARTING_AT' ? `From ${price}` : price
+  }
 
   // Generate Service Schema for SEO
   const servicesSchema = {
@@ -129,9 +221,14 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
                   className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   {/* Service Image */}
-                  {service.image && (
+                  {service.imageUrl && (
                     <div className="h-48 bg-gray-200 relative overflow-hidden">
-                      <Image src={service.image} alt={service.name} fill className="object-cover" />
+                      <Image
+                        src={service.imageUrl}
+                        alt={service.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   )}
 
@@ -139,7 +236,7 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
                   <div className="p-6">
                     {service.category && (
                       <span className="text-xs font-semibold text-onprez-blue uppercase tracking-wide">
-                        {service.category}
+                        {service.category.name}
                       </span>
                     )}
 
@@ -159,19 +256,30 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
                         <span>{service.duration} min</span>
                       </div>
                       {showPrices && (
-                        <div className="font-semibold text-gray-900">
-                          £{service.price.toFixed(2)}
-                        </div>
+                        <div className="font-semibold text-gray-900">{formatPrice(service)}</div>
                       )}
                     </div>
 
+                    <div
+                      className={`mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
+                        availability[service.id]?.status === 'available'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                      aria-live="polite"
+                    >
+                      <CalendarCheck2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>{availability[service.id]?.label || 'View live availability'}</span>
+                    </div>
+
                     {/* Book Button */}
-                    <Button className="w-full" size="sm">
-                      <Link href={`/${businessHandle}/book/${service.id}`}>
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Book Now
-                      </Link>
-                    </Button>
+                    <Link
+                      href={`/${businessHandle}/book/${service.id}`}
+                      className="theme-button-primary flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-semibold"
+                    >
+                      <Calendar className="h-4 w-4" aria-hidden="true" />
+                      Book this service
+                    </Link>
                   </div>
                 </motion.div>
               ))}

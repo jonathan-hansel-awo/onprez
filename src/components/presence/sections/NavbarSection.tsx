@@ -5,15 +5,15 @@ import { useState, useEffect } from 'react'
 import { Menu, X, ExternalLink } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import Link from 'next/link'
 import { cn } from '@/lib/utils/cn'
 
 interface NavbarSectionProps {
   section: NavbarSectionType
   businessName?: string
+  bookingHref?: string
 }
 
-export function NavbarSection({ section, businessName }: NavbarSectionProps) {
+export function NavbarSection({ section, businessName, bookingHref }: NavbarSectionProps) {
   const {
     logo,
     logoText,
@@ -28,6 +28,7 @@ export function NavbarSection({ section, businessName }: NavbarSectionProps) {
     backgroundColor,
     textColor = 'dark',
   } = section.data
+  const resolvedCtaLink = bookingHref && ctaLink === '#contact' ? bookingHref : ctaLink
 
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -125,9 +126,9 @@ export function NavbarSection({ section, businessName }: NavbarSectionProps) {
               </a>
             ))}
 
-            {showCta && ctaText && ctaLink && (
+            {showCta && ctaText && resolvedCtaLink && (
               <a
-                href={ctaLink}
+                href={resolvedCtaLink}
                 className="px-5 py-2.5 rounded-lg theme-button-primary font-semibold text-sm transition-all hover:scale-105"
                 style={{
                   borderRadius: 'var(--theme-radius, 0.5rem)',
@@ -178,9 +179,9 @@ export function NavbarSection({ section, businessName }: NavbarSectionProps) {
                 </a>
               ))}
 
-              {showCta && ctaText && ctaLink && (
+              {showCta && ctaText && resolvedCtaLink && (
                 <a
-                  href={ctaLink}
+                  href={resolvedCtaLink}
                   onClick={() => setIsOpen(false)}
                   className="block w-full text-center px-5 py-3 rounded-lg font-semibold bg-gray-900 text-white hover:bg-gray-800 transition-colors mt-4"
                 >

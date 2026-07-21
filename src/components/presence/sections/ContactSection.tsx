@@ -2,7 +2,17 @@
 
 import { ContactSection as ContactSectionType } from '@/types/page-sections'
 import { motion } from 'framer-motion'
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Globe } from 'lucide-react'
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Globe,
+  Youtube,
+} from 'lucide-react'
 
 interface ContactSectionProps {
   section: ContactSectionType
@@ -12,12 +22,15 @@ interface ContactSectionProps {
     address?: string
     city?: string
     zipCode?: string
+    website?: string
     socialLinks?: {
       facebook?: string
       instagram?: string
       twitter?: string
       linkedin?: string
       website?: string
+      youtube?: string
+      tiktok?: string
     }
   }
 }
@@ -36,6 +49,8 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
     twitter: Twitter,
     linkedin: Linkedin,
     website: Globe,
+    youtube: Youtube,
+    tiktok: Globe,
   }
 
   return (
@@ -114,11 +129,14 @@ export function ContactSection({ section, businessData }: ContactSectionProps) {
             )}
 
             {/* Social Media */}
-            {showSocialMedia && businessData.socialLinks && (
+            {showSocialMedia && (businessData.socialLinks || businessData.website) && (
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-4">Follow Us</h3>
                 <div className="flex gap-3">
-                  {Object.entries(businessData.socialLinks).map(([platform, url]) => {
+                  {Object.entries({
+                    ...businessData.socialLinks,
+                    website: businessData.socialLinks?.website || businessData.website,
+                  }).map(([platform, url]) => {
                     if (!url) return null
                     const Icon = socialIcons[platform as keyof typeof socialIcons]
                     if (!Icon) return null

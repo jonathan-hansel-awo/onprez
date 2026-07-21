@@ -3,6 +3,12 @@
 import { PageSection } from '@/types/page-sections'
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
+import {
+  PresenceTrustSignals,
+  PresenceTrustStrip,
+  SectionBookingCta,
+  StickyMobileBookingCta,
+} from '@/components/presence/PresenceConversion'
 
 // Static imports for above-the-fold sections
 import { HeroSection } from './HeroSection'
@@ -79,14 +85,18 @@ interface SectionRendererProps {
     email?: string
     address?: string
     website?: string
-    socialMedia?: {
+    socialLinks?: {
       facebook?: string
       instagram?: string
       twitter?: string
       linkedin?: string
+      tiktok?: string
+      youtube?: string
+      website?: string
     }
   }
   showInquiryForm?: boolean
+  trustSignals?: PresenceTrustSignals
 }
 
 export function SectionRenderer({
@@ -96,13 +106,17 @@ export function SectionRenderer({
   businessId,
   businessName,
   showInquiryForm = true,
+  trustSignals = {},
 }: SectionRendererProps) {
   const visibleSections = sections
     .filter(section => section.isVisible)
     .sort((a, b) => a.order - b.order)
 
+  const bookingHref = `/${businessHandle}/book`
+  const ctaSectionTypes = new Set(['ABOUT', 'SERVICES', 'GALLERY', 'TESTIMONIALS', 'FAQ'])
+
   return (
-    <>
+    <div className="pb-24 md:pb-0">
       {visibleSections.map((section, index) => {
         // First 2 sections load immediately (above fold)
         const isAboveFold = index < 2
@@ -111,11 +125,16 @@ export function SectionRenderer({
           switch (section.type) {
             case 'NAVBAR':
               return (
-                <NavbarSection key={section.id} section={section} businessName={businessName} />
+                <NavbarSection
+                  key={section.id}
+                  section={section}
+                  businessName={businessName}
+                  bookingHref={bookingHref}
+                />
               )
 
             case 'HERO':
-              return <HeroSection key={section.id} section={section} />
+              return <HeroSection key={section.id} section={section} bookingHref={bookingHref} />
 
             case 'ABOUT':
               return <AboutSection key={section.id} section={section} />
@@ -152,12 +171,20 @@ export function SectionRenderer({
         })()
 
         // Wrap below-fold sections in Suspense
-        return isAboveFold ? (
+        const renderedSection = isAboveFold ? (
           sectionComponent
         ) : (
-          <Suspense key={section.id} fallback={<SectionSkeleton />}>
-            {sectionComponent}
-          </Suspense>
+          <Suspense fallback={<SectionSkeleton />}>{sectionComponent}</Suspense>
+        )
+
+        return (
+          <div key={section.id}>
+            {renderedSection}
+            {section.type === 'HERO' && <PresenceTrustStrip signals={trustSignals} />}
+            {ctaSectionTypes.has(section.type) && (
+              <SectionBookingCta bookingHref={bookingHref} businessName={businessName} />
+            )}
+          </div>
         )
       })}
 
@@ -171,6 +198,8 @@ export function SectionRenderer({
           />
         </Suspense>
       )}
-    </>
+
+      <StickyMobileBookingCta bookingHref={bookingHref} businessName={businessName} />
+    </div>
   )
 }
