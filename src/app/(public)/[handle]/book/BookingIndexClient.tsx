@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { BookingWidget } from '@/components/booking'
+import type { BookingData } from '@/components/booking/BookingWidget'
 
 interface BookingIndexClientProps {
   businessId: string
@@ -19,7 +20,7 @@ export function BookingIndexClient({
   const router = useRouter()
 
   const handleComplete = (
-    booking: any,
+    _booking: BookingData,
     confirmation: { id: string; confirmationNumber: string }
   ) => {
     // Redirect to success page with confirmation number
@@ -31,7 +32,7 @@ export function BookingIndexClient({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <main className="min-h-screen overflow-x-clip bg-gray-50 px-3 py-4 sm:px-4 sm:py-8">
       <BookingWidget
         businessId={businessId}
         businessHandle={businessHandle}
@@ -40,6 +41,6 @@ export function BookingIndexClient({
         onComplete={handleComplete}
         onCancel={handleCancel}
       />
-    </div>
+    </main>
   )
 }

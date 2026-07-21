@@ -59,6 +59,8 @@ export function ServiceSelectionStep({
 
   useEffect(() => {
     fetchServices()
+    // fetchServices is intentionally scoped to the current business handle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessHandle])
 
   async function fetchServices() {
@@ -149,7 +151,7 @@ export function ServiceSelectionStep({
           placeholder="Search services..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          className="min-h-11 w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-base transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -159,7 +161,7 @@ export function ServiceSelectionStep({
           <button
             onClick={() => setSelectedCategory(null)}
             className={cn(
-              'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+              'min-h-11 rounded-full px-4 py-2 text-sm font-medium transition-colors',
               !selectedCategory
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -172,7 +174,7 @@ export function ServiceSelectionStep({
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               className={cn(
-                'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                'min-h-11 rounded-full px-4 py-2 text-sm font-medium transition-colors',
                 selectedCategory === category.id
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -293,10 +295,10 @@ function ServiceCard({ service, isSelected, onSelect, index }: ServiceCardProps)
           : 'border-gray-200 bg-white hover:border-blue-300'
       )}
     >
-      <div className="flex gap-4">
+      <div className="flex min-w-0 gap-3 sm:gap-4">
         {/* Service Image */}
         {service.imageUrl && (
-          <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:h-20 sm:w-20">
             <Image
               src={service.imageUrl}
               alt={service.name}
@@ -339,7 +341,7 @@ function ServiceCard({ service, isSelected, onSelect, index }: ServiceCardProps)
             </div>
 
             {/* Price and Selection Indicator */}
-            <div className="flex-shrink-0 text-right">
+            <div className="max-w-24 flex-shrink-0 text-right">
               <div className="font-bold text-gray-900">{formattedPrice}</div>
               <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
                 <Clock className="w-3.5 h-3.5" />

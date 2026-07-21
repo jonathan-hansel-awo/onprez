@@ -17,6 +17,8 @@ import {
   HelpCircle,
   Star,
   Code,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -95,13 +97,28 @@ export function SectionList({
     onSectionUpdate({ ...section, isVisible: !section.isVisible })
   }
 
+  function moveSection(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction
+    if (targetIndex < 0 || targetIndex >= sections.length) return
+
+    const reordered = [...sections]
+    const [movedSection] = reordered.splice(index, 1)
+    reordered.splice(targetIndex, 0, movedSection)
+    onSectionReorder(reordered.map((section, order) => ({ ...section, order })))
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 space-y-4 flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-gray-900">Sections</h3>
-          <Button variant="primary" size="sm" onClick={() => setShowAddMenu(!showAddMenu)}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowAddMenu(!showAddMenu)}
+            className="min-h-11"
+          >
             <Plus className="w-4 h-4 mr-1" />
             Add
           </Button>
@@ -115,7 +132,7 @@ export function SectionList({
               <button
                 key={type}
                 onClick={() => handleAddSection(type as SectionType)}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors"
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-white"
               >
                 <Icon className="w-4 h-4" />
                 <span className="capitalize">{type.toLowerCase().replace('_', ' ')}</span>
@@ -150,11 +167,11 @@ export function SectionList({
                 `}
                 >
                   {/* Drag Handle */}
-                  <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute left-1 top-1/2 hidden -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 md:block">
                     <GripVertical className="w-4 h-4 text-gray-400" />
                   </div>
 
-                  <div className="flex items-center gap-3 pl-4">
+                  <div className="flex items-center gap-2 pl-0 md:gap-3 md:pl-4">
                     <Icon className="w-5 h-5 text-gray-600 flex-shrink-0" />
 
                     <div className="flex-1 min-w-0">
@@ -168,11 +185,36 @@ export function SectionList({
                     {/* Actions */}
                     <div className="flex items-center gap-1">
                       <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation()
+                          moveSection(index, -1)
+                        }}
+                        disabled={index === 0}
+                        className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100 disabled:opacity-30 md:hidden"
+                        aria-label={`Move ${section.type.toLowerCase()} section up`}
+                      >
+                        <ChevronUp className="h-4 w-4 text-gray-600" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation()
+                          moveSection(index, 1)
+                        }}
+                        disabled={index === sections.length - 1}
+                        className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100 disabled:opacity-30 md:hidden"
+                        aria-label={`Move ${section.type.toLowerCase()} section down`}
+                      >
+                        <ChevronDown className="h-4 w-4 text-gray-600" />
+                      </button>
+                      <button
                         onClick={e => {
                           e.stopPropagation()
                           toggleVisibility(section)
                         }}
-                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                        className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100"
+                        aria-label={`${section.isVisible ? 'Hide' : 'Show'} ${section.type.toLowerCase()} section`}
                       >
                         {section.isVisible ? (
                           <Eye className="w-4 h-4 text-gray-600" />
@@ -188,7 +230,8 @@ export function SectionList({
                             onSectionDelete(section.id)
                           }
                         }}
-                        className="p-1 hover:bg-red-50 rounded transition-colors"
+                        className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-red-50"
+                        aria-label={`Delete ${section.type.toLowerCase()} section`}
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
                       </button>

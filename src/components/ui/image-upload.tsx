@@ -107,11 +107,11 @@ export function ImageUpload({
           <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-200 group">
             <Image src={value} alt="Upload preview" fill className="object-cover" unoptimized />
 
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
               <button
                 type="button"
                 onClick={() => inputRef.current?.click()}
-                className="px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+                className="min-h-11 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-100"
                 disabled={uploading}
               >
                 Change
@@ -121,7 +121,7 @@ export function ImageUpload({
                 <button
                   type="button"
                   onClick={onRemove}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                  className="min-h-11 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
                   disabled={uploading}
                 >
                   Remove

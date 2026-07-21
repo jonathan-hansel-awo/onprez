@@ -144,7 +144,7 @@ export function CustomerDetailsStep({
               onChange={e => onUpdate({ customerName: e.target.value })}
               onBlur={e => handleBlur('customerName', e.target.value)}
               className={cn(
-                'block w-full pl-10 pr-3 py-2.5 border rounded-lg shadow-sm text-sm',
+                'block min-h-11 w-full rounded-lg border py-2.5 pl-10 pr-3 text-base shadow-sm',
                 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                 'placeholder:text-gray-400',
                 touched.customerName && errors.customerName
@@ -187,7 +187,7 @@ export function CustomerDetailsStep({
               onChange={e => onUpdate({ customerEmail: e.target.value })}
               onBlur={e => handleBlur('customerEmail', e.target.value)}
               className={cn(
-                'block w-full pl-10 pr-3 py-2.5 border rounded-lg shadow-sm text-sm',
+                'block min-h-11 w-full rounded-lg border py-2.5 pl-10 pr-3 text-base shadow-sm',
                 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                 'placeholder:text-gray-400',
                 touched.customerEmail && errors.customerEmail
@@ -233,7 +233,7 @@ export function CustomerDetailsStep({
               onChange={e => handlePhoneChange(e.target.value)}
               onBlur={e => handleBlur('customerPhone', e.target.value)}
               className={cn(
-                'block w-full pl-10 pr-3 py-2.5 border rounded-lg shadow-sm text-sm',
+                'block min-h-11 w-full rounded-lg border py-2.5 pl-10 pr-3 text-base shadow-sm',
                 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                 'placeholder:text-gray-400',
                 touched.customerPhone && errors.customerPhone
@@ -277,7 +277,7 @@ export function CustomerDetailsStep({
               rows={3}
               maxLength={500}
               className={cn(
-                'block w-full pl-10 pr-3 py-2.5 border rounded-lg shadow-sm text-sm',
+                'block min-h-11 w-full rounded-lg border py-2.5 pl-10 pr-3 text-base shadow-sm',
                 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                 'placeholder:text-gray-400 resize-none',
                 'border-gray-300'
