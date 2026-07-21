@@ -1,9 +1,26 @@
 import Link from 'next/link'
 import { presenceTemplateCatalogue } from '@/data/presence-template-catalogue'
 import { realisticDemoBusiness, realisticDemoHref } from '@/data/realistic-demo-business'
+import {
+  hairMakeupDemoBusiness,
+  hairMakeupDemoHref,
+} from '@/data/hair-makeup-demo-business'
 
 export function ExamplesCarousel() {
-  const featuredTemplates = presenceTemplateCatalogue.slice(0, 3)
+  const featuredSlugs = [
+    realisticDemoBusiness.templateSlug,
+    hairMakeupDemoBusiness.templateSlug,
+    'regent-barber',
+  ]
+  const featuredTemplates = featuredSlugs.flatMap(slug => {
+    const template = presenceTemplateCatalogue.find(item => item.slug === slug)
+    return template ? [template] : []
+  })
+
+  const realisticDemoHrefs: Record<string, string> = {
+    [realisticDemoBusiness.templateSlug]: realisticDemoHref,
+    [hairMakeupDemoBusiness.templateSlug]: hairMakeupDemoHref,
+  }
 
   return (
     <section className="bg-gray-50 px-5 py-24 sm:px-8 md:py-32">
@@ -52,23 +69,15 @@ export function ExamplesCarousel() {
               </div>
               <div className="p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                  {template.slug === realisticDemoBusiness.templateSlug
-                    ? 'Full realistic demo'
-                    : template.category}
+                  {realisticDemoHrefs[template.slug] ? 'Full realistic demo' : template.category}
                 </p>
                 <h3 className="mt-2 text-xl font-bold text-gray-900">{template.name}</h3>
                 <p className="mt-2 text-sm leading-6 text-gray-600">{template.description}</p>
                 <Link
-                  href={
-                    template.slug === realisticDemoBusiness.templateSlug
-                      ? realisticDemoHref
-                      : `/templates/${template.slug}`
-                  }
+                  href={realisticDemoHrefs[template.slug] || `/templates/${template.slug}`}
                   className="mt-5 inline-flex font-semibold text-onprez-blue"
                 >
-                  {template.slug === realisticDemoBusiness.templateSlug
-                    ? 'Explore full demo'
-                    : 'Preview template'}
+                  {realisticDemoHrefs[template.slug] ? 'Explore full demo' : 'Preview template'}
                 </Link>
               </div>
             </article>

@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Footer, Header, ScrollProgressEnhanced } from '@/components/navigation'
 import { realisticDemoBusiness, realisticDemoHref } from '@/data/realistic-demo-business'
+import { hairMakeupDemoBusiness, hairMakeupDemoHref } from '@/data/hair-makeup-demo-business'
 
 export const metadata: Metadata = {
   title: 'Live Examples | OnPrez',
@@ -11,6 +12,15 @@ export const metadata: Metadata = {
 }
 
 const examples = [
+  {
+    name: hairMakeupDemoBusiness.name,
+    category: hairMakeupDemoBusiness.category,
+    description: `${hairMakeupDemoBusiness.description} Explore ${hairMakeupDemoBusiness.services.length} services with preparation guidance, bridal policies, FAQs and a complete booking journey.`,
+    href: hairMakeupDemoHref,
+    personaliseHref: '/templates/editorial-beauty',
+    image: hairMakeupDemoBusiness.images.hero,
+    featured: true,
+  },
   {
     name: realisticDemoBusiness.name,
     category: realisticDemoBusiness.category,
@@ -82,7 +92,7 @@ export default function ExamplesPage() {
                     <h2 className="text-3xl font-bold text-gray-900">{example.name}</h2>
                     {example.featured && (
                       <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-onprez-blue">
-                        Canonical screenshot and onboarding example
+                        Complete realistic business example
                       </p>
                     )}
                     <p className="mt-4 max-w-2xl leading-7 text-gray-600">{example.description}</p>

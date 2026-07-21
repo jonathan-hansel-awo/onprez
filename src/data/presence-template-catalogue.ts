@@ -1,4 +1,5 @@
 import { realisticDemoBusiness } from '@/data/realistic-demo-business'
+import { hairMakeupDemoBusiness } from '@/data/hair-makeup-demo-business'
 
 export const templateCategories = [
   'ALL',
@@ -145,8 +146,9 @@ export const presenceTemplateCatalogue: TemplateCatalogueItem[] = [
     slug: 'editorial-beauty',
     name: 'Editorial Beauty',
     category: 'BEAUTY',
-    description: 'A confident visual layout for beauty professionals with strong social presence.',
-    audience: 'Makeup artists, nail technicians, hair stylists',
+    description:
+      'A bold editorial hair-and-makeup presence with portfolio-led storytelling and detailed appointment preparation.',
+    audience: 'Textured-hair specialists, makeup artists, bridal stylists, beauty studios',
     palette: {
       background: '#fff7f8',
       surface: '#f5dfe4',
@@ -154,25 +156,16 @@ export const presenceTemplateCatalogue: TemplateCatalogueItem[] = [
       text: '#301f25',
     },
     preview: {
-      eyebrow: 'Beauty, considered',
-      headline: 'Polished work. Personal service.',
-      businessName: 'The Rose Studio',
-      services: [
-        {
-          id: 'signature-glam',
-          name: 'Signature Glam',
-          duration: '75 minutes',
-          price: '£70',
-          description: 'A complete occasion-ready makeup appointment.',
-        },
-        {
-          id: 'soft-glam',
-          name: 'Soft Glam',
-          duration: '60 minutes',
-          price: '£58',
-          description: 'A natural, camera-ready finish tailored to you.',
-        },
-      ],
+      eyebrow: hairMakeupDemoBusiness.tagline,
+      headline: 'Texture-led hair and makeup, finished with intention.',
+      businessName: hairMakeupDemoBusiness.name,
+      services: hairMakeupDemoBusiness.services.map(service => ({
+        id: service.id,
+        name: service.name,
+        duration: service.duration,
+        price: service.price,
+        description: service.description,
+      })),
     },
   },
   {
