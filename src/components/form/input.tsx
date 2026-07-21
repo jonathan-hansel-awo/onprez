@@ -11,6 +11,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
   onRightIconClick?: () => void
+  rightIconLabel?: string
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -23,6 +24,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       leftIcon,
       rightIcon,
       onRightIconClick,
+      rightIconLabel,
       type = 'text',
       ...props
     },
@@ -94,8 +96,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={onRightIconClick}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              tabIndex={-1}
+              className="absolute right-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center text-gray-400 transition-colors hover:text-gray-600"
+              aria-label={rightIconLabel || 'Toggle input option'}
             >
               {rightIcon}
             </button>

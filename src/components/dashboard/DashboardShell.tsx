@@ -20,7 +20,6 @@ import {
   HelpCircle,
   PanelLeftClose,
   PanelLeft,
-  Clock,
 } from 'lucide-react'
 import { UserMenu } from '@/components/navigation/UserMenu'
 import { Logo } from '@/components/navigation'
@@ -96,7 +95,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {/* Mobile close button */}
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-lg transition-colors hover:bg-gray-100 lg:hidden"
+                  aria-label="Close menu"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -114,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       href={item.href}
                       onClick={() => setSidebarOpen(false)}
                       className={`
-                    flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative
+                    relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
                     ${
                       isActive
                         ? 'bg-gradient-to-r from-onprez-blue to-onprez-purple text-white'
@@ -136,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   href="/help"
                   className={`
-                flex items-center gap-3 px-3 py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors
+                flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900
                 ${sidebarCollapsed ? 'lg:justify-center' : ''}
               `}
                   title={sidebarCollapsed ? 'Help & Support' : undefined}
@@ -150,18 +150,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </>
       )}
       {/* Main content */}
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
+      <div
+        className={`min-w-0 overflow-x-clip transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}
+      >
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center">
           <div className="flex items-center justify-between w-full px-4 sm:px-6 lg:px-8">
             {/* Mobile menu button */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Open menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
+            {isPresenceEditor ? (
+              <Link
+                href="/dashboard/presence"
+                className="flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-onprez-blue hover:bg-onprez-blue/10 lg:hidden"
+              >
+                <ChevronRight className="mr-1 h-5 w-5 rotate-180" aria-hidden="true" />
+                Presence
+              </Link>
+            ) : (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg transition-colors hover:bg-gray-100 lg:hidden"
+                aria-label="Open menu"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+            )}
 
             {/* Breadcrumbs */}
             <div className="flex-1">
@@ -174,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page content */}
-        <main className="p-6 lg:p-8">{children}</main>
+        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   )

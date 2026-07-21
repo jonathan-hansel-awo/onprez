@@ -121,7 +121,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
 
       <ThemeProvider theme={theme}>
         <div
-          className="min-h-screen"
+          className="min-h-screen overflow-x-clip pb-20 md:pb-0"
           style={{
             backgroundColor: theme.backgroundColor || '#FFFFFF',
             fontFamily: theme.fontFamily || 'Inter',

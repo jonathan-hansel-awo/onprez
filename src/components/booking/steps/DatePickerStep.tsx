@@ -102,6 +102,8 @@ export function DatePickerStep({
   // Fetch availability for the visible month
   useEffect(() => {
     fetchAvailability()
+    // Availability is refreshed only when the visible month or service changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonth, currentYear, serviceId])
 
   async function fetchAvailability() {
@@ -278,7 +280,7 @@ export function DatePickerStep({
           <p className="text-sm">{error}</p>
           <button
             onClick={fetchAvailability}
-            className="ml-auto text-sm font-medium hover:underline"
+            className="ml-auto min-h-11 px-2 text-sm font-medium hover:underline"
           >
             Retry
           </button>
@@ -286,7 +288,7 @@ export function DatePickerStep({
       )}
 
       {/* Calendar */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-2 sm:p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <Button
@@ -294,12 +296,13 @@ export function DatePickerStep({
             size="sm"
             onClick={goToPreviousMonth}
             disabled={!canGoPrev}
-            className="p-2"
+            className="min-h-11 min-w-11 p-2"
+            aria-label="Previous month"
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
 
-          <h4 className="text-lg font-semibold text-gray-900">
+          <h4 className="text-center text-base font-semibold text-gray-900 sm:text-lg">
             {MONTHS[currentMonth]} {currentYear}
           </h4>
 
@@ -308,7 +311,8 @@ export function DatePickerStep({
             size="sm"
             onClick={goToNextMonth}
             disabled={!canGoNext}
-            className="p-2"
+            className="min-h-11 min-w-11 p-2"
+            aria-label="Next month"
           >
             <ChevronRight className="w-5 h-5" />
           </Button>
@@ -349,7 +353,7 @@ export function DatePickerStep({
                 whileHover={isClickable ? { scale: 1.05 } : undefined}
                 whileTap={isClickable ? { scale: 0.95 } : undefined}
                 className={cn(
-                  'aspect-square p-1 relative rounded-lg transition-all text-sm flex flex-col items-center justify-center',
+                  'relative flex min-h-11 min-w-0 flex-col items-center justify-center rounded-lg p-0.5 text-sm transition-all sm:aspect-square sm:p-1',
                   'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
 
                   // Base styling

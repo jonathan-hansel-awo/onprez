@@ -331,7 +331,7 @@ function SignupPageComponent() {
                   </p>
                   <button
                     onClick={() => copy(`onprez.com/${formData.handle}`)}
-                    className="p-1 hover:bg-blue-100 rounded transition-colors"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-blue-100"
                     aria-label="Copy handle to clipboard"
                   >
                     {isCopied ? (
@@ -430,7 +430,7 @@ function SignupPageComponent() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-h-[85vh] lg:max-h-none overflow-y-auto lg:overflow-visible"
+          className="w-full"
         >
           <motion.div
             animate={
@@ -442,10 +442,10 @@ function SignupPageComponent() {
                 : {}
             }
           >
-            <Card className="backdrop-blur-xl bg-white/95 border-white/20 hover:shadow-2xl transition-all duration-300 group relative overflow-hidden max-h-[90vh] lg:max-h-none flex flex-col">
+            <Card className="group relative flex flex-col overflow-hidden border-white/20 bg-white/95 backdrop-blur-xl transition-all duration-300 hover:shadow-2xl">
               {/* <div className="absolute inset-0 bg-gradient-to-r from-onprez-blue via-onprez-purple to-onprez-blue opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl" /> */}
 
-              <CardContent className="p-6 sm:p-8 overflow-y-auto custom-scrollbar flex-1">
+              <CardContent className="flex-1 p-4 sm:p-8">
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -647,7 +647,7 @@ function SignupPageComponent() {
                                 key={suggestion}
                                 type="button"
                                 onClick={() => handleChange('handle', suggestion)}
-                                className="px-3 py-1.5 text-sm font-medium bg-blue-50 text-onprez-blue rounded-lg hover:bg-blue-100 transition-colors"
+                                className="min-h-11 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-onprez-blue transition-colors hover:bg-blue-100"
                               >
                                 {suggestion}
                               </button>
@@ -691,6 +691,7 @@ function SignupPageComponent() {
                       leftIcon={<LockIcon />}
                       rightIcon={showPassword ? <EyeIcon /> : <EyeOffIcon />}
                       onRightIconClick={toggleVisibility}
+                      rightIconLabel={showPassword ? 'Hide password' : 'Show password'}
                     />
                     <PasswordStrength password={formData.password} />
                   </motion.div>

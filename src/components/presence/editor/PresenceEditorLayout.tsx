@@ -60,6 +60,7 @@ export function PresenceEditorLayout({
   const [activeTab, setActiveTab] = useState<'sections' | 'theme'>('sections')
   const [themeVersion, setThemeVersion] = useState(0)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [mobilePane, setMobilePane] = useState<'editor' | 'preview'>('editor')
 
   // Track changes
   useEffect(() => {
@@ -200,17 +201,17 @@ export function PresenceEditorLayout({
   }
 
   return (
-    <div className="fixed inset-0 top-16 bg-gray-50">
+    <div className="fixed inset-x-0 bottom-0 top-16 flex flex-col overflow-hidden bg-gray-50">
       {/* Confetti Effect */}
       <Confetti active={showConfetti} />
 
       {/* Top Toolbar */}
-      <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 relative z-10">
-        <div className="flex items-center gap-4">
+      <div className="relative z-10 shrink-0 border-b border-gray-200 bg-white px-3 py-2 sm:px-6 lg:flex lg:min-h-16 lg:items-center lg:justify-between lg:py-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
           <h2 className="text-lg font-semibold text-gray-900">Edit Presence</h2>
 
           {/* Status Indicators */}
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
             {/* Publish Status Badge */}
             <div
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
@@ -281,19 +282,52 @@ export function PresenceEditorLayout({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="mt-2 flex flex-wrap items-center gap-2 lg:mt-0 lg:justify-end lg:gap-3">
+          {/* Mobile workspace switcher */}
+          <div className="grid min-w-40 flex-1 grid-cols-2 rounded-lg bg-gray-100 p-1 md:hidden">
+            <button
+              type="button"
+              onClick={() => setMobilePane('editor')}
+              className={`min-h-11 rounded-md px-3 text-sm font-semibold transition-colors ${
+                mobilePane === 'editor' ? 'bg-white text-onprez-blue shadow-sm' : 'text-gray-600'
+              }`}
+              aria-pressed={mobilePane === 'editor'}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPreview(true)
+                setPreviewMode('mobile')
+                setMobilePane('preview')
+              }}
+              className={`min-h-11 rounded-md px-3 text-sm font-semibold transition-colors ${
+                mobilePane === 'preview' ? 'bg-white text-onprez-blue shadow-sm' : 'text-gray-600'
+              }`}
+              aria-pressed={mobilePane === 'preview'}
+            >
+              Preview
+            </button>
+          </div>
+
           {/* Preview Toggle */}
-          <Button variant="ghost" size="sm" onClick={() => setShowPreview(!showPreview)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPreview(!showPreview)}
+            className="hidden min-h-11 md:inline-flex md:items-center"
+          >
             {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
             {showPreview ? 'Hide' : 'Show'} Preview
           </Button>
 
           {/* Device Toggle */}
           {showPreview && (
-            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+            <div className="hidden gap-1 rounded-lg bg-gray-100 p-1 md:flex">
               <button
                 onClick={() => setPreviewMode('desktop')}
-                className={`p-2 rounded transition-all ${
+                className={`min-h-11 min-w-11 rounded p-2 transition-all ${
                   previewMode === 'desktop'
                     ? 'bg-white shadow-sm text-onprez-blue'
                     : 'hover:bg-gray-200 text-gray-600'
@@ -304,7 +338,7 @@ export function PresenceEditorLayout({
               </button>
               <button
                 onClick={() => setPreviewMode('mobile')}
-                className={`p-2 rounded transition-all ${
+                className={`min-h-11 min-w-11 rounded p-2 transition-all ${
                   previewMode === 'mobile'
                     ? 'bg-white shadow-sm text-onprez-blue'
                     : 'hover:bg-gray-200 text-gray-600'
@@ -322,6 +356,7 @@ export function PresenceEditorLayout({
             onClick={handleSave}
             disabled={saving || autoSaving || publishing}
             aria-busy={saving || autoSaving}
+            className="min-h-11 px-3 sm:px-4"
           >
             <Save className="w-4 h-4 mr-2" />
             {saving ? 'Saving...' : 'Save'}
@@ -334,7 +369,7 @@ export function PresenceEditorLayout({
               onClick={handleUnpublish}
               disabled={publishing || saving || autoSaving}
               aria-busy={publishing}
-              className="border-red-300 text-red-600 hover:bg-red-50"
+              className="min-h-11 border-red-300 px-3 text-red-600 hover:bg-red-50 sm:px-4"
             >
               <GlobeIcon className="w-4 h-4 mr-2" />
               {publishing ? 'Unpublishing...' : 'Unpublish'}
@@ -345,6 +380,7 @@ export function PresenceEditorLayout({
               onClick={handlePublish}
               disabled={publishing || saving || autoSaving}
               aria-busy={publishing}
+              className="min-h-11 px-3 sm:px-4"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               {publishing ? 'Publishing...' : 'Publish'}
@@ -354,9 +390,11 @@ export function PresenceEditorLayout({
       </div>
 
       {/* Main Editor Area */}
-      <div className="flex h-[calc(100vh-8rem)]">
+      <div className="flex min-h-0 flex-1">
         {/* Section List Sidebar */}
-        <div className="w-96 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
+        <div
+          className={`${mobilePane === 'editor' ? 'flex' : 'hidden'} w-full flex-col overflow-hidden border-r border-gray-200 bg-white md:flex md:w-96`}
+        >
           {/* Tabs */}
           <div className="flex border-b border-gray-200">
             <button
@@ -404,7 +442,9 @@ export function PresenceEditorLayout({
 
         {/* Preview Area */}
         {showPreview && (
-          <div className="flex-1 overflow-hidden">
+          <div
+            className={`${mobilePane === 'preview' ? 'block' : 'hidden'} min-w-0 flex-1 overflow-hidden md:block`}
+          >
             <PresencePreview
               sections={sections}
               previewMode={previewMode}

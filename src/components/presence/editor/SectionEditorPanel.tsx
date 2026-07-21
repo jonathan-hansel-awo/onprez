@@ -78,7 +78,11 @@ export function SectionEditorPanel({
         <h3 className="font-semibold text-gray-900">
           Edit {section.type.charAt(0) + section.type.slice(1).toLowerCase().replace('_', ' ')}
         </h3>
-        <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded transition-colors">
+        <button
+          onClick={onClose}
+          className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100"
+          aria-label="Close section editor"
+        >
           <X className="w-5 h-5 text-gray-600" />
         </button>
       </div>

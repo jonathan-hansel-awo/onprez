@@ -245,9 +245,9 @@ export function BookingWidget({
   }, [])
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="mx-auto w-full max-w-2xl overflow-x-clip">
       {/* Progress Steps */}
-      <div className="mb-8">
+      <div className="mb-5 px-1 sm:mb-8 sm:px-0">
         <div className="flex items-center justify-between">
           {STEPS.map((step, index) => {
             const isCompleted = index < currentStepIndex
@@ -261,7 +261,7 @@ export function BookingWidget({
                   onClick={() => isClickable && goToStep(step.id)}
                   disabled={!isClickable}
                   className={cn(
-                    'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-all',
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-medium transition-all sm:h-9 sm:w-9',
                     'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
                     isCompleted && 'bg-blue-600 text-white cursor-pointer hover:bg-blue-700',
                     isCurrent && 'bg-blue-600 text-white ring-4 ring-blue-100',
@@ -285,7 +285,7 @@ export function BookingWidget({
 
                 {/* Connector line */}
                 {index < STEPS.length - 1 && (
-                  <div className="flex-1 mx-2 sm:mx-4">
+                  <div className="mx-1 min-w-0 flex-1 sm:mx-4">
                     <div
                       className={cn(
                         'h-0.5 rounded-full',
@@ -309,7 +309,7 @@ export function BookingWidget({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
-            className="p-6"
+            className="p-3 sm:p-6"
           >
             {/* Service Selection Step */}
             {currentStep === 'service' && (
@@ -401,20 +401,30 @@ export function BookingWidget({
 
         {/* Navigation Footer */}
         <div
-          className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl"
+          className="rounded-b-xl border-t border-gray-200 bg-gray-50 px-3 py-3 sm:px-6 sm:py-4"
           aria-busy={isSubmitting}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             {/* Back button */}
             <div>
               {currentStepIndex > 0 &&
                 !(currentStep === 'datetime' && dateTimeSubStep === 'time') && (
-                  <Button variant="ghost" onClick={goToPreviousStep} disabled={isSubmitting}>
+                  <Button
+                    variant="ghost"
+                    onClick={goToPreviousStep}
+                    disabled={isSubmitting}
+                    className="min-h-11 px-3 sm:px-6"
+                  >
                     Back
                   </Button>
                 )}
               {currentStep === 'datetime' && dateTimeSubStep === 'time' && (
-                <Button variant="ghost" onClick={handleBackToDate} disabled={isSubmitting}>
+                <Button
+                  variant="ghost"
+                  onClick={handleBackToDate}
+                  disabled={isSubmitting}
+                  className="min-h-11 px-3 sm:px-6"
+                >
                   Back to Date
                 </Button>
               )}
@@ -423,17 +433,25 @@ export function BookingWidget({
             {/* Next/Submit button */}
             <div className="flex items-center gap-3">
               {onCancel && currentStepIndex === 0 && (
-                <Button variant="outline" onClick={onCancel}>
+                <Button variant="outline" onClick={onCancel} className="min-h-11 px-3 sm:px-6">
                   Cancel
                 </Button>
               )}
               {currentStep !== 'confirmation' ? (
-                <Button onClick={goToNextStep} disabled={!canProceed} className="min-w-[120px]">
+                <Button
+                  onClick={goToNextStep}
+                  disabled={!canProceed}
+                  className="min-h-11 min-w-[112px] px-3 sm:min-w-[120px] sm:px-6"
+                >
                   Continue
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               ) : (
-                <Button onClick={handleComplete} disabled={isSubmitting} className="min-w-[120px]">
+                <Button
+                  onClick={handleComplete}
+                  disabled={isSubmitting}
+                  className="min-h-11 min-w-[136px] px-3 sm:px-6"
+                >
                   {isSubmitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
