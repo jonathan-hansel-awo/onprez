@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { createBooking } from '@/lib/services/booking'
+import { sendBookingCreatedNotifications } from '@/lib/services/booking-notifications'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 
 import { GET, POST } from '@/app/api/bookings/route'
@@ -26,6 +27,10 @@ jest.mock('@/lib/services/booking', () => ({
   createBooking: jest.fn(),
 }))
 
+jest.mock('@/lib/services/booking-notifications', () => ({
+  sendBookingCreatedNotifications: jest.fn(),
+}))
+
 jest.mock('@/lib/services/rate-limit', () => ({
   checkRateLimit: jest.fn(),
 }))
@@ -43,6 +48,7 @@ const mockedPrisma = prisma as unknown as {
 }
 
 const mockedCreateBooking = createBooking as jest.Mock
+const mockedSendBookingCreatedNotifications = sendBookingCreatedNotifications as jest.Mock
 const mockedCheckRateLimit = checkRateLimit as jest.Mock
 
 function createRequest(path: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
@@ -73,11 +79,14 @@ const mockAppointment = {
   endTime: new Date('2026-08-01T10:30:00.000Z'),
   duration: 30,
   customerNotes: 'Please call on arrival',
+  customerPhone: '07123456789',
+  totalAmount: 25,
   createdAt: new Date('2026-07-10T10:00:00.000Z'),
   service: {
     name: 'Haircut',
     price: 25,
     duration: 30,
+    currency: 'GBP',
   },
   customer: {
     name: 'John Customer',
@@ -86,8 +95,10 @@ const mockAppointment = {
   business: {
     name: 'Test Business',
     timezone: 'Europe/London',
+    email: 'business@example.com',
     address: '123 Test Street',
     slug: 'test-business',
+    owner: { email: 'owner@example.com' },
   },
 }
 
@@ -99,6 +110,10 @@ describe('public bookings API', () => {
       limit: 10,
       remaining: 9,
       resetAt: new Date(Date.now() + 60_000),
+    })
+    mockedSendBookingCreatedNotifications.mockResolvedValue({
+      customer: { success: true, messageId: 'customer-message' },
+      business: { success: true, messageId: 'business-message' },
     })
   })
 
@@ -218,6 +233,16 @@ describe('public bookings API', () => {
           },
         })
       )
+      expect(mockedSendBookingCreatedNotifications).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bookingId: 'abc12345bookingid',
+          status: 'CONFIRMED',
+          customerEmail: 'john@example.com',
+          businessEmail: 'business@example.com',
+          businessOwnerEmail: 'owner@example.com',
+          currency: 'GBP',
+        })
+      )
     })
 
     it('creates pending bookings when the service requires approval', async () => {
@@ -273,6 +298,9 @@ describe('public bookings API', () => {
         expect.objectContaining({
           status: 'PENDING',
         })
+      )
+      expect(mockedSendBookingCreatedNotifications).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'PENDING' })
       )
     })
 
@@ -349,6 +377,7 @@ describe('public bookings API', () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Idempotency-Replayed')).toBe('true')
+      expect(mockedSendBookingCreatedNotifications).not.toHaveBeenCalled()
       expect(mockedCreateBooking).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
