@@ -8,6 +8,13 @@ function uniqueRequirements(values: Array<string | null | undefined>): string[] 
   return [...new Set(values.filter((value): value is string => Boolean(value)))]
 }
 
+function normalizeStripeCountry(country: string | null): string {
+  const normalized = country?.trim().toUpperCase()
+
+  if (!normalized || normalized === 'UK' || normalized === 'UNITED KINGDOM') return 'GB'
+  return normalized.length === 2 ? normalized : 'GB'
+}
+
 export function deriveStripeConnectedAccountStatus(
   account: Pick<Stripe.Account, 'charges_enabled' | 'payouts_enabled' | 'requirements'>
 ): StripeConnectedAccountStatus {
@@ -106,7 +113,14 @@ export async function createOrRetrieveStripeConnectedAccount(
   businessId: string
 ): Promise<StripeConnectedAccount> {
   const existing = await retrieveAndSyncStripeConnectedAccount(businessId)
-  if (existing) return existing
+
+  if (existing && existing.status !== StripeConnectedAccountStatus.DISCONNECTED) {
+    return existing
+  }
+
+  if (existing?.status === StripeConnectedAccountStatus.DISCONNECTED) {
+    await prisma.stripeConnectedAccount.delete({ where: { businessId } })
+  }
 
   const business = await prisma.business.findUnique({
     where: { id: businessId },
@@ -126,7 +140,7 @@ export async function createOrRetrieveStripeConnectedAccount(
 
   const account = await getStripeClient().accounts.create({
     type: 'standard',
-    country: business.country === 'UK' ? 'GB' : business.country || 'GB',
+    country: normalizeStripeCountry(business.country),
     email: business.email || business.owner.email,
     business_profile: {
       name: business.name,
