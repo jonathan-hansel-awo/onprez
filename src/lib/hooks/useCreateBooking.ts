@@ -125,7 +125,9 @@ export function useCreateBooking(): UseCreateBookingReturn {
         // uses a transaction lock and conflict checks, so this retry cannot
         // silently double-book the selected slot.
         if (response.status >= 500 && result.error === 'Failed to create booking') {
-          ;({ response, result } = await sendBookingRequest(payload))
+          const retry = await sendBookingRequest(payload)
+          response = retry.response
+          result = retry.result
         }
 
         if (!response.ok || !result.data) {
