@@ -14,6 +14,7 @@ import {
 } from './steps'
 import { useCreateBooking } from '@/lib/hooks/useCreateBooking'
 import { ActionFeedback } from '@/components/ui/action-feedback'
+import { formatLocalCalendarDate } from '@/lib/booking/public-booking'
 
 // Booking flow steps
 type BookingStep = 'service' | 'datetime' | 'details' | 'confirmation'
@@ -182,8 +183,7 @@ export function BookingWidget({
       return
     }
 
-    // Format date as YYYY-MM-DD
-    const dateStr = bookingData.date.toISOString().split('T')[0]
+    const dateStr = formatLocalCalendarDate(bookingData.date)
 
     const result = await createBooking({
       businessId,
