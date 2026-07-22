@@ -10,12 +10,21 @@ export type SectionType =
   | 'TESTIMONIALS'
   | 'CUSTOM_HTML'
 
+export interface SectionAppearance {
+  backgroundColor?: string
+  textColor?: string
+  accentColor?: string
+  contentWidth?: 'narrow' | 'standard' | 'wide' | 'full'
+  spacing?: 'compact' | 'normal' | 'spacious'
+}
+
 // Base section interface
 export interface BaseSection {
   id: string
   type: SectionType
   order: number
   isVisible: boolean
+  appearance?: SectionAppearance
 }
 
 // Navbar section
@@ -48,9 +57,16 @@ export interface HeroSection extends BaseSection {
   data: {
     title: string
     subtitle?: string
+    eyebrow?: string
     backgroundImage?: string
     ctaText?: string
     ctaLink?: string
+    secondaryCtaText?: string
+    secondaryCtaLink?: string
+    layout?: 'cover' | 'split' | 'editorial'
+    imagePosition?: 'left' | 'right'
+    imageFocalPoint?: 'center' | 'top' | 'bottom'
+    minHeight?: 'compact' | 'standard' | 'viewport'
     overlay?: boolean
     alignment?: 'left' | 'center' | 'right'
     overlayColor?: string
@@ -68,8 +84,12 @@ export interface AboutSection extends BaseSection {
   data: {
     title: string
     content: string
+    eyebrow?: string
     image?: string
     imagePosition?: 'left' | 'right'
+    layout?: 'split' | 'editorial' | 'centered'
+    imageShape?: 'portrait' | 'landscape' | 'square'
+    highlights?: string[]
   }
 }
 
@@ -79,7 +99,11 @@ export interface ServicesSection extends BaseSection {
   data: {
     title: string
     description?: string
-    layout?: 'grid' | 'list'
+    eyebrow?: string
+    layout?: 'grid' | 'list' | 'editorial'
+    columns?: 2 | 3
+    cardStyle?: 'elevated' | 'outlined' | 'minimal'
+    showImages?: boolean
     showPrices?: boolean
     serviceIds?: string[] // Reference to Service model
   }
@@ -90,13 +114,17 @@ export interface GallerySection extends BaseSection {
   type: 'GALLERY'
   data: {
     title?: string
+    eyebrow?: string
     images: Array<{
       url: string
       alt: string
       caption?: string
     }>
-    layout?: 'grid' | 'masonry' | 'carousel'
+    layout?: 'grid' | 'masonry' | 'carousel' | 'editorial'
     columns?: 2 | 3 | 4
+    featuredImageIndex?: number
+    gap?: 'tight' | 'normal' | 'wide'
+    imageRadius?: 'none' | 'soft' | 'rounded'
   }
 }
 
@@ -132,6 +160,7 @@ export interface TestimonialsSection extends BaseSection {
   type: 'TESTIMONIALS'
   data: {
     title: string
+    eyebrow?: string
     testimonials: Array<{
       id: string
       name: string
@@ -140,7 +169,8 @@ export interface TestimonialsSection extends BaseSection {
       image?: string
       rating?: number
     }>
-    layout?: 'carousel' | 'grid'
+    layout?: 'carousel' | 'grid' | 'editorial'
+    showRatings?: boolean
   }
 }
 
@@ -182,6 +212,10 @@ export function createSection(type: SectionType, order: number): PageSection {
     type,
     order,
     isVisible: true,
+    appearance: {
+      contentWidth: 'standard' as const,
+      spacing: 'normal' as const,
+    },
   }
 
   switch (type) {
@@ -216,6 +250,10 @@ export function createSection(type: SectionType, order: number): PageSection {
           subtitle: 'Providing exceptional service to our community',
           ctaText: 'Get Started',
           ctaLink: '#contact',
+          layout: 'cover',
+          imagePosition: 'right',
+          imageFocalPoint: 'center',
+          minHeight: 'standard',
           alignment: 'center',
           overlay: true,
           overlayColor: '#000000',
@@ -234,6 +272,9 @@ export function createSection(type: SectionType, order: number): PageSection {
           title: 'About Us',
           content: '',
           imagePosition: 'right',
+          layout: 'split',
+          imageShape: 'portrait',
+          highlights: [],
         },
       }
 
@@ -244,6 +285,9 @@ export function createSection(type: SectionType, order: number): PageSection {
         data: {
           title: 'Our Services',
           layout: 'grid',
+          columns: 3,
+          cardStyle: 'elevated',
+          showImages: true,
           showPrices: true,
         },
       }
@@ -257,6 +301,9 @@ export function createSection(type: SectionType, order: number): PageSection {
           images: [],
           layout: 'grid',
           columns: 3,
+          featuredImageIndex: 0,
+          gap: 'normal',
+          imageRadius: 'soft',
         },
       }
 
@@ -292,6 +339,7 @@ export function createSection(type: SectionType, order: number): PageSection {
           title: 'What Our Clients Say',
           testimonials: [],
           layout: 'carousel',
+          showRatings: true,
         },
       }
 

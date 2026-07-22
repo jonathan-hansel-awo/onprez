@@ -9,6 +9,7 @@ import { GallerySectionEditor } from './sections/GallerySectionEditor'
 import { ContactSectionEditor } from './sections/ContactSectionEditor'
 import { FAQSectionEditor } from './sections/FAQSectionEditor'
 import { NavbarSectionEditor } from './sections/NavbarSectionEditor'
+import { TestimonialsSectionEditor } from './sections/TestimonialsSectionEditor'
 
 interface SectionEditorPanelProps {
   section: PageSection
@@ -27,41 +28,41 @@ export function SectionEditorPanel({
     switch (section.type) {
       case 'NAVBAR':
         return <NavbarSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
-
       case 'HERO':
         return <HeroSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
-
       case 'ABOUT':
         return <AboutSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
-
       case 'SERVICES':
         return (
           <ServicesSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
         )
-
       case 'GALLERY':
         return (
           <GallerySectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
         )
-
       case 'CONTACT':
         return (
           <ContactSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
         )
-
       case 'FAQ':
         return <FAQSectionEditor section={section} onUpdate={onUpdate} />
-
-      // Rest remain the same
       case 'TESTIMONIALS':
+        return (
+          <TestimonialsSectionEditor
+            section={section}
+            onUpdate={onUpdate}
+            businessId={businessId}
+          />
+        )
       case 'CUSTOM_HTML':
         return (
           <div className="p-6 text-center text-gray-500">
-            <p>Editor for {section.type} coming soon...</p>
-            <p className="text-sm mt-2">This section will be available in the next milestone</p>
+            <p>Custom HTML remains unavailable for safety.</p>
+            <p className="mt-2 text-sm">
+              Use the premium layout controls instead; they remain responsive and accessible.
+            </p>
           </div>
         )
-
       default:
         return (
           <div className="p-6 text-center text-gray-500">
@@ -72,9 +73,8 @@ export function SectionEditorPanel({
   }
 
   return (
-    <div className="bg-gray-50 max-h-[50vh] overflow-y-auto">
-      {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-10">
+    <div className="max-h-[62vh] overflow-y-auto bg-gray-50">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
         <h3 className="font-semibold text-gray-900">
           Edit {section.type.charAt(0) + section.type.slice(1).toLowerCase().replace('_', ' ')}
         </h3>
@@ -83,11 +83,10 @@ export function SectionEditorPanel({
           className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100"
           aria-label="Close section editor"
         >
-          <X className="w-5 h-5 text-gray-600" />
+          <X className="h-5 w-5 text-gray-600" />
         </button>
       </div>
 
-      {/* Editor Content */}
       <div className="p-4">{renderEditor()}</div>
     </div>
   )
