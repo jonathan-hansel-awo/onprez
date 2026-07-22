@@ -293,6 +293,9 @@ model Business {
   teamInvitations        TeamInvitation[]
   members                BusinessMember[]
   pages                  Page[]
+  featureEntitlements    FeatureEntitlement[]
+  stripeConnectedAccount StripeConnectedAccount?
+  bookingPayments        BookingPayment[]
 
   @@index([ownerId])
   @@index([category])
@@ -300,6 +303,47 @@ model Business {
   @@index([isPublished, isActive, slug])
   @@index([city, state])
   @@map("businesses")
+}
+
+model FeatureEntitlement {
+  id         String            @id @default(cuid())
+  businessId String
+  feature    FeatureKey
+  enabled    Boolean           @default(true)
+  source     EntitlementSource
+  expiresAt  DateTime?
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  business   Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, feature])
+  @@index([feature, enabled])
+  @@index([expiresAt])
+  @@map("feature_entitlements")
+}
+
+model StripeConnectedAccount {
+  id                        String                       @id @default(cuid())
+  businessId                String                       @unique
+  stripeAccountId           String                       @unique
+  country                   String?
+  defaultCurrency           String?
+  detailsSubmitted          Boolean                      @default(false)
+  chargesEnabled            Boolean                      @default(false)
+  payoutsEnabled            Boolean                      @default(false)
+  status                    StripeConnectedAccountStatus @default(PENDING)
+  disabledReason            String?
+  requirementsDue           String[]                     @default([])
+  requirementsPastDue       String[]                     @default([])
+  requirementsEventuallyDue String[]                     @default([])
+  lastSyncedAt              DateTime?
+  createdAt                 DateTime                     @default(now())
+  updatedAt                 DateTime                     @updatedAt
+  business                  Business                     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("stripe_connected_accounts")
 }
 
 model Page {
@@ -447,60 +491,64 @@ model ServiceCategory {
 }
 
 model Appointment {
-  id                  String                        @id @default(cuid())
-  businessId          String
-  serviceId           String
-  customerId          String
-  startTime           DateTime
-  endTime             DateTime
-  duration            Int
-  timezone            String
-  status              AppointmentStatus             @default(PENDING)
-  previousStatus      AppointmentStatus?
-  confirmedAt         DateTime?
-  confirmedBy         String?
-  completedAt         DateTime?
-  cancelledAt         DateTime?
-  cancellationSource  CancellationSource?
-  cancellationReason  String?
-  cancellationDetails String?
-  cancelledBy         String?
-  rescheduledFrom     String?
-  rescheduledTo       String?
-  rescheduledBy       String?
-  rescheduledAt       DateTime?
-  rescheduleReason    String?
-  customerName        String
-  customerEmail       String
-  customerPhone       String?
-  customerNotes       String?
-  businessNotes       String?
-  reminders           ReminderLog[]
-  isMultiDay          Boolean                       @default(false)
-  endDate             DateTime? // For multi-day: the final day
-  recurrencePattern   Json? // For recurring: { type: 'daily'|'weekly', count: number, days?: number[] }
-  parentId            String? // Link to parent appointment for series
-  parent              Appointment?                  @relation("AppointmentSeries", fields: [parentId], references: [id])
-  children            Appointment[]                 @relation("AppointmentSeries")
-  requiresDeposit     Boolean                       @default(false)
-  depositAmount       Decimal?                      @db.Decimal(10, 2)
-  depositPaid         Boolean                       @default(false)
-  depositPaidAt       DateTime?
-  totalAmount         Decimal                       @db.Decimal(10, 2)
-  paymentStatus       PaymentStatus                 @default(UNPAID)
-  paidAt              DateTime?
-  reminderSentAt      DateTime?
-  reminderCount       Int                           @default(0)
-  bookingSource       String?
-  bookingIp           String?
-  metadata            Json?
-  createdAt           DateTime                      @default(now())
-  updatedAt           DateTime                      @updatedAt
-  business            Business                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer            Customer                      @relation(fields: [customerId, businessId], references: [id, businessId])
-  service             Service                       @relation(fields: [serviceId, businessId], references: [id, businessId])
-  idempotencyKeys     BookingIdempotencyKey[]
-  statusTransitions   AppointmentStatusTransition[]
+  id                           String                        @id @default(cuid())
+  businessId                   String
+  serviceId                    String
+  customerId                   String
+  startTime                    DateTime
+  endTime                      DateTime
+  duration                     Int
+  timezone                     String
+  status                       AppointmentStatus             @default(PENDING)
+  previousStatus               AppointmentStatus?
+  confirmedAt                  DateTime?
+  confirmedBy                  String?
+  completedAt                  DateTime?
+  cancelledAt                  DateTime?
+  cancellationSource           CancellationSource?
+  cancellationReason           String?
+  cancellationDetails          String?
+  cancelledBy                  String?
+  rescheduledFrom              String?
+  rescheduledTo                String?
+  rescheduledBy                String?
+  rescheduledAt                DateTime?
+  rescheduleReason             String?
+  customerName                 String
+  customerEmail                String
+  customerPhone                String?
+  customerNotes                String?
+  businessNotes                String?
+  reminders                    ReminderLog[]
+  isMultiDay                   Boolean                       @default(false)
+  endDate                      DateTime? // For multi-day: the final day
+  recurrencePattern            Json? // For recurring: { type: 'daily'|'weekly', count: number, days?: number[] }
+  parentId                     String? // Link to parent appointment for series
+  parent                       Appointment?                  @relation("AppointmentSeries", fields: [parentId], references: [id])
+  children                     Appointment[]                 @relation("AppointmentSeries")
+  requiresDeposit              Boolean                       @default(false)
+  depositAmount                Decimal?                      @db.Decimal(10, 2)
+  depositPaid                  Boolean                       @default(false)
+  depositPaidAt                DateTime?
+  totalAmount                  Decimal                       @db.Decimal(10, 2)
+  paymentStatus                PaymentStatus                 @default(UNPAID)
+  paidAt                       DateTime?
+  reminderSentAt               DateTime?
+  reminderCount                Int                           @default(0)
+  bookingSource                String?
+  bookingIp                    String?
+  metadata                     Json?
+  cancellationPolicyVersion    String?
+  cancellationPolicyAcceptedAt DateTime?
+  cancellationPolicySnapshot   Json?
+  createdAt                    DateTime                      @default(now())
+  updatedAt                    DateTime                      @updatedAt
+  business                     Business                      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer                     Customer                      @relation(fields: [customerId, businessId], references: [id, businessId])
+  service                      Service                       @relation(fields: [serviceId, businessId], references: [id, businessId])
+  idempotencyKeys              BookingIdempotencyKey[]
+  statusTransitions            AppointmentStatusTransition[]
+  payments                     BookingPayment[]
 
   @@index([serviceId])
   @@index([customerId])
@@ -509,6 +557,41 @@ model Appointment {
   @@index([businessId, createdAt])
   @@index([businessId, customerEmail])
   @@map("appointments")
+}
+
+model BookingPayment {
+  id                        String               @id @default(cuid())
+  businessId                String
+  appointmentId             String
+  provider                  PaymentProvider      @default(STRIPE)
+  purpose                   PaymentPurpose       @default(BOOKING_DEPOSIT)
+  status                    BookingPaymentStatus @default(PENDING)
+  amount                    Decimal              @db.Decimal(10, 2)
+  currency                  String               @default("GBP")
+  providerAccountId         String?
+  providerCheckoutSessionId String?              @unique
+  providerPaymentIntentId   String?              @unique
+  providerChargeId          String?              @unique
+  providerRefundId          String?
+  idempotencyKey            String?              @unique
+  policyVersion             String?
+  policyAcceptedAt          DateTime?
+  policySnapshot            Json?
+  refundedAmount            Decimal              @default(0) @db.Decimal(10, 2)
+  failureCode               String?
+  failureMessage            String?
+  metadata                  Json?
+  paidAt                    DateTime?
+  failedAt                  DateTime?
+  refundedAt                DateTime?
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
+  business                  Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointment               Appointment          @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId])
+  @@index([businessId, status, createdAt])
+  @@map("booking_payments")
 }
 
 model AppointmentStatusTransition {
@@ -716,6 +799,43 @@ model InquiryReply {
 
   @@index([inquiryId, createdAt])
   @@map("inquiry_replies")
+}
+
+enum FeatureKey {
+  BOOKING_DEPOSITS
+}
+
+enum EntitlementSource {
+  ALPHA
+  SUBSCRIPTION
+  PROMOTION
+  ADMIN
+}
+
+enum StripeConnectedAccountStatus {
+  PENDING
+  RESTRICTED
+  READY
+  DISCONNECTED
+}
+
+enum PaymentProvider {
+  STRIPE
+}
+
+enum PaymentPurpose {
+  BOOKING_DEPOSIT
+}
+
+enum BookingPaymentStatus {
+  PENDING
+  REQUIRES_ACTION
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  PARTIALLY_REFUNDED
+  REFUNDED
 }
 
 enum UserRole {
