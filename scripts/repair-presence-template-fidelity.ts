@@ -124,7 +124,7 @@ async function repairBusiness(
             presenceTemplateSlug: applied.templateSlug,
             presenceTemplateVersion: CANONICAL_TEMPLATE_VERSION,
             theme: applied.theme,
-          } as Prisma.InputJsonValue,
+          } as unknown as Prisma.InputJsonValue,
         },
       }),
     ])
