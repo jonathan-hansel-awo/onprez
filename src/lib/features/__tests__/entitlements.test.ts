@@ -112,13 +112,11 @@ describe('feature entitlements', () => {
         enabled: true,
         source: EntitlementSource.ALPHA,
         expiresAt: null,
-        metadata: null,
       },
       update: {
         enabled: true,
         source: EntitlementSource.ALPHA,
         expiresAt: null,
-        metadata: null,
       },
     })
   })
