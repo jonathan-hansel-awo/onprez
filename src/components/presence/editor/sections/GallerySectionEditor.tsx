@@ -40,15 +40,25 @@ export function GallerySectionEditor({ section, onUpdate, businessId }: GalleryS
   }
 
   function removeImage(index: number) {
-    updateData(
-      'images',
-      section.data.images.filter((_, imageIndex) => imageIndex !== index)
-    )
-    if (editingImageIndex === index) setEditingImageIndex(null)
+    const images = section.data.images.filter((_, imageIndex) => imageIndex !== index)
+    const currentFeaturedIndex = section.data.featuredImageIndex || 0
+    let featuredImageIndex = currentFeaturedIndex
 
-    if ((section.data.featuredImageIndex || 0) >= section.data.images.length - 1) {
-      updateData('featuredImageIndex', 0)
-    }
+    if (index === currentFeaturedIndex) featuredImageIndex = 0
+    if (index < currentFeaturedIndex) featuredImageIndex = currentFeaturedIndex - 1
+
+    onUpdate({
+      ...section,
+      data: {
+        ...section.data,
+        images,
+        featuredImageIndex: images.length
+          ? Math.min(featuredImageIndex, images.length - 1)
+          : 0,
+      },
+    })
+
+    if (editingImageIndex === index) setEditingImageIndex(null)
   }
 
   function updateImage(index: number, field: 'alt' | 'caption', value: string) {
@@ -64,10 +74,19 @@ export function GallerySectionEditor({ section, onUpdate, businessId }: GalleryS
     event.preventDefault()
     if (draggedIndex === null || draggedIndex === index) return
 
+    const featuredImage = section.data.images[section.data.featuredImageIndex || 0]
     const images = [...section.data.images]
     const [draggedImage] = images.splice(draggedIndex, 1)
     images.splice(index, 0, draggedImage)
-    updateData('images', images)
+
+    onUpdate({
+      ...section,
+      data: {
+        ...section.data,
+        images,
+        featuredImageIndex: featuredImage ? images.indexOf(featuredImage) : 0,
+      },
+    })
     setDraggedIndex(index)
   }
 
