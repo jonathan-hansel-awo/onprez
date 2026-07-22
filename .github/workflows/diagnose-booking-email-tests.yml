@@ -1,0 +1,71 @@
+name: Diagnose booking email tests
+
+on:
+  push:
+    branches:
+      - fix/booking-email-notifications
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/onprez
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/onprez
+      APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      RESEND_API_KEY: re_ci_placeholder
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ci-placeholder
+      CLOUDINARY_API_KEY: ci-placeholder
+      CLOUDINARY_API_SECRET: ci-placeholder
+      JWT_SECRET: ci-only-jwt-secret-at-least-32-characters
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture full Jest failure
+        run: |
+          set +e
+          npm test -- --runInBand > /tmp/jest-output.txt 2>&1
+          test_status=$?
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('/tmp/jest-output.txt').read_text(errors='replace')
+          lines = text.splitlines()
+          markers = ('FAIL ', '● ', 'TypeError:', 'Error:', 'Expected:', 'Received:', 'Test Suites:', 'Tests:')
+          selected = []
+          for i, line in enumerate(lines):
+              if any(marker in line for marker in markers):
+                  start = max(0, i - 12)
+                  end = min(len(lines), i + 35)
+                  selected.extend(lines[start:end])
+                  selected.append('\n---\n')
+          if not selected:
+              selected = lines[-500:]
+          Path('booking-email-test-diagnostic.txt').write_text('\n'.join(selected[-1200:]) + '\n')
+          PY
+          echo "JEST_STATUS=$test_status" >> booking-email-test-diagnostic.txt
+          exit 0
+
+      - name: Commit diagnostic and remove workflow
+        run: |
+          rm .github/workflows/diagnose-booking-email-tests.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: capture booking email test diagnostic"
+          git push
