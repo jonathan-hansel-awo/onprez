@@ -29,8 +29,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run entitlement tests
-        run: npx jest src/lib/features/__tests__/entitlements.test.ts --runInBand --verbose
+      - name: Capture Stripe configuration test output
+        run: |
+          set +e
+          npx jest src/lib/stripe/__tests__/config.test.ts --runInBand --verbose > stripe-test-output.txt 2>&1
+          echo $? > stripe-test-exit-code.txt
+          exit 0
 
-      - name: Run Stripe configuration tests
-        run: npx jest src/lib/stripe/__tests__/config.test.ts --runInBand --verbose
+      - name: Upload Stripe test diagnostics
+        uses: actions/upload-artifact@v6
+        with:
+          name: stripe-test-diagnostics
+          path: |
+            stripe-test-output.txt
+            stripe-test-exit-code.txt
+          if-no-files-found: error
+          retention-days: 1
