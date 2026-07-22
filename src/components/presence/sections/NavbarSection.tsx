@@ -28,7 +28,12 @@ export function NavbarSection({ section, businessName, bookingHref }: NavbarSect
     backgroundColor,
     textColor = 'dark',
   } = section.data
-  const resolvedCtaLink = bookingHref && ctaLink === '#contact' ? bookingHref : ctaLink
+
+  const isBookingCta =
+    /book|appointment|availability/i.test(ctaText || '') ||
+    ctaLink === '#contact' ||
+    ctaLink === '#services'
+  const resolvedCtaLink = bookingHref && isBookingCta ? bookingHref : ctaLink
 
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
