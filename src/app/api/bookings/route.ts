@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createBooking } from '@/lib/services/booking'
+import { sendBookingCreatedNotifications } from '@/lib/services/booking-notifications'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 import { z } from 'zod'
@@ -278,12 +279,15 @@ async function handlePost(request: NextRequest) {
         endTime: true,
         duration: true,
         customerNotes: true,
+        customerPhone: true,
+        totalAmount: true,
         createdAt: true,
         service: {
           select: {
             name: true,
             price: true,
             duration: true,
+            currency: true,
           },
         },
         customer: {
@@ -296,8 +300,12 @@ async function handlePost(request: NextRequest) {
           select: {
             name: true,
             timezone: true,
+            email: true,
             address: true,
             slug: true,
+            owner: {
+              select: { email: true },
+            },
           },
         },
       },
@@ -312,6 +320,41 @@ async function handlePost(request: NextRequest) {
         { success: false, error: 'Booking created but could not be retrieved' },
         { status: 500 }
       )
+    }
+
+    if (!result.replayed) {
+      const notifications = await sendBookingCreatedNotifications({
+        bookingId: appointment.id,
+        status: appointment.status,
+        customerName: appointment.customer.name,
+        customerEmail: appointment.customer.email,
+        customerPhone: appointment.customerPhone,
+        customerNotes: appointment.customerNotes,
+        businessName: appointment.business.name,
+        businessEmail: appointment.business.email,
+        businessOwnerEmail: appointment.business.owner.email,
+        businessAddress: appointment.business.address,
+        serviceName: appointment.service.name,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        timezone: appointment.business.timezone,
+        totalAmount: Number(appointment.totalAmount),
+        currency: appointment.service.currency,
+      })
+      const allNotificationsSent = notifications.customer.success && notifications.business.success
+
+      logger[allNotificationsSent ? 'info' : 'warn']('booking.api.notifications_completed', {
+        businessId: data.businessId,
+        bookingId: appointment.id,
+        customerSent: notifications.customer.success,
+        businessSent: notifications.business.success,
+      })
+    } else {
+      logger.info('booking.api.notifications_skipped', {
+        businessId: data.businessId,
+        bookingId: appointment.id,
+        reason: 'idempotency_replay',
+      })
     }
 
     logger.info('booking.api.succeeded', {

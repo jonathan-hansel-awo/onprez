@@ -82,9 +82,7 @@ describe('booking creation notifications', () => {
 
     expect(customerEmail.subject).toBe('Booking request received - Heavenly Pamper Palace')
     expect(customerEmail.text).toContain('will review your request')
-    expect(businessEmail.subject).toBe(
-      'New booking request: Serenity Massage - Ada Okoro'
-    )
+    expect(businessEmail.subject).toBe('New booking request: Serenity Massage - Ada Okoro')
   })
 
   it('escapes customer-provided values in HTML messages', () => {
