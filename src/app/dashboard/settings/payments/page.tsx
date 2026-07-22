@@ -130,7 +130,9 @@ export default function PaymentsSettingsPage() {
 
       window.location.assign(payload.data.url)
     } catch (connectError) {
-      setError(connectError instanceof Error ? connectError.message : 'Failed to start Stripe setup')
+      setError(
+        connectError instanceof Error ? connectError.message : 'Failed to start Stripe setup'
+      )
       setConnecting(false)
     }
   }
@@ -280,9 +282,12 @@ export default function PaymentsSettingsPage() {
                     </div>
                   </dl>
 
-                  {(account.requirementsDue.length > 0 || account.requirementsPastDue.length > 0) && (
+                  {(account.requirementsDue.length > 0 ||
+                    account.requirementsPastDue.length > 0) && (
                     <div>
-                      <h3 className="font-semibold text-gray-900">Information Stripe still needs</h3>
+                      <h3 className="font-semibold text-gray-900">
+                        Information Stripe still needs
+                      </h3>
                       <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-600">
                         {[...account.requirementsPastDue, ...account.requirementsDue]
                           .filter((value, index, values) => values.indexOf(value) === index)
@@ -322,7 +327,9 @@ export default function PaymentsSettingsPage() {
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
                 <div>
-                  <h2 className="font-semibold text-blue-950">No customer payments are active yet</h2>
+                  <h2 className="font-semibold text-blue-950">
+                    No customer payments are active yet
+                  </h2>
                   <p className="mt-1 text-sm leading-6 text-blue-900">
                     This phase only connects and verifies the professional's Stripe account. Service
                     deposit controls and customer checkout will be enabled in later phases.

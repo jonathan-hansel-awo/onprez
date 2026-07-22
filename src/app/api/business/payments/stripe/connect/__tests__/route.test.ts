@@ -118,10 +118,7 @@ describe('POST /api/business/payments/stripe/connect', () => {
 
     expect(response.status).toBe(200)
     expect(payload.data.url).toBe('https://connect.stripe.test/setup')
-    expect(mockedRequireEntitlement).toHaveBeenCalledWith(
-      'business-1',
-      FeatureKey.BOOKING_DEPOSITS
-    )
+    expect(mockedRequireEntitlement).toHaveBeenCalledWith('business-1', FeatureKey.BOOKING_DEPOSITS)
     expect(mockedCreateLink).toHaveBeenCalledWith({
       stripeAccountId: 'acct_test',
       businessId: 'business-1',

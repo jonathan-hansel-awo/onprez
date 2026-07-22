@@ -23,11 +23,10 @@ export function deriveStripeConnectedAccountStatus(
   }
 
   const requirements = account.requirements
-  const restricted = Boolean(requirements?.disabled_reason) || Boolean(requirements?.past_due?.length)
+  const restricted =
+    Boolean(requirements?.disabled_reason) || Boolean(requirements?.past_due?.length)
 
-  return restricted
-    ? StripeConnectedAccountStatus.RESTRICTED
-    : StripeConnectedAccountStatus.PENDING
+  return restricted ? StripeConnectedAccountStatus.RESTRICTED : StripeConnectedAccountStatus.PENDING
 }
 
 export async function syncStripeConnectedAccount(

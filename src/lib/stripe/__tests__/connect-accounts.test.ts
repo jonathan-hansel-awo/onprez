@@ -68,9 +68,7 @@ describe('Stripe connected account orchestration', () => {
 
   it('marks an account ready only when charges and payouts are enabled', () => {
     expect(
-      deriveStripeConnectedAccountStatus(
-        account({ charges_enabled: true, payouts_enabled: true })
-      )
+      deriveStripeConnectedAccountStatus(account({ charges_enabled: true, payouts_enabled: true }))
     ).toBe(StripeConnectedAccountStatus.READY)
   })
 
@@ -94,9 +92,7 @@ describe('Stripe connected account orchestration', () => {
   })
 
   it('keeps incomplete accounts pending when Stripe has not restricted them', () => {
-    expect(deriveStripeConnectedAccountStatus(account())).toBe(
-      StripeConnectedAccountStatus.PENDING
-    )
+    expect(deriveStripeConnectedAccountStatus(account())).toBe(StripeConnectedAccountStatus.PENDING)
   })
 
   it('builds only same-origin return and refresh URLs', () => {

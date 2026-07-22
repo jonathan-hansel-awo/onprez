@@ -17,11 +17,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const payload = await request.text()
-    event = getStripeClient().webhooks.constructEvent(
-      payload,
-      signature,
-      getStripeWebhookSecret()
-    )
+    event = getStripeClient().webhooks.constructEvent(payload, signature, getStripeWebhookSecret())
   } catch (error) {
     console.error('Stripe webhook verification error:', error)
     return NextResponse.json({ success: false, error: 'Invalid Stripe signature' }, { status: 400 })
@@ -35,6 +31,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error(`Stripe webhook processing error for ${event.id}:`, error)
-    return NextResponse.json({ success: false, error: 'Webhook processing failed' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Webhook processing failed' },
+      { status: 500 }
+    )
   }
 }
