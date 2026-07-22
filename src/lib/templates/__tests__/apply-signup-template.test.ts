@@ -1,5 +1,6 @@
 import { BusinessCategory } from '@prisma/client'
 import { createSignupPresencePageContent } from '@/lib/templates/apply-signup-template'
+import { createSelectedSignupPresencePageContent } from '@/lib/templates/select-signup-template'
 
 describe('createSignupPresencePageContent', () => {
   it('applies the selected template structure without copying demo services or prices', () => {
@@ -24,7 +25,7 @@ describe('createSignupPresencePageContent', () => {
   })
 
   it('applies premium editorial controls for the Editorial Beauty template', () => {
-    const applied = createSignupPresencePageContent(
+    const applied = createSelectedSignupPresencePageContent(
       'Crown & Canvas Studio',
       BusinessCategory.BEAUTY,
       'editorial-beauty'
