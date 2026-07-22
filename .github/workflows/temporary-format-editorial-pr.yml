@@ -43,7 +43,10 @@ jobs:
             src/components/presence/sections/HeroSection.tsx \
             src/components/presence/sections/ServicesSection.tsx \
             src/components/presence/sections/TestimonialsSection.tsx \
-            src/components/presence/sections/section-style.ts
+            src/components/presence/sections/section-style.ts \
+            src/lib/templates/apply-signup-template.ts \
+            src/lib/templates/editorial-beauty-sections.ts \
+            src/lib/templates/__tests__/apply-signup-template.test.ts
 
       - name: Commit formatting when needed
         run: |
@@ -53,6 +56,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/types/page-sections.ts src/components/presence
+          git add src/types/page-sections.ts src/components/presence src/lib/templates
           git commit -m "style: format premium editorial editor changes"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
