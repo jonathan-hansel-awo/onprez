@@ -1,0 +1,81 @@
+/** @jest-environment node */
+
+import { NextRequest } from 'next/server'
+
+import { getStripeClient, getStripeWebhookSecret } from '@/lib/stripe/config'
+import { syncStripeConnectedAccount } from '@/lib/stripe/connect-accounts'
+import { POST } from '../route'
+
+jest.mock('@/lib/stripe/config', () => ({
+  getStripeClient: jest.fn(),
+  getStripeWebhookSecret: jest.fn(),
+}))
+jest.mock('@/lib/stripe/connect-accounts', () => ({
+  syncStripeConnectedAccount: jest.fn(),
+}))
+
+const mockedGetStripeClient = getStripeClient as jest.Mock
+const mockedGetWebhookSecret = getStripeWebhookSecret as jest.Mock
+const mockedSyncAccount = syncStripeConnectedAccount as jest.Mock
+const constructEvent = jest.fn()
+
+function request(signature?: string) {
+  return new NextRequest('https://onprez.test/api/webhooks/stripe', {
+    method: 'POST',
+    headers: signature ? { 'stripe-signature': signature } : {},
+    body: JSON.stringify({ id: 'evt_test' }),
+  })
+}
+
+describe('POST /api/webhooks/stripe', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockedGetWebhookSecret.mockReturnValue('whsec_test')
+    mockedGetStripeClient.mockReturnValue({ webhooks: { constructEvent } })
+  })
+
+  it('rejects requests without a Stripe signature', async () => {
+    const response = await POST(request())
+
+    expect(response.status).toBe(400)
+    expect(constructEvent).not.toHaveBeenCalled()
+  })
+
+  it('rejects invalid webhook signatures', async () => {
+    constructEvent.mockImplementation(() => {
+      throw new Error('Invalid signature')
+    })
+
+    const response = await POST(request('bad-signature'))
+
+    expect(response.status).toBe(400)
+    expect(mockedSyncAccount).not.toHaveBeenCalled()
+  })
+
+  it('synchronises connected account updates', async () => {
+    const account = { id: 'acct_test', metadata: { onprezBusinessId: 'business-1' } }
+    constructEvent.mockReturnValue({
+      id: 'evt_account_updated',
+      type: 'account.updated',
+      data: { object: account },
+    })
+
+    const response = await POST(request('valid-signature'))
+
+    expect(response.status).toBe(200)
+    expect(mockedSyncAccount).toHaveBeenCalledWith(account)
+  })
+
+  it('acknowledges unrelated Stripe events without mutating account state', async () => {
+    constructEvent.mockReturnValue({
+      id: 'evt_other',
+      type: 'customer.created',
+      data: { object: { id: 'cus_test' } },
+    })
+
+    const response = await POST(request('valid-signature'))
+
+    expect(response.status).toBe(200)
+    expect(mockedSyncAccount).not.toHaveBeenCalled()
+  })
+})
