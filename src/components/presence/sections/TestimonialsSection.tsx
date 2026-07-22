@@ -44,6 +44,7 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
   if (testimonials.length === 0) return null
 
   const safeActiveIndex = Math.min(activeIndex, testimonials.length - 1)
+  const activeTestimonial = testimonials[safeActiveIndex]
 
   const reviewsSchema = {
     '@context': 'https://schema.org',
@@ -189,14 +190,14 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                 >
                   <Quote className="mb-6 h-12 w-12 opacity-20" style={{ color: accentColor }} />
                   <blockquote className="mb-8 text-lg italic leading-relaxed md:text-xl">
-                    “{testimonials[safeActiveIndex].content}”
+                    “{activeTestimonial.content}”
                   </blockquote>
 
                   <footer className="flex flex-wrap items-center gap-4">
-                    {testimonials[safeActiveIndex].image && (
+                    {activeTestimonial.image && (
                       <div className="relative h-16 w-16 overflow-hidden rounded-full">
                         <Image
-                          src={testimonials[safeActiveIndex].image}
+                          src={activeTestimonial.image}
                           alt=""
                           fill
                           sizes="64px"
@@ -205,15 +206,13 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{testimonials[safeActiveIndex].name}</p>
-                      {testimonials[safeActiveIndex].role && (
-                        <p className="text-sm text-gray-600">
-                          {testimonials[safeActiveIndex].role}
-                        </p>
+                      <p className="font-semibold">{activeTestimonial.name}</p>
+                      {activeTestimonial.role && (
+                        <p className="text-sm text-gray-600">{activeTestimonial.role}</p>
                       )}
                       {showRatings && (
                         <div className="mt-2">
-                          <Rating rating={testimonials[safeActiveIndex].rating} size="large" />
+                          <Rating rating={activeTestimonial.rating} size="large" />
                         </div>
                       )}
                     </div>
