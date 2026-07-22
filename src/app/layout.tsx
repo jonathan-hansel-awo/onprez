@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import './legal.css'
 import { SmoothScroll } from '@/components/ui/smooth-scroll'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { PreloadResources } from '@/components/preload-resources'
 import { AnalyticsWrapper } from '@/components/analytics/analytics-wrapper'
+import { CookieConsentBanner } from '@/components/privacy/cookie-consent-banner'
 import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({
@@ -93,6 +95,7 @@ export default function RootLayout({
               {children}
               <AnalyticsWrapper />
             </SmoothScroll>
+            <CookieConsentBanner />
           </ErrorBoundary>
         </AuthProvider>
       </body>

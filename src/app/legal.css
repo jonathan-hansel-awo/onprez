@@ -1,0 +1,111 @@
+/* Legal and policy content */
+.legal-content section + section {
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.legal-content h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #111827;
+}
+
+.legal-content h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.legal-content p,
+.legal-content li,
+.legal-content td,
+.legal-content th {
+  line-height: 1.75;
+}
+
+.legal-content p {
+  color: #4b5563;
+}
+
+.legal-content p + p,
+.legal-content p + ul,
+.legal-content ul + p,
+.legal-content table + p,
+.legal-content aside + p {
+  margin-top: 1rem;
+}
+
+.legal-content ul {
+  margin-top: 1rem;
+  list-style: disc;
+  padding-left: 1.5rem;
+  color: #4b5563;
+}
+
+.legal-content li + li {
+  margin-top: 0.625rem;
+}
+
+.legal-content strong {
+  color: #1f2937;
+}
+
+.legal-content a {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.legal-content a:hover {
+  color: #1d4ed8;
+}
+
+.legal-content table {
+  width: 100%;
+  min-width: 42rem;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.legal-content th,
+.legal-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.875rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-content th {
+  background: #f9fafb;
+  color: #111827;
+  font-weight: 700;
+}
+
+.legal-content code {
+  border-radius: 0.25rem;
+  background: #f3f4f6;
+  padding: 0.125rem 0.35rem;
+  color: #1f2937;
+  font-size: 0.875em;
+}
+
+.legal-content aside {
+  margin-top: 1.25rem;
+  border-left: 4px solid #3b82f6;
+  border-radius: 0.5rem;
+  background: #eff6ff;
+  padding: 1rem 1.25rem;
+  color: #374151;
+  line-height: 1.75;
+}
