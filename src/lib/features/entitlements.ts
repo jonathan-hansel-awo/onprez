@@ -1,9 +1,4 @@
-import {
-  EntitlementSource,
-  FeatureKey,
-  Prisma,
-  type FeatureEntitlement,
-} from '@prisma/client'
+import { EntitlementSource, FeatureKey, Prisma, type FeatureEntitlement } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
 

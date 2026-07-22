@@ -60,9 +60,7 @@ describe('feature entitlements', () => {
   it('checks one business and feature through the composite key', async () => {
     mockedFeatureEntitlement.findUnique.mockResolvedValue(activeEntitlement)
 
-    await expect(
-      canUseFeature('business-1', FeatureKey.BOOKING_DEPOSITS)
-    ).resolves.toBe(true)
+    await expect(canUseFeature('business-1', FeatureKey.BOOKING_DEPOSITS)).resolves.toBe(true)
     expect(mockedFeatureEntitlement.findUnique).toHaveBeenCalledWith({
       where: {
         businessId_feature: {
