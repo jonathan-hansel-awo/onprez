@@ -1,0 +1,40 @@
+name: One-off booking hook formatter
+
+on:
+  push:
+    branches:
+      - fix/booking-local-date-and-confirmation
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/booking-local-date-and-confirmation
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format booking hook
+        run: npx prettier --write src/lib/hooks/useCreateBooking.ts
+
+      - name: Commit formatted hook and remove temporary files
+        run: |
+          rm .format-different.txt
+          rm .github/workflows/one-off-format-hook.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "style: format booking creation hook"
+          git push origin HEAD:fix/booking-local-date-and-confirmation
