@@ -42,6 +42,33 @@ interface UseCreateBookingReturn {
   reset: () => void
 }
 
+interface BookingApiResult {
+  success?: boolean
+  data?: BookingResponse
+  error?: string
+  details?: Record<string, string[] | undefined>
+}
+
+function getBookingError(result: BookingApiResult, status: number): string {
+  if (result.error && result.error !== 'Validation failed') {
+    return result.error
+  }
+
+  const validationMessage = result.details
+    ? Object.values(result.details)
+        .flatMap(messages => messages || [])
+        .find(Boolean)
+    : undefined
+
+  if (validationMessage) return validationMessage
+
+  if (status >= 500) {
+    return 'The booking service is temporarily unavailable. Please try again in a moment.'
+  }
+
+  return 'We could not confirm the booking. Review the details and try again.'
+}
+
 export function useCreateBooking(): UseCreateBookingReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -75,16 +102,14 @@ export function useCreateBooking(): UseCreateBookingReturn {
           body: JSON.stringify(payload),
         })
 
-        const result = await response.json()
+        const result = (await response.json().catch(() => ({}))) as BookingApiResult
 
-        if (!response.ok) {
-          const errorMessage =
-            result.error || 'We could not confirm the booking. Review the details and try again.'
-          setError(errorMessage)
+        if (!response.ok || !result.data) {
+          setError(getBookingError(result, response.status))
           return null
         }
 
-        return result.data as BookingResponse
+        return result.data
       } catch (err) {
         const errorMessage =
           err instanceof Error
