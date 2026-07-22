@@ -23,6 +23,75 @@ describe('createSignupPresencePageContent', () => {
     expect((faq?.data as { items?: unknown[] }).items).toEqual([])
   })
 
+  it('applies premium editorial controls for the Editorial Beauty template', () => {
+    const applied = createSignupPresencePageContent(
+      'Crown & Canvas Studio',
+      BusinessCategory.BEAUTY,
+      'editorial-beauty'
+    )
+
+    expect(applied.templateSlug).toBe('editorial-beauty')
+    expect(applied.templateName).toBe('Editorial Beauty')
+    expect(applied.theme).toMatchObject({
+      primaryColor: '#9c4960',
+      backgroundColor: '#fff7f8',
+      headingFont: 'Georgia',
+      buttonStyle: 'square',
+      spacing: 'relaxed',
+    })
+
+    expect(applied.sections.find(section => section.type === 'HERO')).toMatchObject({
+      type: 'HERO',
+      appearance: {
+        contentWidth: 'wide',
+        spacing: 'spacious',
+      },
+      data: {
+        layout: 'editorial',
+        secondaryCtaText: 'Explore our work',
+        minHeight: 'viewport',
+      },
+    })
+
+    expect(applied.sections.find(section => section.type === 'ABOUT')).toMatchObject({
+      type: 'ABOUT',
+      data: {
+        layout: 'editorial',
+        imageShape: 'portrait',
+      },
+    })
+
+    expect(applied.sections.find(section => section.type === 'SERVICES')).toMatchObject({
+      type: 'SERVICES',
+      data: {
+        layout: 'editorial',
+        showImages: true,
+        showPrices: true,
+      },
+    })
+
+    expect(applied.sections.find(section => section.type === 'GALLERY')).toMatchObject({
+      type: 'GALLERY',
+      data: {
+        layout: 'editorial',
+        featuredImageIndex: 0,
+        imageRadius: 'none',
+      },
+    })
+
+    expect(applied.sections.find(section => section.type === 'TESTIMONIALS')).toMatchObject({
+      type: 'TESTIMONIALS',
+      data: {
+        layout: 'editorial',
+        showRatings: true,
+      },
+    })
+
+    expect(applied.sections.find(section => section.type === 'SERVICES')?.data).not.toHaveProperty(
+      'serviceIds'
+    )
+  })
+
   it('falls back to normal unpublished presence content for an unknown template', () => {
     const applied = createSignupPresencePageContent(
       'Safe Fallback Business',
