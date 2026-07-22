@@ -12,5 +12,5 @@ export function buildTemplateSignupHref(templateSlug: string, businessName?: str
     params.set('businessName', normalisedName)
   }
 
-  return `/signup?${params.toString()}`
+  return `/api/templates/select?${params.toString()}`
 }
