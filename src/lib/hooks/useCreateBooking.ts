@@ -72,6 +72,7 @@ function getBookingError(result: BookingApiResult, status: number): string {
 export function useCreateBooking(): UseCreateBookingReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const idempotencyRef = useRef<{ fingerprint: string; key: string } | null>(null)
   const submittingRef = useRef(false)
 
   const reset = useCallback(() => {
@@ -87,10 +88,16 @@ export function useCreateBooking(): UseCreateBookingReturn {
       setError(null)
 
       try {
+        const fingerprint = JSON.stringify(payload)
+        if (idempotencyRef.current?.fingerprint !== fingerprint) {
+          idempotencyRef.current = { fingerprint, key: crypto.randomUUID() }
+        }
+
         const response = await fetch('/api/bookings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyRef.current.key,
           },
           body: JSON.stringify(payload),
         })
