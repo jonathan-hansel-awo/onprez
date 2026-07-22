@@ -5,7 +5,7 @@ import { signupSchema } from '@/lib/validation/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { apiError, logApiError } from '@/lib/api/error-response'
 import { prisma } from '@/lib/prisma'
-import { createSignupPresencePageContent } from '@/lib/templates/apply-signup-template'
+import { createSelectedSignupPresencePageContent } from '@/lib/templates/select-signup-template'
 import { TEMPLATE_SELECTION_COOKIE } from '@/lib/templates/template-selection'
 
 function getClientIp(request: NextRequest) {
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     if (result.businessId && requestedTemplateSlug) {
       try {
-        const applied = createSignupPresencePageContent(
+        const applied = createSelectedSignupPresencePageContent(
           validation.data.businessName.trim(),
           validation.data.businessCategory,
           requestedTemplateSlug
