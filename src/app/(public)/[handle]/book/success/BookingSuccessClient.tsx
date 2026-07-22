@@ -20,10 +20,7 @@ import {
   CalendarPlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  buildBookingLookupUrl,
-  getBookingConfirmationEmail,
-} from '@/lib/booking/public-booking'
+import { buildBookingLookupUrl, getBookingConfirmationEmail } from '@/lib/booking/public-booking'
 
 interface Business {
   id: string

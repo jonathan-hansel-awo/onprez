@@ -119,10 +119,7 @@ describe('public booking confirmation handoff', () => {
   })
 
   it('uses the retained email to load the newly created booking', async () => {
-    window.sessionStorage.setItem(
-      'onprez:booking-confirmation-email:AB12CD34',
-      'ada@example.com'
-    )
+    window.sessionStorage.setItem('onprez:booking-confirmation-email:AB12CD34', 'ada@example.com')
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ success: true, data: bookingResponse }),

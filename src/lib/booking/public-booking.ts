@@ -63,10 +63,7 @@ export function getBookingConfirmationEmail(
   }
 }
 
-export function buildBookingLookupUrl(
-  confirmationNumber: string,
-  customerEmail: string
-): string {
+export function buildBookingLookupUrl(confirmationNumber: string, customerEmail: string): string {
   const params = new URLSearchParams({
     confirmationNumber,
     customerEmail,
