@@ -49,8 +49,14 @@ export default function TermsPage() {
           <li>Provide accurate information and keep it reasonably up to date.</li>
           <li>Protect passwords, multi-factor codes, and access to trusted devices.</li>
           <li>Do not share an account except through authorised team features.</li>
-          <li>Tell us promptly at <a href="mailto:security@onprez.com">security@onprez.com</a> if you suspect unauthorised use.</li>
-          <li>You are responsible for activity carried out through your account unless caused by our failure to use reasonable care.</li>
+          <li>
+            Tell us promptly at <a href="mailto:security@onprez.com">security@onprez.com</a> if you
+            suspect unauthorised use.
+          </li>
+          <li>
+            You are responsible for activity carried out through your account unless caused by our
+            failure to use reasonable care.
+          </li>
         </ul>
       </section>
 
@@ -58,12 +64,29 @@ export default function TermsPage() {
         <h2>4. Professional responsibilities</h2>
         <p>A professional or business using OnPrez is responsible for:</p>
         <ul>
-          <li>the accuracy of its identity, services, prices, availability, qualifications, and content;</li>
-          <li>holding licences, insurance, permissions, and registrations required for its services;</li>
-          <li>setting and honouring booking, cancellation, refund, deposit, and customer-service policies;</li>
-          <li>complying with consumer, tax, employment, equality, health and safety, and sector-specific laws;</li>
-          <li>using customer information lawfully and providing any additional privacy information required for its own processing;</li>
-          <li>ensuring that notes or custom fields do not contain unnecessary, unlawful, or excessively sensitive information.</li>
+          <li>
+            the accuracy of its identity, services, prices, availability, qualifications, and
+            content;
+          </li>
+          <li>
+            holding licences, insurance, permissions, and registrations required for its services;
+          </li>
+          <li>
+            setting and honouring booking, cancellation, refund, deposit, and customer-service
+            policies;
+          </li>
+          <li>
+            complying with consumer, tax, employment, equality, health and safety, and
+            sector-specific laws;
+          </li>
+          <li>
+            using customer information lawfully and providing any additional privacy information
+            required for its own processing;
+          </li>
+          <li>
+            ensuring that notes or custom fields do not contain unnecessary, unlawful, or
+            excessively sensitive information.
+          </li>
         </ul>
       </section>
 
@@ -77,8 +100,9 @@ export default function TermsPage() {
         </p>
         <p>
           Customers must provide accurate contact and booking information, attend appointments on
-          time, and follow the professional&apos;s disclosed policies. Questions, changes, refunds, and
-          disputes about a professional service should normally be addressed to that professional.
+          time, and follow the professional&apos;s disclosed policies. Questions, changes, refunds,
+          and disputes about a professional service should normally be addressed to that
+          professional.
         </p>
       </section>
 
@@ -101,13 +125,30 @@ export default function TermsPage() {
         <h2>7. Acceptable use</h2>
         <p>You must not use OnPrez to:</p>
         <ul>
-          <li>break the law, facilitate harm, fraud, exploitation, or deceptive business practices;</li>
-          <li>publish unlawful, infringing, hateful, harassing, sexually exploitative, or malicious content;</li>
-          <li>impersonate another person or misrepresent qualifications, reviews, availability, or pricing;</li>
+          <li>
+            break the law, facilitate harm, fraud, exploitation, or deceptive business practices;
+          </li>
+          <li>
+            publish unlawful, infringing, hateful, harassing, sexually exploitative, or malicious
+            content;
+          </li>
+          <li>
+            impersonate another person or misrepresent qualifications, reviews, availability, or
+            pricing;
+          </li>
           <li>send spam or contact people without an appropriate legal basis;</li>
-          <li>probe, bypass, overload, scrape, reverse engineer, or interfere with platform security or operation;</li>
-          <li>upload malware, disguised files, or content that creates an unreasonable technical or security risk;</li>
-          <li>access another user&apos;s account, customer data, or non-public information without permission.</li>
+          <li>
+            probe, bypass, overload, scrape, reverse engineer, or interfere with platform security
+            or operation;
+          </li>
+          <li>
+            upload malware, disguised files, or content that creates an unreasonable technical or
+            security risk;
+          </li>
+          <li>
+            access another user&apos;s account, customer data, or non-public information without
+            permission.
+          </li>
         </ul>
       </section>
 
@@ -124,9 +165,10 @@ export default function TermsPage() {
       <section>
         <h2>9. Third-party services</h2>
         <p>
-          OnPrez may rely on or link to hosting, database, email, media, monitoring, payment, mapping,
-          calendar, or social-media services. Their separate terms and privacy notices may apply.
-          We are not responsible for third-party products or websites outside our reasonable control.
+          OnPrez may rely on or link to hosting, database, email, media, monitoring, payment,
+          mapping, calendar, or social-media services. Their separate terms and privacy notices may
+          apply. We are not responsible for third-party products or websites outside our reasonable
+          control.
         </p>
       </section>
 
@@ -158,8 +200,8 @@ export default function TermsPage() {
         <h2>12. Intellectual property</h2>
         <p>
           OnPrez and its software, design, branding, and documentation are protected by intellectual
-          property laws. Except for the limited right to use the service under these terms, no rights
-          are transferred to you. Feedback may be used to improve OnPrez without payment or
+          property laws. Except for the limited right to use the service under these terms, no
+          rights are transferred to you. Feedback may be used to improve OnPrez without payment or
           restriction, but we will not identify you publicly without permission.
         </p>
       </section>
@@ -168,16 +210,16 @@ export default function TermsPage() {
         <h2>13. Responsibility and liability</h2>
         <p>
           Nothing in these terms excludes or limits liability where doing so would be unlawful,
-          including liability for death or personal injury caused by negligence, fraud, or fraudulent
-          misrepresentation. Your mandatory consumer rights are not affected.
+          including liability for death or personal injury caused by negligence, fraud, or
+          fraudulent misrepresentation. Your mandatory consumer rights are not affected.
         </p>
         <p>
-          Subject to that, OnPrez is not responsible for losses caused by a professional&apos;s service,
-          customer conduct, inaccurate user content, or events outside our reasonable control. For
-          business users, OnPrez is not liable for indirect or consequential loss, lost profit,
-          lost opportunity, or loss of goodwill. Any other aggregate liability arising from the
-          service will not exceed the amount paid by the affected user to OnPrez in the 12 months
-          before the event giving rise to the claim, or £100 if no amount was paid.
+          Subject to that, OnPrez is not responsible for losses caused by a professional&apos;s
+          service, customer conduct, inaccurate user content, or events outside our reasonable
+          control. For business users, OnPrez is not liable for indirect or consequential loss, lost
+          profit, lost opportunity, or loss of goodwill. Any other aggregate liability arising from
+          the service will not exceed the amount paid by the affected user to OnPrez in the 12
+          months before the event giving rise to the claim, or £100 if no amount was paid.
         </p>
       </section>
 

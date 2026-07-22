@@ -27,8 +27,8 @@ export default function CookiesPage() {
       <section>
         <h2>2. Essential storage</h2>
         <p>
-          Essential storage is needed to provide a service you request, keep the platform secure,
-          or remember a privacy choice. It is not used for advertising and cannot be disabled through
+          Essential storage is needed to provide a service you request, keep the platform secure, or
+          remember a privacy choice. It is not used for advertising and cannot be disabled through
           our banner because parts of OnPrez would otherwise stop working.
         </p>
         <div className="overflow-x-auto">
@@ -42,28 +42,40 @@ export default function CookiesPage() {
             </thead>
             <tbody>
               <tr>
-                <td><code>accessToken</code></td>
+                <td>
+                  <code>accessToken</code>
+                </td>
                 <td>Authenticates a signed-in account and protects private areas.</td>
                 <td>Up to 24 hours, or up to 30 days when “remember me” is selected</td>
               </tr>
               <tr>
-                <td><code>refreshToken</code></td>
+                <td>
+                  <code>refreshToken</code>
+                </td>
                 <td>Securely renews an authenticated session.</td>
                 <td>Up to 7 days, or up to 30 days when “remember me” is selected</td>
               </tr>
               <tr>
-                <td><code>onprez:cookie-consent:v1</code></td>
+                <td>
+                  <code>onprez:cookie-consent:v1</code>
+                </td>
                 <td>Stores your essential-only or optional-analytics choice in local storage.</td>
                 <td>Until you clear browser data or the consent version changes</td>
               </tr>
               <tr>
                 <td>Booking confirmation session storage</td>
-                <td>Temporarily carries the submitted email within the current tab so a new booking can be displayed without putting the email in the URL.</td>
+                <td>
+                  Temporarily carries the submitted email within the current tab so a new booking
+                  can be displayed without putting the email in the URL.
+                </td>
                 <td>Until the browser tab or session is closed</td>
               </tr>
               <tr>
                 <td>Signup progress session storage</td>
-                <td>Temporarily remembers non-password signup fields while the signup flow is in progress.</td>
+                <td>
+                  Temporarily remembers non-password signup fields while the signup flow is in
+                  progress.
+                </td>
                 <td>Until signup completes, the data is cleared, or the session ends</td>
               </tr>
             </tbody>
@@ -101,9 +113,10 @@ export default function CookiesPage() {
       <section>
         <h2>5. Managing your choices</h2>
         <p>
-          You can accept optional analytics, use essential storage only, or change your choice later.
-          Withdrawing optional analytics is as easy as accepting it. When you switch analytics off,
-          OnPrez attempts to remove common analytics cookies set for the current site.
+          You can accept optional analytics, use essential storage only, or change your choice
+          later. Withdrawing optional analytics is as easy as accepting it. When you switch
+          analytics off, OnPrez attempts to remove common analytics cookies set for the current
+          site.
         </p>
         <CookieSettingsButton className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-onprez-blue to-onprez-purple px-5 py-3 font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-onprez-blue focus:ring-offset-2" />
         <p>

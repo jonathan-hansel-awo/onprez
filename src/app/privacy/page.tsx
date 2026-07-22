@@ -20,8 +20,7 @@ export default function PrivacyPage() {
         <p>
           OnPrez provides online presence pages, business management tools, and appointment booking
           services for service professionals. OnPrez is operated from the United Kingdom. You can
-          contact us about privacy at{' '}
-          <a href="mailto:privacy@onprez.com">privacy@onprez.com</a>.
+          contact us about privacy at <a href="mailto:privacy@onprez.com">privacy@onprez.com</a>.
         </p>
         <p>
           OnPrez is responsible for personal information used to operate accounts, secure the
@@ -79,11 +78,15 @@ export default function PrivacyPage() {
             </thead>
             <tbody>
               <tr>
-                <td>Provide accounts, presence pages, bookings, inquiries, and requested features</td>
+                <td>
+                  Provide accounts, presence pages, bookings, inquiries, and requested features
+                </td>
                 <td>Contract, or steps requested before entering a contract</td>
               </tr>
               <tr>
-                <td>Authenticate users, prevent abuse, investigate incidents, and protect OnPrez</td>
+                <td>
+                  Authenticate users, prevent abuse, investigate incidents, and protect OnPrez
+                </td>
                 <td>Legitimate interests and legal obligations</td>
               </tr>
               <tr>
@@ -107,8 +110,8 @@ export default function PrivacyPage() {
         </div>
         <p>
           Where we rely on legitimate interests, those interests include operating a secure and
-          useful platform, preventing fraud, supporting users, and understanding service
-          performance without overriding your rights and freedoms.
+          useful platform, preventing fraud, supporting users, and understanding service performance
+          without overriding your rights and freedoms.
         </p>
       </section>
 
@@ -121,8 +124,8 @@ export default function PrivacyPage() {
             books, sends an inquiry, or otherwise interacts with that business;
           </li>
           <li>
-            infrastructure and database providers, including Vercel and Neon, where used to host
-            and operate OnPrez;
+            infrastructure and database providers, including Vercel and Neon, where used to host and
+            operate OnPrez;
           </li>
           <li>
             communications providers such as Resend, media providers such as Cloudinary, and error
@@ -130,8 +133,8 @@ export default function PrivacyPage() {
           </li>
           <li>professional advisers, regulators, courts, and law-enforcement authorities;</li>
           <li>
-            a buyer, investor, or successor if OnPrez is reorganised, financed, sold, or transferred,
-            subject to appropriate confidentiality and data-protection safeguards.
+            a buyer, investor, or successor if OnPrez is reorganised, financed, sold, or
+            transferred, subject to appropriate confidentiality and data-protection safeguards.
           </li>
         </ul>
         <p>We do not sell personal information to advertisers.</p>
@@ -186,8 +189,8 @@ export default function PrivacyPage() {
         <p>
           We use safeguards designed to protect information, including access controls, encrypted
           connections, password hashing, secure authentication cookies, rate limiting, monitoring,
-          and restricted administrative access. No internet service can guarantee absolute
-          security, so please use a unique password and protect your account credentials.
+          and restricted administrative access. No internet service can guarantee absolute security,
+          so please use a unique password and protect your account credentials.
         </p>
       </section>
 
@@ -214,9 +217,9 @@ export default function PrivacyPage() {
       <section>
         <h2>9. Complaints</h2>
         <p>
-          Please contact us first so we can try to resolve your concern. You may also complain to the
-          UK Information Commissioner&apos;s Office. Information about making a complaint is available
-          at{' '}
+          Please contact us first so we can try to resolve your concern. You may also complain to
+          the UK Information Commissioner&apos;s Office. Information about making a complaint is
+          available at{' '}
           <a href="https://ico.org.uk/make-a-complaint/" rel="noreferrer" target="_blank">
             ico.org.uk
           </a>
@@ -228,8 +231,8 @@ export default function PrivacyPage() {
         <h2>10. Children</h2>
         <p>
           OnPrez accounts are intended for people aged 18 or over. A professional must not use the
-          platform to collect children&apos;s information unless they have a lawful basis, appropriate
-          notices, and any required parent or guardian involvement.
+          platform to collect children&apos;s information unless they have a lawful basis,
+          appropriate notices, and any required parent or guardian involvement.
         </p>
       </section>
 
