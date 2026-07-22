@@ -9,11 +9,10 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   generate:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -36,7 +35,6 @@ jobs:
         run: node scripts/apply-booking-protection-foundation.mjs
 
       - name: Format generated files
-        continue-on-error: true
         run: |
           npx prisma format
           npx prettier --write \
@@ -49,16 +47,14 @@ jobs:
             src/lib/stripe/config.ts \
             src/lib/stripe/__tests__/config.test.ts
 
-      - name: Commit generated changes
-        if: always()
-        run: |
-          if git diff --quiet; then
-            echo "No generated changes"
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .env.example package.json package-lock.json prisma/schema.prisma
-          git commit -m "chore: generate booking protection foundation"
-          git push origin HEAD:feat/booking-protection-foundation
+      - name: Upload generated files
+        uses: actions/upload-artifact@v6
+        with:
+          name: booking-protection-foundation-generated
+          path: |
+            .env.example
+            package.json
+            package-lock.json
+            prisma/schema.prisma
+          if-no-files-found: error
+          retention-days: 1
