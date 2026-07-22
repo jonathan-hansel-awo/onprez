@@ -8,8 +8,9 @@ import { Card } from '@/components/ui/card'
 import { Label } from '@/components/form/label'
 import { Toggle } from '@/components/ui/toggle'
 import { Checkbox } from '@/components/form/checkbox'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Package, Loader2 } from 'lucide-react'
+import { SectionAppearanceEditor } from '../SectionAppearanceEditor'
 
 interface ServicesSectionEditorProps {
   section: ServicesSection
@@ -36,25 +37,33 @@ export function ServicesSectionEditor({
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (businessId) {
-      fetchServices()
+    if (!businessId) {
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+
+    async function fetchServices() {
+      try {
+        const response = await fetch(`/api/services?businessId=${businessId}`)
+        const data = await response.json()
+
+        if (!cancelled && data.success) {
+          setServices(data.data.services || [])
+        }
+      } catch (error) {
+        if (!cancelled) console.error('Failed to fetch services:', error)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    fetchServices()
+    return () => {
+      cancelled = true
     }
   }, [businessId])
-
-  async function fetchServices() {
-    try {
-      const response = await fetch(`/api/services?businessId=${businessId}`)
-      const data = await response.json()
-
-      if (data.success) {
-        setServices(data.data.services || [])
-      }
-    } catch (error) {
-      console.error('Failed to fetch services:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   function updateData<K extends keyof ServicesSection['data']>(
     field: K,
@@ -71,51 +80,52 @@ export function ServicesSectionEditor({
 
   function toggleService(serviceId: string) {
     const currentIds = section.data.serviceIds || []
-    const newIds = currentIds.includes(serviceId)
-      ? currentIds.filter(id => id !== serviceId)
-      : [...currentIds, serviceId]
-
-    updateData('serviceIds', newIds)
+    updateData(
+      'serviceIds',
+      currentIds.includes(serviceId)
+        ? currentIds.filter(id => id !== serviceId)
+        : [...currentIds, serviceId]
+    )
   }
 
-  function selectAllServices() {
-    const activeServiceIds = services.filter(s => s.isActive).map(s => s.id)
-    updateData('serviceIds', activeServiceIds)
-  }
-
-  function deselectAllServices() {
-    updateData('serviceIds', [])
-  }
-
+  const activeServices = services.filter(service => service.isActive)
   const selectedCount = section.data.serviceIds?.length || 0
-  const activeServices = services.filter(s => s.isActive)
 
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Section Settings</h3>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">Services Composition</h3>
 
         <div className="space-y-4">
-          {/* Title */}
+          <div>
+            <Label htmlFor="services-eyebrow">Eyebrow / Section Label</Label>
+            <Input
+              id="services-eyebrow"
+              value={section.data.eyebrow || ''}
+              onChange={event => updateData('eyebrow', event.target.value)}
+              placeholder="e.g., Signature services"
+              className="mt-1"
+            />
+          </div>
+
           <div>
             <Label htmlFor="services-title">Section Title *</Label>
             <Input
               id="services-title"
               value={section.data.title}
-              onChange={e => updateData('title', e.target.value)}
-              placeholder="e.g., Our Services, What We Offer"
+              onChange={event => updateData('title', event.target.value)}
+              placeholder="e.g., Services tailored to you"
               className="mt-1"
             />
           </div>
 
-          {/* Description */}
           <div>
             <Label htmlFor="services-description">Description</Label>
             <TextArea
               id="services-description"
               value={section.data.description || ''}
-              onChange={e => updateData('description', e.target.value)}
-              placeholder="Brief description of your services (optional)"
+              onChange={event => updateData('description', event.target.value)}
+              placeholder="Set expectations and help clients choose."
               rows={3}
               className="mt-1"
             />
@@ -123,34 +133,80 @@ export function ServicesSectionEditor({
         </div>
       </Card>
 
-      {/* Display Options */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Display Options</h3>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">Presentation</h3>
 
         <div className="space-y-4">
-          {/* Layout */}
           <div>
-            <Label htmlFor="services-layout">Layout Style</Label>
+            <Label htmlFor="services-layout">Layout Preset</Label>
             <Select
               id="services-layout"
               value={section.data.layout || 'grid'}
-              onChange={e => updateData('layout', e.target.value as 'grid' | 'list')}
+              onChange={event =>
+                updateData('layout', event.target.value as 'grid' | 'list' | 'editorial')
+              }
               className="mt-1"
               options={[
-                { value: 'grid', label: 'Grid (Cards)' },
-                { value: 'list', label: 'List (Rows)' },
+                { value: 'grid', label: 'Grid — familiar cards' },
+                { value: 'list', label: 'List — compact rows' },
+                { value: 'editorial', label: 'Editorial — premium numbered menu' },
               ]}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Grid shows services as cards, List shows them as rows
-            </p>
           </div>
 
-          {/* Show Prices Toggle */}
-          <div className="flex items-center justify-between">
+          {section.data.layout === 'grid' && (
+            <div>
+              <Label htmlFor="services-columns">Desktop Columns</Label>
+              <Select
+                id="services-columns"
+                value={(section.data.columns || 3).toString()}
+                onChange={event => updateData('columns', Number(event.target.value) as 2 | 3)}
+                className="mt-1"
+                options={[
+                  { value: '2', label: '2 columns — larger cards' },
+                  { value: '3', label: '3 columns — more compact' },
+                ]}
+              />
+            </div>
+          )}
+
+          {section.data.layout !== 'editorial' && (
+            <div>
+              <Label htmlFor="services-card-style">Card Style</Label>
+              <Select
+                id="services-card-style"
+                value={section.data.cardStyle || 'elevated'}
+                onChange={event =>
+                  updateData(
+                    'cardStyle',
+                    event.target.value as 'elevated' | 'outlined' | 'minimal'
+                  )
+                }
+                className="mt-1"
+                options={[
+                  { value: 'elevated', label: 'Elevated' },
+                  { value: 'outlined', label: 'Outlined' },
+                  { value: 'minimal', label: 'Minimal' },
+                ]}
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Label>Show Service Images</Label>
+              <p className="text-sm text-gray-500">Hide images for a cleaner editorial menu.</p>
+            </div>
+            <Toggle
+              checked={section.data.showImages ?? true}
+              onChange={checked => updateData('showImages', checked)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
             <div>
               <Label>Show Prices</Label>
-              <p className="text-sm text-gray-500">Display service prices to visitors</p>
+              <p className="text-sm text-gray-500">Transparent pricing improves booking confidence.</p>
             </div>
             <Toggle
               checked={section.data.showPrices ?? true}
@@ -160,61 +216,58 @@ export function ServicesSectionEditor({
         </div>
       </Card>
 
-      {/* Service Selection */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Select Services to Display</h3>
-          <div className="text-sm text-gray-600">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h3 className="text-lg font-semibold text-gray-900">Services to Display</h3>
+          <span className="text-sm text-gray-600">
             {selectedCount} of {activeServices.length} selected
-          </div>
+          </span>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
           </div>
         ) : activeServices.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600 mb-2">No services created yet</p>
+          <div className="rounded-lg bg-gray-50 py-8 text-center">
+            <Package className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+            <p className="mb-2 text-gray-600">No services created yet</p>
             <p className="text-sm text-gray-500">
-              Create services first to display them on your presence page
+              Create services first, then choose which ones belong in this section.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Select All / Deselect All */}
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
+            <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
               <button
                 type="button"
-                onClick={selectAllServices}
+                onClick={() => updateData('serviceIds', activeServices.map(service => service.id))}
                 className="text-sm text-onprez-blue hover:underline"
               >
-                Select All
+                Select all
               </button>
               <span className="text-gray-300">|</span>
               <button
                 type="button"
-                onClick={deselectAllServices}
+                onClick={() => updateData('serviceIds', [])}
                 className="text-sm text-gray-600 hover:underline"
               >
-                Deselect All
+                Show all automatically
               </button>
             </div>
 
-            {/* Service List */}
-            <div className="space-y-2 max-h-80 overflow-y-auto">
+            <div className="max-h-80 space-y-2 overflow-y-auto">
               {activeServices.map(service => {
                 const isSelected = section.data.serviceIds?.includes(service.id) || false
 
                 return (
-                  <div
+                  <label
                     key={service.id}
-                    onClick={() => toggleService(service.id)}
-                    className={`
-                      flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors
-                      ${isSelected ? 'bg-onprez-blue/10 border-2 border-onprez-blue' : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'}
-                    `}
+                    className={`flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors ${
+                      isSelected
+                        ? 'border-2 border-onprez-blue bg-onprez-blue/10'
+                        : 'border border-gray-200 bg-gray-50 hover:bg-gray-100'
+                    }`}
                   >
                     <Checkbox
                       checked={isSelected}
@@ -222,30 +275,21 @@ export function ServicesSectionEditor({
                       className="mt-1"
                     />
 
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <h4 className="font-medium text-gray-900">{service.name}</h4>
-                        <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                        <span className="whitespace-nowrap text-sm font-semibold text-gray-900">
                           £{service.price.toFixed(2)}
                         </span>
                       </div>
-
                       {service.description && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                           {service.description}
                         </p>
                       )}
-
-                      <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                        {service.category && (
-                          <span className="bg-gray-200 px-2 py-0.5 rounded">
-                            {service.category}
-                          </span>
-                        )}
-                        <span>{service.duration} min</span>
-                      </div>
+                      <p className="mt-2 text-xs text-gray-500">{service.duration} min</p>
                     </div>
-                  </div>
+                  </label>
                 )
               })}
             </div>
@@ -253,36 +297,17 @@ export function ServicesSectionEditor({
         )}
       </Card>
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <SectionAppearanceEditor
+        appearance={section.appearance}
+        onChange={appearance => onUpdate({ ...section, appearance })}
+      />
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-800">
-          💡 <strong>Tip:</strong> Services are automatically fetched from your Services page. Any
-          changes you make to your services will be reflected here.
+          Services remain connected to your Services dashboard, so prices, durations and availability
+          stay accurate everywhere.
         </p>
       </div>
-
-      {/* Display All Services Option */}
-      {activeServices.length > 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-900">Display All Services</p>
-              <p className="text-xs text-gray-600 mt-1">
-                Leave no services selected to automatically display all active services
-              </p>
-            </div>
-            {selectedCount > 0 && (
-              <button
-                type="button"
-                onClick={deselectAllServices}
-                className="text-sm text-onprez-blue hover:underline whitespace-nowrap"
-              >
-                Show All
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
