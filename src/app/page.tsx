@@ -7,6 +7,7 @@ import {
   FeatureOneLink,
   FinalCTA,
   Hero,
+  HomepageScenario,
   HowItWorks,
   SocialProofStreamDual,
 } from '@/components/landing'
@@ -44,9 +45,9 @@ const LazyPricingSection = dynamic(
 )
 
 export const metadata: Metadata = {
-  title: 'OnPrez - Your Handle, Your Brand, Your Bookings',
+  title: 'OnPrez - One Page for Services, Availability and Bookings',
   description:
-    'Create your complete online presence in 10 minutes. Customizable presence pages with integrated booking for service professionals. Start free at onprez.com/yourname',
+    'Create one shareable page where clients can see your services and prices, check your availability, and book. Built for independent service professionals and small teams.',
 }
 
 export default function LandingPage() {
@@ -63,6 +64,8 @@ export default function LandingPage() {
       <main id="main-content" className="min-h-screen bg-white">
         {/* Above the fold - Critical */}
         <Hero />
+        <HomepageScenario />
+
         {/* Early sections - High priority */}
         <HowItWorks />
 

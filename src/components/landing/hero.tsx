@@ -3,14 +3,13 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { AvatarStack } from '@/components/ui/avatar-stack'
 import { AnimatedHeadline } from './animated-headline'
 import { GradientMesh } from './gradient-mesh'
 import { BrowserMockup } from './browser-mockup'
-import { heroAvatars } from '@/data/avatars'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react'
 import { HeroMobile } from './hero-mobile'
 import { useRouter } from 'next/navigation'
+import { homepagePositioning } from './homepage-positioning'
 
 export function Hero() {
   const ref = useRef(null)
@@ -22,10 +21,9 @@ export function Hero() {
 
   const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '30%'])
   const contentOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [1, 0.8, 0])
-  const contentScale = useTransform(scrollYProgress, [0, 1], [1, 1.1])
+  const contentScale = useTransform(scrollYProgress, [0, 1], [1, 1.05])
   const mockupY = useTransform(scrollYProgress, [0, 1], ['0%', '20%'])
   const mockupOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [1, 0.9, 0.3])
-  const headlineLines = ['Your Handle.', 'Your Brand.', 'Your Bookings.']
 
   return (
     <section
@@ -39,21 +37,37 @@ export function Hero() {
       <div className="container mx-auto px-4 pb-20 pt-32">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <motion.div
-            className="space-y-8 text-center lg:text-left"
+            className="space-y-7 text-center lg:text-left"
             style={{ y: contentY, opacity: contentOpacity, scale: contentScale }}
           >
-            <AnimatedHeadline
-              lines={headlineLines}
-              className="text-5xl text-gray-900 sm:text-6xl lg:text-7xl"
-            />
             <motion.p
-              className="mx-auto max-w-2xl text-lg text-gray-600 sm:text-xl lg:mx-0"
+              className="mx-auto inline-flex items-center rounded-full border border-blue-200 bg-white/80 px-4 py-2 text-sm font-semibold text-blue-800 shadow-sm backdrop-blur lg:mx-0"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              {homepagePositioning.badge}
+            </motion.p>
+
+            <AnimatedHeadline
+              lines={homepagePositioning.headlineLines}
+              className="text-4xl text-gray-900 sm:text-5xl lg:text-6xl"
+            />
+
+            <motion.div
+              className="mx-auto max-w-2xl space-y-3 lg:mx-0"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.6 }}
             >
-              Create your complete online presence in 10 minutes. No website needed.
-            </motion.p>
+              <p className="text-lg font-medium leading-8 text-gray-700 sm:text-xl">
+                {homepagePositioning.summary}
+              </p>
+              <p className="text-sm leading-6 text-gray-600 sm:text-base">
+                {homepagePositioning.audience}
+              </p>
+            </motion.div>
+
             <motion.div
               className="flex flex-col justify-center gap-4 sm:flex-row lg:justify-start"
               initial={{ opacity: 0, y: 20 }}
@@ -67,7 +81,7 @@ export function Hero() {
                 onClick={() => router.push('/signup')}
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Claim Your Handle Free
+                  {homepagePositioning.primaryCta}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
                 <motion.div
@@ -87,57 +101,25 @@ export function Hero() {
                 className="group"
                 onClick={() => router.push('/examples')}
               >
-                See Live Examples
+                {homepagePositioning.secondaryCta}
                 <Sparkles className="ml-2 h-4 w-4 transition-transform group-hover:rotate-12" />
               </Button>
             </motion.div>
+
             <motion.div
-              className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start"
+              className="grid gap-3 border-t border-gray-200 pt-6 sm:grid-cols-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.3, duration: 0.6 }}
             >
-              <AvatarStack avatars={heroAvatars} max={5} size="md" />
-              <div className="text-left">
-                <p className="text-sm font-semibold text-gray-900">Join 2,500+ professionals</p>
-                <div className="mt-1 flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <motion.svg
-                      key={i}
-                      className="h-4 w-4 fill-current text-yellow-400"
-                      viewBox="0 0 20 20"
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 1.5 + i * 0.1 }}
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </motion.svg>
-                  ))}
-                  <span className="ml-2 text-xs text-gray-600">4.9/5</span>
-                </div>
-              </div>
-            </motion.div>
-            <motion.div
-              className="grid grid-cols-3 gap-8 border-t border-gray-200 pt-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.6, duration: 0.6 }}
-            >
-              {[
-                ['15min', 'To go live'],
-                ['45K+', 'Bookings/month'],
-                ['Free', 'Forever'],
-              ].map(([value, label], index) => (
-                <div key={label} className="text-center lg:text-left">
-                  <motion.div
-                    className="text-3xl font-bold text-gray-900"
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.8 + index * 0.1, type: 'spring' }}
-                  >
-                    {value}
-                  </motion.div>
-                  <div className="mt-1 text-sm text-gray-600">{label}</div>
+              {homepagePositioning.outcomes.map(outcome => (
+                <div
+                  key={outcome.title}
+                  className="rounded-2xl border border-white/80 bg-white/70 p-4 text-left shadow-sm backdrop-blur"
+                >
+                  <CheckCircle2 className="mb-3 h-5 w-5 text-emerald-600" aria-hidden="true" />
+                  <p className="font-semibold text-gray-900">{outcome.title}</p>
+                  <p className="mt-1 text-sm leading-5 text-gray-600">{outcome.description}</p>
                 </div>
               ))}
             </motion.div>
@@ -163,19 +145,21 @@ export function Hero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 2.2, duration: 0.6 }}
       >
-        <motion.div
-          className="group flex cursor-pointer flex-col items-center gap-2 text-gray-400"
+        <motion.a
+          href="#real-world-flow"
+          className="group flex flex-col items-center gap-2 text-gray-400"
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
           <span className="text-xs font-medium transition-colors group-hover:text-gray-600">
-            Scroll to explore
+            See what clients experience
           </span>
           <svg
             className="h-6 w-6 transition-colors group-hover:text-gray-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -184,7 +168,7 @@ export function Hero() {
               d="M19 14l-7 7m0 0l-7-7m7 7V3"
             />
           </svg>
-        </motion.div>
+        </motion.a>
       </motion.div>
     </section>
   )
