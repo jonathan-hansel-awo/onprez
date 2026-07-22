@@ -136,7 +136,9 @@ export function TestimonialsSectionEditor({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => updateData('testimonials', [...section.data.testimonials, createTestimonial()])}
+            onClick={() =>
+              updateData('testimonials', [...section.data.testimonials, createTestimonial()])
+            }
           >
             <Plus className="mr-2 h-4 w-4" />
             Add
@@ -147,14 +149,21 @@ export function TestimonialsSectionEditor({
           <div className="rounded-lg bg-gray-50 px-4 py-10 text-center">
             <Quote className="mx-auto mb-3 h-10 w-10 text-gray-400" />
             <p className="font-medium text-gray-700">No testimonials yet</p>
-            <p className="mt-1 text-sm text-gray-500">Add one to unlock this section in the preview.</p>
+            <p className="mt-1 text-sm text-gray-500">
+              Add one to unlock this section in the preview.
+            </p>
           </div>
         ) : (
           <div className="space-y-5">
             {section.data.testimonials.map((testimonial, index) => (
-              <div key={testimonial.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div
+                key={testimonial.id}
+                className="rounded-xl border border-gray-200 bg-gray-50 p-4"
+              >
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold text-gray-700">Testimonial {index + 1}</span>
+                  <span className="text-sm font-semibold text-gray-700">
+                    Testimonial {index + 1}
+                  </span>
                   <button
                     type="button"
                     onClick={() => removeTestimonial(testimonial.id)}

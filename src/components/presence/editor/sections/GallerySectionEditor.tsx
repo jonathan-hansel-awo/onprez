@@ -199,7 +199,9 @@ export function GallerySectionEditor({ section, onUpdate, businessId }: GalleryS
           onRemove={() => {}}
           showRemoveButton={false}
         />
-        <p className="mt-2 text-xs text-gray-500">Upload images one at a time, then drag to reorder.</p>
+        <p className="mt-2 text-xs text-gray-500">
+          Upload images one at a time, then drag to reorder.
+        </p>
       </Card>
 
       <Card className="p-6">
@@ -212,7 +214,9 @@ export function GallerySectionEditor({ section, onUpdate, businessId }: GalleryS
           <div className="rounded-lg bg-gray-50 py-12 text-center">
             <ImageIcon className="mx-auto mb-3 h-12 w-12 text-gray-400" />
             <p className="mb-2 text-gray-600">No images yet</p>
-            <p className="text-sm text-gray-500">Add at least three for a strong editorial mosaic.</p>
+            <p className="text-sm text-gray-500">
+              Add at least three for a strong editorial mosaic.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -244,7 +248,10 @@ export function GallerySectionEditor({ section, onUpdate, businessId }: GalleryS
                         className="object-cover"
                       />
                       {isFeatured && (
-                        <div className="absolute left-1 top-1 rounded-full bg-white p-1 shadow" title="Featured image">
+                        <div
+                          className="absolute left-1 top-1 rounded-full bg-white p-1 shadow"
+                          title="Featured image"
+                        >
                           <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                         </div>
                       )}
@@ -279,7 +286,11 @@ export function GallerySectionEditor({ section, onUpdate, businessId }: GalleryS
                             />
                           </div>
 
-                          <Button variant="ghost" size="sm" onClick={() => setEditingImageIndex(null)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingImageIndex(null)}
+                          >
                             Done
                           </Button>
                         </div>

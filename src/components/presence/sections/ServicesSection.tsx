@@ -262,12 +262,7 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
           '#111827'
         )}
       >
-        <div
-          className={cn(
-            'mx-auto px-4 sm:px-6 lg:px-8',
-            getContentWidth(section.appearance)
-          )}
-        >
+        <div className={cn('mx-auto px-4 sm:px-6 lg:px-8', getContentWidth(section.appearance))}>
           {heading}
 
           {loading ? (
@@ -297,7 +292,12 @@ export function ServicesSection({ section, businessHandle }: ServicesSectionProp
                     {String(index + 1).padStart(2, '0')}
                   </span>
 
-                  <div className={cn('grid gap-5', showImages && service.imageUrl && 'sm:grid-cols-[150px_1fr] sm:items-center')}>
+                  <div
+                    className={cn(
+                      'grid gap-5',
+                      showImages && service.imageUrl && 'sm:grid-cols-[150px_1fr] sm:items-center'
+                    )}
+                  >
                     {showImages && service.imageUrl && (
                       <div className="relative aspect-[4/3] overflow-hidden bg-black/5">
                         <Image

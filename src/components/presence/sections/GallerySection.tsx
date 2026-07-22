@@ -164,16 +164,16 @@ export function GallerySection({ section }: GallerySectionProps) {
         className={getSectionSpacing(section.appearance)}
         style={getSectionStyle(section.appearance, '#FFFFFF', '#111827')}
       >
-        <div
-          className={cn(
-            'mx-auto px-4 sm:px-6 lg:px-8',
-            getContentWidth(section.appearance)
-          )}
-        >
+        <div className={cn('mx-auto px-4 sm:px-6 lg:px-8', getContentWidth(section.appearance))}>
           {heading('center')}
 
           <div className="relative mx-auto max-w-4xl">
-            <div className={cn('relative aspect-[16/9] overflow-hidden bg-black/5', radiusClasses[imageRadius])}>
+            <div
+              className={cn(
+                'relative aspect-[16/9] overflow-hidden bg-black/5',
+                radiusClasses[imageRadius]
+              )}
+            >
               <Image
                 src={images[currentIndex].url}
                 alt={images[currentIndex].alt}
@@ -191,7 +191,9 @@ export function GallerySection({ section }: GallerySectionProps) {
             {images.length > 1 && (
               <>
                 <button
-                  onClick={() => setCurrentIndex((currentIndex - 1 + images.length) % images.length)}
+                  onClick={() =>
+                    setCurrentIndex((currentIndex - 1 + images.length) % images.length)
+                  }
                   className="absolute left-4 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 p-3 shadow-lg transition-colors hover:bg-white"
                   aria-label="Previous gallery image"
                 >
@@ -249,7 +251,10 @@ export function GallerySection({ section }: GallerySectionProps) {
         <div
           className={cn(
             'mx-auto px-4 sm:px-6 lg:px-8',
-            getContentWidth({ ...section.appearance, contentWidth: section.appearance?.contentWidth || 'wide' })
+            getContentWidth({
+              ...section.appearance,
+              contentWidth: section.appearance?.contentWidth || 'wide',
+            })
           )}
         >
           {heading('left')}
@@ -279,7 +284,11 @@ export function GallerySection({ section }: GallerySectionProps) {
                   src={image.url}
                   alt={image.alt}
                   fill
-                  sizes={index === 0 ? '(min-width: 768px) 58vw, 100vw' : '(min-width: 768px) 42vw, 100vw'}
+                  sizes={
+                    index === 0
+                      ? '(min-width: 768px) 58vw, 100vw'
+                      : '(min-width: 768px) 42vw, 100vw'
+                  }
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
                 {image.caption && (
@@ -302,12 +311,7 @@ export function GallerySection({ section }: GallerySectionProps) {
       className={getSectionSpacing(section.appearance)}
       style={getSectionStyle(section.appearance, '#FFFFFF', '#111827')}
     >
-      <div
-        className={cn(
-          'mx-auto px-4 sm:px-6 lg:px-8',
-          getContentWidth(section.appearance)
-        )}
-      >
+      <div className={cn('mx-auto px-4 sm:px-6 lg:px-8', getContentWidth(section.appearance))}>
         {heading('center')}
 
         <div

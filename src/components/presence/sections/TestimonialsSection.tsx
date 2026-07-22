@@ -37,13 +37,7 @@ function Rating({ rating, size = 'small' }: { rating?: number; size?: 'small' | 
 }
 
 export function TestimonialsSection({ section }: TestimonialsSectionProps) {
-  const {
-    title,
-    eyebrow,
-    testimonials,
-    layout = 'carousel',
-    showRatings = true,
-  } = section.data
+  const { title, eyebrow, testimonials, layout = 'carousel', showRatings = true } = section.data
   const [activeIndex, setActiveIndex] = useState(0)
   const accentColor = getAccentColor(section.appearance)
 
@@ -111,12 +105,7 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
           className={getSectionSpacing(section.appearance)}
           style={getSectionStyle(section.appearance, '#181411', '#F8F1E7')}
         >
-          <div
-            className={cn(
-              'mx-auto px-4 sm:px-6 lg:px-8',
-              getContentWidth(section.appearance)
-            )}
-          >
+          <div className={cn('mx-auto px-4 sm:px-6 lg:px-8', getContentWidth(section.appearance))}>
             {heading}
 
             <div className="grid gap-5 lg:grid-cols-12">
@@ -186,12 +175,7 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
         className={getSectionSpacing(section.appearance)}
         style={getSectionStyle(section.appearance, '#F8FAFC', '#111827')}
       >
-        <div
-          className={cn(
-            'mx-auto px-4 sm:px-6 lg:px-8',
-            getContentWidth(section.appearance)
-          )}
-        >
+        <div className={cn('mx-auto px-4 sm:px-6 lg:px-8', getContentWidth(section.appearance))}>
           {heading}
 
           {layout === 'carousel' ? (
@@ -223,7 +207,9 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold">{testimonials[safeActiveIndex].name}</p>
                       {testimonials[safeActiveIndex].role && (
-                        <p className="text-sm text-gray-600">{testimonials[safeActiveIndex].role}</p>
+                        <p className="text-sm text-gray-600">
+                          {testimonials[safeActiveIndex].role}
+                        </p>
                       )}
                       {showRatings && (
                         <div className="mt-2">
@@ -244,7 +230,9 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                           'h-3 rounded-full transition-all',
                           index === safeActiveIndex ? 'w-8' : 'w-3 bg-black/20'
                         )}
-                        style={index === safeActiveIndex ? { backgroundColor: accentColor } : undefined}
+                        style={
+                          index === safeActiveIndex ? { backgroundColor: accentColor } : undefined
+                        }
                         aria-label={`Show testimonial from ${testimonial.name}`}
                         aria-current={index === safeActiveIndex}
                       />
@@ -265,7 +253,9 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                   className="rounded-xl bg-white p-6 text-gray-900 shadow-lg"
                 >
                   <Quote className="mb-4 h-8 w-8 opacity-20" style={{ color: accentColor }} />
-                  <blockquote className="mb-6 italic leading-relaxed">“{testimonial.content}”</blockquote>
+                  <blockquote className="mb-6 italic leading-relaxed">
+                    “{testimonial.content}”
+                  </blockquote>
                   <footer className="flex items-center gap-3">
                     {testimonial.image && (
                       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full">
@@ -280,7 +270,9 @@ export function TestimonialsSection({ section }: TestimonialsSectionProps) {
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold">{testimonial.name}</p>
-                      {testimonial.role && <p className="text-sm text-gray-600">{testimonial.role}</p>}
+                      {testimonial.role && (
+                        <p className="text-sm text-gray-600">{testimonial.role}</p>
+                      )}
                       {showRatings && (
                         <div className="mt-1">
                           <Rating rating={testimonial.rating} />

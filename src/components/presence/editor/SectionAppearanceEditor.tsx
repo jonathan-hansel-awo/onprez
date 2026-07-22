@@ -31,7 +31,9 @@ export function SectionAppearanceEditor({ appearance, onChange }: SectionAppeara
         <Paintbrush className="h-5 w-5 text-gray-600" aria-hidden="true" />
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Section Appearance</h3>
-          <p className="text-sm text-gray-500">Fine-tune this section without changing the whole page.</p>
+          <p className="text-sm text-gray-500">
+            Fine-tune this section without changing the whole page.
+          </p>
         </div>
       </div>
 

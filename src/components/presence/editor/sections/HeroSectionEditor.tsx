@@ -112,10 +112,7 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
               id="hero-height"
               value={section.data.minHeight || 'standard'}
               onChange={event =>
-                updateData(
-                  'minHeight',
-                  event.target.value as 'compact' | 'standard' | 'viewport'
-                )
+                updateData('minHeight', event.target.value as 'compact' | 'standard' | 'viewport')
               }
               className="mt-1"
               options={[
@@ -277,10 +274,7 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
                     onChange={event =>
                       updateData(
                         'overlayStyle',
-                        event.target.value as
-                          | 'solid'
-                          | 'gradient-vertical'
-                          | 'gradient-diagonal'
+                        event.target.value as 'solid' | 'gradient-vertical' | 'gradient-diagonal'
                       )
                     }
                     className="mt-1"

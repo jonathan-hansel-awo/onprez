@@ -49,7 +49,10 @@ export function AboutSection({ section }: AboutSectionProps) {
         <div
           className={cn(
             'mx-auto px-4 text-center sm:px-6 lg:px-8',
-            getContentWidth({ ...section.appearance, contentWidth: section.appearance?.contentWidth || 'narrow' })
+            getContentWidth({
+              ...section.appearance,
+              contentWidth: section.appearance?.contentWidth || 'narrow',
+            })
           )}
         >
           <motion.div
@@ -90,8 +93,17 @@ export function AboutSection({ section }: AboutSectionProps) {
           )}
 
           {image && (
-            <div className="relative mt-12 aspect-[16/9] overflow-hidden" style={{ borderRadius: 'var(--theme-radius)' }}>
-              <Image src={image} alt={title} fill sizes="(min-width: 1024px) 900px, 100vw" className="object-cover" />
+            <div
+              className="relative mt-12 aspect-[16/9] overflow-hidden"
+              style={{ borderRadius: 'var(--theme-radius)' }}
+            >
+              <Image
+                src={image}
+                alt={title}
+                fill
+                sizes="(min-width: 1024px) 900px, 100vw"
+                className="object-cover"
+              />
             </div>
           )}
         </div>
@@ -108,12 +120,7 @@ export function AboutSection({ section }: AboutSectionProps) {
       className={cn('overflow-hidden', getSectionSpacing(section.appearance))}
       style={getSectionStyle(section.appearance, isEditorial ? '#FBF8F3' : '#FFFFFF', '#111827')}
     >
-      <div
-        className={cn(
-          'mx-auto px-4 sm:px-6 lg:px-8',
-          getContentWidth(section.appearance)
-        )}
-      >
+      <div className={cn('mx-auto px-4 sm:px-6 lg:px-8', getContentWidth(section.appearance))}>
         <div
           className={cn(
             'grid items-center gap-10 md:grid-cols-2 lg:gap-16',

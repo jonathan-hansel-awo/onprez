@@ -56,9 +56,7 @@ export function AboutSectionEditor({ section, onUpdate, businessId }: AboutSecti
 
     updateData(
       'content',
-      section.data.content.substring(0, start) +
-        wrappedText +
-        section.data.content.substring(end)
+      section.data.content.substring(0, start) + wrappedText + section.data.content.substring(end)
     )
 
     setTimeout(() => {
@@ -190,7 +188,9 @@ export function AboutSectionEditor({ section, onUpdate, businessId }: AboutSecti
                     .filter(Boolean)
                 )
               }
-              placeholder={'Award-winning colourist\n10+ years experience\nInclusive texture specialist'}
+              placeholder={
+                'Award-winning colourist\n10+ years experience\nInclusive texture specialist'
+              }
               rows={5}
               className="mt-1"
             />

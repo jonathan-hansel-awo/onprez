@@ -89,7 +89,9 @@ export function HeroSection({ section, bookingHref }: HeroSectionProps) {
 
     switch (overlayStyle) {
       case 'gradient-vertical':
-        return { background: `linear-gradient(to bottom, ${colorWithOpacity} 0%, transparent 100%)` }
+        return {
+          background: `linear-gradient(to bottom, ${colorWithOpacity} 0%, transparent 100%)`,
+        }
       case 'gradient-diagonal':
         return { background: `linear-gradient(135deg, ${colorWithOpacity} 0%, transparent 100%)` }
       default:
@@ -181,7 +183,9 @@ export function HeroSection({ section, bookingHref }: HeroSectionProps) {
             <h1 className="text-4xl font-bold leading-[1.03] sm:text-5xl md:text-6xl lg:text-7xl">
               {title}
             </h1>
-            {subtitle && <p className="max-w-2xl text-lg opacity-90 sm:text-xl md:text-2xl">{subtitle}</p>}
+            {subtitle && (
+              <p className="max-w-2xl text-lg opacity-90 sm:text-xl md:text-2xl">{subtitle}</p>
+            )}
             {actions}
           </motion.div>
         </div>
@@ -200,11 +204,7 @@ export function HeroSection({ section, bookingHref }: HeroSectionProps) {
         heightClasses[minHeight],
         getSectionSpacing(section.appearance)
       )}
-      style={getSectionStyle(
-        section.appearance,
-        isEditorial ? '#F6F0E8' : '#FFFFFF',
-        '#111827'
-      )}
+      style={getSectionStyle(section.appearance, isEditorial ? '#F6F0E8' : '#FFFFFF', '#111827')}
     >
       {isEditorial && (
         <div
@@ -215,10 +215,7 @@ export function HeroSection({ section, bookingHref }: HeroSectionProps) {
       )}
 
       <div
-        className={cn(
-          'mx-auto w-full px-4 sm:px-6 lg:px-8',
-          getContentWidth(section.appearance)
-        )}
+        className={cn('mx-auto w-full px-4 sm:px-6 lg:px-8', getContentWidth(section.appearance))}
       >
         <div
           className={cn(

@@ -177,10 +177,7 @@ export function ServicesSectionEditor({
                 id="services-card-style"
                 value={section.data.cardStyle || 'elevated'}
                 onChange={event =>
-                  updateData(
-                    'cardStyle',
-                    event.target.value as 'elevated' | 'outlined' | 'minimal'
-                  )
+                  updateData('cardStyle', event.target.value as 'elevated' | 'outlined' | 'minimal')
                 }
                 className="mt-1"
                 options={[
@@ -206,7 +203,9 @@ export function ServicesSectionEditor({
           <div className="flex items-center justify-between gap-4">
             <div>
               <Label>Show Prices</Label>
-              <p className="text-sm text-gray-500">Transparent pricing improves booking confidence.</p>
+              <p className="text-sm text-gray-500">
+                Transparent pricing improves booking confidence.
+              </p>
             </div>
             <Toggle
               checked={section.data.showPrices ?? true}
@@ -241,7 +240,12 @@ export function ServicesSectionEditor({
             <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
               <button
                 type="button"
-                onClick={() => updateData('serviceIds', activeServices.map(service => service.id))}
+                onClick={() =>
+                  updateData(
+                    'serviceIds',
+                    activeServices.map(service => service.id)
+                  )
+                }
                 className="text-sm text-onprez-blue hover:underline"
               >
                 Select all
@@ -304,8 +308,8 @@ export function ServicesSectionEditor({
 
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-800">
-          Services remain connected to your Services dashboard, so prices, durations and availability
-          stay accurate everywhere.
+          Services remain connected to your Services dashboard, so prices, durations and
+          availability stay accurate everywhere.
         </p>
       </div>
     </div>
