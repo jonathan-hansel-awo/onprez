@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { BookingWidget } from '@/components/booking'
 import type { BookingData } from '@/components/booking/BookingWidget'
+import { saveBookingConfirmationEmail } from '@/lib/booking/public-booking'
 
 interface BookingPageClientProps {
   business: {
@@ -25,9 +26,10 @@ export function BookingPageClient({ business, service }: BookingPageClientProps)
   const router = useRouter()
 
   const handleComplete = (
-    _booking: BookingData,
+    booking: BookingData,
     confirmation: { id: string; confirmationNumber: string }
   ) => {
+    saveBookingConfirmationEmail(confirmation.confirmationNumber, booking.customerEmail)
     router.push(`/${business.handle}/book/success?confirmation=${confirmation.confirmationNumber}`)
   }
 

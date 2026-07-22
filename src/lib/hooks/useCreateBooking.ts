@@ -115,10 +115,7 @@ export function useCreateBooking(): UseCreateBookingReturn {
           idempotencyRef.current = { fingerprint, key: crypto.randomUUID() }
         }
 
-        let { response, result } = await sendBookingRequest(
-          payload,
-          idempotencyRef.current.key
-        )
+        let { response, result } = await sendBookingRequest(payload, idempotencyRef.current.key)
 
         // Compatibility fallback for deployments where the idempotency table
         // migration has not reached production yet. The booking service still
