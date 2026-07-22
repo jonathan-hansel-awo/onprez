@@ -89,16 +89,40 @@ export async function POST(request: NextRequest) {
         )
 
         if (applied.templateSlug) {
-          await prisma.page.updateMany({
-            where: {
-              businessId: result.businessId,
-              slug: 'home',
-              isPublished: false,
-            },
-            data: {
-              content: applied.sections as unknown as Prisma.InputJsonValue,
-            },
+          const business = await prisma.business.findUnique({
+            where: { id: result.businessId },
+            select: { settings: true },
           })
+          const currentSettings =
+            business?.settings &&
+            typeof business.settings === 'object' &&
+            !Array.isArray(business.settings)
+              ? (business.settings as Prisma.JsonObject)
+              : {}
+
+          await prisma.$transaction([
+            prisma.page.updateMany({
+              where: {
+                businessId: result.businessId,
+                slug: 'home',
+                isPublished: false,
+              },
+              data: {
+                content: applied.sections as unknown as Prisma.InputJsonValue,
+              },
+            }),
+            prisma.business.update({
+              where: { id: result.businessId },
+              data: {
+                settings: {
+                  ...currentSettings,
+                  presenceTemplateSlug: applied.templateSlug,
+                  ...(applied.theme ? { theme: applied.theme } : {}),
+                } as Prisma.InputJsonValue,
+              },
+            }),
+          ])
+
           appliedTemplateName = applied.templateName
         }
       } catch (error) {
