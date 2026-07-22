@@ -69,6 +69,28 @@ function getBookingError(result: BookingApiResult, status: number): string {
   return 'We could not confirm the booking. Review the details and try again.'
 }
 
+async function sendBookingRequest(
+  payload: BookingPayload,
+  idempotencyKey?: string
+): Promise<{ response: Response; result: BookingApiResult }> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey
+  }
+
+  const response = await fetch('/api/bookings', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  })
+
+  const result = (await response.json().catch(() => ({}))) as BookingApiResult
+  return { response, result }
+}
+
 export function useCreateBooking(): UseCreateBookingReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -93,16 +115,18 @@ export function useCreateBooking(): UseCreateBookingReturn {
           idempotencyRef.current = { fingerprint, key: crypto.randomUUID() }
         }
 
-        const response = await fetch('/api/bookings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Idempotency-Key': idempotencyRef.current.key,
-          },
-          body: JSON.stringify(payload),
-        })
+        let { response, result } = await sendBookingRequest(
+          payload,
+          idempotencyRef.current.key
+        )
 
-        const result = (await response.json().catch(() => ({}))) as BookingApiResult
+        // Compatibility fallback for deployments where the idempotency table
+        // migration has not reached production yet. The booking service still
+        // uses a transaction lock and conflict checks, so this retry cannot
+        // silently double-book the selected slot.
+        if (response.status >= 500 && result.error === 'Failed to create booking') {
+          ;({ response, result } = await sendBookingRequest(payload))
+        }
 
         if (!response.ok || !result.data) {
           setError(getBookingError(result, response.status))
