@@ -1,0 +1,59 @@
+name: Generate booking protection foundation
+
+on:
+  push:
+    branches:
+      - feat/booking-protection-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v7
+        with:
+          ref: feat/booking-protection-foundation
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install Stripe and update lockfile
+        run: npm install stripe@22.1.1 --save --ignore-scripts
+
+      - name: Apply schema and configuration changes
+        run: node scripts/apply-booking-protection-foundation.mjs
+
+      - name: Format generated files
+        run: |
+          npx prisma format
+          npx prettier --write \
+            .env.example \
+            package.json \
+            prisma/schema.prisma \
+            scripts/set-booking-deposit-entitlement.ts \
+            src/lib/features/entitlements.ts \
+            src/lib/features/__tests__/entitlements.test.ts \
+            src/lib/stripe/config.ts \
+            src/lib/stripe/__tests__/config.test.ts
+
+      - name: Commit generated changes
+        run: |
+          if git diff --quiet; then
+            echo "No generated changes"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .env.example package.json package-lock.json prisma/schema.prisma
+          git commit -m "chore: generate booking protection foundation"
+          git push origin HEAD:feat/booking-protection-foundation
