@@ -27,6 +27,57 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Wire Editorial Beauty into signup template application
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/lib/templates/apply-signup-template.ts')
+          text = path.read_text()
+
+          default_import = "import { createDefaultPresencePageContent } from '@/lib/utils/default-presence-page'\n"
+          editorial_import = "import { createEditorialBeautySections } from '@/lib/templates/editorial-beauty-sections'\n"
+          if editorial_import not in text:
+              text = text.replace(default_import, default_import + editorial_import)
+
+          old_theme_type = """    fontFamily: string
+  }
+}"""
+          new_theme_type = """    fontFamily: string
+    headingFont?: string
+    buttonStyle?: 'rounded' | 'square' | 'pill'
+    spacing?: 'compact' | 'normal' | 'relaxed'
+  }
+}"""
+          text = text.replace(old_theme_type, new_theme_type)
+
+          old_sections = """    template.slug === 'heavenly-pamper-palace'
+      ? createHeavenlyPamperPalaceSections(businessName)
+      : template.slug === 'regent-barber'
+        ? createRegentBarberSections(businessName)
+        : createGenericTemplateSections(businessName, template)"""
+          new_sections = """    template.slug === 'heavenly-pamper-palace'
+      ? createHeavenlyPamperPalaceSections(businessName)
+      : template.slug === 'editorial-beauty'
+        ? createEditorialBeautySections(businessName)
+        : template.slug === 'regent-barber'
+          ? createRegentBarberSections(businessName)
+          : createGenericTemplateSections(businessName, template)"""
+          text = text.replace(old_sections, new_sections)
+
+          old_font = """      fontFamily: template.slug === 'regent-barber' ? 'Georgia' : 'Inter',"""
+          new_font = """      fontFamily: 'Inter',
+      headingFont:
+        template.slug === 'editorial-beauty' || template.slug === 'regent-barber'
+          ? 'Georgia'
+          : 'Inter',
+      buttonStyle: template.slug === 'editorial-beauty' ? 'square' : 'rounded',
+      spacing: template.slug === 'editorial-beauty' ? 'relaxed' : 'normal',"""
+          text = text.replace(old_font, new_font)
+
+          path.write_text(text)
+          PY
+
       - name: Format changed presence editor files
         run: |
           npx prettier --write \
@@ -48,14 +99,14 @@ jobs:
             src/lib/templates/editorial-beauty-sections.ts \
             src/lib/templates/__tests__/apply-signup-template.test.ts
 
-      - name: Commit formatting when needed
+      - name: Commit integration and formatting when needed
         run: |
           if git diff --quiet; then
-            echo "No formatting changes needed"
+            echo "No integration or formatting changes needed"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/types/page-sections.ts src/components/presence src/lib/templates
-          git commit -m "style: format premium editorial editor changes"
+          git commit -m "feat: apply premium editorial settings during signup"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
