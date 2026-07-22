@@ -1,75 +1,60 @@
 'use client'
 
-import { PageSection } from '@/types/page-sections'
+import type { PageSection } from '@/types/page-sections'
+import type { CanonicalPreviewService } from '@/lib/templates/canonical-template-engine'
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 import {
-  PresenceTrustSignals,
+  type PresenceTrustSignals,
   PresenceTrustStrip,
   SectionBookingCta,
   StickyMobileBookingCta,
 } from '@/components/presence/PresenceConversion'
-
-// Static imports for above-the-fold sections
 import { HeroSection } from './HeroSection'
 import { AboutSection } from './AboutSection'
 import { NavbarSection } from './NavbarSection'
+import { CanonicalPreviewServicesSection } from './CanonicalPreviewServicesSection'
 
-// Dynamic imports for below-the-fold sections (lazy loaded)
 const ServicesSection = dynamic(
   () => import('./ServicesSection').then(mod => ({ default: mod.ServicesSection })),
-  {
-    loading: () => <SectionSkeleton />,
-  }
+  { loading: () => <SectionSkeleton /> }
 )
 
 const GallerySection = dynamic(
   () => import('./GallerySection').then(mod => ({ default: mod.GallerySection })),
-  {
-    loading: () => <SectionSkeleton />,
-  }
+  { loading: () => <SectionSkeleton /> }
 )
 
 const ContactSection = dynamic(
   () => import('./ContactSection').then(mod => ({ default: mod.ContactSection })),
-  {
-    loading: () => <SectionSkeleton />,
-  }
+  { loading: () => <SectionSkeleton /> }
 )
 
 const FAQSection = dynamic(
   () => import('./FAQSection').then(mod => ({ default: mod.FAQSection })),
-  {
-    loading: () => <SectionSkeleton />,
-  }
+  { loading: () => <SectionSkeleton /> }
 )
 
 const TestimonialsSection = dynamic(
   () => import('./TestimonialsSection').then(mod => ({ default: mod.TestimonialsSection })),
-  {
-    loading: () => <SectionSkeleton />,
-  }
+  { loading: () => <SectionSkeleton /> }
 )
 
 const CustomHTMLSection = dynamic(
   () => import('./CustomHTMLSection').then(mod => ({ default: mod.CustomHTMLSection })),
-  {
-    loading: () => <SectionSkeleton />,
-  }
+  { loading: () => <SectionSkeleton /> }
 )
 
 const InquirySection = dynamic(
   () => import('./InquirySection').then(mod => ({ default: mod.InquirySection })),
-  {
-    loading: () => <SectionSkeleton />,
-  }
+  { loading: () => <SectionSkeleton /> }
 )
 
 function SectionSkeleton() {
   return (
-    <div className="py-16 bg-gray-50">
+    <div className="bg-gray-50 py-16">
       <div className="container mx-auto px-4">
-        <div className="h-64 bg-gray-200 animate-pulse rounded-xl" />
+        <div className="h-64 animate-pulse rounded-xl bg-gray-200" />
       </div>
     </div>
   )
@@ -97,6 +82,16 @@ interface SectionRendererProps {
   }
   showInquiryForm?: boolean
   trustSignals?: PresenceTrustSignals
+  servicesOverride?: CanonicalPreviewService[]
+  bookingHrefOverride?: string
+  showConversionCtas?: boolean
+}
+
+function hasMeaningfulTrustSignals(signals: PresenceTrustSignals) {
+  return Object.values(signals).some(value => {
+    if (Array.isArray(value)) return value.length > 0
+    return value !== undefined && value !== null && value !== '' && value !== 0
+  })
 }
 
 export function SectionRenderer({
@@ -107,18 +102,21 @@ export function SectionRenderer({
   businessName,
   showInquiryForm = true,
   trustSignals = {},
+  servicesOverride,
+  bookingHrefOverride,
+  showConversionCtas = true,
 }: SectionRendererProps) {
   const visibleSections = sections
     .filter(section => section.isVisible)
     .sort((a, b) => a.order - b.order)
 
-  const bookingHref = `/${businessHandle}/book`
-  const ctaSectionTypes = new Set(['ABOUT', 'SERVICES', 'GALLERY', 'TESTIMONIALS', 'FAQ'])
+  const bookingHref = bookingHrefOverride || `/${businessHandle}/book`
+  const showTrustStrip = hasMeaningfulTrustSignals(trustSignals)
+  const ctaSectionTypes = new Set(['SERVICES', 'FAQ'])
 
   return (
     <div className="pb-24 md:pb-0">
       {visibleSections.map((section, index) => {
-        // First 2 sections load immediately (above fold)
         const isAboveFold = index < 2
 
         const sectionComponent = (() => {
@@ -140,7 +138,14 @@ export function SectionRenderer({
               return <AboutSection key={section.id} section={section} />
 
             case 'SERVICES':
-              return (
+              return servicesOverride ? (
+                <CanonicalPreviewServicesSection
+                  key={section.id}
+                  section={section}
+                  services={servicesOverride}
+                  bookingHref={bookingHref}
+                />
+              ) : (
                 <ServicesSection
                   key={section.id}
                   section={section}
@@ -170,7 +175,6 @@ export function SectionRenderer({
           }
         })()
 
-        // Wrap below-fold sections in Suspense
         const renderedSection = isAboveFold ? (
           sectionComponent
         ) : (
@@ -180,8 +184,10 @@ export function SectionRenderer({
         return (
           <div key={section.id}>
             {renderedSection}
-            {section.type === 'HERO' && <PresenceTrustStrip signals={trustSignals} />}
-            {ctaSectionTypes.has(section.type) && (
+            {section.type === 'HERO' && showTrustStrip && (
+              <PresenceTrustStrip signals={trustSignals} />
+            )}
+            {showConversionCtas && ctaSectionTypes.has(section.type) && (
               <SectionBookingCta bookingHref={bookingHref} businessName={businessName} />
             )}
           </div>
@@ -199,7 +205,9 @@ export function SectionRenderer({
         </Suspense>
       )}
 
-      <StickyMobileBookingCta bookingHref={bookingHref} businessName={businessName} />
+      {showConversionCtas && (
+        <StickyMobileBookingCta bookingHref={bookingHref} businessName={businessName} />
+      )}
     </div>
   )
 }
