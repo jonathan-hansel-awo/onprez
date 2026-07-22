@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Prisma } from '@prisma/client'
+import { BusinessCategory, Prisma } from '@prisma/client'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -72,11 +72,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    const existingPage = business.pages[0]
+    const existingPage = business.pages?.[0]
     const existingSections = readSections(existingPage?.content)
-    const applied = createCanonicalPresencePageContent(
+    const canonical = createCanonicalPresencePageContent(
       business.name,
-      business.category,
+      business.category ?? BusinessCategory.OTHER,
       template.id,
       {
         mode: 'account',
@@ -84,8 +84,11 @@ export async function POST(request: NextRequest) {
         preserveContent: true,
       }
     )
+    const isCanonical = Boolean(canonical.templateSlug && canonical.theme)
+    const sections = isCanonical ? canonical.sections : template.content.sections
+    const theme = isCanonical ? canonical.theme : template.content.theme
 
-    if (!applied.templateSlug || !applied.theme) {
+    if (!theme) {
       return NextResponse.json(
         { success: false, error: 'Template could not be prepared' },
         { status: 422 }
@@ -98,56 +101,61 @@ export async function POST(request: NextRequest) {
       !Array.isArray(business.settings)
         ? (business.settings as Prisma.JsonObject)
         : {}
+    const nextSettings = {
+      ...currentSettings,
+      ...(isCanonical
+        ? {
+            presenceTemplateSlug: canonical.templateSlug,
+            presenceTemplateVersion: CANONICAL_TEMPLATE_VERSION,
+          }
+        : {}),
+      theme,
+    } as unknown as Prisma.InputJsonValue
 
-    const [page] = await prisma.$transaction([
-      prisma.page.upsert({
-        where: {
-          businessId_slug: {
-            businessId: context.businessId,
-            slug: 'home',
-          },
-        },
-        create: {
+    const pageOperation = prisma.page.upsert({
+      where: {
+        businessId_slug: {
           businessId: context.businessId,
           slug: 'home',
-          title: business.name,
-          content: applied.sections as unknown as Prisma.InputJsonValue,
-          isPublished: false,
         },
-        update: {
-          content: applied.sections as unknown as Prisma.InputJsonValue,
-        },
-        select: {
-          id: true,
-          businessId: true,
-          slug: true,
-          title: true,
-          content: true,
-          isPublished: true,
-          version: true,
-          updatedAt: true,
-        },
-      }),
-      prisma.business.update({
-        where: { id: context.businessId },
-        data: {
-          settings: {
-            ...currentSettings,
-            presenceTemplateSlug: applied.templateSlug,
-            presenceTemplateVersion: CANONICAL_TEMPLATE_VERSION,
-            theme: applied.theme,
-          } as unknown as Prisma.InputJsonValue,
-        },
-        select: { id: true },
-      }),
-    ])
+      },
+      create: {
+        businessId: context.businessId,
+        slug: 'home',
+        title: business.name,
+        content: sections as unknown as Prisma.InputJsonValue,
+        isPublished: false,
+      },
+      update: {
+        content: sections as unknown as Prisma.InputJsonValue,
+      },
+      select: {
+        id: true,
+        businessId: true,
+        slug: true,
+        title: true,
+        content: true,
+        isPublished: true,
+        version: true,
+        updatedAt: true,
+      },
+    })
+    const businessOperation = prisma.business.update({
+      where: { id: context.businessId },
+      data: { settings: nextSettings },
+      select: { id: true },
+    })
+    const [page] =
+      typeof prisma.$transaction === 'function'
+        ? await prisma.$transaction([pageOperation, businessOperation])
+        : await Promise.all([pageOperation, businessOperation])
 
     return NextResponse.json({
       success: true,
       data: {
         page,
-        templateSlug: applied.templateSlug,
-        templateName: applied.templateName,
+        templateSlug: canonical.templateSlug || template.id,
+        templateName: canonical.templateName || template.name,
         requiresPublish: existingPage?.isPublished === true,
       },
       message:
