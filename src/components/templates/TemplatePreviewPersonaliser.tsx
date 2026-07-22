@@ -36,12 +36,9 @@ export function TemplatePreviewPersonaliser({
   )
   const canonicalPage = useMemo(
     () =>
-      createCanonicalPresencePageContent(
-        businessName,
-        'OTHER' as BusinessCategory,
-        template.slug,
-        { mode: 'preview' }
-      ),
+      createCanonicalPresencePageContent(businessName, 'OTHER' as BusinessCategory, template.slug, {
+        mode: 'preview',
+      }),
     [businessName, template.slug]
   )
 
@@ -88,8 +85,9 @@ export function TemplatePreviewPersonaliser({
                   Preview with your business name
                 </label>
                 <p className="mt-2 text-sm leading-6 text-gray-600">
-                  The layout below is not a separate marketing mock-up. It is generated from the same
-                  template definition and section renderer used by the dashboard and public page.
+                  The layout below is not a separate marketing mock-up. It is generated from the
+                  same template definition and section renderer used by the dashboard and public
+                  page.
                 </p>
               </div>
               <input
@@ -142,9 +140,9 @@ export function TemplatePreviewPersonaliser({
 
       {!isClientView && (
         <footer className="border-t border-gray-200 bg-white px-5 py-8 text-center text-xs leading-6 text-gray-600">
-          Demo services, imagery, contact details, and reviews are clearly fictional preview content.
-          The selected design, section structure, typography, spacing, and responsive renderer are the
-          same ones applied to the account.
+          Demo services, imagery, contact details, and reviews are clearly fictional preview
+          content. The selected design, section structure, typography, spacing, and responsive
+          renderer are the same ones applied to the account.
         </footer>
       )}
     </main>

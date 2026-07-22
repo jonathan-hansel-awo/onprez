@@ -93,7 +93,9 @@ export async function POST(request: NextRequest) {
     }
 
     const currentSettings =
-      business.settings && typeof business.settings === 'object' && !Array.isArray(business.settings)
+      business.settings &&
+      typeof business.settings === 'object' &&
+      !Array.isArray(business.settings)
         ? (business.settings as Prisma.JsonObject)
         : {}
 

@@ -204,7 +204,9 @@ export function CanonicalPreviewServicesSection({
                 )}
               >
                 {showImages && service.imageUrl && (
-                  <div className={cn('relative bg-black/5', layout === 'list' ? 'min-h-52' : 'h-64')}>
+                  <div
+                    className={cn('relative bg-black/5', layout === 'list' ? 'min-h-52' : 'h-64')}
+                  >
                     <Image
                       src={service.imageUrl}
                       alt={service.name}
@@ -230,7 +232,11 @@ export function CanonicalPreviewServicesSection({
                       <Clock className="h-4 w-4" aria-hidden="true" />
                       {service.duration} min
                     </span>
-                    <Link href={bookingHref} className="font-semibold" style={{ color: accentColor }}>
+                    <Link
+                      href={bookingHref}
+                      className="font-semibold"
+                      style={{ color: accentColor }}
+                    >
                       Try booking
                     </Link>
                   </div>

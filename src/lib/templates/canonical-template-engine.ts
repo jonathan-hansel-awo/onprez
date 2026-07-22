@@ -278,10 +278,7 @@ function navbar(
   }
 }
 
-function buildHeavenlyPamper(
-  businessName: string,
-  mode: 'account' | 'preview'
-): PageSection[] {
+function buildHeavenlyPamper(businessName: string, mode: 'account' | 'preview'): PageSection[] {
   const slug = 'heavenly-pamper-palace'
   const isPreview = mode === 'preview'
 
@@ -496,10 +493,7 @@ function buildHeavenlyPamper(
   ]
 }
 
-function buildEditorialBeauty(
-  businessName: string,
-  mode: 'account' | 'preview'
-): PageSection[] {
+function buildEditorialBeauty(businessName: string, mode: 'account' | 'preview'): PageSection[] {
   const slug = 'editorial-beauty'
   const isPreview = mode === 'preview'
 
@@ -824,8 +818,11 @@ function buildGeneric(
       },
       data: {
         eyebrow: isProfessional ? 'Ways to work together' : 'Service menu',
-        title: isProfessional ? 'Focused support for important work' : 'Choose the right appointment',
-        description: 'Real services, prices, durations, and availability remain connected to your account.',
+        title: isProfessional
+          ? 'Focused support for important work'
+          : 'Choose the right appointment',
+        description:
+          'Real services, prices, durations, and availability remain connected to your account.',
         layout: isProfessional ? 'list' : isCreative ? 'editorial' : 'grid',
         columns: 3,
         cardStyle: isProfessional ? 'outlined' : 'elevated',
@@ -897,7 +894,10 @@ function buildGeneric(
   ]
 }
 
-function mergeSectionData(templateSection: PageSection, existingSection?: PageSection): PageSection {
+function mergeSectionData(
+  templateSection: PageSection,
+  existingSection?: PageSection
+): PageSection {
   if (!existingSection || existingSection.type !== templateSection.type) return templateSection
 
   const existingData = existingSection.data as Record<string, unknown>
