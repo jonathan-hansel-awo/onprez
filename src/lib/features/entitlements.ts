@@ -1,4 +1,9 @@
-import { EntitlementSource, FeatureKey, type FeatureEntitlement } from '@prisma/client'
+import {
+  EntitlementSource,
+  FeatureKey,
+  Prisma,
+  type FeatureEntitlement,
+} from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
 
@@ -25,7 +30,7 @@ export interface SetFeatureEntitlementInput {
   enabled: boolean
   source: EntitlementSource
   expiresAt?: Date | null
-  metadata?: Record<string, unknown> | null
+  metadata?: Prisma.InputJsonValue
 }
 
 export function isFeatureEntitlementActive(
@@ -79,8 +84,15 @@ export async function setFeatureEntitlement({
   enabled,
   source,
   expiresAt = null,
-  metadata = null,
+  metadata,
 }: SetFeatureEntitlementInput): Promise<FeatureEntitlement> {
+  const data = {
+    enabled,
+    source,
+    expiresAt,
+    ...(metadata === undefined ? {} : { metadata }),
+  }
+
   return prisma.featureEntitlement.upsert({
     where: {
       businessId_feature: {
@@ -91,16 +103,8 @@ export async function setFeatureEntitlement({
     create: {
       businessId,
       feature,
-      enabled,
-      source,
-      expiresAt,
-      metadata,
+      ...data,
     },
-    update: {
-      enabled,
-      source,
-      expiresAt,
-      metadata,
-    },
+    update: data,
   })
 }
