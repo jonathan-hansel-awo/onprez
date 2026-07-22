@@ -34,6 +34,7 @@ export function getStripeClient(): Stripe {
         version: '0.1.0',
         url: 'https://onprez.com',
       },
+      httpClient: Stripe.createNodeHttpClient(),
       maxNetworkRetries: 2,
       timeout: 20_000,
       typescript: true,
