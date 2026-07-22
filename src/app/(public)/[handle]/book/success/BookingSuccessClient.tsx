@@ -20,7 +20,10 @@ import {
   CalendarPlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils/cn'
+import {
+  buildBookingLookupUrl,
+  getBookingConfirmationEmail,
+} from '@/lib/booking/public-booking'
 
 interface Business {
   id: string
@@ -69,17 +72,19 @@ function formatTime(dateString: string, timezone: string): string {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
+      timeZone: timezone,
     })
     .toUpperCase()
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString: string, timezone: string): string {
   const date = new Date(dateString)
   return date.toLocaleDateString('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: timezone,
   })
 }
 
@@ -100,14 +105,20 @@ export function BookingSuccessClient({ business, confirmationNumber }: BookingSu
   useEffect(() => {
     async function fetchBooking() {
       if (!confirmationNumber) {
+        setError('Booking confirmation is missing')
+        setIsLoading(false)
+        return
+      }
+
+      const customerEmail = getBookingConfirmationEmail(confirmationNumber)
+      if (!customerEmail) {
+        setError('Booking details are no longer available in this tab')
         setIsLoading(false)
         return
       }
 
       try {
-        const response = await fetch(
-          `/api/bookings?confirmationNumber=${confirmationNumber}&customerEmail=${booking?.customer.email}`
-        )
+        const response = await fetch(buildBookingLookupUrl(confirmationNumber, customerEmail))
         const result = await response.json()
 
         if (!response.ok) {
@@ -116,14 +127,14 @@ export function BookingSuccessClient({ business, confirmationNumber }: BookingSu
         }
 
         setBooking(result.data)
-      } catch (err) {
+      } catch (_error) {
         setError('Failed to load booking details')
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchBooking()
+    void fetchBooking()
   }, [confirmationNumber])
 
   const handleCopyConfirmation = async () => {
@@ -206,7 +217,7 @@ END:VCALENDAR`
     if (navigator.share) {
       try {
         await navigator.share(shareData)
-      } catch (err) {
+      } catch (_error) {
         // User cancelled or share failed
       }
     } else {
@@ -322,7 +333,9 @@ END:VCALENDAR`
                 <Calendar className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">{formatDate(booking.startTime)}</p>
+                <p className="font-medium text-gray-900">
+                  {formatDate(booking.startTime, booking.business.timezone)}
+                </p>
                 <p className="text-sm text-gray-600 flex items-center gap-1 mt-0.5">
                   <Clock className="w-4 h-4" />
                   {formatTime(booking.startTime, booking.business.timezone)} -{' '}
