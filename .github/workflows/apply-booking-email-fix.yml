@@ -1,0 +1,162 @@
+name: Apply booking email integration
+
+on:
+  push:
+    branches:
+      - fix/booking-email-notifications
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Integrate booking notifications
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          route_path = Path('src/app/api/bookings/route.ts')
+          text = route_path.read_text()
+
+          def replace_once(source: str, target: str) -> None:
+              global text
+              if source not in text:
+                  raise SystemExit(f'Expected booking route anchor was not found: {source[:80]!r}')
+              text = text.replace(source, target, 1)
+
+          replace_once(
+              "import { createBooking } from '@/lib/services/booking'\n",
+              "import { createBooking } from '@/lib/services/booking'\n"
+              "import { sendBookingCreatedNotifications } from '@/lib/services/booking-notifications'\n",
+          )
+
+          replace_once(
+              "        customerNotes: true,\n        createdAt: true,\n",
+              "        customerNotes: true,\n"
+              "        customerPhone: true,\n"
+              "        totalAmount: true,\n"
+              "        createdAt: true,\n",
+          )
+
+          replace_once(
+              "        service: {\n"
+              "          select: {\n"
+              "            name: true,\n"
+              "            price: true,\n"
+              "            duration: true,\n"
+              "          },\n"
+              "        },\n"
+              "        customer: {\n",
+              "        service: {\n"
+              "          select: {\n"
+              "            name: true,\n"
+              "            price: true,\n"
+              "            duration: true,\n"
+              "            currency: true,\n"
+              "          },\n"
+              "        },\n"
+              "        customer: {\n",
+          )
+
+          replace_once(
+              "        business: {\n"
+              "          select: {\n"
+              "            name: true,\n"
+              "            timezone: true,\n"
+              "            address: true,\n"
+              "            slug: true,\n"
+              "          },\n"
+              "        },\n",
+              "        business: {\n"
+              "          select: {\n"
+              "            name: true,\n"
+              "            timezone: true,\n"
+              "            email: true,\n"
+              "            address: true,\n"
+              "            slug: true,\n"
+              "            owner: {\n"
+              "              select: { email: true },\n"
+              "            },\n"
+              "          },\n"
+              "        },\n",
+          )
+
+          notification_block = """    if (!result.replayed) {
+              const notifications = await sendBookingCreatedNotifications({
+                bookingId: appointment.id,
+                status: appointment.status,
+                customerName: appointment.customer.name,
+                customerEmail: appointment.customer.email,
+                customerPhone: appointment.customerPhone,
+                customerNotes: appointment.customerNotes,
+                businessName: appointment.business.name,
+                businessEmail: appointment.business.email,
+                businessOwnerEmail: appointment.business.owner.email,
+                businessAddress: appointment.business.address,
+                serviceName: appointment.service.name,
+                startTime: appointment.startTime,
+                endTime: appointment.endTime,
+                timezone: appointment.business.timezone,
+                totalAmount: Number(appointment.totalAmount),
+                currency: appointment.service.currency,
+              })
+              const allNotificationsSent =
+                notifications.customer.success && notifications.business.success
+
+              logger[allNotificationsSent ? 'info' : 'warn']('booking.api.notifications_completed', {
+                businessId: data.businessId,
+                bookingId: appointment.id,
+                customerSent: notifications.customer.success,
+                businessSent: notifications.business.success,
+              })
+            } else {
+              logger.info('booking.api.notifications_skipped', {
+                businessId: data.businessId,
+                bookingId: appointment.id,
+                reason: 'idempotency_replay',
+              })
+            }
+
+          """
+
+          replace_once(
+              "    logger.info('booking.api.succeeded', {\n",
+              notification_block + "    logger.info('booking.api.succeeded', {\n",
+          )
+
+          route_path.write_text(text)
+          PY
+
+      - name: Format changed files
+        run: npx prettier --write src/app/api/bookings/route.ts src/lib/services/booking-notifications.ts src/lib/services/booking-notifications.test.ts
+
+      - name: Verify focused tests and types
+        run: |
+          npm test -- --runInBand src/lib/services/booking-notifications.test.ts
+          npm run type-check
+
+      - name: Commit implementation and remove temporary workflow
+        run: |
+          rm .github/workflows/apply-booking-email-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: send booking confirmation and business emails"
+          git push
