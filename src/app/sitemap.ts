@@ -5,7 +5,6 @@ import { getAppUrl } from '@/lib/utils/get-app-url'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getAppUrl()
 
-  // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
@@ -31,6 +30,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: new Date('2026-07-22'),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/terms`,
+      lastModified: new Date('2026-07-22'),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/cookies`,
+      lastModified: new Date('2026-07-22'),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
   ]
 
   let presenceRoutes: MetadataRoute.Sitemap = []
@@ -53,7 +70,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }))
   } catch (error) {
-    // Keep the static sitemap available during builds or transient database outages.
     console.warn('Dynamic sitemap entries are temporarily unavailable.', error)
   }
 

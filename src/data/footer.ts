@@ -1,30 +1,22 @@
 export const footerLinks = {
   product: [
-    { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: '#pricing' },
-    { label: 'Examples', href: '#examples' },
-    { label: 'Templates', href: '#' },
-    { label: 'Integrations', href: '#' },
+    { label: 'Features', href: '/#features' },
+    { label: 'Pricing', href: '/#pricing' },
+    { label: 'Examples', href: '/#examples' },
+    { label: 'Templates', href: '/templates' },
   ],
   company: [
-    { label: 'About', href: '#' },
-    { label: 'Blog', href: '#' },
-    { label: 'Careers', href: '#' },
-    { label: 'Contact', href: '#' },
-    { label: 'Press Kit', href: '#' },
+    { label: 'About', href: '/#how-it-works' },
+    { label: 'Contact', href: 'mailto:support@onprez.com' },
   ],
   resources: [
-    { label: 'Help Center', href: '#' },
-    { label: 'API Docs', href: '#' },
-    { label: 'Community', href: '#' },
-    { label: 'Status', href: '#' },
-    { label: 'Roadmap', href: '#' },
+    { label: 'Privacy choices', href: '/cookies' },
+    { label: 'Data rights', href: '/privacy#your-rights' },
   ],
   legal: [
-    { label: 'Privacy Policy', href: '#' },
-    { label: 'Terms of Service', href: '#' },
-    { label: 'Cookie Policy', href: '#' },
-    { label: 'GDPR', href: '#' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
+    { label: 'Cookie Policy', href: '/cookies' },
   ],
 }
 

@@ -1,25 +1,54 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import {
+  COOKIE_CONSENT_CHANGED_EVENT,
+  COOKIE_CONSENT_STORAGE_KEY,
+  hasAnalyticsConsent,
+} from '@/lib/privacy/cookie-consent'
+
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
 
 function AnalyticsContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [analyticsAllowed, setAnalyticsAllowed] = useState(false)
 
   useEffect(() => {
-    // Track page views
-    const url = `${pathname}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`
-
-    // Add your analytics tracking here
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('config', 'GA_MEASUREMENT_ID', {
-        page_path: url,
-      })
+    const syncConsent = () => setAnalyticsAllowed(hasAnalyticsConsent())
+    const handleStorage = (event: StorageEvent) => {
+      if (!event.key || event.key === COOKIE_CONSENT_STORAGE_KEY) {
+        syncConsent()
+      }
     }
-  }, [pathname, searchParams])
+
+    syncConsent()
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, syncConsent)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, syncConsent)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
+
+  useEffect(() => {
+    const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+    if (!analyticsAllowed || !measurementId || !window.gtag) return
+
+    const query = searchParams?.toString()
+    const url = `${pathname}${query ? `?${query}` : ''}`
+
+    window.gtag('config', measurementId, {
+      page_path: url,
+      anonymize_ip: true,
+    })
+  }, [analyticsAllowed, pathname, searchParams])
 
   return null
 }
