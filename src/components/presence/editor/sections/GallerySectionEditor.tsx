@@ -52,9 +52,7 @@ export function GallerySectionEditor({ section, onUpdate, businessId }: GalleryS
       data: {
         ...section.data,
         images,
-        featuredImageIndex: images.length
-          ? Math.min(featuredImageIndex, images.length - 1)
-          : 0,
+        featuredImageIndex: images.length ? Math.min(featuredImageIndex, images.length - 1) : 0,
       },
     })
 
