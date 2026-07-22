@@ -16,13 +16,13 @@ describe('template preview personalisation', () => {
 
   it('preserves the selected template and business name for signup', () => {
     expect(buildTemplateSignupHref('serene-wellness', 'Heavenly Pamper Palace')).toBe(
-      '/signup?template=serene-wellness&businessName=Heavenly+Pamper+Palace'
+      '/api/templates/select?template=serene-wellness&businessName=Heavenly+Pamper+Palace'
     )
   })
 
   it('omits an empty business name', () => {
     expect(buildTemplateSignupHref('serene-wellness', '   ')).toBe(
-      '/signup?template=serene-wellness'
+      '/api/templates/select?template=serene-wellness'
     )
   })
 })
