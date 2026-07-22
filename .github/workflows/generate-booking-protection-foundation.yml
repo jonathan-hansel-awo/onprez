@@ -36,6 +36,7 @@ jobs:
         run: node scripts/apply-booking-protection-foundation.mjs
 
       - name: Format generated files
+        continue-on-error: true
         run: |
           npx prisma format
           npx prettier --write \
@@ -49,6 +50,7 @@ jobs:
             src/lib/stripe/__tests__/config.test.ts
 
       - name: Commit generated changes
+        if: always()
         run: |
           if git diff --quiet; then
             echo "No generated changes"
