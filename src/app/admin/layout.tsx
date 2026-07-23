@@ -27,7 +27,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="hidden text-slate-500 sm:inline">{user.email}</span>
-            <Link href="/dashboard" className="rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50">
+            <Link
+              href="/dashboard"
+              className="rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50"
+            >
               My dashboard
             </Link>
           </div>

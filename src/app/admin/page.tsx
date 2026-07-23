@@ -48,7 +48,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <p className="text-sm font-medium text-blue-600">Platform administration</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Customer setup workspace</h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            Find a customer business, complete its profile, build the presence page, and add services without impersonating the owner.
+            Find a customer business, complete its profile, build the presence page, and add
+            services without impersonating the owner.
           </p>
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -67,7 +68,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           Search
         </button>
         {query ? (
-          <Link href="/admin" className="rounded-xl border border-slate-300 px-5 py-3 text-center text-sm font-medium hover:bg-slate-50">
+          <Link
+            href="/admin"
+            className="rounded-xl border border-slate-300 px-5 py-3 text-center text-sm font-medium hover:bg-slate-50"
+          >
             Clear
           </Link>
         ) : null}
@@ -92,7 +96,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   <tr key={business.id} className="align-top hover:bg-slate-50/70">
                     <td className="px-5 py-4">
                       <div className="font-medium text-slate-950">{business.name}</div>
-                      <div className="mt-1 text-xs text-slate-500">onprez.com/{business.slug} · {business.category}</div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        onprez.com/{business.slug} · {business.category}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <div>{business.owner.email}</div>
@@ -102,17 +108,23 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-2">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${pagePublished ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${pagePublished ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}
+                        >
                           {pagePublished ? 'Published' : 'Draft'}
                         </span>
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${business.isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${business.isActive ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}
+                        >
                           {business.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </div>
                     </td>
                     <td className="px-5 py-4 text-slate-600">
                       <div>{business._count.services} services</div>
-                      <div className="mt-1 text-xs">{business._count.appointments} appointments</div>
+                      <div className="mt-1 text-xs">
+                        {business._count.appointments} appointments
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-right">
                       <Link
