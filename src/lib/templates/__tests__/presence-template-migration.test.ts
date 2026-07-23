@@ -59,7 +59,9 @@ describe('presence template migration planning', () => {
     })
     expect(plan.page.sections.find(section => section.type === 'FAQ')).toMatchObject({
       isVisible: true,
-      data: { items: expect.arrayContaining([expect.objectContaining({ question: expect.any(String) })]) },
+      data: {
+        items: expect.arrayContaining([expect.objectContaining({ question: expect.any(String) })]),
+      },
     })
     expect(plan.summary).toMatchObject({
       migrationMode: 'overhaul',
