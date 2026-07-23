@@ -64,6 +64,7 @@ jobs:
       - name: Format TypeScript files
         run: |
           npx prettier --write \
+            __tests__/api/public-routes.test.ts \
             src/lib/booking-protection/config.ts \
             src/lib/booking-protection/__tests__/config.test.ts \
             src/components/booking-protection/booking-protection-configurator.tsx \
