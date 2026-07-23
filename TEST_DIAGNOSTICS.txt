@@ -1,0 +1,2226 @@
+
+> onprez@0.1.0 test:ci
+> jest --ci --runInBand
+
+PASS __tests__/api/appointments-authorization.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/services-authorization.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ override existing { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/team-authorization.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ override existing { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/public-routes.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/bookings-public.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.903Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"78e388ed-c36e-496d-8823-0861dafba7a2","correlationId":"78e388ed-c36e-496d-8823-0861dafba7a2","method":"POST","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.929Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"78e388ed-c36e-496d-8823-0861dafba7a2","correlationId":"78e388ed-c36e-496d-8823-0861dafba7a2","method":"POST","path":"/api/bookings","status":429,"durationMs":26}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.933Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"525504fe-fa31-4ec0-ab87-2fea4cfc8361","correlationId":"525504fe-fa31-4ec0-ab87-2fea4cfc8361","method":"POST","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.949Z","level":"info","service":"onprez","environment":"test","event":"booking.api.notifications_completed","requestId":"525504fe-fa31-4ec0-ab87-2fea4cfc8361","correlationId":"525504fe-fa31-4ec0-ab87-2fea4cfc8361","method":"POST","path":"/api/bookings","businessId":"business-1","bookingId":"abc12345bookingid","customerSent":true,"businessSent":true}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.949Z","level":"info","service":"onprez","environment":"test","event":"booking.api.succeeded","requestId":"525504fe-fa31-4ec0-ab87-2fea4cfc8361","correlationId":"525504fe-fa31-4ec0-ab87-2fea4cfc8361","method":"POST","path":"/api/bookings","businessId":"business-1","serviceId":"service-1","bookingId":"abc12345bookingid","replayed":false}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.950Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"525504fe-fa31-4ec0-ab87-2fea4cfc8361","correlationId":"525504fe-fa31-4ec0-ab87-2fea4cfc8361","method":"POST","path":"/api/bookings","status":201,"durationMs":17}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.952Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"20f74419-e3fb-4ae1-bb62-fc34bc60ae89","correlationId":"20f74419-e3fb-4ae1-bb62-fc34bc60ae89","method":"POST","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.954Z","level":"info","service":"onprez","environment":"test","event":"booking.api.notifications_completed","requestId":"20f74419-e3fb-4ae1-bb62-fc34bc60ae89","correlationId":"20f74419-e3fb-4ae1-bb62-fc34bc60ae89","method":"POST","path":"/api/bookings","businessId":"business-1","bookingId":"abc12345bookingid","customerSent":true,"businessSent":true}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.954Z","level":"info","service":"onprez","environment":"test","event":"booking.api.succeeded","requestId":"20f74419-e3fb-4ae1-bb62-fc34bc60ae89","correlationId":"20f74419-e3fb-4ae1-bb62-fc34bc60ae89","method":"POST","path":"/api/bookings","businessId":"business-1","serviceId":"service-1","bookingId":"abc12345bookingid","replayed":false}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.955Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"20f74419-e3fb-4ae1-bb62-fc34bc60ae89","correlationId":"20f74419-e3fb-4ae1-bb62-fc34bc60ae89","method":"POST","path":"/api/bookings","status":201,"durationMs":3}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.956Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"8ed3d172-2d8a-4ca0-a700-c7c5836cf4c8","correlationId":"8ed3d172-2d8a-4ca0-a700-c7c5836cf4c8","method":"POST","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.958Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"8ed3d172-2d8a-4ca0-a700-c7c5836cf4c8","correlationId":"8ed3d172-2d8a-4ca0-a700-c7c5836cf4c8","method":"POST","path":"/api/bookings","status":400,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.960Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"2fb3c91d-e451-4db1-acfc-17dff6a16280","correlationId":"2fb3c91d-e451-4db1-acfc-17dff6a16280","method":"POST","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.961Z","level":"info","service":"onprez","environment":"test","event":"booking.api.notifications_skipped","requestId":"2fb3c91d-e451-4db1-acfc-17dff6a16280","correlationId":"2fb3c91d-e451-4db1-acfc-17dff6a16280","method":"POST","path":"/api/bookings","businessId":"business-1","bookingId":"abc12345bookingid","reason":"idempotency_replay"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.961Z","level":"info","service":"onprez","environment":"test","event":"booking.api.succeeded","requestId":"2fb3c91d-e451-4db1-acfc-17dff6a16280","correlationId":"2fb3c91d-e451-4db1-acfc-17dff6a16280","method":"POST","path":"/api/bookings","businessId":"business-1","serviceId":"service-1","bookingId":"abc12345bookingid","replayed":true}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.962Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"2fb3c91d-e451-4db1-acfc-17dff6a16280","correlationId":"2fb3c91d-e451-4db1-acfc-17dff6a16280","method":"POST","path":"/api/bookings","status":200,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.963Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"f8e4c08e-05ef-4642-8b42-23536724c291","correlationId":"f8e4c08e-05ef-4642-8b42-23536724c291","method":"POST","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.964Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"f8e4c08e-05ef-4642-8b42-23536724c291","correlationId":"f8e4c08e-05ef-4642-8b42-23536724c291","method":"POST","path":"/api/bookings","status":404,"durationMs":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.965Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"a86d5983-1fe8-4ceb-8dbe-e70766f1ed61","correlationId":"a86d5983-1fe8-4ceb-8dbe-e70766f1ed61","method":"POST","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.967Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"a86d5983-1fe8-4ceb-8dbe-e70766f1ed61","correlationId":"a86d5983-1fe8-4ceb-8dbe-e70766f1ed61","method":"POST","path":"/api/bookings","status":400,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.968Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"d02fb139-686c-49de-8a2f-372364ed99fd","correlationId":"d02fb139-686c-49de-8a2f-372364ed99fd","method":"GET","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.969Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"d02fb139-686c-49de-8a2f-372364ed99fd","correlationId":"d02fb139-686c-49de-8a2f-372364ed99fd","method":"GET","path":"/api/bookings","status":400,"durationMs":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.970Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"2417f48d-ad0d-48be-8917-4493590c65d2","correlationId":"2417f48d-ad0d-48be-8917-4493590c65d2","method":"GET","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.971Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"2417f48d-ad0d-48be-8917-4493590c65d2","correlationId":"2417f48d-ad0d-48be-8917-4493590c65d2","method":"GET","path":"/api/bookings","status":200,"durationMs":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.972Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"261ef280-7be2-4d10-85b7-fd889973c6ef","correlationId":"261ef280-7be2-4d10-85b7-fd889973c6ef","method":"GET","path":"/api/bookings"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:36.972Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"261ef280-7be2-4d10-85b7-fd889973c6ef","correlationId":"261ef280-7be2-4d10-85b7-fd889973c6ef","method":"GET","path":"/api/bookings","status":404,"durationMs":0}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+PASS __tests__/lib/auth/session-service.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+FAIL __tests__/services/public-auth-services.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.error
+      Resend verification error: TypeError: (0 , _email.sendEmail) is not a function
+          at sendAccountVerificationEmail (/home/runner/work/onprez/onprez/src/lib/services/account-verification-email.ts:94:19)
+          at resendVerificationEmail (/home/runner/work/onprez/onprez/src/lib/services/email-verification.ts:206:39)
+          at Object.<anonymous> (/home/runner/work/onprez/onprez/__tests__/services/public-auth-services.test.ts:146:20)
+
+    [0m [90m 226 |[39m     }
+     [90m 227 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 228 |[39m     console[33m.[39merror([32m'Resend verification error:'[39m[33m,[39m error)
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 229 |[39m
+     [90m 230 |[39m     [36mawait[39m logSecurityEventSafely({
+     [90m 231 |[39m       action[33m:[39m [32m'verification_email_resend_failed'[39m[33m,[39m[0m
+
+      at error (src/lib/services/email-verification.ts:228:13)
+      at Object.<anonymous> (__tests__/services/public-auth-services.test.ts:146:20)
+
+    console.error
+      Signup verification email failed: TypeError: (0 , _email.sendEmail) is not a function
+          at sendAccountVerificationEmail (/home/runner/work/onprez/onprez/src/lib/services/account-verification-email.ts:94:19)
+          at signupUser (/home/runner/work/onprez/onprez/src/lib/services/signup.ts:159:41)
+          at Object.<anonymous> (/home/runner/work/onprez/onprez/__tests__/services/public-auth-services.test.ts:392:20)
+
+    [0m [90m 166 |[39m       [90m// Account exists at this point. Do not report signup failure;[39m
+     [90m 167 |[39m       [90m// user can request a fresh verification email.[39m
+    [31m[1m>[22m[39m[90m 168 |[39m       console[33m.[39merror([32m'Signup verification email failed:'[39m[33m,[39m error)
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 169 |[39m
+     [90m 170 |[39m       [36mawait[39m logSecurityEventSafely({
+     [90m 171 |[39m         userId[33m:[39m result[33m.[39muser[33m.[39mid[33m,[39m[0m
+
+      at error (src/lib/services/signup.ts:168:15)
+      at Object.<anonymous> (__tests__/services/public-auth-services.test.ts:392:20)
+
+  ● public auth services › resendVerificationEmail stores hashed token and sends raw token only in email URL
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 146 |[39m     [36mconst[39m result [33m=[39m [36mawait[39m resendVerificationEmail([32m'User@Example.com'[39m[33m,[39m [32m'127.0.0.1'[39m[33m,[39m [32m'test-agent'[39m)
+     [90m 147 |[39m
+    [31m[1m>[22m[39m[90m 148 |[39m     expect(result[33m.[39msuccess)[33m.[39mtoBe([36mtrue[39m)
+     [90m     |[39m                            [31m[1m^[22m[39m
+     [90m 149 |[39m
+     [90m 150 |[39m     expect(mockedPrisma[33m.[39memailVerificationToken[33m.[39mcreate)[33m.[39mtoHaveBeenCalledWith({
+     [90m 151 |[39m       data[33m:[39m {[0m
+
+      at Object.toBe (__tests__/services/public-auth-services.test.ts:148:28)
+
+PASS __tests__/api/upload-images.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.202Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"b2693e93-2f5a-4109-8feb-dfab82f22a42","correlationId":"b2693e93-2f5a-4109-8feb-dfab82f22a42","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.208Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"b2693e93-2f5a-4109-8feb-dfab82f22a42","correlationId":"b2693e93-2f5a-4109-8feb-dfab82f22a42","method":"POST","path":"/api/upload/images","status":401,"durationMs":6}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.213Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"4c8dd1da-82af-432e-9f1c-34d10bb4ddd6","correlationId":"4c8dd1da-82af-432e-9f1c-34d10bb4ddd6","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.215Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"4c8dd1da-82af-432e-9f1c-34d10bb4ddd6","correlationId":"4c8dd1da-82af-432e-9f1c-34d10bb4ddd6","method":"POST","path":"/api/upload/images","status":429,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.219Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"a0d29de4-92bd-4c37-af3f-b68a05101427","correlationId":"a0d29de4-92bd-4c37-af3f-b68a05101427","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.222Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"a0d29de4-92bd-4c37-af3f-b68a05101427","correlationId":"a0d29de4-92bd-4c37-af3f-b68a05101427","method":"POST","path":"/api/upload/images","status":400,"durationMs":3}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.224Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"9fb1b1ce-c01b-4831-8546-b6f7a59b274f","correlationId":"9fb1b1ce-c01b-4831-8546-b6f7a59b274f","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:38.232Z","level":"warn","service":"onprez","environment":"test","event":"upload.image.rejected","requestId":"9fb1b1ce-c01b-4831-8546-b6f7a59b274f","correlationId":"9fb1b1ce-c01b-4831-8546-b6f7a59b274f","method":"POST","path":"/api/upload/images","reason":"Only JPG, JPEG, PNG, and WEBP files are allowed"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/upload/image/route.ts:158:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/upload-images.test.ts:196:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.233Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"9fb1b1ce-c01b-4831-8546-b6f7a59b274f","correlationId":"9fb1b1ce-c01b-4831-8546-b6f7a59b274f","method":"POST","path":"/api/upload/images","status":400,"durationMs":9}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.235Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"66b4d261-a197-4eb3-9cdb-1dc8e0995a26","correlationId":"66b4d261-a197-4eb3-9cdb-1dc8e0995a26","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:38.237Z","level":"warn","service":"onprez","environment":"test","event":"upload.image.rejected","requestId":"66b4d261-a197-4eb3-9cdb-1dc8e0995a26","correlationId":"66b4d261-a197-4eb3-9cdb-1dc8e0995a26","method":"POST","path":"/api/upload/images","reason":"File content does not match its declared image type"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/upload/image/route.ts:158:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/upload-images.test.ts:206:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.238Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"66b4d261-a197-4eb3-9cdb-1dc8e0995a26","correlationId":"66b4d261-a197-4eb3-9cdb-1dc8e0995a26","method":"POST","path":"/api/upload/images","status":400,"durationMs":3}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.240Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"8130f4cd-33f2-439e-96be-36ae3db67bae","correlationId":"8130f4cd-33f2-439e-96be-36ae3db67bae","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:38.266Z","level":"warn","service":"onprez","environment":"test","event":"upload.image.rejected","requestId":"8130f4cd-33f2-439e-96be-36ae3db67bae","correlationId":"8130f4cd-33f2-439e-96be-36ae3db67bae","method":"POST","path":"/api/upload/images","reason":"Image is malformed or could not be safely decoded"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/upload/image/route.ts:158:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/upload-images.test.ts:221:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.267Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"8130f4cd-33f2-439e-96be-36ae3db67bae","correlationId":"8130f4cd-33f2-439e-96be-36ae3db67bae","method":"POST","path":"/api/upload/images","status":400,"durationMs":27}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.269Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"bab94a0a-e809-4337-8b12-56ce274c3a75","correlationId":"bab94a0a-e809-4337-8b12-56ce274c3a75","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:38.270Z","level":"warn","service":"onprez","environment":"test","event":"upload.image.rejected","requestId":"bab94a0a-e809-4337-8b12-56ce274c3a75","correlationId":"bab94a0a-e809-4337-8b12-56ce274c3a75","method":"POST","path":"/api/upload/images","reason":"File extension and declared image type do not match"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/upload/image/route.ts:158:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/upload-images.test.ts:231:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.271Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"bab94a0a-e809-4337-8b12-56ce274c3a75","correlationId":"bab94a0a-e809-4337-8b12-56ce274c3a75","method":"POST","path":"/api/upload/images","status":400,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.274Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"634bc510-57f6-4a03-a3d3-be652933e40d","correlationId":"634bc510-57f6-4a03-a3d3-be652933e40d","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:38.281Z","level":"warn","service":"onprez","environment":"test","event":"upload.image.rejected","requestId":"634bc510-57f6-4a03-a3d3-be652933e40d","correlationId":"634bc510-57f6-4a03-a3d3-be652933e40d","method":"POST","path":"/api/upload/images","reason":"File too large. Maximum size is 4MB."}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/upload/image/route.ts:158:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/upload-images.test.ts:244:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.281Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"634bc510-57f6-4a03-a3d3-be652933e40d","correlationId":"634bc510-57f6-4a03-a3d3-be652933e40d","method":"POST","path":"/api/upload/images","status":400,"durationMs":7}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.285Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"3afc2a50-e9f4-411c-b029-5fe2838019a6","correlationId":"3afc2a50-e9f4-411c-b029-5fe2838019a6","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:38.287Z","level":"warn","service":"onprez","environment":"test","event":"upload.image.rejected","requestId":"3afc2a50-e9f4-411c-b029-5fe2838019a6","correlationId":"3afc2a50-e9f4-411c-b029-5fe2838019a6","method":"POST","path":"/api/upload/images","reason":"Image dimensions are too large"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/upload/image/route.ts:158:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/upload-images.test.ts:265:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.287Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"3afc2a50-e9f4-411c-b029-5fe2838019a6","correlationId":"3afc2a50-e9f4-411c-b029-5fe2838019a6","method":"POST","path":"/api/upload/images","status":400,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.288Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"60b6fcdf-2114-45fb-a0d7-51b8bc47208e","correlationId":"60b6fcdf-2114-45fb-a0d7-51b8bc47208e","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.291Z","level":"info","service":"onprez","environment":"test","event":"upload.image.succeeded","requestId":"60b6fcdf-2114-45fb-a0d7-51b8bc47208e","correlationId":"60b6fcdf-2114-45fb-a0d7-51b8bc47208e","method":"POST","path":"/api/upload/images","userId":"user-1","purpose":"profile","mimeType":"image/png","bytes":1234,"publicId":"onprez/users/user-1/profile/test"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.292Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"60b6fcdf-2114-45fb-a0d7-51b8bc47208e","correlationId":"60b6fcdf-2114-45fb-a0d7-51b8bc47208e","method":"POST","path":"/api/upload/images","status":200,"durationMs":4}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.298Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"6ad64359-534a-499d-82ba-97ee07caeec5","correlationId":"6ad64359-534a-499d-82ba-97ee07caeec5","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.303Z","level":"info","service":"onprez","environment":"test","event":"upload.image.succeeded","requestId":"6ad64359-534a-499d-82ba-97ee07caeec5","correlationId":"6ad64359-534a-499d-82ba-97ee07caeec5","method":"POST","path":"/api/upload/images","userId":"user-1","purpose":"profile","mimeType":"image/jpeg","bytes":1234,"publicId":"onprez/users/user-1/profile/test"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.304Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"6ad64359-534a-499d-82ba-97ee07caeec5","correlationId":"6ad64359-534a-499d-82ba-97ee07caeec5","method":"POST","path":"/api/upload/images","status":200,"durationMs":6}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.306Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"adc5be57-c27e-4a01-9c67-d328afa8001a","correlationId":"adc5be57-c27e-4a01-9c67-d328afa8001a","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.307Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"adc5be57-c27e-4a01-9c67-d328afa8001a","correlationId":"adc5be57-c27e-4a01-9c67-d328afa8001a","method":"POST","path":"/api/upload/images","status":400,"durationMs":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.308Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"37c2bcc3-4178-47ea-bd32-fa7d1cbce044","correlationId":"37c2bcc3-4178-47ea-bd32-fa7d1cbce044","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.309Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"37c2bcc3-4178-47ea-bd32-fa7d1cbce044","correlationId":"37c2bcc3-4178-47ea-bd32-fa7d1cbce044","method":"POST","path":"/api/upload/images","status":400,"durationMs":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.310Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"0e0cd5a4-23aa-4946-b4f1-9fec9a471127","correlationId":"0e0cd5a4-23aa-4946-b4f1-9fec9a471127","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.312Z","level":"info","service":"onprez","environment":"test","event":"upload.image.succeeded","requestId":"0e0cd5a4-23aa-4946-b4f1-9fec9a471127","correlationId":"0e0cd5a4-23aa-4946-b4f1-9fec9a471127","method":"POST","path":"/api/upload/images","userId":"user-1","businessId":"business-1","purpose":"business-logo","mimeType":"image/png","bytes":1234,"publicId":"onprez/users/user-1/profile/test"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.312Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"0e0cd5a4-23aa-4946-b4f1-9fec9a471127","correlationId":"0e0cd5a4-23aa-4946-b4f1-9fec9a471127","method":"POST","path":"/api/upload/images","status":200,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.314Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"d5cbb453-c2ff-4529-a2a9-ad43773a5466","correlationId":"d5cbb453-c2ff-4529-a2a9-ad43773a5466","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.315Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"d5cbb453-c2ff-4529-a2a9-ad43773a5466","correlationId":"d5cbb453-c2ff-4529-a2a9-ad43773a5466","method":"POST","path":"/api/upload/images","status":403,"durationMs":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.317Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"a349f5a3-2401-46b3-b55e-4557dcd5c5cc","correlationId":"a349f5a3-2401-46b3-b55e-4557dcd5c5cc","method":"POST","path":"/api/upload/images"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.error
+      {"timestamp":"2026-07-23T08:55:38.319Z","level":"error","service":"onprez","environment":"test","event":"api.error","requestId":"a349f5a3-2401-46b3-b55e-4557dcd5c5cc","correlationId":"a349f5a3-2401-46b3-b55e-4557dcd5c5cc","method":"POST","path":"/api/upload/images","context":"upload-image-api","error":{"name":"Error","message":"Cloudinary failure","stack":"Error: Cloudinary failure\n    at /home/runner/work/onprez/onprez/__tests__/api/upload-images.test.ts:394:16\n    at /home/runner/work/onprez/onprez/node_modules/jest-mock/build/index.js:305:39\n    at /home/runner/work/onprez/onprez/node_modules/jest-mock/build/index.js:312:13\n    at mockConstructor (/home/runner/work/onprez/onprez/node_modules/jest-mock/build/index.js:102:19)\n    at Object.mockUploadStream (/home/runner/work/onprez/onprez/__tests__/api/upload-images.test.ts:19:9)\n    at /home/runner/work/onprez/onprez/node_modules/jest-mock/build/index.js:305:39\n    at Object.<anonymous> (/home/runner/work/onprez/onprez/node_modules/jest-mock/build/index.js:312:13)\n    at Object.mockConstructor [as upload_stream] (/home/runner/work/onprez/onprez/node_modules/jest-mock/build/index.js:62:19)\n    at upload_stream (/home/runner/work/onprez/onprez/src/app/api/upload/image/route.ts:30:8)\n    at new Promise (<anonymous>)\n    at uploadToCloudinary (/home/runner/work/onprez/onprez/src/app/api/upload/image/route.ts:28:10)\n    at uploadToCloudinary (/home/runner/work/onprez/onprez/src/app/api/upload/image/route.ts:132:26)\n    at /home/runner/work/onprez/onprez/src/lib/observability/logger.ts:128:24\n    at Object.<anonymous> (/home/runner/work/onprez/onprez/__tests__/api/upload-images.test.ts:400:22)"},"area":"upload"}
+
+    [0m [90m 86 |[39m   [36mconst[39m output [33m=[39m [33mJSON[39m[33m.[39mstringify(entry)
+     [90m 87 |[39m
+    [31m[1m>[22m[39m[90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+     [90m    |[39m                                  [31m[1m^[22m[39m
+     [90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)[0m
+
+      at error (src/lib/observability/logger.ts:88:34)
+      at Object.write (src/lib/observability/logger.ts:98:49)
+      at error (src/lib/api/error-response.ts:50:10)
+      at handlePost (src/app/api/upload/image/route.ts:162:16)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/upload-images.test.ts:400:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:38.334Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"a349f5a3-2401-46b3-b55e-4557dcd5c5cc","correlationId":"a349f5a3-2401-46b3-b55e-4557dcd5c5cc","method":"POST","path":"/api/upload/images","status":500,"durationMs":17}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+PASS __tests__/api/business-settings-routes.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/public-auth-routes.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/presence-authorization.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.log
+      {
+        success: true,
+        data: {
+          page: {
+            id: '22222222-2222-4222-8222-222222222222',
+            businessId: '11111111-1111-4111-8111-111111111111',
+            slug: 'home',
+            title: 'Home',
+            isPublished: true,
+            publishedAt: '2026-08-01T10:00:00.000Z',
+            version: 2,
+            updatedAt: '2026-08-01T10:00:00.000Z'
+          }
+        },
+        message: 'Page published successfully! (Version 2)'
+      }
+
+      at Object.log (__tests__/api/presence-authorization.test.ts:369:15)
+
+PASS __tests__/api/mfa-routes.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/faq-authorization.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/services/mfa-challenge-service.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/mfa.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/services/login-service.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/availability-public.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/service-categories-authorization.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/brute-force-protection.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/login.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/auth/jwt.test.ts (5.539 s)
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/booking-conflict.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.716Z","level":"info","service":"onprez","environment":"test","event":"booking.creation.started","businessId":"business-1","serviceId":"service-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.727Z","level":"info","service":"onprez","environment":"test","event":"booking.database.transaction_started","businessId":"business-1","serviceId":"service-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.731Z","level":"info","service":"onprez","environment":"test","event":"booking.database.appointment_created","businessId":"business-1","serviceId":"service-1","bookingId":"appointment-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.734Z","level":"info","service":"onprez","environment":"test","event":"booking.creation.started","businessId":"business-1","serviceId":"service-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.736Z","level":"info","service":"onprez","environment":"test","event":"booking.database.transaction_started","businessId":"business-1","serviceId":"service-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.738Z","level":"info","service":"onprez","environment":"test","event":"booking.database.appointment_created","businessId":"business-1","serviceId":"service-1","bookingId":"appointment-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.738Z","level":"info","service":"onprez","environment":"test","event":"booking.creation.started","businessId":"business-1","serviceId":"service-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.740Z","level":"info","service":"onprez","environment":"test","event":"booking.database.transaction_started","businessId":"business-1","serviceId":"service-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.740Z","level":"info","service":"onprez","environment":"test","event":"booking.creation.replayed","businessId":"business-1","serviceId":"service-1","bookingId":"appointment-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.747Z","level":"info","service":"onprez","environment":"test","event":"booking.creation.started","businessId":"business-1","serviceId":"service-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:46.749Z","level":"info","service":"onprez","environment":"test","event":"booking.database.transaction_started","businessId":"business-1","serviceId":"service-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:46.749Z","level":"warn","service":"onprez","environment":"test","event":"booking.creation.rejected","businessId":"business-1","serviceId":"service-1","reason":"idempotency_conflict"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/lib/services/booking.ts:332:18)
+      at Object.<anonymous> (__tests__/lib/services/booking-conflict.test.ts:241:20)
+
+PASS __tests__/lib/services/mfa-challenge.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/email.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.046Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.049Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.056Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.error
+      {"timestamp":"2026-07-23T08:55:47.057Z","level":"error","service":"onprez","environment":"test","event":"email.send.failed","recipientCount":1,"providerErrorType":"resend_error"}
+
+    [0m [90m 86 |[39m   [36mconst[39m output [33m=[39m [33mJSON[39m[33m.[39mstringify(entry)
+     [90m 87 |[39m
+    [31m[1m>[22m[39m[90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+     [90m    |[39m                                  [31m[1m^[22m[39m
+     [90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)[0m
+
+      at error (src/lib/observability/logger.ts:88:34)
+      at Object.write (src/lib/observability/logger.ts:98:49)
+      at error (src/lib/services/email.ts:54:14)
+      at Object.<anonymous> (__tests__/lib/services/email.test.ts:79:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.058Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.error
+      {"timestamp":"2026-07-23T08:55:47.059Z","level":"error","service":"onprez","environment":"test","event":"email.send.failed","recipientCount":1,"errorType":"Error"}
+
+    [0m [90m 86 |[39m   [36mconst[39m output [33m=[39m [33mJSON[39m[33m.[39mstringify(entry)
+     [90m 87 |[39m
+    [31m[1m>[22m[39m[90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+     [90m    |[39m                                  [31m[1m^[22m[39m
+     [90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)[0m
+
+      at error (src/lib/observability/logger.ts:88:34)
+      at Object.write (src/lib/observability/logger.ts:98:49)
+      at error (src/lib/services/email.ts:81:12)
+      at Object.<anonymous> (__tests__/lib/services/email.test.ts:92:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.060Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.060Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.062Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.062Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":2,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.064Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.064Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.066Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.066Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.080Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.080Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.082Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.083Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.085Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.086Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.088Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.088Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.090Z","level":"info","service":"onprez","environment":"test","event":"email.send.started","recipientCount":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:47.090Z","level":"info","service":"onprez","environment":"test","event":"email.send.succeeded","recipientCount":1,"messageId":"email-123"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+PASS __tests__/api/business-id-routes.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/dashboard-authorization.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/business-special-date-id-route.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/proxy.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/account-security.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/app/(auth)/login/page.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/business-role-matrix.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/account-sessions.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/business-special-dates-routes.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+FAIL __tests__/lib/services/signup.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.error
+      Signup verification email failed: TypeError: (0 , _email.sendEmail) is not a function
+          at sendAccountVerificationEmail (/home/runner/work/onprez/onprez/src/lib/services/account-verification-email.ts:94:19)
+          at signupUser (/home/runner/work/onprez/onprez/src/lib/services/signup.ts:159:41)
+          at Object.<anonymous> (/home/runner/work/onprez/onprez/__tests__/lib/services/signup.test.ts:101:22)
+
+    [0m [90m 166 |[39m       [90m// Account exists at this point. Do not report signup failure;[39m
+     [90m 167 |[39m       [90m// user can request a fresh verification email.[39m
+    [31m[1m>[22m[39m[90m 168 |[39m       console[33m.[39merror([32m'Signup verification email failed:'[39m[33m,[39m error)
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 169 |[39m
+     [90m 170 |[39m       [36mawait[39m logSecurityEventSafely({
+     [90m 171 |[39m         userId[33m:[39m result[33m.[39muser[33m.[39mid[33m,[39m[0m
+
+      at error (src/lib/services/signup.ts:168:15)
+      at Object.<anonymous> (__tests__/lib/services/signup.test.ts:101:22)
+
+    console.error
+      Signup error: Error: Database error
+          at Object.<anonymous> (/home/runner/work/onprez/onprez/__tests__/lib/services/signup.test.ts:147:61)
+          at Promise.finally.completed (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at _runTest (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at _runTestsForDescribeBlock (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/runner/work/onprez/onprez/node_modules/jest-runner/build/index.js:275:16)
+          at runTest (/home/runner/work/onprez/onprez/node_modules/jest-runner/build/index.js:343:7)
+
+    [0m [90m 202 |[39m     }
+     [90m 203 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 204 |[39m     console[33m.[39merror([32m'Signup error:'[39m[33m,[39m error)
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 205 |[39m
+     [90m 206 |[39m     [36mawait[39m logSecurityEventSafely({
+     [90m 207 |[39m       action[33m:[39m [32m'user_signup_failed'[39m[33m,[39m[0m
+
+      at error (src/lib/services/signup.ts:204:13)
+      at Object.<anonymous> (__tests__/lib/services/signup.test.ts:149:22)
+
+  ● Signup Service › signupUser › should create user and business successfully
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    [0m [90m 105 |[39m       expect(result[33m.[39mbusinessId)[33m.[39mtoBe([32m'business-123'[39m)
+     [90m 106 |[39m       expect(result[33m.[39mrequiresVerification)[33m.[39mtoBe([36mtrue[39m)
+    [31m[1m>[22m[39m[90m 107 |[39m       expect(sendVerificationEmail)[33m.[39mtoHaveBeenCalled()
+     [90m     |[39m                                     [31m[1m^[22m[39m
+     [90m 108 |[39m       expect(logSecurityEvent)[33m.[39mtoHaveBeenCalledWith(
+     [90m 109 |[39m         expect[33m.[39mobjectContaining({
+     [90m 110 |[39m           action[33m:[39m [32m'user_signup'[39m[33m,[39m[0m
+
+      at Object.toHaveBeenCalled (__tests__/lib/services/signup.test.ts:107:37)
+
+FAIL __tests__/lib/services/email-verification.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.error
+      Resend verification error: TypeError: (0 , _email.sendEmail) is not a function
+          at sendAccountVerificationEmail (/home/runner/work/onprez/onprez/src/lib/services/account-verification-email.ts:94:19)
+          at resendVerificationEmail (/home/runner/work/onprez/onprez/src/lib/services/email-verification.ts:206:39)
+          at Object.<anonymous> (/home/runner/work/onprez/onprez/__tests__/lib/services/email-verification.test.ts:150:22)
+
+    [0m [90m 226 |[39m     }
+     [90m 227 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 228 |[39m     console[33m.[39merror([32m'Resend verification error:'[39m[33m,[39m error)
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 229 |[39m
+     [90m 230 |[39m     [36mawait[39m logSecurityEventSafely({
+     [90m 231 |[39m       action[33m:[39m [32m'verification_email_resend_failed'[39m[33m,[39m[0m
+
+      at error (src/lib/services/email-verification.ts:228:13)
+      at Object.<anonymous> (__tests__/lib/services/email-verification.test.ts:150:22)
+
+  ● Email Verification Service › resendVerificationEmail › should resend verification email successfully
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 150 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m resendVerificationEmail([32m'test@example.com'[39m[33m,[39m [32m'127.0.0.1'[39m)
+     [90m 151 |[39m
+    [31m[1m>[22m[39m[90m 152 |[39m       expect(result[33m.[39msuccess)[33m.[39mtoBe([36mtrue[39m)
+     [90m     |[39m                              [31m[1m^[22m[39m
+     [90m 153 |[39m       expect(sendVerificationEmail)[33m.[39mtoHaveBeenCalled()
+     [90m 154 |[39m       expect(logSecurityEvent)[33m.[39mtoHaveBeenCalledWith(
+     [90m 155 |[39m         expect[33m.[39mobjectContaining({[0m
+
+      at Object.toBe (__tests__/lib/services/email-verification.test.ts:152:30)
+
+PASS __tests__/lib/services/password-reset-complete.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/services/mfa-service.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/lib/templates/__tests__/canonical-template-engine.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/login-route.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.134Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"9471e047-1780-43e3-9ecc-0a6c944dc9b2","correlationId":"9471e047-1780-43e3-9ecc-0a6c944dc9b2","method":"POST","path":"/api/auth/login"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:53.139Z","level":"warn","service":"onprez","environment":"test","event":"auth.login.rejected","requestId":"9471e047-1780-43e3-9ecc-0a6c944dc9b2","correlationId":"9471e047-1780-43e3-9ecc-0a6c944dc9b2","method":"POST","path":"/api/auth/login","reason":"validation_failed"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/auth/login/route.ts:67:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/login-route.test.ts:59:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.142Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"9471e047-1780-43e3-9ecc-0a6c944dc9b2","correlationId":"9471e047-1780-43e3-9ecc-0a6c944dc9b2","method":"POST","path":"/api/auth/login","status":400,"durationMs":8}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.170Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"2d7cad14-7ee6-49b1-9110-bbba37b919b2","correlationId":"2d7cad14-7ee6-49b1-9110-bbba37b919b2","method":"POST","path":"/api/auth/login"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:53.172Z","level":"warn","service":"onprez","environment":"test","event":"auth.login.rejected","requestId":"2d7cad14-7ee6-49b1-9110-bbba37b919b2","correlationId":"2d7cad14-7ee6-49b1-9110-bbba37b919b2","method":"POST","path":"/api/auth/login","reason":"rate_limited"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/auth/login/route.ts:86:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/login-route.test.ts:82:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.173Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"2d7cad14-7ee6-49b1-9110-bbba37b919b2","correlationId":"2d7cad14-7ee6-49b1-9110-bbba37b919b2","method":"POST","path":"/api/auth/login","status":429,"durationMs":3}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.175Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"d4694ecb-f807-40cb-83a8-731c9bd22266","correlationId":"d4694ecb-f807-40cb-83a8-731c9bd22266","method":"POST","path":"/api/auth/login"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:53.176Z","level":"warn","service":"onprez","environment":"test","event":"auth.login.rejected","requestId":"d4694ecb-f807-40cb-83a8-731c9bd22266","correlationId":"d4694ecb-f807-40cb-83a8-731c9bd22266","method":"POST","path":"/api/auth/login","reason":"User does not exist"}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at warn (src/app/api/auth/login/route.ts:122:14)
+      at src/lib/observability/logger.ts:128:24
+      at Object.<anonymous> (__tests__/api/login-route.test.ts:103:22)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.177Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"d4694ecb-f807-40cb-83a8-731c9bd22266","correlationId":"d4694ecb-f807-40cb-83a8-731c9bd22266","method":"POST","path":"/api/auth/login","status":401,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.179Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"aeaa7228-7943-4102-885e-b44fdb1db7a8","correlationId":"aeaa7228-7943-4102-885e-b44fdb1db7a8","method":"POST","path":"/api/auth/login"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.180Z","level":"info","service":"onprez","environment":"test","event":"auth.login.mfa_required","requestId":"aeaa7228-7943-4102-885e-b44fdb1db7a8","correlationId":"aeaa7228-7943-4102-885e-b44fdb1db7a8","method":"POST","path":"/api/auth/login"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.180Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"aeaa7228-7943-4102-885e-b44fdb1db7a8","correlationId":"aeaa7228-7943-4102-885e-b44fdb1db7a8","method":"POST","path":"/api/auth/login","status":200,"durationMs":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.182Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"68790e17-b5e3-4d86-b3d9-e5dceb3a9ffe","correlationId":"68790e17-b5e3-4d86-b3d9-e5dceb3a9ffe","method":"POST","path":"/api/auth/login"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.184Z","level":"info","service":"onprez","environment":"test","event":"auth.login.succeeded","requestId":"68790e17-b5e3-4d86-b3d9-e5dceb3a9ffe","correlationId":"68790e17-b5e3-4d86-b3d9-e5dceb3a9ffe","method":"POST","path":"/api/auth/login","userId":"user-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.184Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"68790e17-b5e3-4d86-b3d9-e5dceb3a9ffe","correlationId":"68790e17-b5e3-4d86-b3d9-e5dceb3a9ffe","method":"POST","path":"/api/auth/login","status":200,"durationMs":2}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.188Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"199e1ace-8d27-4e5e-be7a-6723de56792a","correlationId":"199e1ace-8d27-4e5e-be7a-6723de56792a","method":"POST","path":"/api/auth/login"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.194Z","level":"info","service":"onprez","environment":"test","event":"auth.login.succeeded","requestId":"199e1ace-8d27-4e5e-be7a-6723de56792a","correlationId":"199e1ace-8d27-4e5e-be7a-6723de56792a","method":"POST","path":"/api/auth/login","userId":"user-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.194Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"199e1ace-8d27-4e5e-be7a-6723de56792a","correlationId":"199e1ace-8d27-4e5e-be7a-6723de56792a","method":"POST","path":"/api/auth/login","status":200,"durationMs":6}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+PASS __tests__/lib/services/appointment-state.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.429Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.started","bookingId":"appointment-1","businessId":"business-1","toStatus":"PENDING"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.434Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.started","bookingId":"appointment-1","businessId":"business-1","toStatus":"CONFIRMED"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.435Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.database_succeeded","bookingId":"appointment-1","businessId":"business-1","fromStatus":"PENDING","toStatus":"CONFIRMED"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.435Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.completed","bookingId":"appointment-1","businessId":"business-1","notificationSent":false}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.437Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.started","bookingId":"appointment-1","businessId":"business-1","toStatus":"CONFIRMED"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.437Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.database_succeeded","bookingId":"appointment-1","businessId":"business-1","fromStatus":"PENDING","toStatus":"CONFIRMED"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.438Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.email_started","bookingId":"appointment-1","businessId":"business-1"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.438Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.email_completed","bookingId":"appointment-1","businessId":"business-1","sent":true}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.438Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.completed","bookingId":"appointment-1","businessId":"business-1","notificationSent":true}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:53.439Z","level":"info","service":"onprez","environment":"test","event":"booking.transition.started","bookingId":"appointment-1","businessId":"business-1","toStatus":"CONFIRMED"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+PASS __tests__/lib/auth/password.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/components/public-booking-confirmation.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/lib/services/booking-notifications.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:56.929Z","level":"info","service":"onprez","environment":"test","event":"booking.notifications.started","bookingId":"ab12cd34ef56","status":"CONFIRMED"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:56.942Z","level":"info","service":"onprez","environment":"test","event":"booking.notifications.completed","bookingId":"ab12cd34ef56","status":"CONFIRMED","customerSent":true,"businessSent":true}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:56.946Z","level":"info","service":"onprez","environment":"test","event":"booking.notifications.started","bookingId":"ab12cd34ef56","status":"CONFIRMED"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:56.948Z","level":"info","service":"onprez","environment":"test","event":"booking.notifications.completed","bookingId":"ab12cd34ef56","status":"CONFIRMED","customerSent":true,"businessSent":true}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:56.954Z","level":"info","service":"onprez","environment":"test","event":"booking.notifications.started","bookingId":"ab12cd34ef56","status":"CONFIRMED"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.warn
+      {"timestamp":"2026-07-23T08:55:56.955Z","level":"warn","service":"onprez","environment":"test","event":"booking.notifications.completed","bookingId":"ab12cd34ef56","status":"CONFIRMED","customerSent":true,"businessSent":false}
+
+    [0m [90m 87 |[39m
+     [90m 88 |[39m   [36mif[39m (level [33m===[39m [32m'error'[39m) console[33m.[39merror(output)
+    [31m[1m>[22m[39m[90m 89 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'warn'[39m) console[33m.[39mwarn(output)
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 90 |[39m   [36melse[39m [36mif[39m (level [33m===[39m [32m'debug'[39m) console[33m.[39mdebug(output)
+     [90m 91 |[39m   [36melse[39m console[33m.[39minfo(output)
+     [90m 92 |[39m }[0m
+
+      at warn (src/lib/observability/logger.ts:89:38)
+      at Object.write [as warn] (src/lib/observability/logger.ts:97:48)
+      at sendBookingCreatedNotifications (src/lib/services/booking-notifications.ts:259:38)
+      at Object.<anonymous> (src/lib/services/booking-notifications.test.ts:108:20)
+
+PASS __tests__/components/presence-conversion.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/dashboard-onboarding.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/components/async-feedback-states.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/components/mobile-core-flows.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ override existing { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/auth/business-access.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/appointment-status.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:59.116Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"41180719-9664-4f61-8a73-4a2a9c364b18","correlationId":"41180719-9664-4f61-8a73-4a2a9c364b18","method":"PATCH","path":"/api/dashboard/bookings/appointment-1/status"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:59.119Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"41180719-9664-4f61-8a73-4a2a9c364b18","correlationId":"41180719-9664-4f61-8a73-4a2a9c364b18","method":"PATCH","path":"/api/dashboard/bookings/appointment-1/status","status":200,"durationMs":3}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:59.124Z","level":"info","service":"onprez","environment":"test","event":"api.request.started","requestId":"fc79e70c-a400-4365-b940-50f52b920366","correlationId":"fc79e70c-a400-4365-b940-50f52b920366","method":"PATCH","path":"/api/dashboard/bookings/appointment-1/status"}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+    console.info
+      {"timestamp":"2026-07-23T08:55:59.125Z","level":"info","service":"onprez","environment":"test","event":"api.request.completed","requestId":"fc79e70c-a400-4365-b940-50f52b920366","correlationId":"fc79e70c-a400-4365-b940-50f52b920366","method":"PATCH","path":"/api/dashboard/bookings/appointment-1/status","status":400,"durationMs":1}
+
+      at info (src/lib/observability/logger.ts:91:16)
+
+PASS src/lib/templates/__tests__/apply-signup-template.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/scripts/restore-verification.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ override existing { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/password-reset.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.error
+      Password reset request error: Error: Database error
+          at Object.<anonymous> (/home/runner/work/onprez/onprez/__tests__/lib/services/password-reset.test.ts:106:62)
+          at Promise.finally.completed (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at _runTest (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/runner/work/onprez/onprez/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/runner/work/onprez/onprez/node_modules/jest-runner/build/index.js:275:16)
+          at runTest (/home/runner/work/onprez/onprez/node_modules/jest-runner/build/index.js:343:7)
+
+    [0m [90m 326 |[39m     }
+     [90m 327 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 328 |[39m     console[33m.[39merror([32m'Password reset request error:'[39m[33m,[39m error)
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 329 |[39m
+     [90m 330 |[39m     [36mawait[39m logSecurityEventSafely({
+     [90m 331 |[39m       action[33m:[39m [32m'password_reset_request_error'[39m[33m,[39m[0m
+
+      at error (src/lib/services/password-reset.ts:328:13)
+      at Object.<anonymous> (__tests__/lib/services/password-reset.test.ts:109:20)
+
+PASS src/lib/features/__tests__/entitlements.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/database/critical-constraints.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/rate-limit.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/auth/get-user.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/types/__tests__/presence-template.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/security-logging.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/components/guided-empty-states.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/observability/logger.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/constants/brute-force-protection.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/multi-day-booking-conflict.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/code-quality.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ override existing { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/components/presence-dashboard-status.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/env-helper.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/lib/onboarding/progress.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/data/__tests__/presence-template-catalogue.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/components/landing/__tests__/homepage-positioning.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/lib/utils/availability.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ override existing { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/monitoring/sentry-scrubber.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/api/error-response.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/components/cookie-consent-banner.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.error
+      Warning: An update to CookieConsentBanner inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+          at CookieConsentBanner (/home/runner/work/onprez/onprez/src/components/privacy/cookie-consent-banner.tsx:15:47)
+          at children (/home/runner/work/onprez/onprez/src/lib/test-utils.tsx:5:28)
+
+    [0m [90m 22 |[39m     [36mconst[39m syncPreference [33m=[39m () [33m=>[39m {
+     [90m 23 |[39m       [36mconst[39m storedPreference [33m=[39m readCookieConsent()
+    [31m[1m>[22m[39m[90m 24 |[39m       setPreference(storedPreference)
+     [90m    |[39m       [31m[1m^[22m[39m
+     [90m 25 |[39m       setAnalyticsEnabled(storedPreference[33m?[39m[33m.[39manalytics [33m?[39m[33m?[39m [36mfalse[39m)
+     [90m 26 |[39m     }
+     [90m 27 |[39m[0m
+
+      at printWarning (node_modules/react-dom/cjs/react-dom.development.js:86:30)
+      at error (node_modules/react-dom/cjs/react-dom.development.js:60:7)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom.development.js:27628:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom.development.js:25547:5)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom.development.js:16708:7)
+      at setPreference (src/components/privacy/cookie-consent-banner.tsx:24:7)
+      at syncPreference (src/components/privacy/cookie-consent-banner.tsx:29:7)
+      at callTheUserObjectsOperation (node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
+      at innerInvokeEventListeners (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
+      at invokeEventListeners (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+      at EventTargetImpl._dispatch (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+      at EventTargetImpl.dispatchEvent (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+      at dispatchEvent (node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+      at Object.dispatchEvent (__tests__/components/cookie-consent-banner.test.tsx:44:12)
+
+    console.error
+      Warning: An update to CookieConsentBanner inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+          at CookieConsentBanner (/home/runner/work/onprez/onprez/src/components/privacy/cookie-consent-banner.tsx:15:47)
+          at children (/home/runner/work/onprez/onprez/src/lib/test-utils.tsx:5:28)
+
+    [0m [90m 23 |[39m       [36mconst[39m storedPreference [33m=[39m readCookieConsent()
+     [90m 24 |[39m       setPreference(storedPreference)
+    [31m[1m>[22m[39m[90m 25 |[39m       setAnalyticsEnabled(storedPreference[33m?[39m[33m.[39manalytics [33m?[39m[33m?[39m [36mfalse[39m)
+     [90m    |[39m       [31m[1m^[22m[39m
+     [90m 26 |[39m     }
+     [90m 27 |[39m
+     [90m 28 |[39m     [36mconst[39m handleOpenPreferences [33m=[39m () [33m=>[39m {[0m
+
+      at printWarning (node_modules/react-dom/cjs/react-dom.development.js:86:30)
+      at error (node_modules/react-dom/cjs/react-dom.development.js:60:7)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom.development.js:27628:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom.development.js:25547:5)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom.development.js:16708:7)
+      at setAnalyticsEnabled (src/components/privacy/cookie-consent-banner.tsx:25:7)
+      at syncPreference (src/components/privacy/cookie-consent-banner.tsx:29:7)
+      at callTheUserObjectsOperation (node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
+      at innerInvokeEventListeners (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
+      at invokeEventListeners (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+      at EventTargetImpl._dispatch (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+      at EventTargetImpl.dispatchEvent (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+      at dispatchEvent (node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+      at Object.dispatchEvent (__tests__/components/cookie-consent-banner.test.tsx:44:12)
+
+    console.error
+      Warning: An update to CookieConsentBanner inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+          at CookieConsentBanner (/home/runner/work/onprez/onprez/src/components/privacy/cookie-consent-banner.tsx:15:47)
+          at children (/home/runner/work/onprez/onprez/src/lib/test-utils.tsx:5:28)
+
+    [0m [90m 28 |[39m     [36mconst[39m handleOpenPreferences [33m=[39m () [33m=>[39m {
+     [90m 29 |[39m       syncPreference()
+    [31m[1m>[22m[39m[90m 30 |[39m       setIsSettingsOpen([36mtrue[39m)
+     [90m    |[39m       [31m[1m^[22m[39m
+     [90m 31 |[39m     }
+     [90m 32 |[39m
+     [90m 33 |[39m     syncPreference()[0m
+
+      at printWarning (node_modules/react-dom/cjs/react-dom.development.js:86:30)
+      at error (node_modules/react-dom/cjs/react-dom.development.js:60:7)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom.development.js:27628:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom.development.js:25547:5)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom.development.js:16708:7)
+      at setIsSettingsOpen (src/components/privacy/cookie-consent-banner.tsx:30:7)
+      at callTheUserObjectsOperation (node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
+      at innerInvokeEventListeners (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
+      at invokeEventListeners (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+      at EventTargetImpl._dispatch (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+      at EventTargetImpl.dispatchEvent (node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+      at dispatchEvent (node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+      at Object.dispatchEvent (__tests__/components/cookie-consent-banner.test.tsx:44:12)
+
+PASS src/lib/stripe/__tests__/config.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ suppress logs { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/utils/timezone.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/dashboard-layout.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ override existing { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/security-headers.test.js
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+    console.log
+      [@sentry/nextjs] The Sentry SDK was not able to determine your Next.js version. If you are using Next.js version 15 or greater, please add `experimental.clientTraceMetadata: ['sentry-trace', 'baggage']` to your Next.js config to enable pageload tracing for App Router.
+
+      at Module.maybeSetClientTraceMetadataOption (node_modules/@sentry/nextjs/src/config/withSentryConfig/getFinalConfigObjectUtils.ts:181:13)
+
+    console.log
+      [@sentry/nextjs] The Sentry SDK was not able to determine your Next.js version. If you are using Next.js version 15 or greater, Next.js will probably show you a warning about the `experimental.instrumentationHook` being set. To silence Next.js' warning, explicitly set the `experimental.instrumentationHook` option in your `next.config.(js|mjs|ts)` to `undefined`. If you are on Next.js version 14 or lower, you can silence this particular warning by explicitly setting the `experimental.instrumentationHook` option in your `next.config.(js|mjs)` to `true`.
+
+      at Module.maybeSetInstrumentationHookOption (node_modules/@sentry/nextjs/src/config/withSentryConfig/getFinalConfigObjectUtils.ts:224:13)
+
+PASS src/data/__tests__/hair-makeup-demo-business.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/data/__tests__/realistic-demo-business.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/lib/services/__tests__/account-verification-email.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ override existing { override: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/lib/booking/public-booking.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/api/health.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/lib/privacy/cookie-consent.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/types/__tests__/premium-section-variants.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+FAIL __tests__/components/verify-email-page.test.tsx
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+  ● VerifyEmailPage › tells a newly signed-up user that a verification email was sent
+
+    TestingLibraryElementError: Unable to find an element with the text: /check your junk folder/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"mx-auto w-full max-w-md"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"opacity: 0; transform: scale(0.95);"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-1 border-white/20 bg-white/95 backdrop-blur-xl"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"p-8 text-center"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-mail-check h-10 w-10 text-onprez-blue"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"24"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"24"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m16 19 2 2 4-4"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</div>[39m
+                [36m<h2[39m
+                  [33mclass[39m=[32m"mb-3 text-2xl font-bold text-gray-900"[39m
+                [36m>[39m
+                  [0mCheck your inbox[0m
+                [36m</h2>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"text-gray-600"[39m
+                [36m>[39m
+                  [0mWe have sent a verification link to[0m
+                  [36m<strong[39m
+                    [33mclass[39m=[32m"mt-1 block text-gray-900"[39m
+                  [36m>[39m
+                    [0mlouise@example.com[0m
+                  [36m</strong>[39m
+                [36m</p>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"mt-4 text-sm leading-6 text-gray-600"[39m
+                [36m>[39m
+                  [0mOpen the email and select [0m
+                  [36m<strong>[39m
+                    [0mVerify Email Address[0m
+                  [36m</strong>[39m
+                  [0m to activate your account. If it has not arrived within a few minutes, check your spam or junk folder.[0m
+                [36m</p>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"my-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-left"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm leading-6 text-blue-950"[39m
+                  [36m>[39m
+                    [0mYour presence page is saved as a [0m
+                    [36m<strong>[39m
+                      [0mdraft[0m
+                    [36m</strong>[39m
+                    [0m. After verifying, sign in to finish it and click [0m
+                    [36m<strong>[39m
+                      [0mPublish[0m
+                    [36m</strong>[39m
+                    [0m when you are ready to make it accessible.[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"space-y-4 border-t pt-6"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-gray-600"[39m
+                  [36m>[39m
+                    [0mDid not receive the email?[0m
+                  [36m</p>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-onprez-blue to-onprez-purple text-white shadow-lg hover:shadow-xl hover:scale-105 animate-glow-pulse px-6 py-3 text-base w-full"[39m
+                    [33mtabindex[39m=[32m"0"[39m
+                  [36m>[39m
+                    [0mResend verification email[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 24 |[39m     expect([36mawait[39m screen[33m.[39mfindByRole([32m'heading'[39m[33m,[39m { name[33m:[39m [32m'Check your inbox'[39m }))[33m.[39mtoBeInTheDocument()
+     [90m 25 |[39m     expect(screen[33m.[39mgetByText([32m'louise@example.com'[39m))[33m.[39mtoBeInTheDocument()
+    [31m[1m>[22m[39m[90m 26 |[39m     expect(screen[33m.[39mgetByText([35m/check your junk folder/i[39m))[33m.[39mtoBeInTheDocument()
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 27 |[39m     expect(screen[33m.[39mgetByText([35m/saved as a/i[39m))[33m.[39mtoHaveTextContent([32m'draft'[39m)
+     [90m 28 |[39m     expect(screen[33m.[39mgetByText([35m/click/i[39m))[33m.[39mtoHaveTextContent([32m'Publish'[39m)
+     [90m 29 |[39m     expect([0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (__tests__/components/verify-email-page.test.tsx:26:19)
+
+PASS __tests__/setup.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/production-readiness.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/deployment-safety.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/email/appointment-reminder.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS src/lib/templates/__tests__/preview-personalisation.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ enable debugging { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+PASS __tests__/lib/services/appointment-status-email.test.ts
+  ● Console
+
+    console.log
+      ◇ injected env (0) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+      at _log (node_modules/dotenv/lib/main.js:131:11)
+
+
+Summary of all failing tests
+FAIL __tests__/services/public-auth-services.test.ts
+  ● public auth services › resendVerificationEmail stores hashed token and sends raw token only in email URL
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 146 |[39m     [36mconst[39m result [33m=[39m [36mawait[39m resendVerificationEmail([32m'User@Example.com'[39m[33m,[39m [32m'127.0.0.1'[39m[33m,[39m [32m'test-agent'[39m)
+     [90m 147 |[39m
+    [31m[1m>[22m[39m[90m 148 |[39m     expect(result[33m.[39msuccess)[33m.[39mtoBe([36mtrue[39m)
+     [90m     |[39m                            [31m[1m^[22m[39m
+     [90m 149 |[39m
+     [90m 150 |[39m     expect(mockedPrisma[33m.[39memailVerificationToken[33m.[39mcreate)[33m.[39mtoHaveBeenCalledWith({
+     [90m 151 |[39m       data[33m:[39m {[0m
+
+      at Object.toBe (__tests__/services/public-auth-services.test.ts:148:28)
+
+FAIL __tests__/lib/services/signup.test.ts
+  ● Signup Service › signupUser › should create user and business successfully
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    [0m [90m 105 |[39m       expect(result[33m.[39mbusinessId)[33m.[39mtoBe([32m'business-123'[39m)
+     [90m 106 |[39m       expect(result[33m.[39mrequiresVerification)[33m.[39mtoBe([36mtrue[39m)
+    [31m[1m>[22m[39m[90m 107 |[39m       expect(sendVerificationEmail)[33m.[39mtoHaveBeenCalled()
+     [90m     |[39m                                     [31m[1m^[22m[39m
+     [90m 108 |[39m       expect(logSecurityEvent)[33m.[39mtoHaveBeenCalledWith(
+     [90m 109 |[39m         expect[33m.[39mobjectContaining({
+     [90m 110 |[39m           action[33m:[39m [32m'user_signup'[39m[33m,[39m[0m
+
+      at Object.toHaveBeenCalled (__tests__/lib/services/signup.test.ts:107:37)
+
+FAIL __tests__/lib/services/email-verification.test.ts
+  ● Email Verification Service › resendVerificationEmail › should resend verification email successfully
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 150 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m resendVerificationEmail([32m'test@example.com'[39m[33m,[39m [32m'127.0.0.1'[39m)
+     [90m 151 |[39m
+    [31m[1m>[22m[39m[90m 152 |[39m       expect(result[33m.[39msuccess)[33m.[39mtoBe([36mtrue[39m)
+     [90m     |[39m                              [31m[1m^[22m[39m
+     [90m 153 |[39m       expect(sendVerificationEmail)[33m.[39mtoHaveBeenCalled()
+     [90m 154 |[39m       expect(logSecurityEvent)[33m.[39mtoHaveBeenCalledWith(
+     [90m 155 |[39m         expect[33m.[39mobjectContaining({[0m
+
+      at Object.toBe (__tests__/lib/services/email-verification.test.ts:152:30)
+
+FAIL __tests__/components/verify-email-page.test.tsx
+  ● VerifyEmailPage › tells a newly signed-up user that a verification email was sent
+
+    TestingLibraryElementError: Unable to find an element with the text: /check your junk folder/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"mx-auto w-full max-w-md"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"opacity: 0; transform: scale(0.95);"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-1 border-white/20 bg-white/95 backdrop-blur-xl"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"p-8 text-center"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-mail-check h-10 w-10 text-onprez-blue"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"24"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"24"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m16 19 2 2 4-4"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</div>[39m
+                [36m<h2[39m
+                  [33mclass[39m=[32m"mb-3 text-2xl font-bold text-gray-900"[39m
+                [36m>[39m
+                  [0mCheck your inbox[0m
+                [36m</h2>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"text-gray-600"[39m
+                [36m>[39m
+                  [0mWe have sent a verification link to[0m
+                  [36m<strong[39m
+                    [33mclass[39m=[32m"mt-1 block text-gray-900"[39m
+                  [36m>[39m
+                    [0mlouise@example.com[0m
+                  [36m</strong>[39m
+                [36m</p>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"mt-4 text-sm leading-6 text-gray-600"[39m
+                [36m>[39m
+                  [0mOpen the email and select [0m
+                  [36m<strong>[39m
+                    [0mVerify Email Address[0m
+                  [36m</strong>[39m
+                  [0m to activate your account. If it has not arrived within a few minutes, check your spam or junk folder.[0m
+                [36m</p>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"my-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-left"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm leading-6 text-blue-950"[39m
+                  [36m>[39m
+                    [0mYour presence page is saved as a [0m
+                    [36m<strong>[39m
+                      [0mdraft[0m
+                    [36m</strong>[39m
+                    [0m. After verifying, sign in to finish it and click [0m
+                    [36m<strong>[39m
+                      [0mPublish[0m
+                    [36m</strong>[39m
+                    [0m when you are ready to make it accessible.[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"space-y-4 border-t pt-6"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-gray-600"[39m
+                  [36m>[39m
+                    [0mDid not receive the email?[0m
+                  [36m</p>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-onprez-blue to-onprez-purple text-white shadow-lg hover:shadow-xl hover:scale-105 animate-glow-pulse px-6 py-3 text-base w-full"[39m
+                    [33mtabindex[39m=[32m"0"[39m
+                  [36m>[39m
+                    [0mResend verification email[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+    [0m [90m 24 |[39m     expect([36mawait[39m screen[33m.[39mfindByRole([32m'heading'[39m[33m,[39m { name[33m:[39m [32m'Check your inbox'[39m }))[33m.[39mtoBeInTheDocument()
+     [90m 25 |[39m     expect(screen[33m.[39mgetByText([32m'louise@example.com'[39m))[33m.[39mtoBeInTheDocument()
+    [31m[1m>[22m[39m[90m 26 |[39m     expect(screen[33m.[39mgetByText([35m/check your junk folder/i[39m))[33m.[39mtoBeInTheDocument()
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 27 |[39m     expect(screen[33m.[39mgetByText([35m/saved as a/i[39m))[33m.[39mtoHaveTextContent([32m'draft'[39m)
+     [90m 28 |[39m     expect(screen[33m.[39mgetByText([35m/click/i[39m))[33m.[39mtoHaveTextContent([32m'Publish'[39m)
+     [90m 29 |[39m     expect([0m
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByText (__tests__/components/verify-email-page.test.tsx:26:19)
+
+
+Test Suites: 4 failed, 86 passed, 90 total
+Tests:       4 failed, 634 passed, 638 total
+Snapshots:   0 total
+Time:        32.363 s
+Ran all test suites.
+
+TEST_EXIT_CODE=1
