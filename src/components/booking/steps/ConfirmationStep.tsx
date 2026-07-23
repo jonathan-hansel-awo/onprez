@@ -13,8 +13,8 @@ import {
   PoundSterling,
   CheckCircle,
   Edit2,
+  ShieldCheck,
 } from 'lucide-react'
-import { cn } from '@/lib/utils/cn'
 
 interface ConfirmationStepProps {
   // Business info
@@ -37,6 +37,13 @@ interface ConfirmationStepProps {
   customerEmail: string
   customerPhone: string
   customerNotes: string
+
+  requiresDeposit: boolean
+  depositAmount: number | null
+  remainingAmount: number | null
+  cancellationWindowHours: number | null
+  cancellationPolicyAccepted: boolean
+  onCancellationPolicyAcceptedChange: (accepted: boolean) => void
 
   // Actions
   onEditStep?: (step: 'service' | 'datetime' | 'details') => void
@@ -80,6 +87,12 @@ export function ConfirmationStep({
   customerEmail,
   customerPhone,
   customerNotes,
+  requiresDeposit,
+  depositAmount,
+  remainingAmount,
+  cancellationWindowHours,
+  cancellationPolicyAccepted,
+  onCancellationPolicyAcceptedChange,
   onEditStep,
 }: ConfirmationStepProps) {
   return (
@@ -262,15 +275,31 @@ export function ConfirmationStep({
             className="border-t border-blue-100 bg-white px-4 py-3"
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">Total</span>
+              <span className="text-sm font-medium text-gray-600">Service total</span>
               <div className="flex items-center gap-1">
                 <PoundSterling className="w-5 h-5 text-gray-900" />
                 <span className="text-2xl font-bold text-gray-900">{servicePrice.toFixed(2)}</span>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Payment will be collected at the appointment
-            </p>
+            {requiresDeposit && depositAmount !== null ? (
+              <div className="mt-3 space-y-2 rounded-lg bg-blue-50 p-3 text-sm">
+                <div className="flex justify-between font-semibold text-blue-950">
+                  <span>Booking deposit due now</span>
+                  <span>£{depositAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-blue-800">
+                  <span>Remaining at appointment</span>
+                  <span>£{(remainingAmount ?? servicePrice - depositAmount).toFixed(2)}</span>
+                </div>
+                <p className="text-xs text-blue-700">
+                  The deposit is deducted from the service total.
+                </p>
+              </div>
+            ) : (
+              <p className="mt-1 text-xs text-gray-500">
+                Payment will be collected at the appointment
+              </p>
+            )}
           </motion.div>
         )}
       </div>
@@ -280,13 +309,32 @@ export function ConfirmationStep({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+        className="rounded-lg border border-gray-200 bg-gray-50 p-4"
       >
-        <p className="text-xs text-gray-600 leading-relaxed">
-          By confirming this booking, you agree to receive confirmation and reminder emails. Please
-          arrive 5 minutes before your appointment time. Cancellations must be made at least 24
-          hours in advance. For any changes, please contact the business directly.
-        </p>
+        {requiresDeposit ? (
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={cancellationPolicyAccepted}
+              onChange={event => onCancellationPolicyAcceptedChange(event.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm leading-6 text-gray-700">
+              <span className="flex items-center gap-2 font-semibold text-gray-900">
+                <ShieldCheck className="h-4 w-4 text-blue-600" />I accept the booking deposit policy
+              </span>
+              The deposit is deducted from the final price. It may be retained for non-attendance or
+              cancellation with less than {cancellationWindowHours ?? 24} hours&apos; notice, and is
+              refunded if the business cancels or cannot provide the service. This does not affect
+              statutory rights.
+            </span>
+          </label>
+        ) : (
+          <p className="text-xs leading-relaxed text-gray-600">
+            By confirming this booking, you agree to receive confirmation and reminder emails. For
+            changes or cancellations, please contact the business directly.
+          </p>
+        )}
       </motion.div>
     </div>
   )

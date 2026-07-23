@@ -20,6 +20,8 @@ export interface BookingCreatedNotificationInput {
   timezone: string
   totalAmount: number
   currency: string
+  depositPaid?: number
+  remainingAmount?: number
 }
 
 export interface BookingCreatedNotificationResult {
@@ -143,6 +145,17 @@ export function buildCustomerBookingEmail(
     renderDetailRow('Date', localDate),
     renderDetailRow('Time', `${localStartTime}–${localEndTime} (${input.timezone})`),
     renderDetailRow('Price', price),
+    ...(input.depositPaid !== undefined
+      ? [renderDetailRow('Deposit paid', formatCurrency(input.depositPaid, input.currency))]
+      : []),
+    ...(input.remainingAmount !== undefined
+      ? [
+          renderDetailRow(
+            'Balance at appointment',
+            formatCurrency(input.remainingAmount, input.currency)
+          ),
+        ]
+      : []),
     ...(input.businessAddress ? [renderDetailRow('Location', input.businessAddress)] : []),
     renderDetailRow('Reference', confirmationNumber),
   ].join('')
@@ -157,6 +170,12 @@ export function buildCustomerBookingEmail(
     `Date: ${localDate}`,
     `Time: ${localStartTime}–${localEndTime} (${input.timezone})`,
     `Price: ${price}`,
+    ...(input.depositPaid !== undefined
+      ? [`Deposit paid: ${formatCurrency(input.depositPaid, input.currency)}`]
+      : []),
+    ...(input.remainingAmount !== undefined
+      ? [`Balance at appointment: ${formatCurrency(input.remainingAmount, input.currency)}`]
+      : []),
     ...(input.businessAddress ? [`Location: ${input.businessAddress}`] : []),
     `Reference: ${confirmationNumber}`,
     '',
@@ -198,6 +217,12 @@ export function buildBusinessBookingEmail(
     renderDetailRow('Date', localDate),
     renderDetailRow('Time', `${localStartTime}–${localEndTime} (${input.timezone})`),
     renderDetailRow('Value', price),
+    ...(input.depositPaid !== undefined
+      ? [renderDetailRow('Deposit paid', formatCurrency(input.depositPaid, input.currency))]
+      : []),
+    ...(input.remainingAmount !== undefined
+      ? [renderDetailRow('Balance due', formatCurrency(input.remainingAmount, input.currency))]
+      : []),
     renderDetailRow('Reference', confirmationNumber),
     renderDetailRow('Customer notes', notes),
   ].join('')
@@ -212,6 +237,12 @@ export function buildBusinessBookingEmail(
     `Date: ${localDate}`,
     `Time: ${localStartTime}–${localEndTime} (${input.timezone})`,
     `Value: ${price}`,
+    ...(input.depositPaid !== undefined
+      ? [`Deposit paid: ${formatCurrency(input.depositPaid, input.currency)}`]
+      : []),
+    ...(input.remainingAmount !== undefined
+      ? [`Balance due: ${formatCurrency(input.remainingAmount, input.currency)}`]
+      : []),
     `Reference: ${confirmationNumber}`,
     `Customer notes: ${notes}`,
     '',

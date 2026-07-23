@@ -233,6 +233,14 @@ export async function createBooking(
     bookingSource?: string
     bookingIp?: string
     idempotencyKey?: string
+    deposit?: {
+      amount: number
+      policyVersion: string
+      policyAcceptedAt: Date
+      policySnapshot: Prisma.InputJsonValue
+    }
+    metadata?: Prisma.InputJsonValue
+    countCustomerBooking?: boolean
   }
 ): Promise<BookingResult> {
   logger.info('booking.creation.started', { businessId, serviceId })
@@ -300,6 +308,8 @@ export async function createBooking(
           customerNotes: customerData.notes || null,
           businessNotes: options.businessNotes || null,
           status: options.status || null,
+          depositAmount: options.deposit?.amount || null,
+          policyVersion: options.deposit?.policyVersion || null,
         })
       : null
 
@@ -398,7 +408,9 @@ export async function createBooking(
           data: {
             name: customerData.name,
             phone: customerData.phone || existingCustomer.phone,
-            totalBookings: { increment: 1 },
+            ...(options?.countCustomerBooking !== false && {
+              totalBookings: { increment: 1 },
+            }),
           },
         })
       } else {
@@ -408,8 +420,8 @@ export async function createBooking(
             email: normalizedCustomerEmail,
             name: customerData.name,
             phone: customerData.phone,
-            totalBookings: 1,
-            firstBookingAt: new Date(),
+            totalBookings: options?.countCustomerBooking === false ? 0 : 1,
+            firstBookingAt: options?.countCustomerBooking === false ? null : new Date(),
           },
         })
         customerId = newCustomer.id
@@ -437,8 +449,12 @@ export async function createBooking(
         customerNotes: customerData.notes,
         businessNotes: options?.businessNotes,
         totalAmount: service.price,
-        requiresDeposit: service.requiresDeposit,
-        depositAmount: service.depositAmount,
+        requiresDeposit: Boolean(options?.deposit),
+        depositAmount: options?.deposit?.amount ?? null,
+        cancellationPolicyVersion: options?.deposit?.policyVersion ?? null,
+        cancellationPolicyAcceptedAt: options?.deposit?.policyAcceptedAt ?? null,
+        cancellationPolicySnapshot: options?.deposit?.policySnapshot ?? undefined,
+        metadata: options?.metadata,
         bookingSource: options?.bookingSource || 'website',
         bookingIp: options?.bookingIp,
         confirmedAt: status === 'CONFIRMED' ? new Date() : null,
@@ -469,11 +485,12 @@ export async function createBooking(
       })
     }
 
-    // Update customer's last booking date
-    await tx.customer.update({
-      where: { id: customerId },
-      data: { lastBookingAt: new Date() },
-    })
+    if (options?.countCustomerBooking !== false) {
+      await tx.customer.update({
+        where: { id: customerId },
+        data: { lastBookingAt: new Date() },
+      })
+    }
 
     logger.info('booking.database.appointment_created', {
       businessId,

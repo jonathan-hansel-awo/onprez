@@ -23,6 +23,9 @@ export interface ServiceOption {
   featured: boolean
   requiresDeposit: boolean
   depositAmount: number | null
+  remainingAmount: number
+  cancellationWindowHours: number | null
+  deductFromTotal: boolean
   category: {
     id: string
     name: string
@@ -30,6 +33,19 @@ export interface ServiceOption {
     icon: string | null
   } | null
 }
+
+export type SelectedService = Pick<
+  ServiceOption,
+  | 'id'
+  | 'name'
+  | 'price'
+  | 'duration'
+  | 'requiresDeposit'
+  | 'depositAmount'
+  | 'remainingAmount'
+  | 'cancellationWindowHours'
+  | 'deductFromTotal'
+>
 
 export interface ServiceCategory {
   id: string
@@ -42,7 +58,7 @@ export interface ServiceCategory {
 interface ServiceSelectionStepProps {
   businessHandle: string
   selectedServiceId: string | null
-  onSelect: (service: { id: string; name: string; price: number; duration: number }) => void
+  onSelect: (service: SelectedService) => void
 }
 
 export function ServiceSelectionStep({
@@ -262,7 +278,7 @@ export function ServiceSelectionStep({
 interface ServiceCardProps {
   service: ServiceOption
   isSelected: boolean
-  onSelect: (service: { id: string; name: string; price: number; duration: number }) => void
+  onSelect: (service: SelectedService) => void
   index: number
 }
 
@@ -286,6 +302,11 @@ function ServiceCard({ service, isSelected, onSelect, index }: ServiceCardProps)
           name: service.name,
           price: service.price,
           duration: service.duration,
+          requiresDeposit: service.requiresDeposit,
+          depositAmount: service.depositAmount,
+          remainingAmount: service.remainingAmount,
+          cancellationWindowHours: service.cancellationWindowHours,
+          deductFromTotal: service.deductFromTotal,
         })
       }
       className={cn(
@@ -353,7 +374,7 @@ function ServiceCard({ service, isSelected, onSelect, index }: ServiceCardProps)
           {/* Deposit Notice */}
           {service.requiresDeposit && service.depositAmount && (
             <p className="text-xs text-amber-600 mt-2">
-              Requires £{service.depositAmount.toFixed(2)} deposit
+              £{service.depositAmount.toFixed(2)} booking deposit due now
             </p>
           )}
         </div>

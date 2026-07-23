@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 
+import { releaseCheckoutSession, settleCheckoutSession } from '@/lib/booking-protection/checkout'
 import { getStripeClient, getStripeWebhookSecret } from '@/lib/stripe/config'
 import { syncStripeConnectedAccount } from '@/lib/stripe/connect-accounts'
 
@@ -24,8 +25,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    if (event.type === 'account.updated') {
-      await syncStripeConnectedAccount(event.data.object as Stripe.Account)
+    switch (event.type) {
+      case 'account.updated':
+        await syncStripeConnectedAccount(event.data.object as Stripe.Account)
+        break
+      case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded':
+        await settleCheckoutSession(event.data.object as Stripe.Checkout.Session)
+        break
+      case 'checkout.session.expired':
+        await releaseCheckoutSession(event.data.object as Stripe.Checkout.Session)
+        break
+      case 'checkout.session.async_payment_failed':
+        await releaseCheckoutSession(event.data.object as Stripe.Checkout.Session, 'PAYMENT_FAILED')
+        break
+      default:
+        break
     }
 
     return NextResponse.json({ received: true })

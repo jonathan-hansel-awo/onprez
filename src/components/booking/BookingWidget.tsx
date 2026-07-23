@@ -14,7 +14,8 @@ import {
 } from './steps'
 import { useCreateBooking } from '@/lib/hooks/useCreateBooking'
 import { ActionFeedback } from '@/components/ui/action-feedback'
-import { formatLocalCalendarDate } from '@/lib/booking/public-booking'
+import { formatLocalCalendarDate, saveBookingConfirmationEmail } from '@/lib/booking/public-booking'
+import type { SelectedService } from './steps/ServiceSelectionStep'
 
 // Booking flow steps
 type BookingStep = 'service' | 'datetime' | 'details' | 'confirmation'
@@ -33,6 +34,12 @@ export interface BookingData {
   serviceName: string | null
   servicePrice: number | null
   serviceDuration: number | null
+  requiresDeposit: boolean
+  depositAmount: number | null
+  remainingAmount: number | null
+  cancellationWindowHours: number | null
+  deductFromTotal: boolean
+  cancellationPolicyAccepted: boolean
 
   // Date/time
   date: Date | null
@@ -51,6 +58,12 @@ const initialBookingData: BookingData = {
   serviceName: null,
   servicePrice: null,
   serviceDuration: null,
+  requiresDeposit: false,
+  depositAmount: null,
+  remainingAmount: null,
+  cancellationWindowHours: null,
+  deductFromTotal: true,
+  cancellationPolicyAccepted: false,
   date: null,
   timeSlot: null,
   endTime: null,
@@ -66,6 +79,7 @@ interface BookingWidgetProps {
   businessName: string
   businessTimezone: string
   preselectedServiceId?: string
+  preselectedService?: SelectedService
   onComplete?: (
     booking: BookingData,
     confirmation: {
@@ -83,15 +97,24 @@ export function BookingWidget({
   businessName,
   businessTimezone,
   preselectedServiceId,
+  preselectedService,
   onComplete,
   onCancel,
 }: BookingWidgetProps) {
   const [currentStep, setCurrentStep] = useState<BookingStep>(
-    preselectedServiceId ? 'datetime' : 'service'
+    preselectedServiceId || preselectedService ? 'datetime' : 'service'
   )
   const [bookingData, setBookingData] = useState<BookingData>(() => ({
     ...initialBookingData,
-    serviceId: preselectedServiceId || null,
+    serviceId: preselectedService?.id || preselectedServiceId || null,
+    serviceName: preselectedService?.name || null,
+    servicePrice: preselectedService?.price ?? null,
+    serviceDuration: preselectedService?.duration ?? null,
+    requiresDeposit: preselectedService?.requiresDeposit || false,
+    depositAmount: preselectedService?.depositAmount ?? null,
+    remainingAmount: preselectedService?.remainingAmount ?? null,
+    cancellationWindowHours: preselectedService?.cancellationWindowHours ?? null,
+    deductFromTotal: preselectedService?.deductFromTotal ?? true,
   }))
 
   // Sub-step for datetime: 'date' or 'time'
@@ -131,7 +154,7 @@ export function BookingWidget({
           isValidUKPhone(bookingData.customerPhone)
         )
       case 'confirmation':
-        return true
+        return !bookingData.requiresDeposit || bookingData.cancellationPolicyAccepted
       default:
         return false
     }
@@ -195,21 +218,32 @@ export function BookingWidget({
       customerEmail: bookingData.customerEmail,
       customerPhone: bookingData.customerPhone || undefined,
       customerNotes: bookingData.customerNotes || undefined,
+      acceptCancellationPolicy: bookingData.cancellationPolicyAccepted,
     })
 
-    if (result && onComplete) {
-      onComplete(bookingData, result)
+    if (result?.requiresPayment && result.checkoutUrl) {
+      saveBookingConfirmationEmail(result.confirmationNumber, bookingData.customerEmail)
+      window.location.assign(result.checkoutUrl)
+      return
     }
+
+    if (result && onComplete) onComplete(bookingData, result)
   }, [bookingData, businessId, createBooking, onComplete])
 
   // Handle service selection
   const handleServiceSelect = useCallback(
-    (service: { id: string; name: string; price: number; duration: number }) => {
+    (service: SelectedService) => {
       updateBookingData({
         serviceId: service.id,
         serviceName: service.name,
         servicePrice: service.price,
         serviceDuration: service.duration,
+        requiresDeposit: service.requiresDeposit,
+        depositAmount: service.depositAmount,
+        remainingAmount: service.remainingAmount,
+        cancellationWindowHours: service.cancellationWindowHours,
+        deductFromTotal: service.deductFromTotal,
+        cancellationPolicyAccepted: false,
       })
     },
     [updateBookingData]
@@ -387,6 +421,14 @@ export function BookingWidget({
                   customerEmail={bookingData.customerEmail}
                   customerPhone={bookingData.customerPhone}
                   customerNotes={bookingData.customerNotes}
+                  requiresDeposit={bookingData.requiresDeposit}
+                  depositAmount={bookingData.depositAmount}
+                  remainingAmount={bookingData.remainingAmount}
+                  cancellationWindowHours={bookingData.cancellationWindowHours}
+                  cancellationPolicyAccepted={bookingData.cancellationPolicyAccepted}
+                  onCancellationPolicyAcceptedChange={accepted =>
+                    updateBookingData({ cancellationPolicyAccepted: accepted })
+                  }
                   onEditStep={step => {
                     setCurrentStep(step)
                     if (step === 'datetime') {
@@ -449,14 +491,16 @@ export function BookingWidget({
               ) : (
                 <Button
                   onClick={handleComplete}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !canProceed}
                   className="min-h-11 min-w-[136px] px-3 sm:px-6"
                 >
                   {isSubmitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Booking...
+                      Preparing...
                     </>
+                  ) : bookingData.requiresDeposit ? (
+                    'Pay Deposit & Reserve'
                   ) : (
                     'Confirm Booking'
                   )}

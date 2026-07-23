@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 
 import { getStripeClient, getStripeWebhookSecret } from '@/lib/stripe/config'
 import { syncStripeConnectedAccount } from '@/lib/stripe/connect-accounts'
+import { releaseCheckoutSession, settleCheckoutSession } from '@/lib/booking-protection/checkout'
 import { POST } from '../route'
 
 jest.mock('@/lib/stripe/config', () => ({
@@ -13,10 +14,16 @@ jest.mock('@/lib/stripe/config', () => ({
 jest.mock('@/lib/stripe/connect-accounts', () => ({
   syncStripeConnectedAccount: jest.fn(),
 }))
+jest.mock('@/lib/booking-protection/checkout', () => ({
+  releaseCheckoutSession: jest.fn(),
+  settleCheckoutSession: jest.fn(),
+}))
 
 const mockedGetStripeClient = getStripeClient as jest.Mock
 const mockedGetWebhookSecret = getStripeWebhookSecret as jest.Mock
 const mockedSyncAccount = syncStripeConnectedAccount as jest.Mock
+const mockedSettleCheckout = settleCheckoutSession as jest.Mock
+const mockedReleaseCheckout = releaseCheckoutSession as jest.Mock
 const constructEvent = jest.fn()
 
 function request(signature?: string) {
@@ -64,6 +71,34 @@ describe('POST /api/webhooks/stripe', () => {
 
     expect(response.status).toBe(200)
     expect(mockedSyncAccount).toHaveBeenCalledWith(account)
+  })
+
+  it('settles a paid Checkout Session', async () => {
+    const session = { id: 'cs_test', payment_status: 'paid' }
+    constructEvent.mockReturnValue({
+      id: 'evt_checkout_completed',
+      type: 'checkout.session.completed',
+      data: { object: session },
+    })
+
+    const response = await POST(request('valid-signature'))
+
+    expect(response.status).toBe(200)
+    expect(mockedSettleCheckout).toHaveBeenCalledWith(session)
+  })
+
+  it('releases an expired Checkout reservation', async () => {
+    const session = { id: 'cs_expired', status: 'expired' }
+    constructEvent.mockReturnValue({
+      id: 'evt_checkout_expired',
+      type: 'checkout.session.expired',
+      data: { object: session },
+    })
+
+    const response = await POST(request('valid-signature'))
+
+    expect(response.status).toBe(200)
+    expect(mockedReleaseCheckout).toHaveBeenCalledWith(session)
   })
 
   it('acknowledges unrelated Stripe events without mutating account state', async () => {
