@@ -1,4 +1,10 @@
+import { FeatureKey, ServiceDepositMode, StripeConnectedAccountStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  readBookingProtectionDefaults,
+  resolveEffectiveServiceDeposit,
+} from '@/lib/booking-protection/config'
+import { isFeatureEntitlementActive } from '@/lib/features/entitlements'
 import { prisma } from '@/lib/prisma'
 
 function parseIds(idsParam: string | null) {
@@ -31,7 +37,18 @@ export async function GET(
 
     const business = await prisma.business.findUnique({
       where: { slug: handle },
-      select: { id: true, isPublished: true },
+      select: {
+        id: true,
+        isPublished: true,
+        settings: true,
+        featureEntitlements: {
+          where: { feature: FeatureKey.BOOKING_DEPOSITS },
+          take: 1,
+        },
+        stripeConnectedAccount: {
+          select: { status: true, chargesEnabled: true, payoutsEnabled: true },
+        },
+      },
     })
 
     if (!business || !business.isPublished) {
@@ -79,6 +96,7 @@ export async function GET(
         imageUrl: true,
         featured: true,
         requiresDeposit: true,
+        depositMode: true,
         depositAmount: true,
         category: {
           select: {
@@ -116,24 +134,50 @@ export async function GET(
       },
     })
 
-    const transformedServices = services.map(service => ({
-      id: service.id,
-      name: service.name,
-      description: service.description,
-      tagline: service.tagline,
-      price: Number(service.price),
-      priceType: service.priceType,
-      priceRangeMin: service.priceRangeMin ? Number(service.priceRangeMin) : null,
-      priceRangeMax: service.priceRangeMax ? Number(service.priceRangeMax) : null,
-      currency: service.currency,
-      duration: service.duration,
-      bufferTime: service.bufferTime,
-      imageUrl: service.imageUrl,
-      featured: service.featured,
-      requiresDeposit: service.requiresDeposit,
-      depositAmount: service.depositAmount ? Number(service.depositAmount) : null,
-      category: service.category,
-    }))
+    const entitlement = business.featureEntitlements?.[0] ?? null
+    const entitled = isFeatureEntitlementActive(entitlement)
+    const account = business.stripeConnectedAccount ?? null
+    const stripeReady = Boolean(
+      account &&
+      account.status === StripeConnectedAccountStatus.READY &&
+      account.chargesEnabled &&
+      account.payoutsEnabled
+    )
+    const bookingProtectionDefaults = readBookingProtectionDefaults(business.settings)
+
+    const transformedServices = services.map(service => {
+      const price = Number(service.price)
+      const effectiveDeposit = resolveEffectiveServiceDeposit({
+        mode: service.depositMode || ServiceDepositMode.BUSINESS_DEFAULT,
+        customDepositAmount: service.depositAmount ? Number(service.depositAmount) : null,
+        servicePrice: price,
+        defaults: bookingProtectionDefaults,
+        entitled,
+        stripeReady,
+      })
+
+      return {
+        id: service.id,
+        name: service.name,
+        description: service.description,
+        tagline: service.tagline,
+        price,
+        priceType: service.priceType,
+        priceRangeMin: service.priceRangeMin ? Number(service.priceRangeMin) : null,
+        priceRangeMax: service.priceRangeMax ? Number(service.priceRangeMax) : null,
+        currency: service.currency,
+        duration: service.duration,
+        bufferTime: service.bufferTime,
+        imageUrl: service.imageUrl,
+        featured: service.featured,
+        requiresDeposit: effectiveDeposit.requiresDeposit,
+        depositAmount: effectiveDeposit.depositAmount,
+        remainingAmount: effectiveDeposit.remainingAmount,
+        cancellationWindowHours: effectiveDeposit.cancellationWindowHours,
+        depositDeductedFromTotal: true,
+        category: service.category,
+      }
+    })
 
     return NextResponse.json({
       success: true,

@@ -21,6 +21,7 @@ import {
   Edit,
   Package,
   Plus,
+  ShieldCheck,
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -44,8 +45,6 @@ interface ServiceFormData {
   categoryId: string
   imageUrl: string
   requiresApproval: boolean
-  requiresDeposit: boolean
-  depositAmount: string
   maxAdvanceBookingDays: string
   featured: boolean
   active: boolean
@@ -101,8 +100,6 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
     categoryId: '',
     imageUrl: '',
     requiresApproval: false,
-    requiresDeposit: false,
-    depositAmount: '',
     maxAdvanceBookingDays: '',
     featured: false,
     active: true,
@@ -158,8 +155,6 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
         categoryId: service.categoryId || '',
         imageUrl: service.imageUrl || '',
         requiresApproval: service.requiresApproval || false,
-        requiresDeposit: service.requiresDeposit || false,
-        depositAmount: service.depositAmount?.toString() || '',
         maxAdvanceBookingDays: service.maxAdvanceBookingDays?.toString() || '',
         featured: service.featured || false,
         active: service.active !== undefined ? service.active : true,
@@ -293,10 +288,6 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
 
     if (parseInt(formData.duration) <= 0) {
       newErrors.duration = 'Duration must be greater than 0'
-    }
-
-    if (formData.requiresDeposit && !formData.depositAmount) {
-      newErrors.depositAmount = 'Deposit amount is required when deposit is enabled'
     }
 
     setErrors(newErrors)
@@ -493,33 +484,21 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
               />
             )}
 
-            <div className="space-y-4">
-              <label className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={formData.requiresDeposit}
-                  onChange={e => handleChange('requiresDeposit', e.target.checked)}
-                  className="mt-1 w-4 h-4 text-onprez-blue border-gray-300 rounded focus:ring-onprez-blue"
-                />
-                <div>
-                  <span className="text-sm font-medium text-gray-900">Require Deposit</span>
-                  <p className="text-sm text-gray-600">Customer must pay a deposit when booking</p>
-                </div>
-              </label>
-
-              {formData.requiresDeposit && (
-                <Input
-                  label="Deposit Amount (£)"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.depositAmount}
-                  onChange={e => handleChange('depositAmount', e.target.value)}
-                  error={errors.depositAmount}
-                  leftIcon={<DollarSign className="w-5 h-5" />}
-                  placeholder="20.00"
-                />
-              )}
+            <div className="flex items-start gap-3 rounded-xl border border-purple-200 bg-purple-50 p-4">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-purple-700" />
+              <div>
+                <p className="font-medium text-purple-950">Booking Protection</p>
+                <p className="mt-1 text-sm text-purple-900">
+                  Deposit rules for this service are managed centrally alongside the connected
+                  Stripe account.
+                </p>
+                <Link
+                  href="/dashboard/settings/payments"
+                  className="mt-2 inline-flex text-sm font-semibold text-purple-800 hover:underline"
+                >
+                  Manage this service's deposit rule
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>
