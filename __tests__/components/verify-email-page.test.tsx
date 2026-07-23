@@ -23,7 +23,7 @@ describe('VerifyEmailPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Check your inbox' })).toBeInTheDocument()
     expect(screen.getByText('louise@example.com')).toBeInTheDocument()
-    expect(screen.getByText(/check your junk folder/i)).toBeInTheDocument()
+    expect(screen.getByText(/spam or junk folder/i)).toBeInTheDocument()
     expect(screen.getByText(/saved as a/i)).toHaveTextContent('draft')
     expect(screen.getByText(/click/i)).toHaveTextContent('Publish')
     expect(
