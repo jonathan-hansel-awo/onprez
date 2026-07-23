@@ -79,7 +79,23 @@ jobs:
         run: npm run lint
 
       - name: Type-check
-        run: npm run type-check
+        id: typecheck
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run type-check 2>&1 | tee typecheck.log
+
+      - name: Upload type-check diagnostics
+        if: steps.typecheck.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase4-typecheck-diagnostics
+          path: typecheck.log
+          retention-days: 1
+
+      - name: Stop after type-check failure
+        if: steps.typecheck.outcome == 'failure'
+        run: exit 1
 
       - name: Validate Prisma schema
         run: npx prisma validate
