@@ -6,6 +6,7 @@ on:
       - main
 
 permissions:
+  actions: read
   contents: write
 
 jobs:
@@ -23,6 +24,7 @@ jobs:
       CLOUDINARY_API_KEY: ci-placeholder
       CLOUDINARY_API_SECRET: ci-placeholder
       JWT_SECRET: ci-only-jwt-secret-at-least-32-characters
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Check out branch
@@ -37,13 +39,16 @@ jobs:
           node-version: '20'
           cache: npm
 
-      - name: Apply prepared Phase 3 bundle
+      - name: Restore verified Phase 3 artifact
         run: |
-          base64 --decode phase3-v2.zip.b64 > /tmp/phase3-v2.zip
-          rm -rf /tmp/phase3-v2
-          mkdir -p /tmp/phase3-v2
-          unzip -q /tmp/phase3-v2.zip -d /tmp/phase3-v2
-          cp -a /tmp/phase3-v2/. .
+          gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/8558840016/zip > /tmp/phase3-artifact.zip
+          rm -rf /tmp/phase3-artifact
+          mkdir -p /tmp/phase3-artifact
+          unzip -q /tmp/phase3-artifact.zip -d /tmp/phase3-artifact
+          cp -a /tmp/phase3-artifact/prisma/. prisma/
+          cp -a /tmp/phase3-artifact/src/. src/
+          patch -p1 < phase3-final-adjustments.patch
+          rm -f phase3-final-adjustments.patch
           rm -f phase3-v2.zip.b64
           rm -f .github/workflows/apply-booking-protection-phase3-v2.yml
 

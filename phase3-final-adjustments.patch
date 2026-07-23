@@ -1,0 +1,213 @@
+--- a/src/app/api/business/payments/booking-protection/__tests__/route.test.ts
++++ b/src/app/api/business/payments/booking-protection/__tests__/route.test.ts
+@@ -171,6 +171,28 @@
+     expect(mockedTransaction).not.toHaveBeenCalled()
+   })
+ 
++
++  it('rejects a business default above an inherited service price', async () => {
++    mockedServiceFind.mockResolvedValue([{ id: 'service-1', price: 8 }])
++
++    const response = await PUT(
++      putRequest({
++        businessId: 'business-1',
++        defaults: { enabled: true, depositAmount: 10, cancellationWindowHours: 24 },
++        services: [
++          {
++            serviceId: 'service-1',
++            mode: ServiceDepositMode.BUSINESS_DEFAULT,
++            customDepositAmount: null,
++          },
++        ],
++      })
++    )
++
++    expect(response.status).toBe(400)
++    expect(mockedTransaction).not.toHaveBeenCalled()
++  })
++
+   it('persists business defaults and service overrides atomically', async () => {
+     const response = await PUT(
+       putRequest({
+--- a/src/app/api/business/payments/booking-protection/route.ts
++++ b/src/app/api/business/payments/booking-protection/route.ts
+@@ -280,6 +280,22 @@
+           { status: 400 }
+         )
+       }
++
++      if (
++        defaults.enabled &&
++        rule.mode === ServiceDepositMode.BUSINESS_DEFAULT &&
++        defaults.depositAmount > price
++      ) {
++        return NextResponse.json(
++          {
++            success: false,
++            error:
++              'The business default deposit cannot exceed a service price. Choose no deposit or a lower custom amount for this service.',
++            serviceId: rule.serviceId,
++          },
++          { status: 400 }
++        )
++      }
+     }
+ 
+     await prisma.$transaction([
+@@ -304,9 +320,7 @@
+             depositMode: rule.mode,
+             requiresDeposit: effective.requiresDeposit,
+             depositAmount:
+-              rule.mode === ServiceDepositMode.CUSTOM
+-                ? rule.customDepositAmount
+-                : effective.depositAmount,
++              rule.mode === ServiceDepositMode.CUSTOM ? rule.customDepositAmount : null,
+           },
+         })
+       }),
+@@ -319,6 +333,22 @@
+       message: 'Booking Protection settings saved',
+     })
+   } catch (error) {
++    if (
++      error &&
++      typeof error === 'object' &&
++      'code' in error &&
++      error.code === 'FEATURE_NOT_ENTITLED'
++    ) {
++      return NextResponse.json(
++        {
++          success: false,
++          code: 'FEATURE_NOT_ENTITLED',
++          error: 'Booking Protection is not enabled',
++        },
++        { status: 403 }
++      )
++    }
++
+     const authResponse = businessAuthErrorResponse(error)
+     if (authResponse) return authResponse
+ 
+--- a/src/app/api/services/route.ts
++++ b/src/app/api/services/route.ts
+@@ -1,5 +1,14 @@
+-import { ServiceDepositMode } from '@prisma/client'
++import {
++  FeatureKey,
++  ServiceDepositMode,
++  StripeConnectedAccountStatus,
++} from '@prisma/client'
+ import { NextRequest, NextResponse } from 'next/server'
++import {
++  readBookingProtectionDefaults,
++  resolveEffectiveServiceDeposit,
++} from '@/lib/booking-protection/config'
++import { isFeatureEntitlementActive } from '@/lib/features/entitlements'
+ import { prisma } from '@/lib/prisma'
+ import { getCurrentUser } from '@/lib/auth/get-user'
+ import { businessAuthErrorResponse, requireBusinessAccess } from '@/lib/auth/business-access'
+@@ -28,6 +37,14 @@
+       where: businessId ? { id: businessId } : { slug: slug! },
+       select: {
+         id: true,
++        settings: true,
++        featureEntitlements: {
++          where: { feature: FeatureKey.BOOKING_DEPOSITS },
++          take: 1,
++        },
++        stripeConnectedAccount: {
++          select: { status: true, chargesEnabled: true, payoutsEnabled: true },
++        },
+       },
+     })
+ 
+@@ -56,15 +73,43 @@
+       orderBy: [{ order: 'asc' }, { name: 'asc' }],
+     })
+ 
++    const entitlement = business.featureEntitlements[0]
++    const entitled = isFeatureEntitlementActive(entitlement)
++    const account = business.stripeConnectedAccount
++    const stripeReady = Boolean(
++      account &&
++        account.status === StripeConnectedAccountStatus.READY &&
++        account.chargesEnabled &&
++        account.payoutsEnabled
++    )
++    const defaults = readBookingProtectionDefaults(business.settings)
++
+     return NextResponse.json({
+       success: true,
+-      data: services.map(service => ({
+-        ...service,
+-        price: Number(service.price),
+-        priceRangeMin: service.priceRangeMin === null ? null : Number(service.priceRangeMin),
+-        priceRangeMax: service.priceRangeMax === null ? null : Number(service.priceRangeMax),
+-        depositAmount: service.depositAmount === null ? null : Number(service.depositAmount),
+-      })),
++      data: services.map(service => {
++        const price = Number(service.price)
++        const effectiveDeposit = resolveEffectiveServiceDeposit({
++          mode: service.depositMode || ServiceDepositMode.BUSINESS_DEFAULT,
++          customDepositAmount:
++            service.depositAmount === null ? null : Number(service.depositAmount),
++          servicePrice: price,
++          defaults,
++          entitled,
++          stripeReady,
++        })
++
++        return {
++          ...service,
++          price,
++          priceRangeMin: service.priceRangeMin === null ? null : Number(service.priceRangeMin),
++          priceRangeMax: service.priceRangeMax === null ? null : Number(service.priceRangeMax),
++          requiresDeposit: effectiveDeposit.requiresDeposit,
++          depositAmount: effectiveDeposit.depositAmount,
++          remainingAmount: effectiveDeposit.remainingAmount,
++          cancellationWindowHours: effectiveDeposit.cancellationWindowHours,
++          depositDeductedFromTotal: true,
++        }
++      }),
+     })
+   } catch (error) {
+     const authResponse = businessAuthErrorResponse(error)
+--- a/src/app/dashboard/services/[id]/edit/page.tsx
++++ b/src/app/dashboard/services/[id]/edit/page.tsx
+@@ -21,6 +21,7 @@
+   Edit,
+   Package,
+   Plus,
++  ShieldCheck,
+ } from 'lucide-react'
+ import Link from 'next/link'
+ import { motion } from 'framer-motion'
+@@ -99,8 +100,6 @@
+     categoryId: '',
+     imageUrl: '',
+     requiresApproval: false,
+-    requiresDeposit: false,
+-    depositAmount: '',
+     maxAdvanceBookingDays: '',
+     featured: false,
+     active: true,
+@@ -156,8 +155,6 @@
+         categoryId: service.categoryId || '',
+         imageUrl: service.imageUrl || '',
+         requiresApproval: service.requiresApproval || false,
+-        requiresDeposit: service.requiresDeposit || false,
+-        depositAmount: service.depositAmount?.toString() || '',
+         maxAdvanceBookingDays: service.maxAdvanceBookingDays?.toString() || '',
+         featured: service.featured || false,
+         active: service.active !== undefined ? service.active : true,
+--- a/src/app/dashboard/services/new/page.tsx
++++ b/src/app/dashboard/services/new/page.tsx
+@@ -52,8 +52,6 @@
+     categoryId: '',
+     imageUrl: '',
+     requiresApproval: false,
+-    requiresDeposit: false,
+-    depositAmount: '',
+     maxAdvanceBookingDays: '',
+     featured: false,
+     active: true,
