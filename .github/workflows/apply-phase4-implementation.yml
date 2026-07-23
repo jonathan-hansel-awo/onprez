@@ -47,20 +47,21 @@ jobs:
           checkout.write_text(checkout_text)
 
           success = Path('src/app/(public)/[handle]/book/success/BookingSuccessClient.tsx')
-          success_text = success.read_text().replace(
-              """          latest = result.data
-          if (
-            paymentResult !== 'success' ||
-            !latest.payment?.requiresDeposit ||
-            latest.payment.depositPaid
-          ) {""",
-              """          const current = result.data as BookingDetails
-          latest = current
-          if (
-            paymentResult !== 'success' ||
-            !current.payment?.requiresDeposit ||
-            current.payment.depositPaid
-          ) {""",
+          success_text = success.read_text()
+          success_text = success_text.replace(
+              'latest = result.data',
+              'const current = result.data as BookingDetails\n          latest = current',
+              1,
+          )
+          success_text = success_text.replace(
+              '!latest.payment?.requiresDeposit',
+              '!current.payment?.requiresDeposit',
+              1,
+          )
+          success_text = success_text.replace(
+              'latest.payment.depositPaid',
+              'current.payment.depositPaid',
+              1,
           )
           success.write_text(success_text)
           PY
@@ -107,23 +108,7 @@ jobs:
         run: npm run lint
 
       - name: Type-check
-        id: typecheck
-        continue-on-error: true
-        run: |
-          set -o pipefail
-          npm run type-check 2>&1 | tee typecheck.log
-
-      - name: Upload type-check diagnostics
-        if: steps.typecheck.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: phase4-typecheck-diagnostics-corrected
-          path: typecheck.log
-          retention-days: 1
-
-      - name: Stop after type-check failure
-        if: steps.typecheck.outcome == 'failure'
-        run: exit 1
+        run: npm run type-check
 
       - name: Validate Prisma schema
         run: npx prisma validate
