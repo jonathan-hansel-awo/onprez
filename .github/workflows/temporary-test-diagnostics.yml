@@ -1,0 +1,55 @@
+name: Temporary test diagnostics
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/onprez
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/onprez
+      APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      RESEND_API_KEY: re_ci_placeholder
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ci-placeholder
+      CLOUDINARY_API_KEY: ci-placeholder
+      CLOUDINARY_API_SECRET: ci-placeholder
+      JWT_SECRET: ci-only-jwt-secret-at-least-32-characters
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Capture Jest output
+        shell: bash
+        run: |
+          set +e
+          npm run test:ci > TEST_DIAGNOSTICS.txt 2>&1
+          status=$?
+          printf '\nTEST_EXIT_CODE=%s\n' "$status" >> TEST_DIAGNOSTICS.txt
+          exit 0
+
+      - name: Commit diagnostics
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add TEST_DIAGNOSTICS.txt
+          git commit -m "chore: capture temporary test diagnostics"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
