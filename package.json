@@ -33,7 +33,8 @@
     "db:verify-restore": "tsx scripts/verify-database-restore.ts",
     "db:test:seed": "tsx scripts/test-seed-data.ts",
     "entitlement:booking-deposits": "tsx scripts/set-booking-deposit-entitlement.ts",
-    "presence:repair-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts"
+    "presence:repair-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts",
+    "presence:overhaul-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts --mode=overhaul"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -89,9 +90,9 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "husky": "^9.1.7",
+    "lint-staged": "^16.2.3",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "lint-staged": "^16.2.3",
     "prettier": "^3.6.2",
     "prisma": "6.19.3",
     "tailwindcss": "^4",
