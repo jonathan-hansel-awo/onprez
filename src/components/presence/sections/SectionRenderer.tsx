@@ -64,6 +64,80 @@ function SectionSkeleton() {
   )
 }
 
+function PremiumResponsiveStyles() {
+  return (
+    <style>{`
+      @media (max-width: 767px) {
+        [data-presence-template] {
+          overflow-x: clip;
+        }
+
+        [data-presence-template] section[id*='-hero-'] {
+          min-height: min(680px, calc(100svh - 3rem)) !important;
+        }
+
+        [data-presence-template] section[id*='-hero-'] h1 {
+          max-width: 100% !important;
+          font-size: clamp(2.65rem, 12.5vw, 4.5rem) !important;
+          line-height: 0.94 !important;
+          overflow-wrap: anywhere;
+        }
+
+        [data-presence-template] section h2 {
+          max-width: 100%;
+          font-size: clamp(2.2rem, 10vw, 3.8rem) !important;
+          line-height: 0.98 !important;
+          overflow-wrap: anywhere;
+        }
+
+        [data-presence-template] section[id*='-hero-'] p {
+          font-size: 1rem !important;
+          line-height: 1.65 !important;
+        }
+
+        [data-presence-template] section[id*='-hero-'] a.theme-button-primary,
+        [data-presence-template] section[id*='-hero-'] a[href^='#'] {
+          width: 100%;
+          justify-content: center;
+          text-align: center;
+        }
+
+        [data-presence-template] section[id*='-hero-'] div[class*='aspect-'] {
+          min-height: 0 !important;
+        }
+
+        [data-presence-template] section[id*='-hero-'] aside {
+          display: none;
+        }
+
+        [data-presence-template] section[id*='-about-'] img[alt=''] {
+          display: none;
+        }
+
+        [data-presence-template] section article,
+        [data-presence-template] section details,
+        [data-presence-template] section iframe {
+          max-width: 100%;
+        }
+      }
+
+      @media (max-width: 420px) {
+        [data-presence-template] section[id*='-hero-'] {
+          min-height: 600px !important;
+        }
+
+        [data-presence-template] section[id*='-hero-'] h1 {
+          font-size: clamp(2.35rem, 12vw, 3.55rem) !important;
+        }
+
+        [data-presence-template] section h2 {
+          font-size: clamp(2rem, 9.5vw, 3rem) !important;
+        }
+      }
+    `}</style>
+  )
+}
+
 interface SectionRendererProps {
   sections: PageSection[]
   businessHandle: string
@@ -122,6 +196,8 @@ export function SectionRenderer({
 
   return (
     <div className="pb-24 md:pb-0" data-presence-template={premiumTemplateSlug}>
+      {premiumTemplateSlug && <PremiumResponsiveStyles />}
+
       {visibleSections.map((section, index) => {
         const isAboveFold = index < 2
 
