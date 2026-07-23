@@ -107,7 +107,17 @@ jobs:
           retention-days: 1
 
       - name: Run full test suite
-        run: npm test -- --runInBand
+        run: |
+          set -o pipefail
+          npm test -- --runInBand 2>&1 | tee /tmp/phase3-full-test.log
+
+      - name: Upload full-suite diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-full-test-diagnostics
+          path: /tmp/phase3-full-test.log
+          retention-days: 1
 
       - name: Build application
         run: npm run build
