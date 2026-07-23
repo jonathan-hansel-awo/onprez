@@ -10,6 +10,10 @@ import {
   SectionBookingCta,
   StickyMobileBookingCta,
 } from '@/components/presence/PresenceConversion'
+import {
+  applyPremiumRuntimeArtDirection,
+  getPremiumTemplateSlug,
+} from '@/lib/templates/premium-runtime-art-direction'
 import { HeroSection } from './HeroSection'
 import { AboutSection } from './AboutSection'
 import { NavbarSection } from './NavbarSection'
@@ -52,11 +56,85 @@ const InquirySection = dynamic(
 
 function SectionSkeleton() {
   return (
-    <div className="bg-gray-50 py-16">
+    <div className="bg-gray-50 py-12 sm:py-16">
       <div className="container mx-auto px-4">
-        <div className="h-64 animate-pulse rounded-xl bg-gray-200" />
+        <div className="h-48 animate-pulse rounded-xl bg-gray-200 sm:h-64" />
       </div>
     </div>
+  )
+}
+
+function PremiumResponsiveStyles() {
+  return (
+    <style>{`
+      @media (max-width: 767px) {
+        [data-presence-template] {
+          overflow-x: clip;
+        }
+
+        [data-presence-template] section[id*='-hero-'] {
+          min-height: min(680px, calc(100svh - 3rem)) !important;
+        }
+
+        [data-presence-template] section[id*='-hero-'] h1 {
+          max-width: 100% !important;
+          font-size: clamp(2.65rem, 12.5vw, 4.5rem) !important;
+          line-height: 0.94 !important;
+          overflow-wrap: anywhere;
+        }
+
+        [data-presence-template] section h2 {
+          max-width: 100%;
+          font-size: clamp(2.2rem, 10vw, 3.8rem) !important;
+          line-height: 0.98 !important;
+          overflow-wrap: anywhere;
+        }
+
+        [data-presence-template] section[id*='-hero-'] p {
+          font-size: 1rem !important;
+          line-height: 1.65 !important;
+        }
+
+        [data-presence-template] section[id*='-hero-'] a.theme-button-primary,
+        [data-presence-template] section[id*='-hero-'] a[href^='#'] {
+          width: 100%;
+          justify-content: center;
+          text-align: center;
+        }
+
+        [data-presence-template] section[id*='-hero-'] div[class*='aspect-'] {
+          min-height: 0 !important;
+        }
+
+        [data-presence-template] section[id*='-hero-'] aside {
+          display: none;
+        }
+
+        [data-presence-template] section[id*='-about-'] img[alt=''] {
+          display: none;
+        }
+
+        [data-presence-template] section article,
+        [data-presence-template] section details,
+        [data-presence-template] section iframe {
+          max-width: 100%;
+        }
+      }
+
+      @media (max-width: 420px) {
+        [data-presence-template] section[id*='-hero-'] {
+          min-height: 600px !important;
+        }
+
+        [data-presence-template] section[id*='-hero-'] h1 {
+          font-size: clamp(2.35rem, 12vw, 3.55rem) !important;
+        }
+
+        [data-presence-template] section h2 {
+          font-size: clamp(2rem, 9.5vw, 3rem) !important;
+        }
+      }
+    `}</style>
   )
 }
 
@@ -106,16 +184,20 @@ export function SectionRenderer({
   bookingHrefOverride,
   showConversionCtas = true,
 }: SectionRendererProps) {
-  const visibleSections = sections
+  const premiumTemplateSlug = getPremiumTemplateSlug(sections)
+  const visibleSections = applyPremiumRuntimeArtDirection(sections)
     .filter(section => section.isVisible)
     .sort((a, b) => a.order - b.order)
 
   const bookingHref = bookingHrefOverride || `/${businessHandle}/book`
   const showTrustStrip = hasMeaningfulTrustSignals(trustSignals)
   const ctaSectionTypes = new Set(['SERVICES', 'FAQ'])
+  const showInlineConversionCtas = showConversionCtas && !premiumTemplateSlug
 
   return (
-    <div className="pb-24 md:pb-0">
+    <div className="pb-24 md:pb-0" data-presence-template={premiumTemplateSlug}>
+      {premiumTemplateSlug && <PremiumResponsiveStyles />}
+
       {visibleSections.map((section, index) => {
         const isAboveFold = index < 2
 
@@ -192,7 +274,7 @@ export function SectionRenderer({
             {section.type === 'HERO' && showTrustStrip && (
               <PresenceTrustStrip signals={trustSignals} />
             )}
-            {showConversionCtas && ctaSectionTypes.has(section.type) && (
+            {showInlineConversionCtas && ctaSectionTypes.has(section.type) && (
               <SectionBookingCta bookingHref={bookingHref} businessName={businessName} />
             )}
           </div>

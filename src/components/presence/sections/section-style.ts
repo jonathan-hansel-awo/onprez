@@ -1,9 +1,9 @@
 import type { SectionAppearance } from '@/types/page-sections'
 
 export const SECTION_SPACING_CLASSES: Record<NonNullable<SectionAppearance['spacing']>, string> = {
-  compact: 'py-10 md:py-14',
-  normal: 'py-16 md:py-24',
-  spacious: 'py-24 md:py-32',
+  compact: 'py-8 sm:py-10 md:py-14',
+  normal: 'py-12 sm:py-16 md:py-24',
+  spacious: 'py-16 sm:py-24 md:py-32',
 }
 
 export const CONTENT_WIDTH_CLASSES: Record<
