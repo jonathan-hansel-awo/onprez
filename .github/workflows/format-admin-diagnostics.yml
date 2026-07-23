@@ -1,0 +1,45 @@
+name: Format admin diagnostics
+
+on:
+  push:
+    branches:
+      - feat/platform-admin-assisted-setup
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Apply repository formatting
+        run: |
+          npx prettier --write \
+            __tests__/proxy-admin.test.ts \
+            docs/admin/ASSISTED_SETUP_ADMIN.md \
+            src/app/admin \
+            src/app/api/admin \
+            src/components/admin \
+            src/lib/admin \
+            src/lib/auth/get-user.ts \
+            src/proxy.ts \
+            src/types/auth.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: formatted-admin-files
+          path: |
+            __tests__/proxy-admin.test.ts
+            docs/admin/ASSISTED_SETUP_ADMIN.md
+            src/app/admin
+            src/app/api/admin
+            src/components/admin
+            src/lib/admin
+            src/lib/auth/get-user.ts
+            src/proxy.ts
+            src/types/auth.ts
