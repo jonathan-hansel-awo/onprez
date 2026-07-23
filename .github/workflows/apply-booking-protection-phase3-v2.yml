@@ -55,10 +55,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate and format
+      - name: Format Prisma schema
+        run: npx prisma format
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Format TypeScript files
         run: |
-          npx prisma format
-          npx prisma generate
           npx prettier --write \
             prisma/schema.prisma \
             src/lib/booking-protection/config.ts \
@@ -73,14 +77,23 @@ jobs:
             'src/app/dashboard/services/[id]/edit/page.tsx' \
             src/app/dashboard/settings/payments/page.tsx
 
-      - name: Validate permanent implementation
-        run: |
-          npm run format:check
-          npm run lint
-          npm run type-check
-          npx prisma validate
-          npm test -- --runInBand
-          npm run build
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Run tests
+        run: npm test -- --runInBand
+
+      - name: Build application
+        run: npm run build
 
       - name: Commit permanent Phase 3 implementation
         run: |
