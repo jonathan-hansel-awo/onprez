@@ -1,9 +1,9 @@
 name: Apply Booking Protection Phase 3 v2
 
 on:
-  push:
+  pull_request:
     branches:
-      - feat/booking-protection-service-controls-v2
+      - main
 
 permissions:
   contents: write
