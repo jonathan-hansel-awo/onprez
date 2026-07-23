@@ -304,7 +304,7 @@ export function HeroSection({ section, bookingHref }: HeroSectionProps) {
 
         {showScrollCue && (
           <a
-            href={`#${section.id}-next`}
+            href={resolvedSecondaryCtaLink || '#'}
             className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[0.62rem] font-semibold uppercase tracking-[0.22em] opacity-60 lg:flex"
             style={{ color: explicitTextColor }}
             aria-label="Continue to the next section"

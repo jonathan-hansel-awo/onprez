@@ -85,7 +85,7 @@ export function ContactSection({ section, businessData, bookingHref }: ContactSe
     .filter(Boolean)
     .join(', ')
   const accentColor = getAccentColor(section.appearance)
-  const textColor = section.appearance?.textColor || '#111827'
+  const textColor = layout === 'immersive' ? '#FFFFFF' : section.appearance?.textColor || '#111827'
   const resolvedCtaLink = resolveCtaLink(ctaLink, bookingHref)
   const resolvedSecondaryCtaLink = resolveCtaLink(secondaryCtaLink, bookingHref)
   const socialLinks = Object.entries({

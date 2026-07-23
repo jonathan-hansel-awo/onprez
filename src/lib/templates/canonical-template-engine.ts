@@ -1239,7 +1239,7 @@ function buildGeneric(
         ctaText: isProfessional ? 'Book a consultation' : 'Book now',
         ctaLink: '#book',
         secondaryCtaText: isCreative ? 'View the portfolio' : 'Explore services',
-        secondaryCtaLink: `#${sectionId(slug, isCreative ? 'GALLERY' : 'SERVICES', isCreative ? 4 : 3)}`,
+        secondaryCtaLink: `#${sectionId(template.slug, isCreative ? 'GALLERY' : 'SERVICES', isCreative ? 4 : 3)}`,
         layout: profile.contactLayout,
         backgroundImage: profile.contactLayout === 'immersive' ? images.about : undefined,
         note: profile.contactNote,
