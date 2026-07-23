@@ -24,7 +24,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     })
 
     if (!page) {
-      return NextResponse.json({ success: false, error: 'Presence page not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Presence page not found' },
+        { status: 404 }
+      )
     }
 
     const now = new Date()
@@ -44,9 +47,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       }),
       prisma.business.update({
         where: { id: businessId },
-        data: isPublished
-          ? { isPublished: true, publishedAt: now }
-          : { isPublished: false },
+        data: isPublished ? { isPublished: true, publishedAt: now } : { isPublished: false },
       }),
     ])
 

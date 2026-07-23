@@ -24,7 +24,10 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
     })
 
     if (!page) {
-      return NextResponse.json({ success: false, error: 'Presence page not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Presence page not found' },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({ success: true, data: { page } })
@@ -33,7 +36,10 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
     if (authResponse) return authResponse
 
     console.error('Admin get presence error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to load presence page' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Failed to load presence page' },
+      { status: 500 }
+    )
   }
 }
 
@@ -65,7 +71,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     })
 
     if (!page) {
-      return NextResponse.json({ success: false, error: 'Presence page not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Presence page not found' },
+        { status: 404 }
+      )
     }
 
     await prisma.page.update({
@@ -87,6 +96,9 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     if (authResponse) return authResponse
 
     console.error('Admin save presence error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to save presence draft' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Failed to save presence draft' },
+      { status: 500 }
+    )
   }
 }

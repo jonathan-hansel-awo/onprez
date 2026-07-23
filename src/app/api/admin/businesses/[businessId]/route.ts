@@ -10,16 +10,28 @@ const updateBusinessSchema = z.object({
   name: z.string().trim().min(1).max(120),
   tagline: nullableText(180),
   description: nullableText(5000),
-  email: z.union([z.string().trim().email(), z.literal('')]).optional().nullable(),
+  email: z
+    .union([z.string().trim().email(), z.literal('')])
+    .optional()
+    .nullable(),
   phone: nullableText(50),
-  website: z.union([z.string().trim().url(), z.literal('')]).optional().nullable(),
+  website: z
+    .union([z.string().trim().url(), z.literal('')])
+    .optional()
+    .nullable(),
   address: nullableText(250),
   city: nullableText(120),
   state: nullableText(120),
   zipCode: nullableText(30),
   country: nullableText(120),
-  logoUrl: z.union([z.string().trim().url(), z.literal('')]).optional().nullable(),
-  coverImageUrl: z.union([z.string().trim().url(), z.literal('')]).optional().nullable(),
+  logoUrl: z
+    .union([z.string().trim().url(), z.literal('')])
+    .optional()
+    .nullable(),
+  coverImageUrl: z
+    .union([z.string().trim().url(), z.literal('')])
+    .optional()
+    .nullable(),
 })
 
 function emptyToNull(value: string | null | undefined) {
@@ -145,6 +157,9 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     if (authResponse) return authResponse
 
     console.error('Admin update business error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to update business' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: 'Failed to update business' },
+      { status: 500 }
+    )
   }
 }
