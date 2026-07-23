@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const protectedRoutes = ['/dashboard', '/account']
+const protectedRoutes = ['/dashboard', '/account', '/admin']
 const safeApiMethods = new Set(['GET', 'HEAD', 'OPTIONS'])
 const SAFE_TRACE_ID_PATTERN = /^[A-Za-z0-9._:-]{8,128}$/
 
@@ -152,7 +152,7 @@ export async function proxy(request: NextRequest) {
 
     // Important:
     // This only checks that a token exists.
-    // The dashboard/account pages must still validate the token server-side.
+    // The dashboard/account/admin pages must still validate the token server-side.
     return continueWithTrace(request, trace)
   } catch (error) {
     console.error(
