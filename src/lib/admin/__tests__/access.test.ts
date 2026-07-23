@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import { getCurrentUser, isAdmin } from '@/lib/auth/get-user'
 import { PlatformAdminError, requirePlatformAdminApi } from '@/lib/admin/access'
 
