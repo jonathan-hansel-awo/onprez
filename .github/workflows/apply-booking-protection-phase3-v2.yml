@@ -88,7 +88,25 @@ jobs:
       - name: Validate Prisma schema
         run: npx prisma validate
 
-      - name: Run tests
+      - name: Run Booking Protection config tests
+        run: |
+          set -o pipefail
+          npm test -- --runInBand src/lib/booking-protection/__tests__/config.test.ts 2>&1 | tee /tmp/phase3-config-test.log
+
+      - name: Run Booking Protection route tests
+        run: |
+          set -o pipefail
+          npm test -- --runInBand src/app/api/business/payments/booking-protection/__tests__/route.test.ts 2>&1 | tee /tmp/phase3-route-test.log
+
+      - name: Upload focused test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-focused-test-diagnostics
+          path: /tmp/phase3-*-test.log
+          retention-days: 1
+
+      - name: Run full test suite
         run: npm test -- --runInBand
 
       - name: Build application
