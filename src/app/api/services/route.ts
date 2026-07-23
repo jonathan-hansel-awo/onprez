@@ -1,4 +1,10 @@
+import { FeatureKey, ServiceDepositMode, StripeConnectedAccountStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  readBookingProtectionDefaults,
+  resolveEffectiveServiceDeposit,
+} from '@/lib/booking-protection/config'
+import { isFeatureEntitlementActive } from '@/lib/features/entitlements'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse, requireBusinessAccess } from '@/lib/auth/business-access'
@@ -27,6 +33,14 @@ export async function GET(request: NextRequest) {
       where: businessId ? { id: businessId } : { slug: slug! },
       select: {
         id: true,
+        settings: true,
+        featureEntitlements: {
+          where: { feature: FeatureKey.BOOKING_DEPOSITS },
+          take: 1,
+        },
+        stripeConnectedAccount: {
+          select: { status: true, chargesEnabled: true, payoutsEnabled: true },
+        },
       },
     })
 
@@ -55,15 +69,43 @@ export async function GET(request: NextRequest) {
       orderBy: [{ order: 'asc' }, { name: 'asc' }],
     })
 
+    const entitlement = business.featureEntitlements?.[0] ?? null
+    const entitled = isFeatureEntitlementActive(entitlement)
+    const account = business.stripeConnectedAccount ?? null
+    const stripeReady = Boolean(
+      account &&
+      account.status === StripeConnectedAccountStatus.READY &&
+      account.chargesEnabled &&
+      account.payoutsEnabled
+    )
+    const defaults = readBookingProtectionDefaults(business.settings)
+
     return NextResponse.json({
       success: true,
-      data: services.map(service => ({
-        ...service,
-        price: Number(service.price),
-        priceRangeMin: service.priceRangeMin === null ? null : Number(service.priceRangeMin),
-        priceRangeMax: service.priceRangeMax === null ? null : Number(service.priceRangeMax),
-        depositAmount: service.depositAmount === null ? null : Number(service.depositAmount),
-      })),
+      data: services.map(service => {
+        const price = Number(service.price)
+        const effectiveDeposit = resolveEffectiveServiceDeposit({
+          mode: service.depositMode || ServiceDepositMode.BUSINESS_DEFAULT,
+          customDepositAmount:
+            service.depositAmount === null ? null : Number(service.depositAmount),
+          servicePrice: price,
+          defaults,
+          entitled,
+          stripeReady,
+        })
+
+        return {
+          ...service,
+          price,
+          priceRangeMin: service.priceRangeMin === null ? null : Number(service.priceRangeMin),
+          priceRangeMax: service.priceRangeMax === null ? null : Number(service.priceRangeMax),
+          requiresDeposit: effectiveDeposit.requiresDeposit,
+          depositAmount: effectiveDeposit.depositAmount,
+          remainingAmount: effectiveDeposit.remainingAmount,
+          cancellationWindowHours: effectiveDeposit.cancellationWindowHours,
+          depositDeductedFromTotal: true,
+        }
+      }),
     })
   } catch (error) {
     const authResponse = businessAuthErrorResponse(error)
@@ -121,6 +163,9 @@ export async function POST(request: NextRequest) {
       data: {
         ...serviceData,
         businessId: context.businessId,
+        depositMode: ServiceDepositMode.BUSINESS_DEFAULT,
+        requiresDeposit: false,
+        depositAmount: null,
         price: parseNumber(serviceData.price),
         duration: parseNumber(serviceData.duration),
         bufferTime: serviceData.bufferTime ? parseNumber(serviceData.bufferTime) : 0,

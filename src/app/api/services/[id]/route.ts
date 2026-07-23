@@ -94,12 +94,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         ...(body.requiresApproval !== undefined && {
           requiresApproval: Boolean(body.requiresApproval),
         }),
-        ...(body.requiresDeposit !== undefined && {
-          requiresDeposit: Boolean(body.requiresDeposit),
-        }),
-        ...(body.depositAmount !== undefined && {
-          depositAmount: body.depositAmount ? parseNumber(body.depositAmount) : null,
-        }),
         ...(body.maxAdvanceBookingDays !== undefined && {
           maxAdvanceBookingDays: body.maxAdvanceBookingDays
             ? parseNumber(body.maxAdvanceBookingDays)

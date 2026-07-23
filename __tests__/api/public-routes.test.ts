@@ -238,7 +238,18 @@ describe('public business routes', () => {
 
       expect(mockedPrisma.business.findUnique).toHaveBeenCalledWith({
         where: { slug: 'test-business' },
-        select: { id: true, isPublished: true },
+        select: {
+          id: true,
+          isPublished: true,
+          settings: true,
+          featureEntitlements: {
+            where: { feature: 'BOOKING_DEPOSITS' },
+            take: 1,
+          },
+          stripeConnectedAccount: {
+            select: { status: true, chargesEnabled: true, payoutsEnabled: true },
+          },
+        },
       })
 
       expect(mockedPrisma.service.findMany).toHaveBeenCalledWith(

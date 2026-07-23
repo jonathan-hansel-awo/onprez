@@ -8,7 +8,7 @@ import { Input } from '@/components/form/input'
 import { TextArea } from '@/components/form/text-area'
 import { Select } from '@/components/form/select'
 import { ImageUpload } from '@/components/ui/image-upload'
-import { ArrowLeft, Loader2, DollarSign, Clock, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Loader2, DollarSign, Clock, AlertCircle, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
@@ -30,8 +30,6 @@ interface ServiceFormData {
   categoryId: string
   imageUrl: string
   requiresApproval: boolean
-  requiresDeposit: boolean
-  depositAmount: string
   maxAdvanceBookingDays: string
   featured: boolean
   active: boolean
@@ -54,8 +52,6 @@ export default function NewServicePage() {
     categoryId: '',
     imageUrl: '',
     requiresApproval: false,
-    requiresDeposit: false,
-    depositAmount: '',
     maxAdvanceBookingDays: '',
     featured: false,
     active: true,
@@ -109,10 +105,6 @@ export default function NewServicePage() {
 
     if (parseInt(formData.duration) <= 0) {
       newErrors.duration = 'Duration must be greater than 0'
-    }
-
-    if (formData.requiresDeposit && !formData.depositAmount) {
-      newErrors.depositAmount = 'Deposit amount is required when deposit is enabled'
     }
 
     setErrors(newErrors)
@@ -267,33 +259,21 @@ export default function NewServicePage() {
               />
             )}
 
-            <div className="space-y-4">
-              <label className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={formData.requiresDeposit}
-                  onChange={e => handleChange('requiresDeposit', e.target.checked)}
-                  className="mt-1 w-4 h-4 text-onprez-blue border-gray-300 rounded focus:ring-onprez-blue"
-                />
-                <div>
-                  <span className="text-sm font-medium text-gray-900">Require Deposit</span>
-                  <p className="text-sm text-gray-600">Customer must pay a deposit when booking</p>
-                </div>
-              </label>
-
-              {formData.requiresDeposit && (
-                <Input
-                  label="Deposit Amount (£)"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.depositAmount}
-                  onChange={e => handleChange('depositAmount', e.target.value)}
-                  error={errors.depositAmount}
-                  leftIcon={<DollarSign className="w-5 h-5" />}
-                  placeholder="20.00"
-                />
-              )}
+            <div className="flex items-start gap-3 rounded-xl border border-purple-200 bg-purple-50 p-4">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-purple-700" />
+              <div>
+                <p className="font-medium text-purple-950">Booking Protection</p>
+                <p className="mt-1 text-sm text-purple-900">
+                  New services use your business deposit default. Save this service, then set a
+                  no-deposit or custom fixed-amount override from Payments &amp; Booking Protection.
+                </p>
+                <Link
+                  href="/dashboard/settings/payments"
+                  className="mt-2 inline-flex text-sm font-semibold text-purple-800 hover:underline"
+                >
+                  Manage Booking Protection
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

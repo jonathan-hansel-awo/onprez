@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { BookingProtectionConfigurator } from '@/components/booking-protection/booking-protection-configurator'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface StripeStatusResponse {
@@ -322,6 +323,11 @@ export default function PaymentsSettingsPage() {
             </CardContent>
           </Card>
 
+          <BookingProtectionConfigurator
+            businessId={status.business.id}
+            enabled={account?.status === 'READY'}
+          />
+
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-5">
               <div className="flex items-start gap-3">
@@ -332,7 +338,8 @@ export default function PaymentsSettingsPage() {
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-blue-900">
                     This phase only connects and verifies the professional's Stripe account. Service
-                    deposit controls and customer checkout will be enabled in later phases.
+                    deposit rules are now configurable, but customer checkout remains disabled until
+                    Phase 4.
                   </p>
                 </div>
               </div>
