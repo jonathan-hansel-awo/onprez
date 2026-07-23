@@ -1,0 +1,36 @@
+name: Format overhaul diagnostic
+
+on:
+  push:
+    branches:
+      - feat/presence-template-overhaul
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts --silent
+      - run: >-
+          npx prettier --write
+          package.json
+          scripts/repair-presence-template-fidelity.ts
+          src/lib/templates/presence-template-migration.ts
+          src/lib/templates/__tests__/presence-template-migration.test.ts
+          docs/presence/CANONICAL_TEMPLATE_OVERHAUL.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: formatted-overhaul-files
+          path: |
+            package.json
+            scripts/repair-presence-template-fidelity.ts
+            src/lib/templates/presence-template-migration.ts
+            src/lib/templates/__tests__/presence-template-migration.test.ts
+            docs/presence/CANONICAL_TEMPLATE_OVERHAUL.md
