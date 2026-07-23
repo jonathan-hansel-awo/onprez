@@ -111,6 +111,26 @@ export async function GET(request: NextRequest) {
             phone: true,
           },
         },
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            amount: true,
+            currency: true,
+            refundedAmount: true,
+            refundStatus: true,
+            refundReason: true,
+            refundFailureMessage: true,
+            retainedAt: true,
+            retainedReason: true,
+            lastReconciledAt: true,
+            reconciliationSource: true,
+            policySnapshot: true,
+            paidAt: true,
+          },
+        },
       },
       orderBy: {
         [sortBy]: sortOrder,
@@ -152,6 +172,32 @@ export async function GET(request: NextRequest) {
           businessNotes: apt.businessNotes,
           totalAmount: Number(apt.totalAmount),
           paymentStatus: apt.paymentStatus,
+          deposit: apt.payments[0]
+            ? {
+                paymentId: apt.payments[0].id,
+                status: apt.payments[0].status,
+                amount: Number(apt.payments[0].amount),
+                currency: apt.payments[0].currency,
+                paidAt: apt.payments[0].paidAt,
+                refundedAmount: Number(apt.payments[0].refundedAmount),
+                refundStatus: apt.payments[0].refundStatus,
+                refundReason: apt.payments[0].refundReason,
+                refundFailureMessage: apt.payments[0].refundFailureMessage,
+                retainedAt: apt.payments[0].retainedAt,
+                retainedReason: apt.payments[0].retainedReason,
+                lastReconciledAt: apt.payments[0].lastReconciledAt,
+                reconciliationSource: apt.payments[0].reconciliationSource,
+                cancellationWindowHours:
+                  apt.payments[0].policySnapshot &&
+                  typeof apt.payments[0].policySnapshot === 'object' &&
+                  !Array.isArray(apt.payments[0].policySnapshot) &&
+                  typeof (apt.payments[0].policySnapshot as Record<string, unknown>)
+                    .cancellationWindowHours === 'number'
+                    ? (apt.payments[0].policySnapshot as Record<string, number>)
+                        .cancellationWindowHours
+                    : 24,
+              }
+            : null,
           service: {
             id: apt.service.id,
             name: apt.service.name,

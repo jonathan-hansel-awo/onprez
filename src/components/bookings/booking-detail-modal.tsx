@@ -53,6 +53,22 @@ interface BookingDetails {
   businessNotes: string | null
   totalAmount: number
   paymentStatus: PaymentStatus
+  deposit?: {
+    paymentId: string
+    status: string
+    amount: number
+    currency: string
+    paidAt: string | null
+    refundedAmount: number
+    refundStatus: string
+    refundReason: string | null
+    refundFailureMessage: string | null
+    retainedAt: string | null
+    retainedReason: string | null
+    lastReconciledAt: string | null
+    reconciliationSource: string | null
+    cancellationWindowHours: number
+  } | null
   service: {
     id: string
     name: string
@@ -76,6 +92,9 @@ interface BookingDetailModalProps {
   onStatusChange?: (status: AppointmentStatus) => void
   onReschedule?: () => void
   onCancel?: () => void
+  onReconcilePayment?: () => void
+  onRetryRefund?: () => void
+  paymentActionLoading?: boolean
 }
 
 function formatDateTime(dateString: string): string {
@@ -149,6 +168,9 @@ export function BookingDetailModal({
   onStatusChange,
   onReschedule,
   onCancel,
+  onReconcilePayment,
+  onRetryRefund,
+  paymentActionLoading = false,
 }: BookingDetailModalProps) {
   const [copied, setCopied] = useState(false)
   const [isSendingReminder, setIsSendingReminder] = useState(false)
@@ -347,17 +369,11 @@ export function BookingDetailModal({
             </div>
 
             {/* Payment Info */}
-            <div className="p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-2 text-gray-500 mb-3">
-                <CreditCard className="w-4 h-4" />
-                <span className="text-sm font-medium">Payment</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Total Amount</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {formatCurrency(booking.totalAmount)}
-                  </p>
+            <div className="p-4 border border-gray-200 rounded-lg space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <CreditCard className="w-4 h-4" />
+                  <span className="text-sm font-medium">Payment</span>
                 </div>
                 <Badge
                   variant={
@@ -371,6 +387,77 @@ export function BookingDetailModal({
                   {PAYMENT_STATUS_LABELS[booking.paymentStatus]}
                 </Badge>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Service total</p>
+                  <p className="text-xl font-bold text-gray-900">
+                    {formatCurrency(booking.totalAmount)}
+                  </p>
+                </div>
+                {booking.deposit && (
+                  <div>
+                    <p className="text-sm text-gray-500">Deposit paid</p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {formatCurrency(booking.deposit.amount)}
+                    </p>
+                  </div>
+                )}
+              </div>
+              {booking.deposit && (
+                <div className="space-y-2 border-t border-gray-100 pt-3 text-sm">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-gray-500">Refund status</span>
+                    <span className="font-medium text-gray-900">
+                      {booking.deposit.refundStatus}
+                    </span>
+                  </div>
+                  {booking.deposit.refundedAmount > 0 && (
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Refunded</span>
+                      <span className="font-medium text-green-700">
+                        {formatCurrency(booking.deposit.refundedAmount)}
+                      </span>
+                    </div>
+                  )}
+                  {booking.deposit.retainedAt && (
+                    <div className="p-2 rounded bg-amber-50 text-amber-800">
+                      Deposit retained: {booking.deposit.retainedReason || 'Cancellation policy'}
+                    </div>
+                  )}
+                  {booking.deposit.refundFailureMessage && (
+                    <div className="p-2 rounded bg-red-50 text-red-700">
+                      {booking.deposit.refundFailureMessage}
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={onReconcilePayment}
+                      disabled={paymentActionLoading}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Reconcile with Stripe
+                    </Button>
+                    {booking.deposit.refundStatus === 'FAILED' && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={onRetryRefund}
+                        disabled={paymentActionLoading}
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                      >
+                        Retry refund
+                      </Button>
+                    )}
+                  </div>
+                  {booking.deposit.lastReconciledAt && (
+                    <p className="text-xs text-gray-500">
+                      Last reconciled {formatDateTime(booking.deposit.lastReconciledAt)}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Created At */}

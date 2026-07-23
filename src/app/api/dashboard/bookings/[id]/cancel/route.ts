@@ -1,8 +1,17 @@
+import { BookingPaymentStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getCurrentUser } from '@/lib/auth/get-user'
-import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+
 import { requireAppointmentRole } from '@/lib/auth/appointment-access'
+import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { decideCancellationRefund } from '@/lib/booking-protection/cancellation'
+import {
+  recordRetainedBookingDeposit,
+  requestBookingDepositRefund,
+} from '@/lib/booking-protection/operations'
+import { logger } from '@/lib/observability/logger'
+import { prisma } from '@/lib/prisma'
 import { AppointmentTransitionError, transitionAppointment } from '@/lib/services/appointment-state'
 
 const cancelSchema = z.object({
@@ -18,6 +27,7 @@ const cancelSchema = z.object({
   customReason: z.string().max(500).optional(),
   notifyCustomer: z.boolean().default(true),
   waiveCancellationFee: z.boolean().default(false),
+  refundDeposit: z.boolean().optional(),
 })
 
 export type CancellationReason = z.infer<typeof cancelSchema>['reason']
@@ -32,8 +42,23 @@ const reasonLabels: Record<CancellationReason, string> = {
   OTHER: 'Other reason',
 }
 
+function isSameOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin')
+  if (!origin) return true
+
+  try {
+    return new URL(origin).origin === request.nextUrl.origin
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    if (!isSameOrigin(request)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+    }
+
     const user = await getCurrentUser()
 
     if (!user) {
@@ -41,9 +66,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const { id } = await params
-    const body = await request.json()
-
-    const validation = cancelSchema.safeParse(body)
+    const validation = cancelSchema.safeParse(await request.json())
 
     if (!validation.success) {
       return NextResponse.json(
@@ -52,21 +75,50 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       )
     }
 
-    const { reason, customReason, notifyCustomer, waiveCancellationFee } = validation.data
-
+    const { reason, customReason, notifyCustomer, waiveCancellationFee, refundDeposit } =
+      validation.data
     const { appointment: appointmentAccess } = await requireAppointmentRole(user.id, id, [
       'ADMIN',
       'MANAGER',
       'STAFF',
     ])
 
-    const now = new Date()
+    const payment = await prisma.bookingPayment.findFirst({
+      where: {
+        appointmentId: id,
+        businessId: appointmentAccess.businessId,
+        status: {
+          in: [
+            BookingPaymentStatus.SUCCEEDED,
+            BookingPaymentStatus.PARTIALLY_REFUNDED,
+            BookingPaymentStatus.REFUNDED,
+          ],
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+    const paidAmount = payment ? Number(payment.amount) : 0
+    const alreadyRefunded = payment ? Number(payment.refundedAmount) : 0
+    const refundDecision = decideCancellationRefund({
+      reason,
+      startTime: appointmentAccess.startTime,
+      depositPaid: Boolean(payment),
+      refundableAmount: Math.max(0, paidAmount - alreadyRefunded),
+      policySnapshot: payment?.policySnapshot,
+      requestedRefund: refundDeposit,
+      waiveCancellationFee,
+    })
 
+    const now = new Date()
     const cancellationNote = [
-      `[${now.toISOString()}] Cancelled by ${user.email}`,
+      `Cancelled by ${user.email}`,
       `Reason: ${reasonLabels[reason]}`,
       customReason ? `Details: ${customReason}` : null,
-      waiveCancellationFee ? 'Cancellation fee waived' : null,
+      payment
+        ? refundDecision.shouldRefund
+          ? `Deposit refund requested: ${refundDecision.explanation}`
+          : `Deposit retained: ${refundDecision.explanation}`
+        : null,
     ]
       .filter(Boolean)
       .join('\n')
@@ -80,8 +132,42 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       reason,
       cancellationDetails: customReason,
       cancellationSource: 'BUSINESS',
-      notes: cancellationNote,
+      notes: `[${now.toISOString()}] ${cancellationNote}`,
       notifyCustomer,
+      metadata: {
+        depositDecision: refundDecision.shouldRefund ? 'REFUND' : 'RETAIN',
+        depositDecisionForced: refundDecision.forced,
+        refundableAmount: refundDecision.refundableAmount,
+      },
+    })
+
+    const depositOutcome = refundDecision.shouldRefund
+      ? await requestBookingDepositRefund({
+          appointmentId: id,
+          businessId: appointmentAccess.businessId,
+          requestedBy: user.id,
+          reason: customReason || reasonLabels[reason],
+        })
+      : {
+          status: payment ? ('RETAINED' as const) : ('NOT_REQUIRED' as const),
+          refundableAmount: refundDecision.refundableAmount,
+          refundedAmount: alreadyRefunded,
+          retained: payment
+            ? await recordRetainedBookingDeposit({
+                appointmentId: id,
+                businessId: appointmentAccess.businessId,
+                retainedBy: user.id,
+                reason: customReason || reasonLabels[reason],
+              })
+            : false,
+        }
+
+    logger.info('booking.cancellation.completed', {
+      bookingId: id,
+      businessId: appointmentAccess.businessId,
+      reason,
+      depositOutcome: depositOutcome.status,
+      refundForced: refundDecision.forced,
     })
 
     return NextResponse.json({
@@ -89,6 +175,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: {
         appointment: result.appointment,
         notificationSent: result.notificationSent,
+        deposit: {
+          ...depositOutcome,
+          decision: refundDecision.shouldRefund ? 'REFUND' : 'RETAIN',
+          forced: refundDecision.forced,
+          explanation: refundDecision.explanation,
+          cancellationWindowHours: refundDecision.cancellationWindowHours,
+        },
       },
     })
   } catch (error) {
@@ -104,7 +197,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const authResponse = businessAuthErrorResponse(error)
     if (authResponse) return authResponse
 
-    console.error('Cancel booking error:', error)
+    logger.error('booking.cancellation.failed', { error })
     return NextResponse.json({ success: false, error: 'Failed to cancel booking' }, { status: 500 })
   }
 }
