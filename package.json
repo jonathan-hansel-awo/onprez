@@ -32,7 +32,8 @@
     "db:test:migrations": "tsx scripts/test-migrations.ts",
     "db:verify-restore": "tsx scripts/verify-database-restore.ts",
     "db:test:seed": "tsx scripts/test-seed-data.ts",
-    "entitlement:booking-deposits": "tsx scripts/set-booking-deposit-entitlement.ts"
+    "entitlement:booking-deposits": "tsx scripts/set-booking-deposit-entitlement.ts",
+    "presence:repair-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { apiError, logApiError } from '@/lib/api/error-response'
 import { prisma } from '@/lib/prisma'
 import { createSelectedSignupPresencePageContent } from '@/lib/templates/select-signup-template'
+import { CANONICAL_TEMPLATE_VERSION } from '@/lib/templates/canonical-template-engine'
 import { TEMPLATE_SELECTION_COOKIE } from '@/lib/templates/template-selection'
 
 function getClientIp(request: NextRequest) {
@@ -21,18 +22,9 @@ function safeSignupFailureMessage(error?: string) {
   }
 
   const normalized = error.toLowerCase()
-
-  if (normalized.includes('handle')) {
-    return 'That handle is not available. Please choose another.'
-  }
-
-  if (normalized.includes('email')) {
-    return 'This email cannot be used to create an account.'
-  }
-
-  if (normalized.includes('password')) {
-    return 'Password does not meet the requirements.'
-  }
+  if (normalized.includes('handle')) return 'That handle is not available. Please choose another.'
+  if (normalized.includes('email')) return 'This email cannot be used to create an account.'
+  if (normalized.includes('password')) return 'Password does not meet the requirements.'
 
   return 'Signup failed. Please check your details and try again.'
 }
@@ -40,13 +32,11 @@ function safeSignupFailureMessage(error?: string) {
 export async function POST(request: NextRequest) {
   try {
     const ipAddress = getClientIp(request)
-
     const rateLimitKey = `signup:${ipAddress}`
     const rateLimit = await checkRateLimit(rateLimitKey, 'auth:signup')
 
     if (!rateLimit.allowed) {
       const resetInSeconds = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)
-
       return apiError('RATE_LIMITED', 'Too many signup attempts. Please try again later.', 429, {
         headers: {
           'X-RateLimit-Limit': rateLimit.limit.toString(),
@@ -59,18 +49,16 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const validation = signupSchema.safeParse(body)
-
     if (!validation.success) {
       return apiError('VALIDATION_ERROR', 'Validation failed', 400, {
-        details: validation.error.issues.map(err => ({
-          field: err.path.join('.'),
-          message: err.message,
+        details: validation.error.issues.map(error => ({
+          field: error.path.join('.'),
+          message: error.message,
         })),
       })
     }
 
     const userAgent = request.headers.get('user-agent') || undefined
-
     const result = await signupUser(validation.data, ipAddress, userAgent)
 
     if (!result.success) {
@@ -88,7 +76,7 @@ export async function POST(request: NextRequest) {
           requestedTemplateSlug
         )
 
-        if (applied.templateSlug) {
+        if (applied.templateSlug && applied.theme) {
           const business = await prisma.business.findUnique({
             where: { id: result.businessId },
             select: { settings: true },
@@ -101,13 +89,21 @@ export async function POST(request: NextRequest) {
               : {}
 
           await prisma.$transaction([
-            prisma.page.updateMany({
+            prisma.page.upsert({
               where: {
+                businessId_slug: {
+                  businessId: result.businessId,
+                  slug: 'home',
+                },
+              },
+              create: {
                 businessId: result.businessId,
                 slug: 'home',
+                title: validation.data.businessName.trim(),
+                content: applied.sections as unknown as Prisma.InputJsonValue,
                 isPublished: false,
               },
-              data: {
+              update: {
                 content: applied.sections as unknown as Prisma.InputJsonValue,
               },
             }),
@@ -117,8 +113,9 @@ export async function POST(request: NextRequest) {
                 settings: {
                   ...currentSettings,
                   presenceTemplateSlug: applied.templateSlug,
-                  ...(applied.theme ? { theme: applied.theme } : {}),
-                } as Prisma.InputJsonValue,
+                  presenceTemplateVersion: CANONICAL_TEMPLATE_VERSION,
+                  theme: applied.theme,
+                } as unknown as Prisma.InputJsonValue,
               },
             }),
           ])
