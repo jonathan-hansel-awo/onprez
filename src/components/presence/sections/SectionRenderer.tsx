@@ -10,6 +10,10 @@ import {
   SectionBookingCta,
   StickyMobileBookingCta,
 } from '@/components/presence/PresenceConversion'
+import {
+  applyPremiumRuntimeArtDirection,
+  getPremiumTemplateSlug,
+} from '@/lib/templates/premium-runtime-art-direction'
 import { HeroSection } from './HeroSection'
 import { AboutSection } from './AboutSection'
 import { NavbarSection } from './NavbarSection'
@@ -52,9 +56,9 @@ const InquirySection = dynamic(
 
 function SectionSkeleton() {
   return (
-    <div className="bg-gray-50 py-16">
+    <div className="bg-gray-50 py-12 sm:py-16">
       <div className="container mx-auto px-4">
-        <div className="h-64 animate-pulse rounded-xl bg-gray-200" />
+        <div className="h-48 animate-pulse rounded-xl bg-gray-200 sm:h-64" />
       </div>
     </div>
   )
@@ -106,16 +110,18 @@ export function SectionRenderer({
   bookingHrefOverride,
   showConversionCtas = true,
 }: SectionRendererProps) {
-  const visibleSections = sections
+  const premiumTemplateSlug = getPremiumTemplateSlug(sections)
+  const visibleSections = applyPremiumRuntimeArtDirection(sections)
     .filter(section => section.isVisible)
     .sort((a, b) => a.order - b.order)
 
   const bookingHref = bookingHrefOverride || `/${businessHandle}/book`
   const showTrustStrip = hasMeaningfulTrustSignals(trustSignals)
   const ctaSectionTypes = new Set(['SERVICES', 'FAQ'])
+  const showInlineConversionCtas = showConversionCtas && !premiumTemplateSlug
 
   return (
-    <div className="pb-24 md:pb-0">
+    <div className="pb-24 md:pb-0" data-presence-template={premiumTemplateSlug}>
       {visibleSections.map((section, index) => {
         const isAboveFold = index < 2
 
@@ -192,7 +198,7 @@ export function SectionRenderer({
             {section.type === 'HERO' && showTrustStrip && (
               <PresenceTrustStrip signals={trustSignals} />
             )}
-            {showConversionCtas && ctaSectionTypes.has(section.type) && (
+            {showInlineConversionCtas && ctaSectionTypes.has(section.type) && (
               <SectionBookingCta bookingHref={bookingHref} businessName={businessName} />
             )}
           </div>
