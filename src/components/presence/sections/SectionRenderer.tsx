@@ -158,7 +158,12 @@ export function SectionRenderer({
 
             case 'CONTACT':
               return (
-                <ContactSection key={section.id} section={section} businessData={businessData} />
+                <ContactSection
+                  key={section.id}
+                  section={section}
+                  businessData={businessData}
+                  bookingHref={bookingHref}
+                />
               )
 
             case 'FAQ':
