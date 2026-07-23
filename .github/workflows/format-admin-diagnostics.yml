@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/platform-admin-assisted-setup
+  pull_request:
 
 permissions:
   contents: read
