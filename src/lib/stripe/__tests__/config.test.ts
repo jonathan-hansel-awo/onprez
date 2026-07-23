@@ -5,6 +5,8 @@ import {
   getStripeConfigurationStatus,
   getStripeWebhookSecret,
   isStripeConfigured,
+  isStripeConnectConfigured,
+  isStripeWebhookConfigured,
   resetStripeClientForTests,
 } from '@/lib/stripe/config'
 
@@ -29,9 +31,19 @@ describe('Stripe server configuration', () => {
       webhookSecretConfigured: false,
       publishableKeyConfigured: false,
     })
+    expect(isStripeConnectConfigured()).toBe(false)
+    expect(isStripeWebhookConfigured()).toBe(false)
     expect(isStripeConfigured()).toBe(false)
     expect(() => getStripeClient()).toThrow('STRIPE_SECRET_KEY is not configured')
     expect(() => getStripeWebhookSecret()).toThrow('STRIPE_WEBHOOK_SECRET is not configured')
+  })
+
+  it('allows hosted onboarding when the secret key exists before the webhook is configured', () => {
+    process.env.STRIPE_SECRET_KEY = 'sk_test_onprez_foundation'
+
+    expect(isStripeConnectConfigured()).toBe(true)
+    expect(isStripeWebhookConfigured()).toBe(false)
+    expect(isStripeConfigured()).toBe(false)
   })
 
   it('creates one reusable server client when credentials are configured', () => {
@@ -49,6 +61,8 @@ describe('Stripe server configuration', () => {
       webhookSecretConfigured: true,
       publishableKeyConfigured: true,
     })
+    expect(isStripeConnectConfigured()).toBe(true)
+    expect(isStripeWebhookConfigured()).toBe(true)
     expect(isStripeConfigured()).toBe(true)
   })
 })

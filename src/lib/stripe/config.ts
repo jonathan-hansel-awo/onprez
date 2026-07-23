@@ -15,9 +15,17 @@ export function getStripeConfigurationStatus() {
   }
 }
 
-export function isStripeConfigured(): boolean {
+export function isStripeConnectConfigured(): boolean {
+  return getStripeConfigurationStatus().secretKeyConfigured
+}
+
+export function isStripeWebhookConfigured(): boolean {
   const status = getStripeConfigurationStatus()
   return status.secretKeyConfigured && status.webhookSecretConfigured
+}
+
+export function isStripeConfigured(): boolean {
+  return isStripeWebhookConfigured()
 }
 
 export function getStripeClient(): Stripe {

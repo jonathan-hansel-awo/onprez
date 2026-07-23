@@ -72,6 +72,13 @@ const SETTINGS_LINKS: SettingsLink[] = [
     icon: Calendar,
     category: 'booking',
   },
+  {
+    href: '/dashboard/settings/payments',
+    label: 'Payments & Booking Protection',
+    description: 'Connect Stripe and prepare to require booking deposits',
+    icon: CreditCard,
+    category: 'booking',
+  },
 
   // Team Settings
   {
@@ -178,6 +185,9 @@ export default function SettingsPage() {
             </li>
             <li>
               • Configure <strong>Booking Rules</strong> to control buffer time and advance booking
+            </li>
+            <li>
+              • Connect <strong>Stripe</strong> before enabling payment-backed bookings
             </li>
             <li>
               • Customize your <strong>Branding</strong> to match your business identity
