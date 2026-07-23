@@ -1,17 +1,22 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import {
   CANONICAL_TEMPLATE_VERSION,
-  createCanonicalPresencePageContent,
   isCanonicalTemplateSlug,
 } from '../src/lib/templates/canonical-template-engine'
+import {
+  createPresenceTemplateMigrationPlan,
+  type PresenceTemplateMigrationMode,
+} from '../src/lib/templates/presence-template-migration'
 import type { PageSection } from '../src/types/page-sections'
 
 const prisma = new PrismaClient()
 
-const defaultRepairs: Record<string, string> = {
+const defaultTargets: Record<string, string> = {
   heavenlypamperpalace: 'heavenly-pamper-palace',
   hanselisky: 'editorial-beauty',
 }
+
+const approvedTemplateMirrorBusinesses = new Set(Object.keys(defaultTargets))
 
 function readArgument(name: string) {
   const prefix = `--${name}=`
@@ -26,15 +31,23 @@ function readBoolean(name: string, fallback = false) {
   throw new Error(`--${name} must be true or false`)
 }
 
+function readMigrationMode(): PresenceTemplateMigrationMode {
+  const value = readArgument('mode') || 'overhaul'
+  if (value === 'repair' || value === 'overhaul') return value
+  throw new Error('--mode must be repair or overhaul')
+}
+
 function readSections(value: Prisma.JsonValue | null | undefined): PageSection[] {
   return Array.isArray(value) ? (value as unknown as PageSection[]) : []
 }
 
-async function repairBusiness(
+async function migrateBusiness(
   businessSelector: string,
   templateSlug: string,
+  migrationMode: PresenceTemplateMigrationMode,
   publish: boolean,
-  dryRun: boolean
+  dryRun: boolean,
+  allowTemplateDemoContent: boolean
 ) {
   if (!isCanonicalTemplateSlug(templateSlug)) {
     throw new Error(`Unknown canonical template: ${templateSlug}`)
@@ -67,19 +80,29 @@ async function repairBusiness(
   const page = business.pages[0]
   if (!page) throw new Error(`No home presence page found for ${business.slug}`)
 
-  const sourceSections = readSections(page.content).length
-    ? readSections(page.content)
-    : readSections(page.publishedContent)
-  const applied = createCanonicalPresencePageContent(
-    business.name,
-    business.category,
+  if (
+    migrationMode === 'overhaul' &&
+    !approvedTemplateMirrorBusinesses.has(business.slug) &&
+    !allowTemplateDemoContent
+  ) {
+    throw new Error(
+      `Overhaul mode mirrors template-owned example copy, reviews, and FAQs. ` +
+        `Pass --allow-template-demo-content=true to confirm this for ${business.slug}.`
+    )
+  }
+
+  const draftSections = readSections(page.content)
+  const publishedSections = readSections(page.publishedContent)
+  const sourceSections = draftSections.length ? draftSections : publishedSections
+  const source = draftSections.length ? 'draft content' : 'published content fallback'
+  const plan = createPresenceTemplateMigrationPlan({
+    businessName: business.name,
+    category: business.category,
     templateSlug,
-    {
-      mode: 'account',
-      existingSections: sourceSections,
-      preserveContent: true,
-    }
-  )
+    existingSections: sourceSections,
+    migrationMode,
+  })
+  const applied = plan.page
 
   if (!applied.templateSlug || !applied.theme) {
     throw new Error(`Could not build canonical template ${templateSlug}`)
@@ -89,15 +112,33 @@ async function repairBusiness(
     business.settings && typeof business.settings === 'object' && !Array.isArray(business.settings)
       ? (business.settings as Prisma.JsonObject)
       : {}
+  const willUpdatePublishedContent = publish && page.isPublished
+  const warnings: string[] = []
+
+  if (publish && !page.isPublished) {
+    warnings.push(
+      'The page is currently a draft. --publish=true will not change its publication status or expose it publicly.'
+    )
+  }
+
+  if (migrationMode === 'overhaul') {
+    warnings.push(
+      'Overhaul mode replaces all page-owned sections, layout, text, images, reviews, and FAQs with the canonical template mirror.'
+    )
+  }
 
   const result = {
     business: { id: business.id, name: business.name, slug: business.slug },
     template: applied.templateSlug,
     templateVersion: CANONICAL_TEMPLATE_VERSION,
-    sectionCount: applied.sections.length,
+    source,
+    ...plan.summary,
     wasPublished: page.isPublished,
-    publish,
+    willUpdateDraftContent: true,
+    willUpdatePublishedContent,
+    publishRequested: publish,
     dryRun,
+    warnings,
   }
 
   if (!dryRun) {
@@ -107,7 +148,7 @@ async function repairBusiness(
         where: { id: page.id },
         data: {
           content: applied.sections as unknown as Prisma.InputJsonValue,
-          ...(publish && page.isPublished
+          ...(willUpdatePublishedContent
             ? {
                 publishedContent: applied.sections as unknown as Prisma.InputJsonValue,
                 publishedAt: now,
@@ -123,6 +164,8 @@ async function repairBusiness(
             ...currentSettings,
             presenceTemplateSlug: applied.templateSlug,
             presenceTemplateVersion: CANONICAL_TEMPLATE_VERSION,
+            presenceTemplateMigrationMode: migrationMode,
+            presenceTemplateMigratedAt: now.toISOString(),
             theme: applied.theme,
           } as unknown as Prisma.InputJsonValue,
         },
@@ -136,15 +179,24 @@ async function repairBusiness(
 async function main() {
   const business = readArgument('business')
   const requestedTemplate = readArgument('template')
+  const migrationMode = readMigrationMode()
   const publish = readBoolean('publish', false)
   const dryRun = readBoolean('dry-run', false)
+  const allowTemplateDemoContent = readBoolean('allow-template-demo-content', false)
 
   if (business) {
-    const templateSlug = requestedTemplate || defaultRepairs[business]
+    const templateSlug = requestedTemplate || defaultTargets[business]
     if (!templateSlug) {
       throw new Error('Pass --template=<canonical-template-slug> for a custom business selector')
     }
-    await repairBusiness(business, templateSlug, publish, dryRun)
+    await migrateBusiness(
+      business,
+      templateSlug,
+      migrationMode,
+      publish,
+      dryRun,
+      allowTemplateDemoContent
+    )
     return
   }
 
@@ -152,8 +204,15 @@ async function main() {
     throw new Error('--template requires --business')
   }
 
-  for (const [businessSlug, templateSlug] of Object.entries(defaultRepairs)) {
-    await repairBusiness(businessSlug, templateSlug, publish, dryRun)
+  for (const [businessSlug, templateSlug] of Object.entries(defaultTargets)) {
+    await migrateBusiness(
+      businessSlug,
+      templateSlug,
+      migrationMode,
+      publish,
+      dryRun,
+      allowTemplateDemoContent
+    )
   }
 }
 
