@@ -22,7 +22,7 @@ SET role = 'USER'
 WHERE email = 'your-email@example.com';
 ```
 
-Sign out and sign back in after changing the role so the latest database-backed session user is loaded.
+Sign out and sign back in after changing the role so the latest database-backed session user is loaded. Role changes are enforced again on every server request.
 
 ## Capabilities
 
