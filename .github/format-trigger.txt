@@ -1,0 +1,1 @@
+Temporary trigger for the branch-local Prettier workflow. Remove before opening the final PR.
