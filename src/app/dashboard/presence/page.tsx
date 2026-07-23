@@ -11,10 +11,16 @@ import { TemplateSelector } from '@/components/presence/TemplateSelector'
 import { TemplatePreviewModal } from '@/components/presence/TemplatePreviewModal'
 import type { PresenceTemplate } from '@/types/templates'
 
+interface PresencePageSummary {
+  slug: string
+  isPublished: boolean
+}
+
 export default function PresencePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [hasPresence, setHasPresence] = useState(false)
+  const [isPublished, setIsPublished] = useState(false)
   const [businessId, setBusinessId] = useState<string | null>(null)
   const [businessSlug, setBusinessSlug] = useState<string | null>(null)
   const [showTemplateSelector, setShowTemplateSelector] = useState(false)
@@ -39,7 +45,11 @@ export default function PresencePage() {
 
         const pageRes = await fetch(`/api/presence/pages?businessId=${business.id}`)
         const pageData = await pageRes.json()
-        setHasPresence(Boolean(pageData.success && pageData.data.pages.length > 0))
+        const pages: PresencePageSummary[] = pageData.success ? pageData.data.pages : []
+        const homePage = pages.find(page => page.slug === 'home') || pages[0]
+
+        setHasPresence(Boolean(homePage))
+        setIsPublished(Boolean(homePage?.isPublished))
       }
     } catch (error) {
       console.error('Failed to check presence status:', error)
@@ -187,7 +197,7 @@ export default function PresencePage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {businessSlug && (
+          {businessSlug && isPublished && (
             <Link
               href={`/${businessSlug}`}
               target="_blank"
@@ -205,21 +215,40 @@ export default function PresencePage() {
             href="/dashboard/presence/editor"
             className="inline-flex items-center rounded-lg bg-gradient-to-r from-onprez-blue to-onprez-purple px-6 py-3 font-semibold text-white shadow-lg transition-transform hover:scale-[1.02]"
           >
-            Edit Presence
+            {isPublished ? 'Edit Presence' : 'Edit and publish'}
           </Link>
         </div>
       </div>
 
+      {!isPublished && (
+        <Card className="border-amber-200 bg-amber-50 p-5">
+          <h2 className="font-semibold text-amber-950">Your presence page is not live yet</h2>
+          <p className="mt-2 text-sm leading-6 text-amber-900">
+            Your page is safely stored as a draft. Open the editor, review your content, and click
+            Publish when you are ready for customers to access it.
+          </p>
+        </Card>
+      )}
+
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="p-6">
           <div className="mb-1 text-sm text-gray-600">Status</div>
-          <div className="text-2xl font-bold text-green-600">Published</div>
+          <div
+            className={`text-2xl font-bold ${isPublished ? 'text-green-600' : 'text-amber-700'}`}
+          >
+            {isPublished ? 'Published' : 'Draft — not live'}
+          </div>
         </Card>
         <Card className="p-6">
           <div className="mb-1 text-sm text-gray-600">Page URL</div>
           <div className="break-all text-lg font-semibold text-gray-900">
             onprez.com/{businessSlug}
           </div>
+          <p className="mt-2 text-sm text-gray-500">
+            {isPublished
+              ? 'Public and ready to share.'
+              : 'Reserved for you. It becomes accessible after you publish.'}
+          </p>
         </Card>
         <Card className="p-6">
           <div className="mb-1 text-sm text-gray-600">Template controls</div>

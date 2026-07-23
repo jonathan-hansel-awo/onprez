@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth/password'
 import { generateVerificationToken } from '@/lib/utils/token'
-import { sendVerificationEmail } from '@/lib/services/email'
+import { sendAccountVerificationEmail } from '@/lib/services/account-verification-email'
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import { RESERVED_HANDLES, type SignupInput } from '@/lib/validation/auth'
 import { env } from '@/lib/config/env'
@@ -151,10 +151,17 @@ export async function signupUser(
       return { user, business }
     })
 
-    const verificationUrl = `${getAppBaseUrl()}/verify-email?token=${verificationToken}`
+    const appBaseUrl = getAppBaseUrl()
+    const verificationUrl = `${appBaseUrl}/verify-email?token=${verificationToken}`
+    const presenceUrl = `${appBaseUrl}/${handle}`
 
     try {
-      await sendVerificationEmail(email, verificationUrl, businessName)
+      await sendAccountVerificationEmail({
+        email,
+        verificationUrl,
+        businessName,
+        presenceUrl,
+      })
     } catch (error) {
       // Account exists at this point. Do not report signup failure;
       // user can request a fresh verification email.

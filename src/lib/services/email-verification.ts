@@ -1,6 +1,6 @@
 import { createHmac } from 'crypto'
 import { prisma } from '@/lib/prisma'
-import { sendVerificationEmail } from '@/lib/services/email'
+import { sendAccountVerificationEmail } from '@/lib/services/account-verification-email'
 import { logSecurityEvent } from '@/lib/services/security-logging'
 import { generateVerificationToken } from '@/lib/utils/token'
 import { env } from '@/lib/config/env'
@@ -199,10 +199,16 @@ export async function resendVerificationEmail(
       },
     })
 
-    const verificationUrl = `${getAppBaseUrl()}/verify-email?token=${verificationToken}`
-    const businessName = user.businesses[0]?.name || 'Your Business'
+    const appBaseUrl = getAppBaseUrl()
+    const verificationUrl = `${appBaseUrl}/verify-email?token=${verificationToken}`
+    const business = user.businesses[0]
 
-    await sendVerificationEmail(user.email, verificationUrl, businessName)
+    await sendAccountVerificationEmail({
+      email: user.email,
+      verificationUrl,
+      businessName: business?.name || 'Your Business',
+      presenceUrl: business ? `${appBaseUrl}/${business.slug}` : undefined,
+    })
 
     await logSecurityEventSafely({
       userId: user.id,
