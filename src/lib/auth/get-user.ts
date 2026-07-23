@@ -132,6 +132,13 @@ export async function requireRole(allowedRoles: UserRole[]): Promise<AuthUser> {
 }
 
 /**
+ * Require a manually promoted platform administrator.
+ */
+export async function requirePlatformAdmin(): Promise<AuthUser> {
+  return requireRole(['ADMIN', 'SUPERADMIN'])
+}
+
+/**
  * Check if user has role.
  */
 export function hasRole(user: AuthUser, roles: UserRole[]): boolean {
@@ -142,5 +149,5 @@ export function hasRole(user: AuthUser, roles: UserRole[]): boolean {
  * Check if user is platform admin.
  */
 export function isAdmin(user: AuthUser): boolean {
-  return user.role === 'ADMIN'
+  return user.role === 'ADMIN' || user.role === 'SUPERADMIN'
 }

@@ -83,7 +83,7 @@ export interface RateLimitConfig {
   windowMs: number
 }
 
-export type UserRole = 'USER' | 'ADMIN' | 'STAFF'
+export type UserRole = 'USER' | 'ADMIN' | 'SUPERADMIN'
 
 export interface AuthUser {
   id: string
