@@ -9,7 +9,10 @@ const serviceSchema = z.object({
   description: z.string().trim().max(5000).optional().nullable(),
   price: z.coerce.number().min(0).max(1000000),
   duration: z.coerce.number().int().min(5).max(1440),
-  imageUrl: z.union([z.string().trim().url(), z.literal('')]).optional().nullable(),
+  imageUrl: z
+    .union([z.string().trim().url(), z.literal('')])
+    .optional()
+    .nullable(),
   active: z.boolean().optional().default(true),
   featured: z.boolean().optional().default(false),
 })

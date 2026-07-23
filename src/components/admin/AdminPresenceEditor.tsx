@@ -100,14 +100,23 @@ export function AdminPresenceEditor({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Link href={`/admin/businesses/${businessId}`} className="text-sm font-medium text-blue-600">
+          <Link
+            href={`/admin/businesses/${businessId}`}
+            className="text-sm font-medium text-blue-600"
+          >
             ← Back to assisted setup
           </Link>
           <h1 className="mt-2 text-xl font-semibold">Editing {businessName}</h1>
-          <p className="text-sm text-slate-500">Changes are made as platform admin and recorded in the security log.</p>
+          <p className="text-sm text-slate-500">
+            Changes are made as platform admin and recorded in the security log.
+          </p>
         </div>
         {initialPublishStatus ? (
-          <Link href={`/${businessSlug}`} target="_blank" className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50">
+          <Link
+            href={`/${businessSlug}`}
+            target="_blank"
+            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50"
+          >
             View live page
           </Link>
         ) : null}
