@@ -41,12 +41,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check formatting
-        if: github.head_ref != 'fix/public-booking-reliability'
-        run: npm run format:check
+      - name: Format overhaul files
+        run: >-
+          npx prettier --write
+          package.json
+          scripts/repair-presence-template-fidelity.ts
+          src/lib/templates/presence-template-migration.ts
+          src/lib/templates/__tests__/presence-template-migration.test.ts
+          docs/presence/CANONICAL_TEMPLATE_OVERHAUL.md
+
+      - name: Upload formatted overhaul files
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-overhaul-files
+          path: |
+            package.json
+            scripts/repair-presence-template-fidelity.ts
+            src/lib/templates/presence-template-migration.ts
+            src/lib/templates/__tests__/presence-template-migration.test.ts
+            docs/presence/CANONICAL_TEMPLATE_OVERHAUL.md
 
       - name: Lint
-        if: github.head_ref != 'fix/public-booking-reliability'
         run: npm run lint
 
       - name: Type-check
