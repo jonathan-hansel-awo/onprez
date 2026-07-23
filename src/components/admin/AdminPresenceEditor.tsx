@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { PresenceEditorLayout } from '@/components/presence/editor/PresenceEditorLayout'
 import type { PageSection } from '@/types/page-sections'
 
+type AdminMutationResult = { success: boolean; error?: string }
+
 export function AdminPresenceEditor({
   businessId,
   businessName,
@@ -23,18 +25,18 @@ export function AdminPresenceEditor({
   const [sections, setSections] = useState(initialSections)
   const saveRequestRef = useRef<{
     fingerprint: string
-    promise: Promise<{ success: boolean; error?: string }>
+    promise: Promise<AdminMutationResult>
   } | null>(null)
-  const publishRequestRef = useRef<Promise<{ success: boolean; error?: string }> | null>(null)
+  const publishRequestRef = useRef<Promise<AdminMutationResult> | null>(null)
 
-  function handleSave(updatedSections: PageSection[]) {
+  function handleSave(updatedSections: PageSection[]): Promise<AdminMutationResult> {
     const fingerprint = JSON.stringify(updatedSections)
     const activeSave = saveRequestRef.current
 
     if (activeSave?.fingerprint === fingerprint) return activeSave.promise
     if (activeSave) return activeSave.promise.then(() => handleSave(updatedSections))
 
-    const request = (async () => {
+    const request: Promise<AdminMutationResult> = (async () => {
       try {
         const response = await fetch(`/api/admin/businesses/${businessId}/presence`, {
           method: 'PUT',
@@ -62,10 +64,10 @@ export function AdminPresenceEditor({
     return request
   }
 
-  function handlePublish(isPublished: boolean) {
+  function handlePublish(isPublished: boolean): Promise<AdminMutationResult> {
     if (publishRequestRef.current) return publishRequestRef.current
 
-    const request = (async () => {
+    const request: Promise<AdminMutationResult> = (async () => {
       try {
         const response = await fetch(`/api/admin/businesses/${businessId}/presence/publish`, {
           method: 'POST',
