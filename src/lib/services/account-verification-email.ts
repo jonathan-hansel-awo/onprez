@@ -1,8 +1,4 @@
-import {
-  sendEmail,
-  sendVerificationEmail,
-  type EmailResult,
-} from '@/lib/services/email'
+import { sendEmail, sendVerificationEmail, type EmailResult } from '@/lib/services/email'
 
 export interface AccountVerificationEmailInput {
   email: string
