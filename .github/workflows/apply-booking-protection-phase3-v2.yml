@@ -64,7 +64,6 @@ jobs:
       - name: Format TypeScript files
         run: |
           npx prettier --write \
-            prisma/schema.prisma \
             src/lib/booking-protection/config.ts \
             src/lib/booking-protection/__tests__/config.test.ts \
             src/components/booking-protection/booking-protection-configurator.tsx \
