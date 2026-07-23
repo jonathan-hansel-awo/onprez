@@ -42,7 +42,7 @@ export function PresenceTrustStrip({ signals }: { signals: PresenceTrustSignals 
 
   return (
     <aside aria-label="Business highlights" className="border-y border-gray-200 bg-white">
-      <div className="container mx-auto flex flex-wrap justify-center gap-x-6 gap-y-3 px-4 py-4 sm:px-6">
+      <div className="container mx-auto flex flex-wrap justify-center gap-x-5 gap-y-3 px-4 py-4 sm:gap-x-6 sm:px-6">
         {items.map(({ icon: Icon, label }) => (
           <div key={label} className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <Icon className="h-4 w-4 shrink-0 text-onprez-blue" aria-hidden="true" />
@@ -85,7 +85,7 @@ export function StickyMobileBookingCta({ bookingHref, businessName }: BookingLin
         aria-label={`Book an appointment with ${businessName}`}
       >
         <Calendar className="h-5 w-5" aria-hidden="true" />
-        Book now
+        Book an appointment
       </Link>
     </div>
   )
