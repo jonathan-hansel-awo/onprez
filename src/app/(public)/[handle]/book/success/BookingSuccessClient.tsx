@@ -55,11 +55,21 @@ interface BookingDetails {
   }
   notes: string | null
   createdAt: string
+  payment: {
+    requiresDeposit: boolean
+    depositAmount: number | null
+    depositPaid: boolean
+    depositPaidAt: string | null
+    status: string
+    remainingAmount: number
+  }
 }
 
 interface BookingSuccessClientProps {
   business: Business
   confirmationNumber?: string
+  paymentResult?: string
+  checkoutSessionId?: string
 }
 
 function formatTime(dateString: string, timezone: string): string {
@@ -93,13 +103,20 @@ function formatDuration(minutes: number): string {
   return `${hours} hr ${mins} min`
 }
 
-export function BookingSuccessClient({ business, confirmationNumber }: BookingSuccessClientProps) {
+export function BookingSuccessClient({
+  business,
+  confirmationNumber,
+  paymentResult,
+  checkoutSessionId,
+}: BookingSuccessClientProps) {
   const [booking, setBooking] = useState<BookingDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+
     async function fetchBooking() {
       if (!confirmationNumber) {
         setError('Booking confirmation is missing')
@@ -115,24 +132,51 @@ export function BookingSuccessClient({ business, confirmationNumber }: BookingSu
       }
 
       try {
-        const response = await fetch(buildBookingLookupUrl(confirmationNumber, customerEmail))
-        const result = await response.json()
-
-        if (!response.ok) {
-          setError(result.error || 'Booking not found')
-          return
+        if (paymentResult === 'success' && checkoutSessionId) {
+          const statusUrl = new URL('/api/bookings/payment-status', window.location.origin)
+          statusUrl.searchParams.set('confirmationNumber', confirmationNumber)
+          statusUrl.searchParams.set('customerEmail', customerEmail)
+          statusUrl.searchParams.set('sessionId', checkoutSessionId)
+          await fetch(statusUrl.toString(), { cache: 'no-store' })
         }
 
-        setBooking(result.data)
+        let latest: BookingDetails | null = null
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+          const response = await fetch(buildBookingLookupUrl(confirmationNumber, customerEmail), {
+            cache: 'no-store',
+          })
+          const result = await response.json()
+
+          if (!response.ok) {
+            setError(result.error || 'Booking not found')
+            return
+          }
+
+          const current = result.data as BookingDetails
+          latest = current
+          if (
+            paymentResult !== 'success' ||
+            !current.payment?.requiresDeposit ||
+            current.payment.depositPaid
+          ) {
+            break
+          }
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+
+        if (!cancelled && latest) setBooking(latest)
       } catch (_error) {
-        setError('Failed to load booking details')
+        if (!cancelled) setError('Failed to load booking details')
       } finally {
-        setIsLoading(false)
+        if (!cancelled) setIsLoading(false)
       }
     }
 
     void fetchBooking()
-  }, [confirmationNumber])
+    return () => {
+      cancelled = true
+    }
+  }, [checkoutSessionId, confirmationNumber, paymentResult])
 
   const handleCopyConfirmation = async () => {
     if (!booking) return
@@ -260,8 +304,32 @@ END:VCALENDAR`
     )
   }
 
+  const paymentCancelled =
+    paymentResult === 'cancelled' && booking.payment.requiresDeposit && !booking.payment.depositPaid
+  const paymentProcessing =
+    paymentResult === 'success' && booking.payment.requiresDeposit && !booking.payment.depositPaid
+  const awaitingApproval = booking.payment.depositPaid && booking.status === 'PENDING'
+  const bookingConfirmed = booking.status === 'CONFIRMED'
+  const pageTone = paymentCancelled || paymentProcessing ? 'from-amber-50' : 'from-green-50'
+  const headerTitle = paymentCancelled
+    ? 'Deposit Not Paid'
+    : paymentProcessing
+      ? 'Payment Processing'
+      : awaitingApproval
+        ? 'Deposit Paid — Awaiting Approval'
+        : bookingConfirmed
+          ? 'Booking Confirmed!'
+          : 'Booking Received'
+  const headerCopy = paymentCancelled
+    ? 'Your appointment was not confirmed. Choose the slot again when you are ready to pay the deposit.'
+    : paymentProcessing
+      ? 'Stripe is confirming your deposit. Refresh this page shortly if the status does not update.'
+      : awaitingApproval
+        ? 'Your deposit is secure. The business will confirm the appointment after reviewing it.'
+        : 'Your appointment has been successfully booked.'
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className={`min-h-screen bg-gradient-to-b ${pageTone} to-white`}>
       <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Success Header */}
         <motion.div
@@ -276,11 +344,15 @@ END:VCALENDAR`
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
             className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
           >
-            <CheckCircle className="w-12 h-12 text-green-600" />
+            {paymentCancelled || paymentProcessing ? (
+              <AlertCircle className="h-12 w-12 text-amber-600" />
+            ) : (
+              <CheckCircle className="h-12 w-12 text-green-600" />
+            )}
           </motion.div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking Confirmed!</h1>
-          <p className="text-gray-600">Your appointment has been successfully booked</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{headerTitle}</h1>
+          <p className="text-gray-600">{headerCopy}</p>
         </motion.div>
 
         {/* Confirmation Number */}
@@ -306,7 +378,13 @@ END:VCALENDAR`
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-3">
-            A confirmation email has been sent to {booking.customer.email}
+            {paymentCancelled
+              ? 'No confirmation email was sent because the deposit was not paid.'
+              : paymentProcessing
+                ? `We’ll email ${booking.customer.email} as soon as Stripe confirms the deposit.`
+                : awaitingApproval
+                  ? `A deposit receipt and booking request have been sent to ${booking.customer.email}.`
+                  : `A confirmation email has been sent to ${booking.customer.email}.`}
           </p>
         </motion.div>
 
@@ -363,44 +441,68 @@ END:VCALENDAR`
                   £{booking.service.price.toFixed(2)}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Payment to be collected at appointment</p>
+              {booking.payment.requiresDeposit && booking.payment.depositAmount !== null ? (
+                <div className="mt-3 space-y-1 text-sm">
+                  <div className="flex justify-between text-green-700">
+                    <span>Deposit paid</span>
+                    <span>
+                      £
+                      {(booking.payment.depositPaid ? booking.payment.depositAmount : 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Remaining at appointment</span>
+                    <span>£{booking.payment.remainingAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">Payment to be collected at appointment</p>
+              )}
             </div>
           </div>
         </motion.div>
 
         {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="space-y-3"
-        >
-          {/* Add to Calendar */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" onClick={handleAddToCalendar} className="w-full">
-              <CalendarPlus className="w-4 h-4 mr-2" />
-              Google Calendar
-            </Button>
-            <Button variant="outline" onClick={handleDownloadICS} className="w-full">
-              <Download className="w-4 h-4 mr-2" />
-              Download .ics
-            </Button>
-          </div>
+        {bookingConfirmed && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="space-y-3"
+          >
+            {/* Add to Calendar */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="outline" onClick={handleAddToCalendar} className="w-full">
+                <CalendarPlus className="w-4 h-4 mr-2" />
+                Google Calendar
+              </Button>
+              <Button variant="outline" onClick={handleDownloadICS} className="w-full">
+                <Download className="w-4 h-4 mr-2" />
+                Download .ics
+              </Button>
+            </div>
 
-          {/* Share */}
-          <Button variant="outline" onClick={handleShare} className="w-full">
-            <Share2 className="w-4 h-4 mr-2" />
-            Share with friends
-          </Button>
-
-          {/* Back to Business */}
-          <Link href={`/${business.slug}`} className="block">
-            <Button variant="ghost" className="w-full">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to {business.name}
+            {/* Share */}
+            <Button variant="outline" onClick={handleShare} className="w-full">
+              <Share2 className="w-4 h-4 mr-2" />
+              Share with friends
             </Button>
+
+            {/* Back to Business */}
+            <Link href={`/${business.slug}`} className="block">
+              <Button variant="ghost" className="w-full">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to {business.name}
+              </Button>
+            </Link>
+          </motion.div>
+        )}
+
+        {paymentCancelled && (
+          <Link href={`/${business.slug}/book`} className="mb-6 block">
+            <Button className="w-full">Choose a slot again</Button>
           </Link>
-        </motion.div>
+        )}
 
         {/* Contact Info */}
         {(business.phone || business.email) && (

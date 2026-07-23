@@ -1,7 +1,13 @@
+import { FeatureKey, StripeConnectedAccountStatus } from '@prisma/client'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { BookingPageClient } from './BookingPageClient'
 import { Metadata } from 'next'
+import {
+  readBookingProtectionDefaults,
+  resolveEffectiveServiceDeposit,
+} from '@/lib/booking-protection/config'
+import { isFeatureEntitlementActive } from '@/lib/features/entitlements'
 
 interface BookingPageProps {
   params: Promise<{
@@ -24,6 +30,14 @@ export default async function BookingPage({ params }: BookingPageProps) {
       isPublished: true,
       logoUrl: true,
       branding: true,
+      settings: true,
+      featureEntitlements: {
+        where: { feature: FeatureKey.BOOKING_DEPOSITS },
+        take: 1,
+      },
+      stripeConnectedAccount: {
+        select: { status: true, chargesEnabled: true, payoutsEnabled: true },
+      },
     },
   })
 
@@ -46,12 +60,28 @@ export default async function BookingPage({ params }: BookingPageProps) {
       duration: true,
       bufferTime: true,
       imageUrl: true,
+      depositMode: true,
+      depositAmount: true,
     },
   })
 
   if (!service) {
     notFound()
   }
+
+  const stripeReady = Boolean(
+    business.stripeConnectedAccount?.status === StripeConnectedAccountStatus.READY &&
+    business.stripeConnectedAccount.chargesEnabled &&
+    business.stripeConnectedAccount.payoutsEnabled
+  )
+  const effectiveDeposit = resolveEffectiveServiceDeposit({
+    mode: service.depositMode,
+    customDepositAmount: service.depositAmount === null ? null : Number(service.depositAmount),
+    servicePrice: Number(service.price),
+    defaults: readBookingProtectionDefaults(business.settings),
+    entitled: isFeatureEntitlementActive(business.featureEntitlements[0]),
+    stripeReady,
+  })
 
   return (
     <BookingPageClient
@@ -68,6 +98,11 @@ export default async function BookingPage({ params }: BookingPageProps) {
         description: service.description,
         price: Number(service.price),
         duration: service.duration,
+        requiresDeposit: effectiveDeposit.requiresDeposit,
+        depositAmount: effectiveDeposit.depositAmount,
+        remainingAmount: effectiveDeposit.remainingAmount,
+        cancellationWindowHours: effectiveDeposit.cancellationWindowHours,
+        deductFromTotal: effectiveDeposit.deductFromTotal,
       }}
     />
   )

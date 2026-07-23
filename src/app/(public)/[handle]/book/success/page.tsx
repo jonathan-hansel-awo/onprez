@@ -5,7 +5,7 @@ import { BookingSuccessClient } from './BookingSuccessClient'
 
 interface PageProps {
   params: Promise<{ handle: string }>
-  searchParams: Promise<{ confirmation?: string }>
+  searchParams: Promise<{ confirmation?: string; payment?: string; session_id?: string }>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BookingSuccessPage({ params, searchParams }: PageProps) {
   const { handle } = await params
-  const { confirmation } = await searchParams
+  const { confirmation, payment, session_id: sessionId } = await searchParams
 
   // Verify business exists
   const business = await prisma.business.findUnique({
@@ -45,5 +45,12 @@ export default async function BookingSuccessPage({ params, searchParams }: PageP
     notFound()
   }
 
-  return <BookingSuccessClient business={business} confirmationNumber={confirmation} />
+  return (
+    <BookingSuccessClient
+      business={business}
+      confirmationNumber={confirmation}
+      paymentResult={payment}
+      checkoutSessionId={sessionId}
+    />
+  )
 }

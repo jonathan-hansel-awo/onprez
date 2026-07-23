@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { createBooking } from '@/lib/services/booking'
+import { createBookingDepositCheckout } from '@/lib/booking-protection/checkout'
 import { sendBookingCreatedNotifications } from '@/lib/services/booking-notifications'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 
@@ -27,6 +28,10 @@ jest.mock('@/lib/services/booking', () => ({
   createBooking: jest.fn(),
 }))
 
+jest.mock('@/lib/booking-protection/checkout', () => ({
+  createBookingDepositCheckout: jest.fn(),
+}))
+
 jest.mock('@/lib/services/booking-notifications', () => ({
   sendBookingCreatedNotifications: jest.fn(),
 }))
@@ -48,6 +53,7 @@ const mockedPrisma = prisma as unknown as {
 }
 
 const mockedCreateBooking = createBooking as jest.Mock
+const mockedCreateCheckout = createBookingDepositCheckout as jest.Mock
 const mockedSendBookingCreatedNotifications = sendBookingCreatedNotifications as jest.Mock
 const mockedCheckRateLimit = checkRateLimit as jest.Mock
 
@@ -203,7 +209,11 @@ describe('public bookings API', () => {
           id: true,
           name: true,
           duration: true,
+          price: true,
+          currency: true,
           requiresApproval: true,
+          depositMode: true,
+          depositAmount: true,
         },
       })
 
@@ -386,6 +396,146 @@ describe('public bookings API', () => {
         expect.any(Object),
         expect.objectContaining({ idempotencyKey: 'booking_key_1234567890' })
       )
+    })
+
+    it('requires policy acceptance before reserving a deposit-backed booking', async () => {
+      mockedPrisma.business.findUnique.mockResolvedValue({
+        id: 'business-1',
+        name: 'Test Business',
+        slug: 'test-business',
+        timezone: 'Europe/London',
+        email: 'business@example.com',
+        address: '123 Test Street',
+        settings: {
+          bookingProtection: {
+            enabled: true,
+            depositAmount: 10,
+            cancellationWindowHours: 24,
+          },
+        },
+        featureEntitlements: [{ enabled: true, expiresAt: null }],
+        stripeConnectedAccount: {
+          stripeAccountId: 'acct_test',
+          status: 'READY',
+          chargesEnabled: true,
+          payoutsEnabled: true,
+        },
+      })
+      mockedPrisma.service.findFirst.mockResolvedValue({
+        id: 'service-1',
+        name: 'Haircut',
+        duration: 30,
+        price: 25,
+        currency: 'GBP',
+        requiresApproval: false,
+        depositMode: 'BUSINESS_DEFAULT',
+        depositAmount: null,
+      })
+
+      const response = await POST(
+        jsonRequest('/api/bookings', {
+          businessId: 'business-1',
+          serviceId: 'service-1',
+          date: '2026-08-01',
+          startTime: '10:00',
+          customerName: 'John Customer',
+          customerEmail: 'john@example.com',
+        })
+      )
+
+      expect(response.status).toBe(400)
+      expect(mockedCreateBooking).not.toHaveBeenCalled()
+      expect(mockedCreateCheckout).not.toHaveBeenCalled()
+    })
+
+    it('returns a Stripe Checkout URL without sending booking notifications early', async () => {
+      mockedPrisma.business.findUnique.mockResolvedValue({
+        id: 'business-1',
+        name: 'Test Business',
+        slug: 'test-business',
+        timezone: 'Europe/London',
+        email: 'business@example.com',
+        address: '123 Test Street',
+        settings: {
+          bookingProtection: {
+            enabled: true,
+            depositAmount: 10,
+            cancellationWindowHours: 24,
+          },
+        },
+        featureEntitlements: [{ enabled: true, expiresAt: null }],
+        stripeConnectedAccount: {
+          stripeAccountId: 'acct_test',
+          status: 'READY',
+          chargesEnabled: true,
+          payoutsEnabled: true,
+        },
+      })
+      mockedPrisma.service.findFirst.mockResolvedValue({
+        id: 'service-1',
+        name: 'Haircut',
+        duration: 30,
+        price: 25,
+        currency: 'GBP',
+        requiresApproval: false,
+        depositMode: 'BUSINESS_DEFAULT',
+        depositAmount: null,
+      })
+      mockedCreateBooking.mockResolvedValue({
+        success: true,
+        appointment: { id: mockAppointment.id },
+      })
+      mockedPrisma.appointment.findFirst.mockResolvedValue({
+        ...mockAppointment,
+        status: 'PENDING',
+        requiresDeposit: true,
+        depositAmount: 10,
+        depositPaid: false,
+        paymentStatus: 'UNPAID',
+      })
+      mockedCreateCheckout.mockResolvedValue({
+        checkoutUrl: 'https://checkout.stripe.test/session',
+        checkoutSessionId: 'cs_test',
+        expiresAt: new Date('2026-08-01T09:30:00.000Z'),
+        replayed: false,
+      })
+
+      const response = await POST(
+        jsonRequest('/api/bookings', {
+          businessId: 'business-1',
+          serviceId: 'service-1',
+          date: '2026-08-01',
+          startTime: '10:00',
+          customerName: 'John Customer',
+          customerEmail: 'john@example.com',
+          acceptCancellationPolicy: true,
+        })
+      )
+      const json = await response.json()
+
+      expect(response.status).toBe(201)
+      expect(json.data).toMatchObject({
+        requiresPayment: true,
+        checkoutUrl: 'https://checkout.stripe.test/session',
+        depositAmount: 10,
+        remainingAmount: 15,
+      })
+      expect(mockedCreateBooking).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({
+          status: 'PENDING',
+          countCustomerBooking: false,
+          deposit: expect.objectContaining({ amount: 10 }),
+        })
+      )
+      expect(mockedCreateCheckout).toHaveBeenCalledWith(
+        expect.objectContaining({ providerAccountId: 'acct_test', amount: 10 })
+      )
+      expect(mockedSendBookingCreatedNotifications).not.toHaveBeenCalled()
     })
 
     it('rejects public booking when the service is inactive or outside the business', async () => {

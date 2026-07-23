@@ -19,6 +19,11 @@ interface BookingPageClientProps {
     description: string | null
     price: number
     duration: number
+    requiresDeposit: boolean
+    depositAmount: number | null
+    remainingAmount: number
+    cancellationWindowHours: number | null
+    deductFromTotal: boolean
   }
 }
 
@@ -45,6 +50,7 @@ export function BookingPageClient({ business, service }: BookingPageClientProps)
         businessName={business.name}
         businessTimezone={business.timezone}
         preselectedServiceId={service.id}
+        preselectedService={service}
         onComplete={handleComplete}
         onCancel={handleCancel}
       />

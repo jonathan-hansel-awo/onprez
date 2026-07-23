@@ -69,6 +69,14 @@ const bookingResponse = {
   },
   notes: null,
   createdAt: '2026-07-22T07:40:00.000Z',
+  payment: {
+    requiresDeposit: false,
+    depositAmount: null,
+    depositPaid: false,
+    depositPaidAt: null,
+    status: 'UNPAID',
+    remainingAmount: 70,
+  },
 }
 
 describe('public booking confirmation handoff', () => {
@@ -102,6 +110,11 @@ describe('public booking confirmation handoff', () => {
             description: null,
             price: 70,
             duration: 60,
+            requiresDeposit: false,
+            depositAmount: null,
+            remainingAmount: 70,
+            cancellationWindowHours: null,
+            deductFromTotal: true,
           }}
         />
       ),
@@ -130,7 +143,8 @@ describe('public booking confirmation handoff', () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        '/api/bookings?confirmationNumber=AB12CD34&customerEmail=ada%40example.com'
+        '/api/bookings?confirmationNumber=AB12CD34&customerEmail=ada%40example.com',
+        { cache: 'no-store' }
       )
     )
     expect(await screen.findByRole('heading', { name: 'Booking Confirmed!' })).toBeInTheDocument()
