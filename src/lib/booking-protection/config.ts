@@ -1,5 +1,6 @@
 import { Prisma, ServiceDepositMode } from '@prisma/client'
 
+// This version will be snapshotted with each customer policy acceptance in the payment phase.
 export const BOOKING_PROTECTION_POLICY_VERSION = 'booking-deposit-v1'
 
 export interface BookingProtectionDefaults {
