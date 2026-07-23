@@ -125,9 +125,9 @@
        orderBy: [{ order: 'asc' }, { name: 'asc' }],
      })
  
-+    const entitlement = business.featureEntitlements[0]
++    const entitlement = business.featureEntitlements?.[0] ?? null
 +    const entitled = isFeatureEntitlementActive(entitlement)
-+    const account = business.stripeConnectedAccount
++    const account = business.stripeConnectedAccount ?? null
 +    const stripeReady = Boolean(
 +      account &&
 +        account.status === StripeConnectedAccountStatus.READY &&
@@ -172,6 +172,20 @@
      })
    } catch (error) {
      const authResponse = businessAuthErrorResponse(error)
+--- a/src/app/api/public/businesses/[handle]/services/route.ts
++++ b/src/app/api/public/businesses/[handle]/services/route.ts
+@@ -134,9 +134,9 @@
+       },
+     })
+ 
+-    const entitlement = business.featureEntitlements[0]
++    const entitlement = business.featureEntitlements?.[0] ?? null
+     const entitled = isFeatureEntitlementActive(entitlement)
+-    const account = business.stripeConnectedAccount
++    const account = business.stripeConnectedAccount ?? null
+     const stripeReady = Boolean(
+       account &&
+       account.status === StripeConnectedAccountStatus.READY &&
 --- a/src/app/dashboard/services/[id]/edit/page.tsx
 +++ b/src/app/dashboard/services/[id]/edit/page.tsx
 @@ -21,6 +21,7 @@
