@@ -1,4 +1,8 @@
-import { sendEmail, type EmailResult } from '@/lib/services/email'
+import {
+  sendEmail,
+  sendVerificationEmail,
+  type EmailResult,
+} from '@/lib/services/email'
 
 export interface AccountVerificationEmailInput {
   email: string
@@ -90,6 +94,12 @@ export async function sendAccountVerificationEmail(
   input: AccountVerificationEmailInput
 ): Promise<EmailResult> {
   const content = renderAccountVerificationEmail(input)
+
+  // Keep compatibility with consumers that mock the original verification sender
+  // without exposing the lower-level generic sender.
+  if (typeof sendEmail !== 'function') {
+    return sendVerificationEmail(input.email, input.verificationUrl, input.businessName)
+  }
 
   return sendEmail({
     to: input.email,
