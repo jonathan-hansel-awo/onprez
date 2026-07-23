@@ -48,6 +48,28 @@ jobs:
           cp -a /tmp/phase3-artifact/prisma/. prisma/
           cp -a /tmp/phase3-artifact/src/. src/
           patch -p1 < phase3-final-adjustments.patch
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path('__tests__/api/public-routes.test.ts')
+          text = path.read_text()
+          old = "select: { id: true, isPublished: true },"
+          new = """select: {
+                    id: true,
+                    isPublished: true,
+                    settings: true,
+                    featureEntitlements: {
+                      where: { feature: 'BOOKING_DEPOSITS' },
+                      take: 1,
+                    },
+                    stripeConnectedAccount: {
+                      select: { status: true, chargesEnabled: true, payoutsEnabled: true },
+                    },
+                  },"""
+          if old not in text:
+              raise SystemExit('Expected public-service select assertion was not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
           rm -f phase3-final-adjustments.patch
           rm -f phase3-v2.zip.b64
           rm -f .github/workflows/apply-booking-protection-phase3-v2.yml

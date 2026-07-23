@@ -225,24 +225,3 @@
      maxAdvanceBookingDays: '',
      featured: false,
      active: true,
---- a/__tests__/api/public-routes.test.ts
-+++ b/__tests__/api/public-routes.test.ts
-@@ -239,7 +239,20 @@
-       expect(mockedPrisma.business.findUnique).toHaveBeenCalledWith({
-         where: { slug: 'test-business' },
--        select: { id: true, isPublished: true },
-+        select: {
-+          id: true,
-+          isPublished: true,
-+          settings: true,
-+          featureEntitlements: {
-+            where: { feature: 'BOOKING_DEPOSITS' },
-+            take: 1,
-+          },
-+          stripeConnectedAccount: {
-+            select: { status: true, chargesEnabled: true, payoutsEnabled: true },
-+          },
-+        },
-       })
- 
-       expect(mockedPrisma.service.findMany).toHaveBeenCalledWith(
