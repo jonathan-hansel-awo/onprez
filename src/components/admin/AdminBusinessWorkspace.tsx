@@ -211,7 +211,9 @@ export function AdminBusinessWorkspace({
   }
 
   async function deleteService(service: ServiceItem) {
-    if (!confirm(`Delete “${service.name}”? Services with appointment history cannot be deleted.`)) {
+    if (
+      !confirm(`Delete “${service.name}”? Services with appointment history cannot be deleted.`)
+    ) {
       return
     }
 
@@ -265,15 +267,21 @@ export function AdminBusinessWorkspace({
       <section className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Presence</p>
-          <p className="mt-2 text-lg font-semibold">{pageStatus.isPublished ? 'Published' : 'Draft'}</p>
+          <p className="mt-2 text-lg font-semibold">
+            {pageStatus.isPublished ? 'Published' : 'Draft'}
+          </p>
           <p className="mt-1 text-xs text-slate-500">
-            {pageStatus.updatedAt ? `Updated ${new Date(pageStatus.updatedAt).toLocaleDateString()}` : 'No page found'}
+            {pageStatus.updatedAt
+              ? `Updated ${new Date(pageStatus.updatedAt).toLocaleDateString()}`
+              : 'No page found'}
           </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Services</p>
           <p className="mt-2 text-lg font-semibold">{services.length}</p>
-          <p className="mt-1 text-xs text-slate-500">{services.filter(service => service.active).length} active</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {services.filter(service => service.active).length} active
+          </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Account</p>
@@ -285,12 +293,22 @@ export function AdminBusinessWorkspace({
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <div className="mb-6">
           <h2 className="text-xl font-semibold">Business profile content</h2>
-          <p className="mt-1 text-sm text-slate-500">These details feed contact, SEO, trust, and presence-page content.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            These details feed contact, SEO, trust, and presence-page content.
+          </p>
         </div>
         <form onSubmit={saveProfile} className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Business name" value={business.name} onChange={value => updateBusiness('name', value)} />
-            <Field label="Tagline" value={business.tagline || ''} onChange={value => updateBusiness('tagline', value)} />
+            <Field
+              label="Business name"
+              value={business.name}
+              onChange={value => updateBusiness('name', value)}
+            />
+            <Field
+              label="Tagline"
+              value={business.tagline || ''}
+              onChange={value => updateBusiness('tagline', value)}
+            />
           </div>
           <label className="block space-y-1.5 text-sm">
             <span className="font-medium text-slate-700">Description</span>
@@ -302,16 +320,60 @@ export function AdminBusinessWorkspace({
             />
           </label>
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Public email" type="email" value={business.email || ''} onChange={value => updateBusiness('email', value)} />
-            <Field label="Phone" value={business.phone || ''} onChange={value => updateBusiness('phone', value)} />
-            <Field label="Website" value={business.website || ''} onChange={value => updateBusiness('website', value)} placeholder="https://" />
-            <Field label="Country" value={business.country || ''} onChange={value => updateBusiness('country', value)} />
-            <Field label="Address" value={business.address || ''} onChange={value => updateBusiness('address', value)} />
-            <Field label="City" value={business.city || ''} onChange={value => updateBusiness('city', value)} />
-            <Field label="County / state" value={business.state || ''} onChange={value => updateBusiness('state', value)} />
-            <Field label="Postcode" value={business.zipCode || ''} onChange={value => updateBusiness('zipCode', value)} />
-            <Field label="Logo image URL" value={business.logoUrl || ''} onChange={value => updateBusiness('logoUrl', value)} placeholder="https://" />
-            <Field label="Cover image URL" value={business.coverImageUrl || ''} onChange={value => updateBusiness('coverImageUrl', value)} placeholder="https://" />
+            <Field
+              label="Public email"
+              type="email"
+              value={business.email || ''}
+              onChange={value => updateBusiness('email', value)}
+            />
+            <Field
+              label="Phone"
+              value={business.phone || ''}
+              onChange={value => updateBusiness('phone', value)}
+            />
+            <Field
+              label="Website"
+              value={business.website || ''}
+              onChange={value => updateBusiness('website', value)}
+              placeholder="https://"
+            />
+            <Field
+              label="Country"
+              value={business.country || ''}
+              onChange={value => updateBusiness('country', value)}
+            />
+            <Field
+              label="Address"
+              value={business.address || ''}
+              onChange={value => updateBusiness('address', value)}
+            />
+            <Field
+              label="City"
+              value={business.city || ''}
+              onChange={value => updateBusiness('city', value)}
+            />
+            <Field
+              label="County / state"
+              value={business.state || ''}
+              onChange={value => updateBusiness('state', value)}
+            />
+            <Field
+              label="Postcode"
+              value={business.zipCode || ''}
+              onChange={value => updateBusiness('zipCode', value)}
+            />
+            <Field
+              label="Logo image URL"
+              value={business.logoUrl || ''}
+              onChange={value => updateBusiness('logoUrl', value)}
+              placeholder="https://"
+            />
+            <Field
+              label="Cover image URL"
+              value={business.coverImageUrl || ''}
+              onChange={value => updateBusiness('coverImageUrl', value)}
+              placeholder="https://"
+            />
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -329,7 +391,9 @@ export function AdminBusinessWorkspace({
         <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold">Services</h2>
-            <p className="mt-1 text-sm text-slate-500">Add the customer’s real services, prices, durations, and images.</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Add the customer’s real services, prices, durations, and images.
+            </p>
           </div>
           {editingServiceId ? (
             <button onClick={resetServiceForm} className="text-sm font-medium text-blue-600">
@@ -340,32 +404,68 @@ export function AdminBusinessWorkspace({
 
         <form onSubmit={saveService} className="rounded-2xl bg-slate-50 p-4 sm:p-5">
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Service name" value={serviceDraft.name} onChange={value => setServiceDraft(current => ({ ...current, name: value }))} />
-            <Field label="Image URL" value={serviceDraft.imageUrl} onChange={value => setServiceDraft(current => ({ ...current, imageUrl: value }))} placeholder="https://" />
-            <Field label="Price (£)" type="number" value={serviceDraft.price} onChange={value => setServiceDraft(current => ({ ...current, price: value }))} />
-            <Field label="Duration (minutes)" type="number" value={serviceDraft.duration} onChange={value => setServiceDraft(current => ({ ...current, duration: value }))} />
+            <Field
+              label="Service name"
+              value={serviceDraft.name}
+              onChange={value => setServiceDraft(current => ({ ...current, name: value }))}
+            />
+            <Field
+              label="Image URL"
+              value={serviceDraft.imageUrl}
+              onChange={value => setServiceDraft(current => ({ ...current, imageUrl: value }))}
+              placeholder="https://"
+            />
+            <Field
+              label="Price (£)"
+              type="number"
+              value={serviceDraft.price}
+              onChange={value => setServiceDraft(current => ({ ...current, price: value }))}
+            />
+            <Field
+              label="Duration (minutes)"
+              type="number"
+              value={serviceDraft.duration}
+              onChange={value => setServiceDraft(current => ({ ...current, duration: value }))}
+            />
           </div>
           <label className="mt-4 block space-y-1.5 text-sm">
             <span className="font-medium text-slate-700">Description</span>
             <textarea
               value={serviceDraft.description}
-              onChange={event => setServiceDraft(current => ({ ...current, description: event.target.value }))}
+              onChange={event =>
+                setServiceDraft(current => ({ ...current, description: event.target.value }))
+              }
               rows={3}
               className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 outline-none ring-blue-500 focus:ring-2"
             />
           </label>
           <div className="mt-4 flex flex-wrap gap-5 text-sm">
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={serviceDraft.active} onChange={event => setServiceDraft(current => ({ ...current, active: event.target.checked }))} />
+              <input
+                type="checkbox"
+                checked={serviceDraft.active}
+                onChange={event =>
+                  setServiceDraft(current => ({ ...current, active: event.target.checked }))
+                }
+              />
               Active and bookable
             </label>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={serviceDraft.featured} onChange={event => setServiceDraft(current => ({ ...current, featured: event.target.checked }))} />
+              <input
+                type="checkbox"
+                checked={serviceDraft.featured}
+                onChange={event =>
+                  setServiceDraft(current => ({ ...current, featured: event.target.checked }))
+                }
+              />
               Featured
             </label>
           </div>
           <div className="mt-5 flex items-center gap-3">
-            <button disabled={serviceSaving} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+            <button
+              disabled={serviceSaving}
+              className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            >
               {serviceSaving ? 'Saving…' : editingServiceId ? 'Update service' : 'Add service'}
             </button>
             {serviceMessage ? <p className="text-sm text-slate-600">{serviceMessage}</p> : null}
@@ -374,19 +474,45 @@ export function AdminBusinessWorkspace({
 
         <div className="mt-6 space-y-3">
           {services.map(service => (
-            <div key={service.id} className="flex flex-col gap-4 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              key={service.id}
+              className="flex flex-col gap-4 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-semibold">{service.name}</h3>
-                  {!service.active ? <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">Hidden</span> : null}
-                  {service.featured ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">Featured</span> : null}
+                  {!service.active ? (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                      Hidden
+                    </span>
+                  ) : null}
+                  {service.featured ? (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+                      Featured
+                    </span>
+                  ) : null}
                 </div>
-                <p className="mt-1 text-sm text-slate-600">£{service.price.toFixed(2)} · {service.duration} minutes · {service.appointmentCount} appointments</p>
-                {service.description ? <p className="mt-1 line-clamp-2 text-sm text-slate-500">{service.description}</p> : null}
+                <p className="mt-1 text-sm text-slate-600">
+                  £{service.price.toFixed(2)} · {service.duration} minutes ·{' '}
+                  {service.appointmentCount} appointments
+                </p>
+                {service.description ? (
+                  <p className="mt-1 line-clamp-2 text-sm text-slate-500">{service.description}</p>
+                ) : null}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => startEditing(service)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">Edit</button>
-                <button onClick={() => deleteService(service)} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50">Delete</button>
+                <button
+                  onClick={() => startEditing(service)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => deleteService(service)}
+                  className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
