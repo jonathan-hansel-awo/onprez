@@ -1,25 +1,26 @@
-name: Format admin diagnostics
+name: Finalize admin formatting
 
 on:
   push:
     branches:
       - feat/platform-admin-assisted-setup
-  pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  format:
+  format-and-clean:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: feat/platform-admin-assisted-setup
       - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Apply repository formatting
+      - name: Apply repository formatting and remove diagnostics
         run: |
           npx prettier --write \
             __tests__/proxy-admin.test.ts \
@@ -31,16 +32,11 @@ jobs:
             src/lib/auth/get-user.ts \
             src/proxy.ts \
             src/types/auth.ts
-      - uses: actions/upload-artifact@v4
-        with:
-          name: formatted-admin-files
-          path: |
-            __tests__/proxy-admin.test.ts
-            docs/admin/ASSISTED_SETUP_ADMIN.md
-            src/app/admin
-            src/app/api/admin
-            src/components/admin
-            src/lib/admin
-            src/lib/auth/get-user.ts
-            src/proxy.ts
-            src/types/auth.ts
+          rm .github/workflows/format-admin-diagnostics.yml
+      - name: Commit exact formatter output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "style: apply exact admin formatter output" || exit 0
+          git push origin HEAD:feat/platform-admin-assisted-setup
