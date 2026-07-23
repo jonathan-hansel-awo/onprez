@@ -48,6 +48,10 @@ export interface NavbarSection extends BaseSection {
     position?: 'fixed' | 'sticky' | 'static'
     backgroundColor?: string
     textColor?: 'light' | 'dark' | 'auto'
+    variant?: 'standard' | 'floating' | 'editorial'
+    showDivider?: boolean
+    monogram?: string
+    announcement?: string
   }
 }
 
@@ -75,6 +79,23 @@ export interface HeroSection extends BaseSection {
     textColor?: 'light' | 'dark' | 'custom'
     customTextColor?: string
     textShadow?: boolean
+    variant?:
+      | 'classic'
+      | 'luxury'
+      | 'editorial'
+      | 'bold'
+      | 'professional'
+      | 'creative'
+      | 'education'
+    imageTreatment?: 'full' | 'frame' | 'arch' | 'offset' | 'collage'
+    floatingCard?: {
+      eyebrow: string
+      title: string
+      description?: string
+    }
+    meta?: string[]
+    decorativeText?: string
+    showScrollCue?: boolean
   }
 }
 
@@ -90,6 +111,14 @@ export interface AboutSection extends BaseSection {
     layout?: 'split' | 'editorial' | 'centered'
     imageShape?: 'portrait' | 'landscape' | 'square'
     highlights?: string[]
+    variant?: 'classic' | 'story' | 'atelier' | 'credentials'
+    quote?: string
+    stats?: Array<{
+      value: string
+      label: string
+    }>
+    imageTreatment?: 'classic' | 'arch' | 'stacked' | 'framed' | 'polaroid'
+    secondaryImage?: string
   }
 }
 
@@ -139,6 +168,15 @@ export interface ContactSection extends BaseSection {
     showMap?: boolean
     showSocialMedia?: boolean
     mapEmbedUrl?: string
+    eyebrow?: string
+    description?: string
+    ctaText?: string
+    ctaLink?: string
+    secondaryCtaText?: string
+    secondaryCtaLink?: string
+    layout?: 'standard' | 'panel' | 'immersive'
+    backgroundImage?: string
+    note?: string
   }
 }
 
