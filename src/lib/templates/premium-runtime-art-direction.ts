@@ -33,8 +33,6 @@ export function applyPremiumRuntimeArtDirection(sections: PageSection[]): PageSe
   if (!templateSlug) return sections
 
   return sections.map(section => {
-    const data = 'data' in section ? section.data : undefined
-
     if (section.type === 'NAVBAR') {
       return {
         ...section,
@@ -49,6 +47,7 @@ export function applyPremiumRuntimeArtDirection(sections: PageSection[]): PageSe
       const baseData = {
         ...section.data,
         ctaText: normalizeBookingCtaLabel(section.data.ctaText),
+        secondaryCtaText: normalizeBookingCtaLabel(section.data.secondaryCtaText),
       }
 
       if (templateSlug === 'editorial-beauty') {
@@ -93,6 +92,6 @@ export function applyPremiumRuntimeArtDirection(sections: PageSection[]): PageSe
       }
     }
 
-    return data ? section : section
+    return section
   })
 }
