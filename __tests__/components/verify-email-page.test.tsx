@@ -26,6 +26,8 @@ describe('VerifyEmailPage', () => {
     expect(screen.getByText(/check your junk folder/i)).toBeInTheDocument()
     expect(screen.getByText(/saved as a/i)).toHaveTextContent('draft')
     expect(screen.getByText(/click/i)).toHaveTextContent('Publish')
-    expect(screen.queryByRole('heading', { name: 'Verifying your email...' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Verifying your email...' })
+    ).not.toBeInTheDocument()
   })
 })

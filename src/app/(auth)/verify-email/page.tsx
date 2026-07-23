@@ -96,12 +96,7 @@ function VerifyEmailContent() {
   const resendControls = email ? (
     <div className="space-y-4 border-t pt-6">
       <p className="text-sm text-gray-600">Did not receive the email?</p>
-      <Button
-        onClick={handleResend}
-        disabled={isResending}
-        variant="primary"
-        className="w-full"
-      >
+      <Button onClick={handleResend} disabled={isResending} variant="primary" className="w-full">
         {isResending ? 'Sending...' : 'Resend verification email'}
       </Button>
       {resendMessage && (
@@ -133,12 +128,13 @@ function VerifyEmailContent() {
                 </p>
                 <p className="mt-4 text-sm leading-6 text-gray-600">
                   Open the email and select <strong>Verify Email Address</strong> to activate your
-                  account. If it has not arrived within a few minutes, check your spam or junk folder.
+                  account. If it has not arrived within a few minutes, check your spam or junk
+                  folder.
                 </p>
                 <div className="my-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-left">
                   <p className="text-sm leading-6 text-blue-950">
-                    Your presence page is saved as a <strong>draft</strong>. After verifying, sign in
-                    to finish it and click <strong>Publish</strong> when you are ready to make it
+                    Your presence page is saved as a <strong>draft</strong>. After verifying, sign
+                    in to finish it and click <strong>Publish</strong> when you are ready to make it
                     accessible.
                   </p>
                 </div>
