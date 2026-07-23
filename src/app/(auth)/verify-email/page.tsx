@@ -83,7 +83,7 @@ function VerifyEmailContent() {
 
       setResendMessage(
         result.success
-          ? 'If your account still needs verification, we have sent a fresh link. Check your inbox and junk folder.'
+          ? 'If your account still needs verification, we have sent a fresh link. Check your inbox and spam or junk folder.'
           : result.message
       )
     } catch (_error) {
@@ -133,7 +133,7 @@ function VerifyEmailContent() {
                 </p>
                 <p className="mt-4 text-sm leading-6 text-gray-600">
                   Open the email and select <strong>Verify Email Address</strong> to activate your
-                  account. If it has not arrived within a few minutes, check your junk folder.
+                  account. If it has not arrived within a few minutes, check your spam or junk folder.
                 </p>
                 <div className="my-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-left">
                   <p className="text-sm leading-6 text-blue-950">
