@@ -34,7 +34,8 @@
     "db:test:seed": "tsx scripts/test-seed-data.ts",
     "entitlement:booking-deposits": "tsx scripts/set-booking-deposit-entitlement.ts",
     "presence:repair-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts",
-    "presence:overhaul-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts --mode=overhaul"
+    "presence:overhaul-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts --mode=overhaul",
+    "payments:reconcile": "tsx scripts/reconcile-booking-payments.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

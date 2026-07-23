@@ -48,6 +48,22 @@ interface BookingListItem {
   businessNotes: string | null
   totalAmount: number
   paymentStatus: PaymentStatus
+  deposit: {
+    paymentId: string
+    status: string
+    amount: number
+    currency: string
+    paidAt: string | null
+    refundedAmount: number
+    refundStatus: string
+    refundReason: string | null
+    refundFailureMessage: string | null
+    retainedAt: string | null
+    retainedReason: string | null
+    lastReconciledAt: string | null
+    reconciliationSource: string | null
+    cancellationWindowHours: number
+  } | null
   service: {
     id: string
     name: string
@@ -162,6 +178,7 @@ function Bookings() {
   // Cancel state
   const [isCancelOpen, setIsCancelOpen] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
+  const [isPaymentActionRunning, setIsPaymentActionRunning] = useState(false)
 
   // Quick create state
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false)
@@ -422,14 +439,14 @@ function Bookings() {
   const handleCancelFromModal = () => {
     setIsModalOpen(false)
     setIsCancelOpen(true)
-    handleCancel()
   }
 
   // Handle cancel submission
   const handleCancelSubmit = async (
     reason: string,
     customReason?: string,
-    notifyCustomer?: boolean
+    notifyCustomer?: boolean,
+    refundDeposit?: boolean
   ) => {
     if (!selectedBooking) return
 
@@ -443,6 +460,7 @@ function Bookings() {
           reason,
           customReason,
           notifyCustomer,
+          refundDeposit,
         }),
       })
 
@@ -472,6 +490,45 @@ function Bookings() {
 
   const handleCancelClose = () => {
     setIsCancelOpen(false)
+  }
+
+  const handleReconcilePayment = async () => {
+    if (!selectedBooking) return
+    setIsPaymentActionRunning(true)
+    try {
+      const response = await fetch(
+        `/api/dashboard/bookings/${selectedBooking.id}/payment/reconcile`,
+        { method: 'POST' }
+      )
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Failed to reconcile payment')
+      await fetchBookings()
+      setIsModalOpen(false)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to reconcile payment')
+    } finally {
+      setIsPaymentActionRunning(false)
+    }
+  }
+
+  const handleRetryRefund = async () => {
+    if (!selectedBooking) return
+    setIsPaymentActionRunning(true)
+    try {
+      const response = await fetch(`/api/dashboard/bookings/${selectedBooking.id}/refund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Manual refund retry from booking dashboard' }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Failed to refund deposit')
+      await fetchBookings()
+      setIsModalOpen(false)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to refund deposit')
+    } finally {
+      setIsPaymentActionRunning(false)
+    }
   }
 
   const hasActiveFilters = status || search || startDate || endDate
@@ -754,6 +811,9 @@ function Bookings() {
         onStatusChange={handleStatusChange}
         onReschedule={handleReschedule}
         onCancel={handleCancelFromModal}
+        onReconcilePayment={handleReconcilePayment}
+        onRetryRefund={handleRetryRefund}
+        paymentActionLoading={isPaymentActionRunning}
       />
 
       {/* Status Change Confirmation Dialog */}
@@ -811,6 +871,7 @@ function Bookings() {
                 endTime: selectedBooking.endTime,
                 service: selectedBooking.service,
                 customer: selectedBooking.customer,
+                deposit: selectedBooking.deposit,
               }
             : null
         }

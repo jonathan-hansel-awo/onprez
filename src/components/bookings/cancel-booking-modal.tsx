@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Modal, ModalBody, ModalFooter } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, Calendar, Clock, User } from 'lucide-react'
+import { AlertTriangle, Calendar, Clock, CreditCard, User } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export type CancellationReason =
@@ -21,7 +21,8 @@ interface CancelBookingModalProps {
   onCancel: (
     reason: CancellationReason,
     customReason?: string,
-    notifyCustomer?: boolean
+    notifyCustomer?: boolean,
+    refundDeposit?: boolean
   ) => Promise<void>
   booking: {
     id: string
@@ -35,6 +36,12 @@ interface CancelBookingModalProps {
       name: string
       email: string
     }
+    deposit?: {
+      amount: number
+      refundedAmount: number
+      refundStatus: string
+      cancellationWindowHours: number
+    } | null
   } | null
   isLoading?: boolean
 }
@@ -104,6 +111,7 @@ export function CancelBookingModal({
   const [selectedReason, setSelectedReason] = useState<CancellationReason | null>(null)
   const [customReason, setCustomReason] = useState('')
   const [notifyCustomer, setNotifyCustomer] = useState(true)
+  const [refundDeposit, setRefundDeposit] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
@@ -120,7 +128,12 @@ export function CancelBookingModal({
     setError(null)
 
     try {
-      await onCancel(selectedReason, customReason.trim() || undefined, notifyCustomer)
+      await onCancel(
+        selectedReason,
+        customReason.trim() || undefined,
+        notifyCustomer,
+        booking?.deposit ? refundDeposit : undefined
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to cancel booking')
     }
@@ -130,6 +143,7 @@ export function CancelBookingModal({
     setSelectedReason(null)
     setCustomReason('')
     setNotifyCustomer(true)
+    setRefundDeposit(false)
     setError(null)
     onClose()
   }
@@ -194,7 +208,28 @@ export function CancelBookingModal({
               <button
                 key={reason.value}
                 type="button"
-                onClick={() => setSelectedReason(reason.value)}
+                onClick={() => {
+                  setSelectedReason(reason.value)
+                  if (!booking.deposit) return
+                  if (
+                    [
+                      'BUSINESS_UNAVAILABLE',
+                      'STAFF_UNAVAILABLE',
+                      'EMERGENCY',
+                      'DUPLICATE_BOOKING',
+                    ].includes(reason.value)
+                  ) {
+                    setRefundDeposit(true)
+                  } else if (reason.value === 'NO_SHOW_POLICY') {
+                    setRefundDeposit(false)
+                  } else {
+                    const hoursUntilAppointment =
+                      (new Date(booking.startTime).getTime() - Date.now()) / 3_600_000
+                    setRefundDeposit(
+                      hoursUntilAppointment >= booking.deposit.cancellationWindowHours
+                    )
+                  }
+                }}
                 className={cn(
                   'w-full text-left p-4 rounded-lg border-2 transition-all',
                   selectedReason === reason.value
@@ -228,6 +263,53 @@ export function CancelBookingModal({
             <p className="text-xs text-gray-500 mt-1 text-right">
               {customReason.length}/500 characters
             </p>
+          </div>
+        )}
+
+        {booking.deposit && (
+          <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg space-y-3">
+            <div className="flex items-start gap-3">
+              <CreditCard className="w-5 h-5 text-blue-700 mt-0.5" />
+              <div>
+                <p className="font-medium text-blue-900">Booking deposit</p>
+                <p className="text-sm text-blue-800">
+                  {new Intl.NumberFormat('en-GB', {
+                    style: 'currency',
+                    currency: 'GBP',
+                  }).format(
+                    Math.max(0, booking.deposit.amount - booking.deposit.refundedAmount)
+                  )}{' '}
+                  remains refundable. The cancellation policy window is{' '}
+                  {booking.deposit.cancellationWindowHours} hours.
+                </p>
+              </div>
+            </div>
+            <label className="flex items-center justify-between gap-4 p-3 bg-white rounded-lg border border-blue-100">
+              <span>
+                <span className="block font-medium text-gray-900">Refund the deposit</span>
+                <span className="block text-sm text-gray-500">
+                  Business-caused cancellations are always refunded. No-shows are retained.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={refundDeposit}
+                onChange={event => setRefundDeposit(event.target.checked)}
+                disabled={
+                  selectedReason === 'NO_SHOW_POLICY' ||
+                  Boolean(
+                    selectedReason &&
+                    [
+                      'BUSINESS_UNAVAILABLE',
+                      'STAFF_UNAVAILABLE',
+                      'EMERGENCY',
+                      'DUPLICATE_BOOKING',
+                    ].includes(selectedReason)
+                  )
+                }
+                className="h-5 w-5 rounded border-gray-300"
+              />
+            </label>
           </div>
         )}
 

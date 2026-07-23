@@ -574,7 +574,19 @@ model BookingPayment {
   providerCheckoutUrl       String?
   providerPaymentIntentId   String?              @unique
   providerChargeId          String?              @unique
-  providerRefundId          String?
+  providerRefundId          String?              @unique
+  refundStatus              BookingRefundStatus  @default(NOT_REQUESTED)
+  refundReason              String?
+  refundRequestedAt         DateTime?
+  refundRequestedBy         String?
+  refundAttempt             Int                  @default(0)
+  refundFailureCode         String?
+  refundFailureMessage      String?
+  retainedAt                DateTime?
+  retainedReason            String?
+  retainedBy                String?
+  lastReconciledAt          DateTime?
+  reconciliationSource      String?
   idempotencyKey            String?              @unique
   policyVersion             String?
   policyAcceptedAt          DateTime?
@@ -595,8 +607,30 @@ model BookingPayment {
 
   @@index([appointmentId])
   @@index([expiresAt])
+  @@index([businessId, refundStatus, updatedAt])
   @@index([businessId, status, createdAt])
   @@map("booking_payments")
+}
+
+model StripeWebhookEvent {
+  id              String                   @id
+  type            String
+  objectKey       String?
+  objectId        String?
+  accountId       String?
+  livemode        Boolean                  @default(false)
+  status          StripeWebhookEventStatus @default(PROCESSING)
+  attempts        Int                      @default(1)
+  lastError       String?
+  stripeCreatedAt DateTime?
+  processedAt     DateTime?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([objectKey])
+  @@index([status, updatedAt])
+  @@index([type, createdAt])
+  @@map("stripe_webhook_events")
 }
 
 model AppointmentStatusTransition {
@@ -841,6 +875,19 @@ enum BookingPaymentStatus {
   CANCELLED
   PARTIALLY_REFUNDED
   REFUNDED
+}
+
+enum BookingRefundStatus {
+  NOT_REQUESTED
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum StripeWebhookEventStatus {
+  PROCESSING
+  SUCCEEDED
+  FAILED
 }
 
 enum UserRole {

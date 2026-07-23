@@ -1,0 +1,536 @@
+
+> onprez@0.1.0 build
+> next build
+
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'swMinify'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 15.5.20
+   - Experiments (use with caution):
+     · clientTraceMetadata
+
+   Creating an optimized production build ...
+[@sentry/nextjs - Node.js] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+[@sentry/nextjs - Edge] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+[@sentry/nextjs - Client] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+ ✓ Compiled successfully in 43s
+   Linting and checking validity of types ...
+
+ ⚠ The Next.js plugin was not detected in your ESLint configuration. See https://nextjs.org/docs/app/api-reference/config/eslint#migrating-existing-config
+
+./src/app/(auth)/forgot-password/page.tsx
+36:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/(auth)/login/page.tsx
+148:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+168:9  Warning: 'handleSocialLogin' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+301:37  Warning: 'form' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/(auth)/mfa/setup/page.tsx
+5:8  Warning: 'Link' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+28:6  Warning: React Hook useEffect has a missing dependency: 'setupMfa'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/(auth)/reset-password/page.tsx
+68:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/account/activity/page.tsx
+5:16  Warning: 'CardHeader' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+5:28  Warning: 'CardTitle' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+5:39  Warning: 'CardDescription' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+8:10  Warning: 'Select' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+48:6  Warning: React Hook useEffect has a missing dependency: 'fetchLogs'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/account/sessions/page.tsx
+7:16  Warning: 'CardHeader' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+7:28  Warning: 'CardTitle' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+7:39  Warning: 'CardDescription' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+38:11  Warning: 'user' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+50:6  Warning: React Hook useEffect has a missing dependency: 'getCurrentSession'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/api/appointments/[id]/route.ts
+109:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/services/[id]/variants/[variantId]/route.ts
+31:13  Warning: 'variant' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/bookings/calendar/page.tsx
+61:9  Warning: 'router' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+65:10  Warning: 'selectedDate' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+84:10  Warning: 'initialTime' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/bookings/page.tsx
+432:9  Warning: 'handleCancel' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/categories/[id]/edit/page.tsx
+43:6  Warning: React Hook useEffect has a missing dependency: 'fetchCategory'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/dashboard/categories/page.tsx
+27:10  Warning: 'businessId' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/services/[id]/edit/page.tsx
+113:6  Warning: React Hook useEffect has a missing dependency: 'fetchServiceData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/dashboard/settings/booking/page.tsx
+130:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+158:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/settings/branding/page.tsx
+37:6  Warning: React Hook useEffect has a missing dependency: 'fetchBrandingData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+48:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+76:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/settings/features/page.tsx
+48:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+76:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/settings/hours/page.tsx
+99:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+134:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/settings/page.tsx
+14:3  Warning: 'Shield' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+15:3  Warning: 'Bell' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+19:10  Warning: 'cn' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/settings/profile/page.tsx
+52:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+89:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/settings/reminders/page.tsx
+41:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/settings/special-dates/page.tsx
+114:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+188:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+215:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/settings/team/page.tsx
+81:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+111:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+131:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+154:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+178:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/app/invite/[token]/page.tsx
+28:6  Warning: React Hook useEffect has a missing dependency: 'fetchInvitation'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+40:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+71:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/animations/text-reveal.tsx
+4:18  Warning: 'ReactNode' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/auth/LogoutModal.tsx
+5:18  Warning: 'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/booking-protection/booking-protection-configurator.tsx
+58:6  Warning: React Hook useEffect has a missing dependency: 'loadConfiguration'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+84:9  Warning: The 'services' logical expression could make the dependencies of useMemo Hook (at line 87) change on every render. To fix this, wrap the initialization of 'services' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./src/components/bookings/booking-detail-modal.tsx
+14:3  Warning: 'MapPin' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+16:3  Warning: 'FileText' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+17:3  Warning: 'MessageSquare' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+21:3  Warning: 'Edit' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+200:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+366:19  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+
+./src/components/bookings/booking-notes-display.tsx
+7:10  Warning: 'cn' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/bookings/calendar-day-view.tsx
+4:18  Warning: 'parseISO' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+8:10  Warning: 'cn' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+99:6  Warning: React Hook useEffect has a missing dependency: 'fetchDayBookings'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/bookings/calendar-time-slot.tsx
+4:10  Warning: 'Clock' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+4:30  Warning: 'MoreVertical' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+5:10  Warning: 'Button' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/bookings/calendar-week-view.tsx
+94:6  Warning: React Hook useEffect has a missing dependency: 'fetchWeekBookings'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/bookings/quick-create-booking-modal.tsx
+10:3  Warning: 'User' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+148:6  Warning: React Hook useEffect has a missing dependency: 'resetForm'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+177:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+235:16  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/bookings/reschedule-modal.tsx
+113:6  Warning: React Hook useEffect has a missing dependency: 'today'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+150:16  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/landing/activity-card.tsx
+57:9  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/landing/client-reaction.tsx
+4:10  Warning: 'useState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+4:20  Warning: 'useEffect' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/landing/feature-customizable.tsx
+3:18  Warning: 'AnimatePresence' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/landing/feature-discovery.tsx
+4:31  Warning: 'useRef' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/landing/feature-one-link.tsx
+4:31  Warning: 'useRef' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/landing/hero-mobile.tsx
+4:10  Warning: 'Button' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+7:10  Warning: 'ArrowRight' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+7:22  Warning: 'Sparkles' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/landing/how-it-works/how-it-works.tsx
+98:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+
+./src/components/landing/social-proof-stream.tsx
+3:18  Warning: 'useAnimation' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+4:10  Warning: 'useEffect' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/landing/testimonial-tiles.tsx
+6:20  Warning: 'useEffect' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+14:10  Warning: 'isInView' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+14:20  Warning: 'setIsInView' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/navigation/UserMenu.tsx
+8:34  Warning: 'Monitor' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+8:43  Warning: 'Activity' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/navigation/scroll-progress-enhanced.tsx
+10:42  Warning: 'interactive' is assigned a value but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/navigation/scroll-progress.tsx
+3:40  Warning: 'useTransform' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/presence/editor/ThemeCustomizer.tsx
+1:1  Warning: Unused eslint-disable directive (no problems were reported from 'react/no-unescaped-entities').
+143:6  Warning: React Hook useEffect has a missing dependency: 'fetchTheme'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/presence/editor/sections/ContactSectionEditor.tsx
+1:1  Warning: Unused eslint-disable directive (no problems were reported from 'react/no-unescaped-entities').
+41:6  Warning: React Hook useEffect has a missing dependency: 'fetchBusinessData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/presence/editor/sections/FAQSectionEditor.tsx
+1:1  Warning: Unused eslint-disable directive (no problems were reported from 'react/no-unescaped-entities').
+
+./src/components/presence/sections/FAQSection.tsx
+13:39  Warning: 'businessName' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/seo/seo-checklist.tsx
+1:1  Warning: Unused eslint-disable directive (no problems were reported from 'react/no-unescaped-entities').
+
+./src/components/services/booking-limits-field.tsx
+5:20  Warning: 'Clock' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+6:10  Warning: 'cn' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/ui/avatar-stack.tsx
+32:7  Warning: 'onAnimationStart' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+33:7  Warning: 'onAnimationEnd' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+34:7  Warning: 'onDrag' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+35:7  Warning: 'onDragStart' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+36:7  Warning: 'onDragEnd' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+37:7  Warning: 'onDragEnter' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+38:7  Warning: 'onDragLeave' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+39:7  Warning: 'onDragOver' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+40:7  Warning: 'onDrop' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+41:7  Warning: 'onTransitionEnd' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+95:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/ui/badge.tsx
+3:10  Warning: 'HTMLAttributes' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/ui/calendar.tsx
+156:6  Warning: React Hook useMemo has missing dependencies: 'isDateDisabled' and 'today'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/ui/date-picker.tsx
+5:10  Warning: 'Button' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/components/ui/index.ts
+1:10  Warning: 'Dialog' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/auth/jwt.example.ts
+14:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+17:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+25:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+26:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+27:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+28:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+31:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+33:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+34:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+35:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+36:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+39:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+42:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+43:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+44:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+47:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+49:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+50:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+53:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+56:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+57:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+
+./src/lib/auth/password.example.ts
+14:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+17:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+21:5  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+22:5  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+23:5  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+29:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+33:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+34:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+37:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+43:7  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+46:9  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+50:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+53:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+58:5  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+60:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+63:3  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+67:5  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+
+./src/lib/auth/password.ts
+62:12  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/auth/types.ts
+26:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/booking-protection/operations.ts
+95:7  Warning: 'payment' is never reassigned. Use 'const' instead.  prefer-const
+
+./src/lib/config/env-helper.ts
+92:5  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+
+./src/lib/hooks/use-in-view.ts
+13:38  Warning: 'margin' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/hooks/useHandleAvailability.ts
+42:26  Warning: React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.  react-hooks/exhaustive-deps
+
+./src/lib/observability/logger.ts
+90:31  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+91:8  Warning: Unexpected console statement. Only these console methods are allowed: warn, error.  no-console
+
+./src/lib/services/email.ts
+587:10  Warning: 'renderPasswordResetEmail' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+657:10  Warning: 'renderPasswordChangedEmail' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/services/mfa.ts
+32:7  Warning: 'ENCRYPTION_KEY' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/activity-log.ts
+220:13  Warning: 'password' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+220:23  Warning: 'token' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+220:30  Warning: 'secret' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/availability.ts
+83:47  Warning: 'timezone' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/96) ...
+   Generating static pages (24/96) 
+   Generating static pages (48/96) 
+   Generating static pages (72/96) 
+prisma:error 
+Invalid `prisma.business.findMany()` invocation:
+
+
+Can't reach database server at `localhost:5432`
+
+Please make sure your database server is running at `localhost:5432`.
+HowItWorks render — inView: false hasStarted: false activeStep: 1
+Dynamic sitemap entries are temporarily unavailable. Error [PrismaClientInitializationError]: 
+Invalid `prisma.business.findMany()` invocation:
+
+
+Can't reach database server at `localhost:5432`
+
+Please make sure your database server is running at `localhost:5432`.
+    at async y (.next/server/app/sitemap.xml/route.js:1:1428)
+    at async B (.next/server/app/sitemap.xml/route.js:1:2053) {
+  clientVersion: '6.19.3',
+  errorCode: undefined,
+  retryable: undefined
+}
+ ✓ Generating static pages (96/96)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                     Size  First Load JS
+┌ ○ /                                                          948 B         283 kB
+├ ○ /_not-found                                                381 B         186 kB
+├ ƒ /[handle]                                                  316 B         253 kB
+├ ƒ /[handle]/book                                           2.67 kB         255 kB
+├ ƒ /[handle]/book/[serviceId]                               3.08 kB         254 kB
+├ ƒ /[handle]/book/success                                   6.26 kB         240 kB
+├ ƒ /account                                                   381 B         186 kB
+├ ƒ /account/activity                                        4.66 kB         243 kB
+├ ƒ /account/security                                        6.36 kB         242 kB
+├ ƒ /account/sessions                                        3.43 kB         241 kB
+├ ƒ /admin                                                     173 B         188 kB
+├ ƒ /admin/businesses/[businessId]                           3.17 kB         191 kB
+├ ƒ /admin/businesses/[businessId]/presence                   1.2 kB         286 kB
+├ ƒ /api/account/activity                                      381 B         186 kB
+├ ƒ /api/account/sessions                                      381 B         186 kB
+├ ƒ /api/account/sessions/[id]                                 381 B         186 kB
+├ ƒ /api/account/sessions/terminate-all                        381 B         186 kB
+├ ƒ /api/account/trusted-devices                               381 B         186 kB
+├ ƒ /api/account/trusted-devices/[id]                          381 B         186 kB
+├ ƒ /api/admin/businesses/[businessId]                         381 B         186 kB
+├ ƒ /api/admin/businesses/[businessId]/presence                381 B         186 kB
+├ ƒ /api/admin/businesses/[businessId]/presence/publish        381 B         186 kB
+├ ƒ /api/admin/businesses/[businessId]/services                381 B         186 kB
+├ ƒ /api/admin/businesses/[businessId]/services/[serviceId]    381 B         186 kB
+├ ƒ /api/appointments                                          381 B         186 kB
+├ ƒ /api/appointments/[id]                                     381 B         186 kB
+├ ƒ /api/appointments/[id]/reschedule                          381 B         186 kB
+├ ƒ /api/appointments/[id]/series                              381 B         186 kB
+├ ƒ /api/appointments/check-conflicts                          381 B         186 kB
+├ ƒ /api/appointments/multi-day                                381 B         186 kB
+├ ƒ /api/auth/check-handle                                     381 B         186 kB
+├ ƒ /api/auth/login                                            381 B         186 kB
+├ ƒ /api/auth/logout                                           381 B         186 kB
+├ ƒ /api/auth/me                                               381 B         186 kB
+├ ƒ /api/auth/mfa/backup-codes                                 381 B         186 kB
+├ ƒ /api/auth/mfa/challenge                                    381 B         186 kB
+├ ƒ /api/auth/mfa/disable                                      381 B         186 kB
+├ ƒ /api/auth/mfa/regenerate-codes                             381 B         186 kB
+├ ƒ /api/auth/mfa/setup                                        381 B         186 kB
+├ ƒ /api/auth/mfa/status                                       381 B         186 kB
+├ ƒ /api/auth/mfa/verify-setup                                 381 B         186 kB
+├ ƒ /api/auth/password-reset/complete                          381 B         186 kB
+├ ƒ /api/auth/password-reset/request                           381 B         186 kB
+├ ƒ /api/auth/resend-verification                              381 B         186 kB
+├ ƒ /api/auth/signup                                           381 B         186 kB
+├ ƒ /api/auth/verify-email                                     381 B         186 kB
+├ ƒ /api/availability                                          381 B         186 kB
+├ ƒ /api/availability/next                                     381 B         186 kB
+├ ƒ /api/availability/slots                                    381 B         186 kB
+├ ƒ /api/bookings                                              381 B         186 kB
+├ ƒ /api/bookings/payment-status                               381 B         186 kB
+├ ƒ /api/business/[businessId]                                 381 B         186 kB
+├ ƒ /api/business/[businessId]/theme                           381 B         186 kB
+├ ƒ /api/business/current                                      381 B         186 kB
+├ ƒ /api/business/features                                     381 B         186 kB
+├ ƒ /api/business/hours                                        381 B         186 kB
+├ ƒ /api/business/payments/booking-protection                  381 B         186 kB
+├ ƒ /api/business/payments/stripe/connect                      381 B         186 kB
+├ ƒ /api/business/payments/stripe/refresh                      381 B         186 kB
+├ ƒ /api/business/payments/stripe/return                       381 B         186 kB
+├ ƒ /api/business/payments/stripe/status                       381 B         186 kB
+├ ƒ /api/business/settings                                     381 B         186 kB
+├ ƒ /api/business/settings/booking                             381 B         186 kB
+├ ƒ /api/business/special-dates                                381 B         186 kB
+├ ƒ /api/business/special-dates/[id]                           381 B         186 kB
+├ ƒ /api/dashboard/bookings                                    381 B         186 kB
+├ ƒ /api/dashboard/bookings/[id]/cancel                        381 B         186 kB
+├ ƒ /api/dashboard/bookings/[id]/notes                         381 B         186 kB
+├ ƒ /api/dashboard/bookings/[id]/payment/reconcile             381 B         186 kB
+├ ƒ /api/dashboard/bookings/[id]/refund                        381 B         186 kB
+├ ƒ /api/dashboard/bookings/[id]/reminder                      381 B         186 kB
+├ ƒ /api/dashboard/bookings/[id]/reschedule                    381 B         186 kB
+├ ƒ /api/dashboard/bookings/[id]/status                        381 B         186 kB
+├ ƒ /api/dashboard/bookings/day                                381 B         186 kB
+├ ƒ /api/dashboard/bookings/quick-create                       381 B         186 kB
+├ ƒ /api/dashboard/bookings/week                               381 B         186 kB
+├ ƒ /api/dashboard/customers                                   381 B         186 kB
+├ ƒ /api/dashboard/customers/search                            381 B         186 kB
+├ ƒ /api/dashboard/onboarding                                  381 B         186 kB
+├ ƒ /api/dashboard/recent-bookings                             381 B         186 kB
+├ ƒ /api/dashboard/services                                    381 B         186 kB
+├ ƒ /api/dashboard/settings/reminders                          381 B         186 kB
+├ ƒ /api/dashboard/stats                                       381 B         186 kB
+├ ƒ /api/dashboard/upcoming-appointments                       381 B         186 kB
+├ ƒ /api/faqs                                                  381 B         186 kB
+├ ƒ /api/faqs/bulk                                             381 B         186 kB
+├ ƒ /api/faqs/reorder                                          381 B         186 kB
+├ ƒ /api/health                                                381 B         186 kB
+├ ƒ /api/presence/apply-template                               381 B         186 kB
+├ ƒ /api/presence/pages                                        381 B         186 kB
+├ ƒ /api/presence/pages/publish                                381 B         186 kB
+├ ƒ /api/public/businesses/[handle]/faqs                       381 B         186 kB
+├ ƒ /api/public/businesses/[handle]/services                   381 B         186 kB
+├ ƒ /api/public/inquiries                                      381 B         186 kB
+├ ƒ /api/service-categories                                    381 B         186 kB
+├ ƒ /api/service-categories/[id]                               381 B         186 kB
+├ ƒ /api/services                                              381 B         186 kB
+├ ƒ /api/services/[id]                                         381 B         186 kB
+├ ƒ /api/services/[id]/duplicate                               381 B         186 kB
+├ ƒ /api/services/[id]/toggle                                  381 B         186 kB
+├ ƒ /api/services/[id]/variants                                381 B         186 kB
+├ ƒ /api/services/[id]/variants/[variantId]                    381 B         186 kB
+├ ƒ /api/services/bulk                                         381 B         186 kB
+├ ƒ /api/services/reorder                                      381 B         186 kB
+├ ƒ /api/services/stats                                        381 B         186 kB
+├ ƒ /api/team/invitations                                      381 B         186 kB
+├ ƒ /api/team/invitations/[id]                                 381 B         186 kB
+├ ƒ /api/team/invitations/accept/[token]                       381 B         186 kB
+├ ƒ /api/team/members                                          381 B         186 kB
+├ ƒ /api/team/members/[id]                                     381 B         186 kB
+├ ƒ /api/templates/select                                      381 B         186 kB
+├ ƒ /api/upload/image                                          381 B         186 kB
+├ ƒ /api/webhooks/stripe                                       381 B         186 kB
+├ ○ /cookies                                                 2.25 kB         245 kB
+├ ƒ /dashboard                                               7.38 kB         241 kB
+├ ƒ /dashboard/analytics                                     4.11 kB         238 kB
+├ ƒ /dashboard/bookings                                      8.63 kB         257 kB
+├ ƒ /dashboard/bookings/calendar                             11.2 kB         258 kB
+├ ƒ /dashboard/categories                                    5.64 kB         238 kB
+├ ƒ /dashboard/categories/[id]/edit                          6.35 kB         238 kB
+├ ƒ /dashboard/categories/new                                5.38 kB         237 kB
+├ ƒ /dashboard/customers                                     3.78 kB         237 kB
+├ ƒ /dashboard/presence                                      5.92 kB         261 kB
+├ ƒ /dashboard/presence/editor                                1.2 kB         286 kB
+├ ƒ /dashboard/services                                      29.3 kB         270 kB
+├ ƒ /dashboard/services/[id]/edit                            6.97 kB         261 kB
+├ ƒ /dashboard/services/new                                   3.8 kB         248 kB
+├ ƒ /dashboard/settings                                      3.32 kB         237 kB
+├ ƒ /dashboard/settings/booking                              8.83 kB         241 kB
+├ ƒ /dashboard/settings/branding                             4.52 kB         247 kB
+├ ƒ /dashboard/settings/features                             7.34 kB         239 kB
+├ ƒ /dashboard/settings/hours                                7.85 kB         240 kB
+├ ƒ /dashboard/settings/payments                             6.66 kB         239 kB
+├ ƒ /dashboard/settings/profile                              8.81 kB         241 kB
+├ ƒ /dashboard/settings/reminders                             3.3 kB         235 kB
+├ ƒ /dashboard/settings/special-dates                        8.91 kB         241 kB
+├ ƒ /dashboard/settings/team                                 8.05 kB         240 kB
+├ ƒ /dashboard/sharing                                       3.82 kB         237 kB
+├ ○ /examples                                                  227 B         250 kB
+├ ○ /forgot-password                                         6.17 kB         240 kB
+├ ƒ /invite/[token]                                          7.39 kB         239 kB
+├ ○ /login                                                   6.94 kB         259 kB
+├ ○ /mfa/challenge                                            7.4 kB         241 kB
+├ ○ /mfa/setup                                                6.7 kB         246 kB
+├ ○ /privacy                                                 2.25 kB         245 kB
+├ ○ /reset-password                                          3.93 kB         241 kB
+├ ○ /robots.txt                                                381 B         186 kB
+├ ○ /signup                                                  8.09 kB         263 kB
+├ ○ /sitemap.xml                                               381 B         186 kB
+├ ○ /templates                                               3.44 kB         252 kB
+├ ● /templates/[slug]                                         1.9 kB         269 kB
+├   ├ /templates/serene-wellness
+├   ├ /templates/heavenly-pamper-palace
+├   ├ /templates/regent-barber
+├   └ [+5 more paths]
+├ ○ /terms                                                   2.25 kB         245 kB
+├ ○ /unauthorized                                            2.46 kB         236 kB
+└ ○ /verify-email                                            3.54 kB         237 kB
++ First Load JS shared by all                                 186 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js                      54.2 kB
+  ├ chunks/5857-b96ce9939a1322e4.js                           128 kB
+  └ other shared chunks (total)                              3.74 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
