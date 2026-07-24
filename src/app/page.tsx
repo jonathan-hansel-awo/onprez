@@ -53,11 +53,6 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <>
-      {/* Skip to main content for accessibility */}
-      <a href="#main-content" className="skip-to-main">
-        Skip to main content
-      </a>
-
       <Header />
       <ScrollProgressEnhanced interactive={true} />
 
