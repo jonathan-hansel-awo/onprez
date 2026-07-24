@@ -1,6 +1,10 @@
 'use client'
 
-import { PageSection, createSection, SectionType } from '@/types/page-sections'
+import {
+  PageSection,
+  createSection,
+  type PresenceSectionType,
+} from '@/types/page-sections'
 import { Button } from '@/components/ui/button'
 import { SectionEditorPanel } from './SectionEditorPanel'
 import {
@@ -19,6 +23,8 @@ import {
   Code,
   ChevronUp,
   ChevronDown,
+  UserRound,
+  ListChecks,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -37,12 +43,28 @@ const SECTION_ICONS = {
   NAVBAR: Navigation,
   HERO: Type,
   ABOUT: Type,
+  OWNER: UserRound,
   SERVICES: Package,
+  PROCESS: ListChecks,
   GALLERY: ImageIcon,
   CONTACT: Mail,
   FAQ: HelpCircle,
   TESTIMONIALS: Star,
   CUSTOM_HTML: Code,
+} satisfies Record<PresenceSectionType, typeof Navigation>
+
+const SECTION_LABELS: Record<PresenceSectionType, string> = {
+  NAVBAR: 'Navigation',
+  HERO: 'Hero',
+  ABOUT: 'About the practice',
+  OWNER: 'Meet the owner',
+  SERVICES: 'Services',
+  PROCESS: 'How it works',
+  GALLERY: 'Gallery',
+  CONTACT: 'Contact',
+  FAQ: 'FAQ',
+  TESTIMONIALS: 'Testimonials',
+  CUSTOM_HTML: 'Custom HTML',
 }
 
 export function SectionList({
@@ -73,7 +95,6 @@ export function SectionList({
     newSections.splice(draggedIndex, 1)
     newSections.splice(index, 0, draggedSection)
 
-    // Update order
     const reorderedSections = newSections.map((section, idx) => ({
       ...section,
       order: idx,
@@ -87,7 +108,7 @@ export function SectionList({
     setDraggedIndex(null)
   }
 
-  function handleAddSection(type: SectionType) {
+  function handleAddSection(type: PresenceSectionType) {
     const newSection = createSection(type, sections.length)
     onSectionAdd(newSection)
     setShowAddMenu(false)
@@ -108,43 +129,43 @@ export function SectionList({
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 space-y-4 flex-1 overflow-y-auto">
-        {/* Header */}
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900">Sections</h3>
+          <div>
+            <h3 className="font-semibold text-gray-900">Sections</h3>
+            <p className="mt-1 text-xs text-gray-500">Build the page around the story you need.</p>
+          </div>
           <Button
             variant="primary"
             size="sm"
             onClick={() => setShowAddMenu(!showAddMenu)}
             className="min-h-11"
           >
-            <Plus className="w-4 h-4 mr-1" />
+            <Plus className="mr-1 h-4 w-4" />
             Add
           </Button>
         </div>
 
-        {/* Add Section Menu */}
         {showAddMenu && (
-          <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-            <p className="text-xs text-gray-600 font-medium mb-2">Choose a section type:</p>
+          <div className="space-y-2 rounded-lg bg-gray-50 p-3">
+            <p className="mb-2 text-xs font-medium text-gray-600">Choose a section type:</p>
             {Object.entries(SECTION_ICONS).map(([type, Icon]) => (
               <button
                 key={type}
-                onClick={() => handleAddSection(type as SectionType)}
+                onClick={() => handleAddSection(type as PresenceSectionType)}
                 className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-white"
               >
-                <Icon className="w-4 h-4" />
-                <span className="capitalize">{type.toLowerCase().replace('_', ' ')}</span>
+                <Icon className="h-4 w-4" />
+                <span>{SECTION_LABELS[type as PresenceSectionType]}</span>
               </button>
             ))}
           </div>
         )}
 
-        {/* Section List */}
         <div className="space-y-2">
           {sections.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 text-sm">
+            <div className="py-8 text-center text-sm text-gray-500">
               No sections yet. Add your first section above.
             </div>
           ) : (
@@ -161,28 +182,25 @@ export function SectionList({
                   onDragEnd={handleDragEnd}
                   onClick={() => onSectionSelect(section.id)}
                   className={`
-                  group relative p-3 rounded-lg cursor-pointer transition-all
-                  ${isSelected ? 'bg-onprez-blue/10 border-2 border-onprez-blue' : 'bg-white border border-gray-200 hover:border-gray-300'}
-                  ${!section.isVisible ? 'opacity-50' : ''}
-                `}
+                    group relative cursor-pointer rounded-lg p-3 transition-all
+                    ${isSelected ? 'border-2 border-onprez-blue bg-onprez-blue/10' : 'border border-gray-200 bg-white hover:border-gray-300'}
+                    ${!section.isVisible ? 'opacity-50' : ''}
+                  `}
                 >
-                  {/* Drag Handle */}
                   <div className="absolute left-1 top-1/2 hidden -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 md:block">
-                    <GripVertical className="w-4 h-4 text-gray-400" />
+                    <GripVertical className="h-4 w-4 text-gray-400" />
                   </div>
 
                   <div className="flex items-center gap-2 pl-0 md:gap-3 md:pl-4">
-                    <Icon className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                    <Icon className="h-5 w-5 flex-shrink-0 text-gray-600" />
 
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 text-sm truncate">
-                        {section.type.charAt(0) +
-                          section.type.slice(1).toLowerCase().replace('_', ' ')}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-gray-900">
+                        {SECTION_LABELS[section.type]}
                       </div>
                       <div className="text-xs text-gray-500">Order: {section.order + 1}</div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
@@ -192,7 +210,7 @@ export function SectionList({
                         }}
                         disabled={index === 0}
                         className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100 disabled:opacity-30 md:hidden"
-                        aria-label={`Move ${section.type.toLowerCase()} section up`}
+                        aria-label={`Move ${SECTION_LABELS[section.type]} section up`}
                       >
                         <ChevronUp className="h-4 w-4 text-gray-600" />
                       </button>
@@ -204,7 +222,7 @@ export function SectionList({
                         }}
                         disabled={index === sections.length - 1}
                         className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100 disabled:opacity-30 md:hidden"
-                        aria-label={`Move ${section.type.toLowerCase()} section down`}
+                        aria-label={`Move ${SECTION_LABELS[section.type]} section down`}
                       >
                         <ChevronDown className="h-4 w-4 text-gray-600" />
                       </button>
@@ -214,12 +232,12 @@ export function SectionList({
                           toggleVisibility(section)
                         }}
                         className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100"
-                        aria-label={`${section.isVisible ? 'Hide' : 'Show'} ${section.type.toLowerCase()} section`}
+                        aria-label={`${section.isVisible ? 'Hide' : 'Show'} ${SECTION_LABELS[section.type]} section`}
                       >
                         {section.isVisible ? (
-                          <Eye className="w-4 h-4 text-gray-600" />
+                          <Eye className="h-4 w-4 text-gray-600" />
                         ) : (
-                          <EyeOff className="w-4 h-4 text-gray-400" />
+                          <EyeOff className="h-4 w-4 text-gray-400" />
                         )}
                       </button>
 
@@ -231,9 +249,9 @@ export function SectionList({
                           }
                         }}
                         className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-red-50"
-                        aria-label={`Delete ${section.type.toLowerCase()} section`}
+                        aria-label={`Delete ${SECTION_LABELS[section.type]} section`}
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
+                        <Trash2 className="h-4 w-4 text-red-600" />
                       </button>
                     </div>
                   </div>
@@ -244,11 +262,10 @@ export function SectionList({
         </div>
       </div>
 
-      {/* Editor Panel */}
       {selectedSectionId && (
         <div className="border-t border-gray-200">
           <SectionEditorPanel
-            section={sections.find(s => s.id === selectedSectionId)!}
+            section={sections.find(section => section.id === selectedSectionId)!}
             onUpdate={onSectionUpdate}
             onClose={() => onSectionSelect(null)}
             businessId={businessId}
