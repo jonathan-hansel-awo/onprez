@@ -20,9 +20,9 @@ interface CanonicalPreviewServicesSectionProps {
 }
 
 const cardStyleClasses = {
-  elevated: 'overflow-hidden rounded-xl bg-white shadow-lg',
-  outlined: 'overflow-hidden rounded-xl border border-black/10 bg-transparent',
-  minimal: 'overflow-hidden border-b border-black/10 bg-transparent',
+  elevated: 'overflow-hidden rounded-xl bg-white text-gray-950 shadow-lg',
+  outlined: 'overflow-hidden rounded-xl border border-current/15 bg-transparent',
+  minimal: 'overflow-hidden border-b border-current/15 bg-transparent',
 }
 
 function formatPrice(service: CanonicalPreviewService) {
@@ -66,7 +66,7 @@ export function CanonicalPreviewServicesSection({
   const heading = (
     <div
       className={cn(
-        'mb-12',
+        'mb-10 sm:mb-12',
         layout === 'editorial'
           ? 'grid gap-5 text-left md:grid-cols-[minmax(0,1fr)_minmax(260px,0.55fr)] md:items-end'
           : 'text-center'
@@ -84,7 +84,9 @@ export function CanonicalPreviewServicesSection({
         <h2
           className={cn(
             'font-bold leading-[1.02] tracking-[-0.025em] theme-heading',
-            layout === 'editorial' ? 'text-5xl sm:text-6xl lg:text-7xl' : 'text-3xl md:text-4xl'
+            layout === 'editorial'
+              ? 'text-[clamp(2.5rem,12vw,4.5rem)] sm:text-6xl lg:text-7xl'
+              : 'text-3xl md:text-4xl'
           )}
           style={{ fontFamily: 'var(--theme-font-heading)' }}
         >
@@ -94,7 +96,7 @@ export function CanonicalPreviewServicesSection({
       {description && (
         <p
           className={cn(
-            'text-lg leading-relaxed opacity-70',
+            'text-base leading-relaxed opacity-75 sm:text-lg',
             layout !== 'editorial' && 'mx-auto mt-4 max-w-2xl'
           )}
         >
@@ -162,12 +164,12 @@ export function CanonicalPreviewServicesSection({
                       {service.name}
                     </h3>
                     {service.description && (
-                      <p className="mt-2 max-w-2xl text-sm leading-relaxed opacity-70">
+                      <p className="mt-2 max-w-2xl text-sm leading-relaxed opacity-75">
                         {service.description}
                       </p>
                     )}
                     <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
-                      <span className="flex items-center gap-1 opacity-70">
+                      <span className="flex items-center gap-1 opacity-75">
                         <Clock className="h-4 w-4" aria-hidden="true" />
                         {service.duration} min
                       </span>
@@ -181,7 +183,7 @@ export function CanonicalPreviewServicesSection({
                   className="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline md:justify-self-end"
                   style={{ color: accentColor }}
                 >
-                  Try booking <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                  Book this service <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </article>
             ))}
@@ -226,18 +228,18 @@ export function CanonicalPreviewServicesSection({
                     </h3>
                     {showPrices && <strong className="shrink-0">{formatPrice(service)}</strong>}
                   </div>
-                  <p className="mt-3 leading-relaxed opacity-70">{service.description}</p>
-                  <div className="mt-5 flex items-center justify-between gap-4 text-sm">
-                    <span className="flex items-center gap-1 opacity-70">
+                  <p className="mt-3 leading-relaxed opacity-75">{service.description}</p>
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-4 text-sm">
+                    <span className="flex items-center gap-1 opacity-75">
                       <Clock className="h-4 w-4" aria-hidden="true" />
                       {service.duration} min
                     </span>
                     <Link
                       href={bookingHref}
-                      className="font-semibold"
+                      className="min-h-11 font-semibold leading-[2.75rem]"
                       style={{ color: accentColor }}
                     >
-                      Try booking
+                      Book this service
                     </Link>
                   </div>
                 </div>
