@@ -168,6 +168,7 @@ export function SectionList({
             sections.map((section, index) => {
               const Icon = SECTION_ICONS[section.type]
               const isSelected = selectedSectionId === section.id
+              const accessibilityLabel = SECTION_LABELS[section.type].toLowerCase()
 
               return (
                 <div
@@ -206,7 +207,7 @@ export function SectionList({
                         }}
                         disabled={index === 0}
                         className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100 disabled:opacity-30 md:hidden"
-                        aria-label={`Move ${SECTION_LABELS[section.type]} section up`}
+                        aria-label={`Move ${accessibilityLabel} section up`}
                       >
                         <ChevronUp className="h-4 w-4 text-gray-600" />
                       </button>
@@ -218,7 +219,7 @@ export function SectionList({
                         }}
                         disabled={index === sections.length - 1}
                         className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100 disabled:opacity-30 md:hidden"
-                        aria-label={`Move ${SECTION_LABELS[section.type]} section down`}
+                        aria-label={`Move ${accessibilityLabel} section down`}
                       >
                         <ChevronDown className="h-4 w-4 text-gray-600" />
                       </button>
@@ -228,7 +229,7 @@ export function SectionList({
                           toggleVisibility(section)
                         }}
                         className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-gray-100"
-                        aria-label={`${section.isVisible ? 'Hide' : 'Show'} ${SECTION_LABELS[section.type]} section`}
+                        aria-label={`${section.isVisible ? 'Hide' : 'Show'} ${accessibilityLabel} section`}
                       >
                         {section.isVisible ? (
                           <Eye className="h-4 w-4 text-gray-600" />
@@ -245,7 +246,7 @@ export function SectionList({
                           }
                         }}
                         className="flex min-h-11 min-w-11 items-center justify-center rounded transition-colors hover:bg-red-50"
-                        aria-label={`Delete ${SECTION_LABELS[section.type]} section`}
+                        aria-label={`Delete ${accessibilityLabel} section`}
                       >
                         <Trash2 className="h-4 w-4 text-red-600" />
                       </button>
