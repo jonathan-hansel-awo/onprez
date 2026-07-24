@@ -1,0 +1,18 @@
+name: Format diagnostics
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install dependencies quietly
+        run: npm ci --ignore-scripts --silent
+      - name: Report formatting differences
+        run: npx prettier --check docs/presence/PRESENCE_EDITOR_ART_DIRECTION_V3.md src/components/presence/editor/PresenceEditorLayout.tsx src/components/presence/editor/SectionEditorPanel.tsx src/components/presence/editor/SectionList.tsx src/components/presence/editor/sections/HeroSectionEditor.tsx src/components/presence/editor/sections/OwnerSectionEditor.tsx src/components/presence/editor/sections/ProcessSectionEditor.tsx src/components/presence/sections/CanonicalPreviewServicesSection.tsx src/components/presence/sections/OwnerSection.tsx src/components/presence/sections/ProcessSection.tsx src/components/presence/sections/SectionRenderer.tsx src/contexts/ThemeProvider.tsx src/data/presence-template-catalogue.ts src/lib/templates/__tests__/premium-runtime-art-direction.test.ts src/lib/templates/__tests__/presence-editor-art-direction.test.ts src/lib/templates/__tests__/stillpoint-template-contract.test.ts src/lib/templates/premium-runtime-art-direction.ts src/types/page-sections.ts
