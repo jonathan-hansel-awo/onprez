@@ -1,7 +1,10 @@
+import { BusinessCategory } from '@prisma/client'
 import type { PageSection } from '@/types/page-sections'
+import { createCanonicalPresencePageContent } from '../canonical-template-engine'
 import {
   applyPremiumRuntimeArtDirection,
   getPremiumTemplateSlug,
+  materializePremiumTemplateSections,
   normalizeBookingCtaLabel,
 } from '../premium-runtime-art-direction'
 
@@ -47,9 +50,10 @@ const editorialSections: PageSection[] = [
 ]
 
 describe('premium runtime art direction', () => {
-  it('replaces the prototype-like Try Booking label', () => {
+  it('replaces prototype-like Try Booking labels', () => {
     expect(normalizeBookingCtaLabel('Try Booking')).toBe('Book an appointment')
     expect(normalizeBookingCtaLabel('  try   booking ')).toBe('Book an appointment')
+    expect(normalizeBookingCtaLabel('Try booking this')).toBe('Book an appointment')
     expect(normalizeBookingCtaLabel('Check availability')).toBe('Check availability')
   })
 
@@ -94,5 +98,75 @@ describe('premium runtime art direction', () => {
     if (navbar?.type === 'NAVBAR') {
       expect(navbar.data.ctaText).toBe('Book an appointment')
     }
+  })
+
+  it('materializes a therapist template with separate practice, owner, and process sections', () => {
+    const canonical = createCanonicalPresencePageContent(
+      'Stillpoint Therapy',
+      BusinessCategory.OTHER,
+      'stillpoint-therapy',
+      { mode: 'preview' }
+    )
+    const originalSections = canonical.sections
+    const materialized = materializePremiumTemplateSections(originalSections)
+
+    expect(materialized).not.toBe(originalSections)
+    expect(originalSections.some(section => section.type === 'OWNER')).toBe(false)
+    expect(originalSections.some(section => section.type === 'PROCESS')).toBe(false)
+
+    const about = materialized.find(section => section.type === 'ABOUT')
+    const owner = materialized.find(section => section.type === 'OWNER')
+    const process = materialized.find(section => section.type === 'PROCESS')
+    const services = materialized.find(section => section.type === 'SERVICES')
+    const gallery = materialized.find(section => section.type === 'GALLERY')
+
+    expect(about).toMatchObject({
+      order: 2,
+      data: {
+        eyebrow: 'The practice',
+        title: 'A private place to pause and be heard',
+      },
+    })
+    expect(owner).toMatchObject({
+      order: 3,
+      data: {
+        eyebrow: 'Meet your therapist',
+        name: 'Dr Sarah Bennett',
+        layout: 'editorial',
+      },
+    })
+    expect(process).toMatchObject({
+      order: 5,
+      data: {
+        title: 'Starting therapy should feel clear',
+        layout: 'cards',
+        steps: expect.arrayContaining([
+          expect.objectContaining({ title: 'Choose a consultation' }),
+        ]),
+      },
+    })
+    expect(services).toMatchObject({
+      order: 4,
+      data: { layout: 'grid', showImages: false },
+    })
+    expect(gallery).toMatchObject({
+      order: 6,
+      data: { layout: 'carousel' },
+    })
+  })
+
+  it('does not recreate rich therapist sections after a user deletes them from a saved design', () => {
+    const canonical = createCanonicalPresencePageContent(
+      'Stillpoint Therapy',
+      BusinessCategory.OTHER,
+      'stillpoint-therapy',
+      { mode: 'preview' }
+    )
+    const materialized = materializePremiumTemplateSections(canonical.sections)
+    const withoutOwner = materialized.filter(section => section.type !== 'OWNER')
+    const repairedAgain = materializePremiumTemplateSections(withoutOwner)
+
+    expect(repairedAgain.some(section => section.type === 'OWNER')).toBe(false)
+    expect(repairedAgain.filter(section => section.type === 'PROCESS')).toHaveLength(1)
   })
 })
