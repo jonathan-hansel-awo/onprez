@@ -1,4 +1,4 @@
-// Section type definitions
+// Core section types retained for backwards-compatible template recipes
 export type SectionType =
   | 'NAVBAR'
   | 'HERO'
@@ -10,6 +10,9 @@ export type SectionType =
   | 'TESTIMONIALS'
   | 'CUSTOM_HTML'
 
+// Rich editor-only sections can be introduced without breaking older exhaustive template maps.
+export type PresenceSectionType = SectionType | 'OWNER' | 'PROCESS'
+
 export interface SectionAppearance {
   backgroundColor?: string
   textColor?: string
@@ -18,16 +21,14 @@ export interface SectionAppearance {
   spacing?: 'compact' | 'normal' | 'spacious'
 }
 
-// Base section interface
 export interface BaseSection {
   id: string
-  type: SectionType
+  type: PresenceSectionType
   order: number
   isVisible: boolean
   appearance?: SectionAppearance
 }
 
-// Navbar section
 export interface NavbarSection extends BaseSection {
   type: 'NAVBAR'
   data: {
@@ -55,7 +56,6 @@ export interface NavbarSection extends BaseSection {
   }
 }
 
-// Hero section
 export interface HeroSection extends BaseSection {
   type: 'HERO'
   data: {
@@ -74,7 +74,7 @@ export interface HeroSection extends BaseSection {
     overlay?: boolean
     alignment?: 'left' | 'center' | 'right'
     overlayColor?: string
-    overlayOpacity?: number // 0-100
+    overlayOpacity?: number
     overlayStyle?: 'solid' | 'gradient-vertical' | 'gradient-diagonal'
     textColor?: 'light' | 'dark' | 'custom'
     customTextColor?: string
@@ -99,7 +99,6 @@ export interface HeroSection extends BaseSection {
   }
 }
 
-// About section
 export interface AboutSection extends BaseSection {
   type: 'ABOUT'
   data: {
@@ -122,7 +121,24 @@ export interface AboutSection extends BaseSection {
   }
 }
 
-// Services section
+export interface OwnerSection extends BaseSection {
+  type: 'OWNER'
+  data: {
+    eyebrow?: string
+    name: string
+    role?: string
+    biography: string
+    image?: string
+    imagePosition?: 'left' | 'right'
+    layout?: 'portrait' | 'profile-card' | 'editorial'
+    credentials?: string[]
+    quote?: string
+    signature?: string
+    ctaText?: string
+    ctaLink?: string
+  }
+}
+
 export interface ServicesSection extends BaseSection {
   type: 'SERVICES'
   data: {
@@ -134,11 +150,26 @@ export interface ServicesSection extends BaseSection {
     cardStyle?: 'elevated' | 'outlined' | 'minimal'
     showImages?: boolean
     showPrices?: boolean
-    serviceIds?: string[] // Reference to Service model
+    serviceIds?: string[]
   }
 }
 
-// Gallery section
+export interface ProcessSection extends BaseSection {
+  type: 'PROCESS'
+  data: {
+    eyebrow?: string
+    title: string
+    description?: string
+    layout?: 'steps' | 'timeline' | 'cards'
+    columns?: 2 | 3 | 4
+    steps: Array<{
+      id: string
+      title: string
+      description: string
+    }>
+  }
+}
+
 export interface GallerySection extends BaseSection {
   type: 'GALLERY'
   data: {
@@ -157,7 +188,6 @@ export interface GallerySection extends BaseSection {
   }
 }
 
-// Contact section
 export interface ContactSection extends BaseSection {
   type: 'CONTACT'
   data: {
@@ -180,7 +210,6 @@ export interface ContactSection extends BaseSection {
   }
 }
 
-// FAQ section
 export interface FAQSection extends BaseSection {
   type: 'FAQ'
   data: {
@@ -193,7 +222,6 @@ export interface FAQSection extends BaseSection {
   }
 }
 
-// Testimonials section
 export interface TestimonialsSection extends BaseSection {
   type: 'TESTIMONIALS'
   data: {
@@ -212,7 +240,6 @@ export interface TestimonialsSection extends BaseSection {
   }
 }
 
-// Custom HTML section
 export interface CustomHTMLSection extends BaseSection {
   type: 'CUSTOM_HTML'
   data: {
@@ -221,19 +248,19 @@ export interface CustomHTMLSection extends BaseSection {
   }
 }
 
-// Union type of all sections
 export type PageSection =
   | NavbarSection
   | HeroSection
   | AboutSection
+  | OwnerSection
   | ServicesSection
+  | ProcessSection
   | GallerySection
   | ContactSection
   | FAQSection
   | TestimonialsSection
   | CustomHTMLSection
 
-// Page content structure
 export interface PageContent {
   sections: PageSection[]
   theme?: {
@@ -243,8 +270,7 @@ export interface PageContent {
   }
 }
 
-// Helper function to create a new section with defaults
-export function createSection(type: SectionType, order: number): PageSection {
+export function createSection(type: PresenceSectionType, order: number): PageSection {
   const baseSection = {
     id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type,
@@ -277,7 +303,7 @@ export function createSection(type: SectionType, order: number): PageSection {
           position: 'sticky',
           textColor: 'dark',
         },
-      } as NavbarSection
+      }
 
     case 'HERO':
       return {
@@ -299,8 +325,10 @@ export function createSection(type: SectionType, order: number): PageSection {
           overlayStyle: 'solid',
           textColor: 'light',
           textShadow: true,
+          variant: 'classic',
+          imageTreatment: 'full',
         },
-      } as HeroSection
+      }
 
     case 'ABOUT':
       return {
@@ -311,8 +339,23 @@ export function createSection(type: SectionType, order: number): PageSection {
           content: '',
           imagePosition: 'right',
           layout: 'split',
-          imageShape: 'portrait',
+          imageShape: 'landscape',
           highlights: [],
+        },
+      }
+
+    case 'OWNER':
+      return {
+        ...baseSection,
+        type: 'OWNER',
+        data: {
+          eyebrow: 'Meet the owner',
+          name: 'Your Name',
+          role: 'Founder',
+          biography: '<p>Introduce the person behind the business, their experience, and their approach.</p>',
+          imagePosition: 'left',
+          layout: 'portrait',
+          credentials: [],
         },
       }
 
@@ -330,6 +373,35 @@ export function createSection(type: SectionType, order: number): PageSection {
         },
       }
 
+    case 'PROCESS':
+      return {
+        ...baseSection,
+        type: 'PROCESS',
+        data: {
+          eyebrow: 'How it works',
+          title: 'A clear path from enquiry to appointment',
+          layout: 'steps',
+          columns: 3,
+          steps: [
+            {
+              id: `step-${Date.now()}-1`,
+              title: 'Choose a service',
+              description: 'Find the option that best matches what you need.',
+            },
+            {
+              id: `step-${Date.now()}-2`,
+              title: 'Select a time',
+              description: 'Review live availability and reserve a convenient appointment.',
+            },
+            {
+              id: `step-${Date.now()}-3`,
+              title: 'Receive confirmation',
+              description: 'Get the details and preparation guidance you need before the visit.',
+            },
+          ],
+        },
+      }
+
     case 'GALLERY':
       return {
         ...baseSection,
@@ -337,7 +409,7 @@ export function createSection(type: SectionType, order: number): PageSection {
         data: {
           title: 'Gallery',
           images: [],
-          layout: 'grid',
+          layout: 'carousel',
           columns: 3,
           featuredImageIndex: 0,
           gap: 'normal',
