@@ -172,7 +172,7 @@ export function materializePremiumTemplateSections(sections: PageSection[]): Pag
   const galleryId = getSectionId(sections, 'GALLERY', 'stillpoint-therapy-gallery-4')
   const contactId = getSectionId(sections, 'CONTACT', 'stillpoint-therapy-contact-7')
 
-  const enrichedSections = sections.map(section => {
+  const enrichedSections: PageSection[] = sections.map((section): PageSection => {
     switch (section.type) {
       case 'NAVBAR': {
         const existingLinks = section.data.links || []
