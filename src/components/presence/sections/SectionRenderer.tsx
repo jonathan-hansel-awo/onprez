@@ -16,6 +16,8 @@ import {
 } from '@/lib/templates/premium-runtime-art-direction'
 import { HeroSection } from './HeroSection'
 import { AboutSection } from './AboutSection'
+import { OwnerSection } from './OwnerSection'
+import { ProcessSection } from './ProcessSection'
 import { NavbarSection } from './NavbarSection'
 import { CanonicalPreviewServicesSection } from './CanonicalPreviewServicesSection'
 
@@ -195,7 +197,11 @@ export function SectionRenderer({
   const showInlineConversionCtas = showConversionCtas && !premiumTemplateSlug
 
   return (
-    <div className="pb-24 md:pb-0" data-presence-template={premiumTemplateSlug}>
+    <div
+      className="pb-24 md:pb-0"
+      data-presence-root
+      data-presence-template={premiumTemplateSlug}
+    >
       {premiumTemplateSlug && <PremiumResponsiveStyles />}
 
       {visibleSections.map((section, index) => {
@@ -219,6 +225,9 @@ export function SectionRenderer({
             case 'ABOUT':
               return <AboutSection key={section.id} section={section} />
 
+            case 'OWNER':
+              return <OwnerSection key={section.id} section={section} bookingHref={bookingHref} />
+
             case 'SERVICES':
               return servicesOverride ? (
                 <CanonicalPreviewServicesSection
@@ -234,6 +243,9 @@ export function SectionRenderer({
                   businessHandle={businessHandle}
                 />
               )
+
+            case 'PROCESS':
+              return <ProcessSection key={section.id} section={section} />
 
             case 'GALLERY':
               return <GallerySection key={section.id} section={section} />
