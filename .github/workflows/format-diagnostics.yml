@@ -11,8 +11,11 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - name: Clone branch quietly
+        run: git clone -q --depth 1 --branch feat/presence-editor-art-direction-therapist https://github.com/jonathan-hansel-awo/onprez.git repo
       - name: Install dependencies quietly
+        working-directory: repo
         run: npm ci --ignore-scripts --silent
       - name: Report formatting differences
+        working-directory: repo
         run: npx prettier --check docs/presence/PRESENCE_EDITOR_ART_DIRECTION_V3.md src/components/presence/editor/PresenceEditorLayout.tsx src/components/presence/editor/SectionEditorPanel.tsx src/components/presence/editor/SectionList.tsx src/components/presence/editor/sections/HeroSectionEditor.tsx src/components/presence/editor/sections/OwnerSectionEditor.tsx src/components/presence/editor/sections/ProcessSectionEditor.tsx src/components/presence/sections/CanonicalPreviewServicesSection.tsx src/components/presence/sections/OwnerSection.tsx src/components/presence/sections/ProcessSection.tsx src/components/presence/sections/SectionRenderer.tsx src/contexts/ThemeProvider.tsx src/data/presence-template-catalogue.ts src/lib/templates/__tests__/premium-runtime-art-direction.test.ts src/lib/templates/__tests__/presence-editor-art-direction.test.ts src/lib/templates/__tests__/stillpoint-template-contract.test.ts src/lib/templates/premium-runtime-art-direction.ts src/types/page-sections.ts
