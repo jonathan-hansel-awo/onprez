@@ -51,7 +51,8 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
               ]}
             />
             <p className="mt-1 text-xs text-gray-500">
-              The layout controls structure. Visual style and image treatment below control the art direction.
+              The layout controls structure. Visual style and image treatment below control the art
+              direction.
             </p>
           </div>
 
@@ -231,7 +232,8 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
                     ? {
                         eyebrow: 'A note for you',
                         title: 'A calmer first step',
-                        description: 'Choose a time that feels manageable and begin at your own pace.',
+                        description:
+                          'Choose a time that feels manageable and begin at your own pace.',
                       }
                     : undefined
                 )

@@ -1,8 +1,4 @@
-import type {
-  OwnerSection,
-  PageSection,
-  ProcessSection,
-} from '@/types/page-sections'
+import type { OwnerSection, PageSection, ProcessSection } from '@/types/page-sections'
 
 const premiumTemplateSlugs = [
   'serene-wellness',
@@ -167,7 +163,8 @@ export function materializePremiumTemplateSections(sections: PageSection[]): Pag
     section =>
       (section.type === 'HERO' && isSereneFallbackImage(section.data.backgroundImage)) ||
       (section.type === 'ABOUT' && isSereneFallbackImage(section.data.image)) ||
-      (section.type === 'GALLERY' && section.data.images.some(image => isSereneFallbackImage(image.url)))
+      (section.type === 'GALLERY' &&
+        section.data.images.some(image => isSereneFallbackImage(image.url)))
   )
   const ownerId = getSectionId(sections, 'OWNER', 'stillpoint-therapy-owner-3')
   const servicesId = getSectionId(sections, 'SERVICES', 'stillpoint-therapy-services-3')
@@ -180,7 +177,11 @@ export function materializePremiumTemplateSections(sections: PageSection[]): Pag
       case 'NAVBAR': {
         const existingLinks = section.data.links || []
         const desiredLinks = [
-          { id: 'stillpoint-nav-about', label: 'The practice', href: '#stillpoint-therapy-about-2' },
+          {
+            id: 'stillpoint-nav-about',
+            label: 'The practice',
+            href: '#stillpoint-therapy-about-2',
+          },
           { id: 'stillpoint-nav-owner', label: 'Meet Sarah', href: `#${ownerId}` },
           { id: 'stillpoint-nav-services', label: 'Sessions', href: `#${servicesId}` },
           { id: 'stillpoint-nav-process', label: 'How it works', href: `#${processId}` },

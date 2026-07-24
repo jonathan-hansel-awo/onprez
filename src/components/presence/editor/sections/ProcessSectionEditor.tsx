@@ -84,9 +84,7 @@ export function ProcessSectionEditor({ section, onUpdate }: ProcessSectionEditor
               <Select
                 id="process-columns"
                 value={(section.data.columns || 3).toString()}
-                onChange={event =>
-                  updateData('columns', Number(event.target.value) as 2 | 3 | 4)
-                }
+                onChange={event => updateData('columns', Number(event.target.value) as 2 | 3 | 4)}
                 className="mt-1"
                 options={[
                   { value: '2', label: '2 columns' },

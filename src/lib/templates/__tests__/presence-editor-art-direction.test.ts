@@ -64,13 +64,13 @@ describe('presence editor art-direction contract', () => {
     expect(source).toContain('--theme-button-radius')
     expect(source).toContain('--theme-radius')
     expect(source).toContain('color: inherit')
-    expect(source).not.toContain("theme.buttonStyle === 'pill' ? '9999px' : '0.5rem'\n    root.style.setProperty('--theme-radius'")
+    expect(source).not.toContain(
+      "theme.buttonStyle === 'pill' ? '9999px' : '0.5rem'\n    root.style.setProperty('--theme-radius'"
+    )
   })
 
   it('exposes premium hero styles in the editor instead of flattening templates', () => {
-    const source = readSource(
-      'src/components/presence/editor/sections/HeroSectionEditor.tsx'
-    )
+    const source = readSource('src/components/presence/editor/sections/HeroSectionEditor.tsx')
 
     expect(source).toContain('Premium Art Direction')
     expect(source).toContain('Editorial — expressive magazine type')

@@ -1,10 +1,6 @@
 'use client'
 
-import {
-  PageSection,
-  createSection,
-  type PresenceSectionType,
-} from '@/types/page-sections'
+import { PageSection, createSection, type PresenceSectionType } from '@/types/page-sections'
 import { Button } from '@/components/ui/button'
 import { SectionEditorPanel } from './SectionEditorPanel'
 import {

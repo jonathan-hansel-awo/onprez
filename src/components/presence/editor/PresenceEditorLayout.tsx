@@ -176,9 +176,7 @@ export function PresenceEditorLayout({
 
   function handleSectionUpdate(updatedSection: PageSection) {
     setSections(previousSections =>
-      previousSections.map(section =>
-        section.id === updatedSection.id ? updatedSection : section
-      )
+      previousSections.map(section => (section.id === updatedSection.id ? updatedSection : section))
     )
   }
 
@@ -310,11 +308,7 @@ export function PresenceEditorLayout({
             onClick={() => setShowPreview(!showPreview)}
             className="hidden min-h-11 md:inline-flex md:items-center"
           >
-            {showPreview ? (
-              <EyeOff className="mr-2 h-4 w-4" />
-            ) : (
-              <Eye className="mr-2 h-4 w-4" />
-            )}
+            {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
             {showPreview ? 'Hide' : 'Show'} Preview
           </Button>
 

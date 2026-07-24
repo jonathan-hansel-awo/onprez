@@ -16,14 +16,7 @@ interface ProcessSectionProps {
 }
 
 export function ProcessSection({ section }: ProcessSectionProps) {
-  const {
-    eyebrow,
-    title,
-    description,
-    layout = 'steps',
-    columns = 3,
-    steps,
-  } = section.data
+  const { eyebrow, title, description, layout = 'steps', columns = 3, steps } = section.data
   const accentColor = getAccentColor(section.appearance)
 
   if (steps.length === 0) return null

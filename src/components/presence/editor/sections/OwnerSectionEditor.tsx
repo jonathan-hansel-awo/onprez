@@ -113,11 +113,15 @@ export function OwnerSectionEditor({ section, onUpdate, businessId }: OwnerSecti
                     .filter(Boolean)
                 )
               }
-              placeholder={'BACP registered\nTrauma-informed practice\nOnline and in-person sessions'}
+              placeholder={
+                'BACP registered\nTrauma-informed practice\nOnline and in-person sessions'
+              }
               rows={5}
               className="mt-1"
             />
-            <p className="mt-1 text-xs text-gray-500">Add one credential or reassurance per line.</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Add one credential or reassurance per line.
+            </p>
           </div>
 
           <div>

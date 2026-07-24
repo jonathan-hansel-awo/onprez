@@ -114,7 +114,11 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
     const buttonRadius =
       theme.buttonStyle === 'square' ? '0px' : theme.buttonStyle === 'pill' ? '9999px' : '0.5rem'
     const surfaceRadius =
-      theme.buttonStyle === 'square' ? '0.5rem' : theme.buttonStyle === 'pill' ? '1.75rem' : '1.25rem'
+      theme.buttonStyle === 'square'
+        ? '0.5rem'
+        : theme.buttonStyle === 'pill'
+          ? '1.75rem'
+          : '1.25rem'
 
     root.style.setProperty('--theme-button-radius', buttonRadius)
     root.style.setProperty('--theme-radius', surfaceRadius)

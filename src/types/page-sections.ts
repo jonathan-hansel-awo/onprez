@@ -352,7 +352,8 @@ export function createSection(type: PresenceSectionType, order: number): PageSec
           eyebrow: 'Meet the owner',
           name: 'Your Name',
           role: 'Founder',
-          biography: '<p>Introduce the person behind the business, their experience, and their approach.</p>',
+          biography:
+            '<p>Introduce the person behind the business, their experience, and their approach.</p>',
           imagePosition: 'left',
           layout: 'portrait',
           credentials: [],

@@ -197,11 +197,7 @@ export function SectionRenderer({
   const showInlineConversionCtas = showConversionCtas && !premiumTemplateSlug
 
   return (
-    <div
-      className="pb-24 md:pb-0"
-      data-presence-root
-      data-presence-template={premiumTemplateSlug}
-    >
+    <div className="pb-24 md:pb-0" data-presence-root data-presence-template={premiumTemplateSlug}>
       {premiumTemplateSlug && <PremiumResponsiveStyles />}
 
       {visibleSections.map((section, index) => {
