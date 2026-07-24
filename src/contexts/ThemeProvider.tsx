@@ -12,11 +12,10 @@ interface ThemeSettings {
   headingFont?: string
   buttonStyle?: 'rounded' | 'square' | 'pill'
   spacing?: 'compact' | 'normal' | 'relaxed'
-  // New background options
   backgroundType?: 'solid' | 'gradient' | 'pattern'
   backgroundGradient?: {
     type: 'linear' | 'radial'
-    angle?: number // for linear
+    angle?: number
     colors: string[]
   }
   backgroundPattern?: {
@@ -38,7 +37,6 @@ interface ThemeProviderProps {
   children: ReactNode
 }
 
-// Helper to generate gradient CSS
 function generateGradientCSS(gradient: ThemeSettings['backgroundGradient']): string {
   if (!gradient || gradient.colors.length < 2) return ''
 
@@ -52,7 +50,6 @@ function generateGradientCSS(gradient: ThemeSettings['backgroundGradient']): str
   return `linear-gradient(${angle}deg, ${colorStops})`
 }
 
-// Helper to generate pattern CSS
 function generatePatternCSS(
   pattern: ThemeSettings['backgroundPattern'],
   bgColor: string
@@ -102,33 +99,31 @@ function generatePatternCSS(
 }
 
 export function ThemeProvider({ theme, children }: ThemeProviderProps) {
-  // Apply theme to CSS variables whenever theme changes
   useEffect(() => {
     const root = document.documentElement
 
-    // Colors
     root.style.setProperty('--theme-primary', theme.primaryColor || '#3B82F6')
     root.style.setProperty('--theme-secondary', theme.secondaryColor || '#8B5CF6')
     root.style.setProperty('--theme-accent', theme.accentColor || '#10B981')
     root.style.setProperty('--theme-bg', theme.backgroundColor || '#FFFFFF')
     root.style.setProperty('--theme-text', theme.textColor || '#111827')
 
-    // Typography
     root.style.setProperty('--theme-font-body', theme.fontFamily || 'Inter')
     root.style.setProperty('--theme-font-heading', theme.headingFont || 'Inter')
 
-    // Border radius based on button style
-    const borderRadius =
+    const buttonRadius =
       theme.buttonStyle === 'square' ? '0px' : theme.buttonStyle === 'pill' ? '9999px' : '0.5rem'
-    root.style.setProperty('--theme-radius', borderRadius)
+    const surfaceRadius =
+      theme.buttonStyle === 'square' ? '0.5rem' : theme.buttonStyle === 'pill' ? '1.75rem' : '1.25rem'
 
-    // Spacing
+    root.style.setProperty('--theme-button-radius', buttonRadius)
+    root.style.setProperty('--theme-radius', surfaceRadius)
+
     const spacing =
       theme.spacing === 'compact' ? '3rem' : theme.spacing === 'relaxed' ? '6rem' : '4rem'
     root.style.setProperty('--theme-spacing', spacing)
   }, [theme])
 
-  // Generate background styles
   const getBackgroundStyles = (): React.CSSProperties => {
     const bgColor = theme.backgroundColor || '#FFFFFF'
 
@@ -159,6 +154,17 @@ export function ThemeProvider({ theme, children }: ThemeProviderProps) {
 
   return (
     <ThemeContext.Provider value={theme}>
+      <style>{`
+        .theme-heading,
+        .theme-body-text {
+          color: inherit;
+        }
+
+        .theme-button-primary,
+        .theme-button-outline {
+          border-radius: var(--theme-button-radius, 0.5rem);
+        }
+      `}</style>
       <div
         style={{
           ...getBackgroundStyles(),
