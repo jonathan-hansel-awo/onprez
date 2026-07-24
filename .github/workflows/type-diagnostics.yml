@@ -1,0 +1,21 @@
+name: Type diagnostics
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone branch quietly
+        run: git clone -q --depth 1 --branch feat/presence-editor-art-direction-therapist https://github.com/jonathan-hansel-awo/onprez.git repo
+      - name: Install dependencies quietly
+        working-directory: repo
+        run: npm ci --silent
+      - name: Report TypeScript errors
+        working-directory: repo
+        run: npm run type-check
