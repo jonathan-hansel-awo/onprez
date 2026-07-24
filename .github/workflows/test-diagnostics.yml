@@ -19,7 +19,7 @@ jobs:
       - name: Report failing assertions only
         working-directory: repo
         run: |
-          npx jest --ci --runInBand --silent --json --outputFile=test-results.json || true
+          npx jest --ci --runInBand --silent --json --outputFile=test-results.json >/dev/null 2>&1 || true
           python - <<'PY'
           import json
           from pathlib import Path
