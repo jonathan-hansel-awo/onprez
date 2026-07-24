@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { PageSection } from '@/types/page-sections'
+import { materializePremiumTemplateSections } from '@/lib/templates/premium-runtime-art-direction'
 import { Button } from '@/components/ui/button'
 import { SectionList } from './SectionList'
 import { PresencePreview } from './PresencePreview'
@@ -44,7 +45,9 @@ export function PresenceEditorLayout({
   businessSlug,
   initialPublishStatus = false,
 }: PresenceEditorLayoutProps) {
-  const [sections, setSections] = useState<PageSection[]>(initialSections)
+  const [sections, setSections] = useState<PageSection[]>(() =>
+    materializePremiumTemplateSections(initialSections)
+  )
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null)
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
   const [showPreview, setShowPreview] = useState(true)
@@ -62,14 +65,12 @@ export function PresenceEditorLayout({
   const [showConfetti, setShowConfetti] = useState(false)
   const [mobilePane, setMobilePane] = useState<'editor' | 'preview'>('editor')
 
-  // Track changes
   useEffect(() => {
     if (JSON.stringify(sections) !== JSON.stringify(initialSections)) {
       setHasUnsavedChanges(true)
     }
   }, [sections, initialSections])
 
-  // Debounced auto-save function
   const debouncedAutoSave = useCallback(
     debounce(async (sectionsToSave: PageSection[]) => {
       setAutoSaving(true)
@@ -87,7 +88,6 @@ export function PresenceEditorLayout({
     [onSave]
   )
 
-  // Auto-save when sections change
   useEffect(() => {
     if (hasUnsavedChanges && businessId) {
       debouncedAutoSave(sections)
@@ -140,7 +140,6 @@ export function PresenceEditorLayout({
       setShowConfetti(true)
       showSaveMessage('success', 'Page published successfully! 🎉')
 
-      // Hide confetti after 3 seconds
       setTimeout(() => setShowConfetti(false), 3000)
     } else {
       showSaveMessage(
@@ -176,13 +175,13 @@ export function PresenceEditorLayout({
   }
 
   function handleSectionUpdate(updatedSection: PageSection) {
-    setSections(prev =>
-      prev.map(section => (section.id === updatedSection.id ? updatedSection : section))
+    setSections(previousSections =>
+      previousSections.map(section => (section.id === updatedSection.id ? updatedSection : section))
     )
   }
 
   function handleSectionDelete(sectionId: string) {
-    setSections(prev => prev.filter(section => section.id !== sectionId))
+    setSections(previousSections => previousSections.filter(section => section.id !== sectionId))
     if (selectedSectionId === sectionId) {
       setSelectedSectionId(null)
     }
@@ -193,71 +192,64 @@ export function PresenceEditorLayout({
   }
 
   function handleSectionAdd(newSection: PageSection) {
-    setSections(prev => [...prev, newSection])
+    setSections(previousSections => [...previousSections, newSection])
   }
 
   function handleThemeUpdate(theme: any) {
-    setThemeVersion(prev => prev + 1)
+    setThemeVersion(previousVersion => previousVersion + 1)
   }
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-16 flex flex-col overflow-hidden bg-gray-50">
-      {/* Confetti Effect */}
       <Confetti active={showConfetti} />
 
-      {/* Top Toolbar */}
       <div className="relative z-10 shrink-0 border-b border-gray-200 bg-white px-3 py-2 sm:px-6 lg:flex lg:min-h-16 lg:items-center lg:justify-between lg:py-0">
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-4">
           <h2 className="text-lg font-semibold text-gray-900">Edit Presence</h2>
 
-          {/* Status Indicators */}
           <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-            {/* Publish Status Badge */}
             <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium ${
                 isPublished
-                  ? 'bg-green-100 text-green-700 border border-green-300'
-                  : 'bg-gray-100 text-gray-600 border border-gray-300'
+                  ? 'border-green-300 bg-green-100 text-green-700'
+                  : 'border-gray-300 bg-gray-100 text-gray-600'
               }`}
             >
               {isPublished ? (
                 <>
-                  <Globe className="w-3 h-3" />
+                  <Globe className="h-3 w-3" />
                   <span>Published</span>
                 </>
               ) : (
                 <>
-                  <FileText className="w-3 h-3" />
+                  <FileText className="h-3 w-3" />
                   <span>Draft</span>
                 </>
               )}
             </div>
 
-            {/* Unsaved Changes */}
             {hasUnsavedChanges && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-300"
+                className="flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-600"
               >
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                <div className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
                 <span>Unsaved changes</span>
               </motion.div>
             )}
 
-            {/* Auto-saving */}
             {autoSaving && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full"
+                className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs text-blue-600"
               >
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
                 <span>Saving...</span>
               </motion.div>
             )}
 
-            {/* Save Message */}
             <AnimatePresence>
               {saveMessage && (
                 <motion.div
@@ -271,9 +263,9 @@ export function PresenceEditorLayout({
                   }`}
                 >
                   {saveMessage.type === 'success' ? (
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="h-4 w-4" />
                   ) : (
-                    <AlertCircle className="w-4 h-4" />
+                    <AlertCircle className="h-4 w-4" />
                   )}
                   <span>{saveMessage.text}</span>
                 </motion.div>
@@ -283,7 +275,6 @@ export function PresenceEditorLayout({
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-2 lg:mt-0 lg:justify-end lg:gap-3">
-          {/* Mobile workspace switcher */}
           <div className="grid min-w-40 flex-1 grid-cols-2 rounded-lg bg-gray-100 p-1 md:hidden">
             <button
               type="button"
@@ -311,46 +302,43 @@ export function PresenceEditorLayout({
             </button>
           </div>
 
-          {/* Preview Toggle */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowPreview(!showPreview)}
             className="hidden min-h-11 md:inline-flex md:items-center"
           >
-            {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+            {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
             {showPreview ? 'Hide' : 'Show'} Preview
           </Button>
 
-          {/* Device Toggle */}
           {showPreview && (
             <div className="hidden gap-1 rounded-lg bg-gray-100 p-1 md:flex">
               <button
                 onClick={() => setPreviewMode('desktop')}
                 className={`min-h-11 min-w-11 rounded p-2 transition-all ${
                   previewMode === 'desktop'
-                    ? 'bg-white shadow-sm text-onprez-blue'
-                    : 'hover:bg-gray-200 text-gray-600'
+                    ? 'bg-white text-onprez-blue shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-200'
                 }`}
                 title="Desktop preview"
               >
-                <Monitor className="w-4 h-4" />
+                <Monitor className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setPreviewMode('mobile')}
                 className={`min-h-11 min-w-11 rounded p-2 transition-all ${
                   previewMode === 'mobile'
-                    ? 'bg-white shadow-sm text-onprez-blue'
-                    : 'hover:bg-gray-200 text-gray-600'
+                    ? 'bg-white text-onprez-blue shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-200'
                 }`}
                 title="Mobile preview"
               >
-                <Smartphone className="w-4 h-4" />
+                <Smartphone className="h-4 w-4" />
               </button>
             </div>
           )}
 
-          {/* Save Draft */}
           <Button
             variant="ghost"
             onClick={handleSave}
@@ -358,11 +346,10 @@ export function PresenceEditorLayout({
             aria-busy={saving || autoSaving}
             className="min-h-11 px-3 sm:px-4"
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="mr-2 h-4 w-4" />
             {saving ? 'Saving...' : 'Save'}
           </Button>
 
-          {/* Publish/Unpublish */}
           {isPublished ? (
             <Button
               variant="outline"
@@ -371,7 +358,7 @@ export function PresenceEditorLayout({
               aria-busy={publishing}
               className="min-h-11 border-red-300 px-3 text-red-600 hover:bg-red-50 sm:px-4"
             >
-              <GlobeIcon className="w-4 h-4 mr-2" />
+              <GlobeIcon className="mr-2 h-4 w-4" />
               {publishing ? 'Unpublishing...' : 'Unpublish'}
             </Button>
           ) : (
@@ -382,26 +369,23 @@ export function PresenceEditorLayout({
               aria-busy={publishing}
               className="min-h-11 px-3 sm:px-4"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Sparkles className="mr-2 h-4 w-4" />
               {publishing ? 'Publishing...' : 'Publish'}
             </Button>
           )}
         </div>
       </div>
 
-      {/* Main Editor Area */}
       <div className="flex min-h-0 flex-1">
-        {/* Section List Sidebar */}
         <div
           className={`${mobilePane === 'editor' ? 'flex' : 'hidden'} w-full flex-col overflow-hidden border-r border-gray-200 bg-white md:flex md:w-96`}
         >
-          {/* Tabs */}
           <div className="flex border-b border-gray-200">
             <button
               onClick={() => setActiveTab('sections')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'sections'
-                  ? 'text-onprez-blue border-b-2 border-onprez-blue'
+                  ? 'border-b-2 border-onprez-blue text-onprez-blue'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -411,7 +395,7 @@ export function PresenceEditorLayout({
               onClick={() => setActiveTab('theme')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'theme'
-                  ? 'text-onprez-blue border-b-2 border-onprez-blue'
+                  ? 'border-b-2 border-onprez-blue text-onprez-blue'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -419,8 +403,7 @@ export function PresenceEditorLayout({
             </button>
           </div>
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="custom-scrollbar flex-1 overflow-y-auto">
             {activeTab === 'sections' ? (
               <SectionList
                 sections={sections}
@@ -440,7 +423,6 @@ export function PresenceEditorLayout({
           </div>
         </div>
 
-        {/* Preview Area */}
         {showPreview && (
           <div
             className={`${mobilePane === 'preview' ? 'block' : 'hidden'} min-w-0 flex-1 overflow-hidden md:block`}
@@ -455,13 +437,12 @@ export function PresenceEditorLayout({
           </div>
         )}
 
-        {/* Full Width Editor (when preview hidden) */}
         {!showPreview && (
-          <div className="flex-1 flex items-center justify-center bg-gray-100">
+          <div className="flex flex-1 items-center justify-center bg-gray-100">
             <div className="text-center text-gray-500">
-              <Eye className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <Eye className="mx-auto mb-3 h-12 w-12 text-gray-400" />
               <p className="text-lg font-medium">Preview Hidden</p>
-              <p className="text-sm mt-2">Click "Show Preview" to see your changes</p>
+              <p className="mt-2 text-sm">Click “Show Preview” to see your changes</p>
             </div>
           </div>
         )}

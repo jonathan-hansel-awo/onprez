@@ -237,6 +237,48 @@ export const presenceTemplateCatalogue: TemplateCatalogueItem[] = [
     },
   },
   {
+    slug: 'stillpoint-therapy',
+    name: 'Stillpoint Therapy',
+    category: 'PROFESSIONAL',
+    description:
+      'A calm, editorial therapist presence with a separate practitioner profile, a reassuring first-session journey, and quiet mobile-first booking.',
+    audience: 'Counsellors, psychotherapists, psychologists, relationship therapists',
+    palette: {
+      background: '#f5f2ec',
+      surface: '#dfe8e3',
+      primary: '#526f68',
+      text: '#24312e',
+    },
+    preview: {
+      eyebrow: 'Confidential support · online and in person',
+      headline: 'A calmer place to understand what you are carrying.',
+      businessName: 'Stillpoint Therapy',
+      services: [
+        {
+          id: 'initial-consultation',
+          name: 'Initial Consultation',
+          duration: '30 minutes',
+          price: '£45',
+          description: 'A gentle first conversation to explore what brings you to therapy.',
+        },
+        {
+          id: 'individual-therapy',
+          name: 'Individual Therapy',
+          duration: '50 minutes',
+          price: '£75',
+          description: 'Confidential one-to-one therapy shaped around your needs and pace.',
+        },
+        {
+          id: 'online-therapy',
+          name: 'Online Therapy',
+          duration: '50 minutes',
+          price: '£70',
+          description: 'Secure online sessions offering consistent support wherever you are.',
+        },
+      ],
+    },
+  },
+  {
     slug: 'frame-creative',
     name: 'Frame Creative',
     category: 'CREATIVE',

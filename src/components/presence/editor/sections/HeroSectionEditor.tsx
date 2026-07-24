@@ -51,7 +51,8 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
               ]}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Editorial and split layouts use the uploaded image as a dedicated image panel.
+              The layout controls structure. Visual style and image treatment below control the art
+              direction.
             </p>
           </div>
 
@@ -61,7 +62,7 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
               id="hero-eyebrow"
               value={section.data.eyebrow || ''}
               onChange={event => updateData('eyebrow', event.target.value)}
-              placeholder="e.g., Hair artistry · Ely"
+              placeholder="e.g., Integrative therapy · Ely"
               className="mt-1"
             />
           </div>
@@ -126,6 +127,182 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
       </Card>
 
       <Card className="p-6">
+        <h3 className="mb-1 text-lg font-semibold text-gray-900">Premium Art Direction</h3>
+        <p className="mb-4 text-sm text-gray-500">
+          Choose a visual language without replacing the section or losing responsive behaviour.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="hero-variant">Visual Style</Label>
+            <Select
+              id="hero-variant"
+              value={section.data.variant || 'classic'}
+              onChange={event =>
+                updateData(
+                  'variant',
+                  event.target.value as
+                    | 'classic'
+                    | 'luxury'
+                    | 'editorial'
+                    | 'bold'
+                    | 'professional'
+                    | 'creative'
+                    | 'education'
+                )
+              }
+              className="mt-1"
+              options={[
+                { value: 'classic', label: 'Classic — balanced and versatile' },
+                { value: 'luxury', label: 'Luxury — refined and spacious' },
+                { value: 'editorial', label: 'Editorial — expressive magazine type' },
+                { value: 'bold', label: 'Bold — high-impact statement' },
+                { value: 'professional', label: 'Professional — calm and trust-led' },
+                { value: 'creative', label: 'Creative — art-directed and distinctive' },
+                { value: 'education', label: 'Education — warm and approachable' },
+              ]}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="hero-image-treatment">Image Treatment</Label>
+            <Select
+              id="hero-image-treatment"
+              value={section.data.imageTreatment || 'full'}
+              onChange={event =>
+                updateData(
+                  'imageTreatment',
+                  event.target.value as 'full' | 'frame' | 'arch' | 'offset' | 'collage'
+                )
+              }
+              className="mt-1"
+              options={[
+                { value: 'full', label: 'Full bleed' },
+                { value: 'frame', label: 'Framed' },
+                { value: 'arch', label: 'Arch' },
+                { value: 'offset', label: 'Offset border' },
+                { value: 'collage', label: 'Editorial collage' },
+              ]}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="hero-meta">Trust Labels</Label>
+            <TextArea
+              id="hero-meta"
+              value={(section.data.meta || []).join('\n')}
+              onChange={event =>
+                updateData(
+                  'meta',
+                  event.target.value
+                    .split('\n')
+                    .map(item => item.trim())
+                    .filter(Boolean)
+                )
+              }
+              placeholder={'Confidential\nOnline and in-person\nBACP registered'}
+              rows={4}
+              className="mt-1"
+            />
+            <p className="mt-1 text-xs text-gray-500">Add one concise reassurance per line.</p>
+          </div>
+
+          <div>
+            <Label htmlFor="hero-decorative-text">Decorative Background Word</Label>
+            <Input
+              id="hero-decorative-text"
+              value={section.data.decorativeText || ''}
+              onChange={event => updateData('decorativeText', event.target.value)}
+              placeholder="e.g., BREATHE"
+              className="mt-1"
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-t border-gray-200 pt-4">
+            <div>
+              <Label>Floating Story Card</Label>
+              <p className="text-sm text-gray-500">Adds a supporting message on larger screens.</p>
+            </div>
+            <Toggle
+              checked={Boolean(section.data.floatingCard)}
+              onChange={checked =>
+                updateData(
+                  'floatingCard',
+                  checked
+                    ? {
+                        eyebrow: 'A note for you',
+                        title: 'A calmer first step',
+                        description:
+                          'Choose a time that feels manageable and begin at your own pace.',
+                      }
+                    : undefined
+                )
+              }
+            />
+          </div>
+
+          {section.data.floatingCard && (
+            <div className="space-y-3 rounded-xl bg-gray-50 p-4">
+              <div>
+                <Label htmlFor="hero-floating-eyebrow">Card Eyebrow</Label>
+                <Input
+                  id="hero-floating-eyebrow"
+                  value={section.data.floatingCard.eyebrow}
+                  onChange={event =>
+                    updateData('floatingCard', {
+                      ...section.data.floatingCard!,
+                      eyebrow: event.target.value,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="hero-floating-title">Card Title</Label>
+                <Input
+                  id="hero-floating-title"
+                  value={section.data.floatingCard.title}
+                  onChange={event =>
+                    updateData('floatingCard', {
+                      ...section.data.floatingCard!,
+                      title: event.target.value,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="hero-floating-description">Card Description</Label>
+                <TextArea
+                  id="hero-floating-description"
+                  value={section.data.floatingCard.description || ''}
+                  onChange={event =>
+                    updateData('floatingCard', {
+                      ...section.data.floatingCard!,
+                      description: event.target.value,
+                    })
+                  }
+                  rows={3}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-4 border-t border-gray-200 pt-4">
+            <div>
+              <Label>Scroll Cue</Label>
+              <p className="text-sm text-gray-500">Shows a subtle prompt on large screens.</p>
+            </div>
+            <Toggle
+              checked={section.data.showScrollCue ?? false}
+              onChange={checked => updateData('showScrollCue', checked)}
+            />
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
         <h3 className="mb-4 text-lg font-semibold text-gray-900">Call to Action</h3>
 
         <div className="space-y-4">
@@ -157,7 +334,7 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
               id="hero-secondary-cta-text"
               value={section.data.secondaryCtaText || ''}
               onChange={event => updateData('secondaryCtaText', event.target.value)}
-              placeholder="e.g., Explore our work"
+              placeholder="e.g., Meet your therapist"
               className="mt-1"
             />
           </div>
@@ -168,7 +345,7 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
               id="hero-secondary-cta-link"
               value={section.data.secondaryCtaLink || ''}
               onChange={event => updateData('secondaryCtaLink', event.target.value)}
-              placeholder="e.g., #gallery"
+              placeholder="e.g., #owner"
               className="mt-1"
             />
           </div>
@@ -340,8 +517,9 @@ export function HeroSectionEditor({ section, onUpdate, businessId }: HeroSection
 
       <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
         <p className="text-sm text-purple-800">
-          <strong>Premium recipe:</strong> Choose Editorial, upload a portrait image, use a serif
-          heading font in Theme, add an eyebrow, and pair a booking CTA with a gallery CTA.
+          <strong>Art-direction tip:</strong> Start with the business story, then combine a layout,
+          visual style, image treatment, and section colours. The editor now preserves those choices
+          across preview and published pages.
         </p>
       </div>
     </div>

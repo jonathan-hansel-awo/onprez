@@ -4,7 +4,9 @@ import { PageSection } from '@/types/page-sections'
 import { X } from 'lucide-react'
 import { HeroSectionEditor } from './sections/HeroSectionEditor'
 import { AboutSectionEditor } from './sections/AboutSectionEditor'
+import { OwnerSectionEditor } from './sections/OwnerSectionEditor'
 import { ServicesSectionEditor } from './sections/ServicesSectionEditor'
+import { ProcessSectionEditor } from './sections/ProcessSectionEditor'
 import { GallerySectionEditor } from './sections/GallerySectionEditor'
 import { ContactSectionEditor } from './sections/ContactSectionEditor'
 import { FAQSectionEditor } from './sections/FAQSectionEditor'
@@ -32,10 +34,14 @@ export function SectionEditorPanel({
         return <HeroSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
       case 'ABOUT':
         return <AboutSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
+      case 'OWNER':
+        return <OwnerSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
       case 'SERVICES':
         return (
           <ServicesSectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
         )
+      case 'PROCESS':
+        return <ProcessSectionEditor section={section} onUpdate={onUpdate} />
       case 'GALLERY':
         return (
           <GallerySectionEditor section={section} onUpdate={onUpdate} businessId={businessId} />
