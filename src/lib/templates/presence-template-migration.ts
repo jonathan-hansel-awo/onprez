@@ -1,5 +1,5 @@
 import type { BusinessCategory } from '@prisma/client'
-import type { PageSection, SectionType } from '@/types/page-sections'
+import type { PageSection, PresenceSectionType } from '@/types/page-sections'
 import {
   createCanonicalPresencePageContent,
   type CanonicalPresencePage,
@@ -19,10 +19,10 @@ export interface PresenceTemplateMigrationSummary {
   migrationMode: PresenceTemplateMigrationMode
   sourceSectionCount: number
   targetSectionCount: number
-  addedSectionTypes: SectionType[]
-  removedSectionTypes: SectionType[]
-  replacedSectionTypes: SectionType[]
-  unchangedSectionTypes: SectionType[]
+  addedSectionTypes: PresenceSectionType[]
+  removedSectionTypes: PresenceSectionType[]
+  replacedSectionTypes: PresenceSectionType[]
+  unchangedSectionTypes: PresenceSectionType[]
   templateDemoContentIncluded: boolean
   preservedDataSources: string[]
 }
@@ -32,7 +32,7 @@ export interface PresenceTemplateMigrationPlan {
   summary: PresenceTemplateMigrationSummary
 }
 
-function uniqueSectionTypes(sections: PageSection[]) {
+function uniqueSectionTypes(sections: PageSection[]): PresenceSectionType[] {
   return Array.from(new Set(sections.map(section => section.type)))
 }
 
