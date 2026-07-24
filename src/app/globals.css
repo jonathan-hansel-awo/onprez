@@ -127,24 +127,6 @@ video {
   }
 }
 
-/* Skip to main content link */
-.skip-to-main {
-  position: absolute;
-  top: -100%;
-  left: 0;
-  background: #3b82f6;
-  color: #ffffff;
-  padding: 0.75rem 1.5rem;
-  text-decoration: none;
-  border-radius: 0 0 0.5rem 0;
-  z-index: 9999;
-  transition: top 0.3s;
-}
-
-.skip-to-main:focus {
-  top: 0;
-}
-
 /* Auth Page Animations */
 @keyframes gradient-shift {
   0%,
