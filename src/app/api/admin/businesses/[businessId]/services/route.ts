@@ -113,6 +113,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         price: input.price,
         duration: input.duration,
         imageUrl: input.imageUrl?.trim() || null,
+        galleryImages: [],
         active: input.active,
         featured: input.featured,
         depositMode: ServiceDepositMode.BUSINESS_DEFAULT,

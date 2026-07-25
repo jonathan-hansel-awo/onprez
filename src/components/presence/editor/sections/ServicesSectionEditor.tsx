@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Loader2, Package } from 'lucide-react'
 import { ServicesSection } from '@/types/page-sections'
 import { Input } from '@/components/form/input'
@@ -70,6 +71,7 @@ export function ServicesSectionEditor({
   onUpdate,
   businessId,
 }: ServicesSectionEditorProps) {
+  const pathname = usePathname()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -87,7 +89,10 @@ export function ServicesSectionEditor({
       setLoadError('')
 
       try {
-        const response = await fetch(`/api/services?businessId=${encodeURIComponent(businessId!)}`)
+        const endpoint = pathname.startsWith('/admin/')
+          ? `/api/admin/businesses/${encodeURIComponent(businessId!)}/services`
+          : `/api/services?businessId=${encodeURIComponent(businessId!)}`
+        const response = await fetch(endpoint)
         const data = await response.json()
 
         if (!response.ok || !data.success) {
@@ -109,7 +114,7 @@ export function ServicesSectionEditor({
     return () => {
       cancelled = true
     }
-  }, [businessId])
+  }, [businessId, pathname])
 
   function updateData<K extends keyof ServicesSection['data']>(
     field: K,
