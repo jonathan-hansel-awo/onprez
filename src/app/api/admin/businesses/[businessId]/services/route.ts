@@ -1,3 +1,4 @@
+import { ServiceDepositMode } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
@@ -114,6 +115,9 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         imageUrl: input.imageUrl?.trim() || null,
         active: input.active,
         featured: input.featured,
+        depositMode: ServiceDepositMode.BUSINESS_DEFAULT,
+        requiresDeposit: false,
+        depositAmount: null,
         order: (lastService?.order ?? -1) + 1,
       },
       select: {
