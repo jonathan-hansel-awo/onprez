@@ -106,10 +106,8 @@ export async function GET(
       return {
         ...service,
         price,
-        priceRangeMin:
-          service.priceRangeMin === null ? null : Number(service.priceRangeMin),
-        priceRangeMax:
-          service.priceRangeMax === null ? null : Number(service.priceRangeMax),
+        priceRangeMin: service.priceRangeMin === null ? null : Number(service.priceRangeMin),
+        priceRangeMax: service.priceRangeMax === null ? null : Number(service.priceRangeMax),
         requiresDeposit: false,
         depositAmount: null,
         remainingAmount: price,
