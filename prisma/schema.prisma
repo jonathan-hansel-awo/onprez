@@ -440,7 +440,7 @@ model Service {
   bufferTime             Int                @default(0)
   categoryId             String?
   imageUrl               String?
-  galleryImages          String[]
+  galleryImages          String[]           @default([])
   requiresApproval       Boolean            @default(false)
   requiresDeposit        Boolean            @default(false)
   depositMode            ServiceDepositMode @default(BUSINESS_DEFAULT)
