@@ -136,13 +136,17 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       },
     })
 
-    await recordAdminAction({
-      adminUserId: admin.id,
-      action: 'admin.service.created',
-      targetBusinessId: businessId,
-      request,
-      details: { serviceId: service.id, serviceName: service.name },
-    })
+    try {
+      await recordAdminAction({
+        adminUserId: admin.id,
+        action: 'admin.service.created',
+        targetBusinessId: businessId,
+        request,
+        details: { serviceId: service.id, serviceName: service.name },
+      })
+    } catch (auditError) {
+      console.error('Admin service audit log failed:', auditError)
+    }
 
     return NextResponse.json(
       { success: true, data: { service: serializeService(service) } },
