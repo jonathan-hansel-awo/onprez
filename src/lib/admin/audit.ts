@@ -47,7 +47,6 @@ export async function recordAdminAction({
   })
 }
 
-
 export async function recordAdminActionSafely(
   input: Parameters<typeof recordAdminAction>[0]
 ): Promise<boolean> {
