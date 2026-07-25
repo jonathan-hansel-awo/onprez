@@ -120,6 +120,40 @@ describe('platform-admin assisted services and presence', () => {
     )
   })
 
+  it('identifies a production service schema mismatch without exposing database details', async () => {
+    mockedPrisma.business.findUnique.mockResolvedValue({ id: 'business-1' })
+    mockedPrisma.service.findFirst.mockResolvedValue({ order: 2 })
+    mockedPrisma.service.create.mockRejectedValue(
+      Object.assign(new Error('column does not exist'), {
+        code: 'P2022',
+        meta: { column: 'services.galleryImages' },
+      })
+    )
+
+    const response = await createAdminService(
+      jsonRequest('/api/admin/businesses/business-1/services', 'POST', {
+        name: 'Deep Tissue Massage',
+        description: 'A focused massage.',
+        price: 75,
+        duration: 60,
+        imageUrl: '',
+        active: true,
+        featured: false,
+      }),
+      { params: Promise.resolve({ businessId: 'business-1' }) }
+    )
+
+    const json = await response.json()
+
+    expect(response.status).toBe(503)
+    expect(json.success).toBe(false)
+    expect(json.code).toBe('SERVICE_SCHEMA_OUT_OF_DATE')
+    expect(json.error).toMatch(
+      /^The service database schema is out of date\. Apply pending migrations and try again\. Reference: [0-9a-f-]+$/
+    )
+    expect(mockedRecordAdminActionSafely).not.toHaveBeenCalled()
+  })
+
   it('updates the live snapshot in the same request when an admin saves a published page', async () => {
     const sections = [
       {
