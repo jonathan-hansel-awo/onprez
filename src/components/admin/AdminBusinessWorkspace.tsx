@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { FormEvent, useState } from 'react'
+import { ChangeEvent, FormEvent, useState } from 'react'
 
 type BusinessDetails = {
   id: string
@@ -99,6 +99,7 @@ export function AdminBusinessWorkspace({
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileMessage, setProfileMessage] = useState<string | null>(null)
   const [serviceSaving, setServiceSaving] = useState(false)
+  const [serviceImageUploading, setServiceImageUploading] = useState(false)
   const [serviceMessage, setServiceMessage] = useState<string | null>(null)
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
   const [serviceDraft, setServiceDraft] = useState<ServiceDraft>(emptyService)
@@ -164,6 +165,40 @@ export function AdminBusinessWorkspace({
   function resetServiceForm() {
     setEditingServiceId(null)
     setServiceDraft(emptyService)
+  }
+
+  async function uploadServiceImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) return
+
+    setServiceImageUploading(true)
+    setServiceMessage(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('businessId', business.id)
+      formData.append('purpose', 'service')
+
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      })
+      const result = await response.json()
+
+      if (!response.ok || !result.success || typeof result.data?.url !== 'string') {
+        throw new Error(result.error || 'Failed to upload service image')
+      }
+
+      setServiceDraft(current => ({ ...current, imageUrl: result.data.url }))
+      setServiceMessage('Image uploaded. Save the service to keep it.')
+    } catch (error) {
+      setServiceMessage(error instanceof Error ? error.message : 'Failed to upload service image')
+    } finally {
+      setServiceImageUploading(false)
+    }
   }
 
   async function saveService(event: FormEvent) {
@@ -409,12 +444,29 @@ export function AdminBusinessWorkspace({
               value={serviceDraft.name}
               onChange={value => setServiceDraft(current => ({ ...current, name: value }))}
             />
-            <Field
-              label="Image URL"
-              value={serviceDraft.imageUrl}
-              onChange={value => setServiceDraft(current => ({ ...current, imageUrl: value }))}
-              placeholder="https://"
-            />
+            <div className="space-y-3">
+              <Field
+                label="Image URL (optional)"
+                value={serviceDraft.imageUrl}
+                onChange={value => setServiceDraft(current => ({ ...current, imageUrl: value }))}
+                placeholder="https://"
+              />
+              <label className="block space-y-1.5 text-sm">
+                <span className="font-medium text-slate-700">Or upload an image</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={serviceImageUploading}
+                  onChange={uploadServiceImage}
+                  className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:font-semibold file:text-blue-700 disabled:opacity-50"
+                />
+                <span className="block text-xs text-slate-500">
+                  {serviceImageUploading
+                    ? 'Uploading and checking image…'
+                    : 'JPEG, PNG, or WebP. The secure URL will be filled in automatically.'}
+                </span>
+              </label>
+            </div>
             <Field
               label="Price (£)"
               type="number"
@@ -463,10 +515,16 @@ export function AdminBusinessWorkspace({
           </div>
           <div className="mt-5 flex items-center gap-3">
             <button
-              disabled={serviceSaving}
+              disabled={serviceSaving || serviceImageUploading}
               className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
             >
-              {serviceSaving ? 'Saving…' : editingServiceId ? 'Update service' : 'Add service'}
+              {serviceImageUploading
+                ? 'Uploading image…'
+                : serviceSaving
+                  ? 'Saving…'
+                  : editingServiceId
+                    ? 'Update service'
+                    : 'Add service'}
             </button>
             {serviceMessage ? <p className="text-sm text-slate-600">{serviceMessage}</p> : null}
           </div>
