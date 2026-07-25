@@ -48,17 +48,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
-    const user = await getCurrentUser()
-    const isPlatformAdmin = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN'
-
     if (includeInactive) {
+      const user = await getCurrentUser()
+
       if (!user) {
         return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
 
-      if (!isPlatformAdmin) {
-        await requireBusinessAccess(user.id, business.id)
-      }
+      await requireBusinessAccess(user.id, business.id)
     }
 
     const services = await prisma.service.findMany({
@@ -71,19 +68,6 @@ export async function GET(request: NextRequest) {
       },
       orderBy: [{ order: 'asc' }, { name: 'asc' }],
     })
-
-    if (isPlatformAdmin) {
-      return NextResponse.json({
-        success: true,
-        data: services.map(service => ({
-          ...service,
-          price: Number(service.price),
-          priceRangeMin: service.priceRangeMin === null ? null : Number(service.priceRangeMin),
-          priceRangeMax: service.priceRangeMax === null ? null : Number(service.priceRangeMax),
-          depositAmount: service.depositAmount === null ? null : Number(service.depositAmount),
-        })),
-      })
-    }
 
     const entitlement = business.featureEntitlements?.[0] ?? null
     const entitled = isFeatureEntitlementActive(entitlement)
