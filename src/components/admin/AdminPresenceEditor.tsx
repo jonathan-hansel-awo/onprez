@@ -70,13 +70,6 @@ export function AdminPresenceEditor({
           return { success: false, error: result.error || 'Failed to save the customer draft.' }
         }
 
-        // A saved edit to an already-live assisted-setup page should update its published snapshot.
-        // Draft pages remain private until the admin explicitly publishes them.
-        if (isPublished) {
-          const publishResult = await publishSavedDraft(true)
-          if (!publishResult.success) return publishResult
-        }
-
         setSections(updatedSections)
         return { success: true }
       } catch {
