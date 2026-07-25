@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { Loader2, Package } from 'lucide-react'
 import { ServicesSection } from '@/types/page-sections'
 import { Input } from '@/components/form/input'
 import { TextArea } from '@/components/form/text-area'
@@ -8,8 +10,6 @@ import { Card } from '@/components/ui/card'
 import { Label } from '@/components/form/label'
 import { Toggle } from '@/components/ui/toggle'
 import { Checkbox } from '@/components/form/checkbox'
-import { useEffect, useState } from 'react'
-import { Package, Loader2 } from 'lucide-react'
 import { SectionAppearanceEditor } from '../SectionAppearanceEditor'
 
 interface ServicesSectionEditorProps {
@@ -21,11 +21,48 @@ interface ServicesSectionEditorProps {
 interface Service {
   id: string
   name: string
-  description: string
+  description: string | null
   price: number
   duration: number
-  category?: string
-  isActive: boolean
+  active: boolean
+}
+
+function normalizeServices(payload: unknown): Service[] {
+  if (!payload || typeof payload !== 'object') return []
+
+  const responseData = (payload as { data?: unknown }).data
+  const rawServices = Array.isArray(responseData)
+    ? responseData
+    : responseData && typeof responseData === 'object'
+      ? (responseData as { services?: unknown }).services
+      : undefined
+
+  if (!Array.isArray(rawServices)) return []
+
+  return rawServices.flatMap(item => {
+    if (!item || typeof item !== 'object') return []
+    const service = item as Record<string, unknown>
+    const id = typeof service.id === 'string' ? service.id : ''
+    const name = typeof service.name === 'string' ? service.name : ''
+
+    if (!id || !name) return []
+
+    return [
+      {
+        id,
+        name,
+        description: typeof service.description === 'string' ? service.description : null,
+        price: Number(service.price) || 0,
+        duration: Number(service.duration) || 0,
+        active:
+          typeof service.active === 'boolean'
+            ? service.active
+            : typeof service.isActive === 'boolean'
+              ? service.isActive
+              : true,
+      },
+    ]
+  })
 }
 
 export function ServicesSectionEditor({
@@ -35,6 +72,7 @@ export function ServicesSectionEditor({
 }: ServicesSectionEditorProps) {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
     if (!businessId) {
@@ -45,15 +83,23 @@ export function ServicesSectionEditor({
     let cancelled = false
 
     async function fetchServices() {
+      setLoading(true)
+      setLoadError('')
+
       try {
-        const response = await fetch(`/api/services?businessId=${businessId}`)
+        const response = await fetch(`/api/services?businessId=${encodeURIComponent(businessId!)}`)
         const data = await response.json()
 
-        if (!cancelled && data.success) {
-          setServices(data.data.services || [])
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Failed to load services')
         }
+
+        if (!cancelled) setServices(normalizeServices(data))
       } catch (error) {
-        if (!cancelled) console.error('Failed to fetch services:', error)
+        if (!cancelled) {
+          console.error('Failed to fetch services:', error)
+          setLoadError(error instanceof Error ? error.message : 'Failed to load services')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -71,10 +117,7 @@ export function ServicesSectionEditor({
   ) {
     onUpdate({
       ...section,
-      data: {
-        ...section.data,
-        [field]: value,
-      },
+      data: { ...section.data, [field]: value },
     })
   }
 
@@ -88,14 +131,13 @@ export function ServicesSectionEditor({
     )
   }
 
-  const activeServices = services.filter(service => service.isActive)
+  const activeServices = services.filter(service => service.active)
   const selectedCount = section.data.serviceIds?.length || 0
 
   return (
     <div className="space-y-6">
       <Card className="p-6">
         <h3 className="mb-4 text-lg font-semibold text-gray-900">Services Composition</h3>
-
         <div className="space-y-4">
           <div>
             <Label htmlFor="services-eyebrow">Eyebrow / Section Label</Label>
@@ -107,7 +149,6 @@ export function ServicesSectionEditor({
               className="mt-1"
             />
           </div>
-
           <div>
             <Label htmlFor="services-title">Section Title *</Label>
             <Input
@@ -118,7 +159,6 @@ export function ServicesSectionEditor({
               className="mt-1"
             />
           </div>
-
           <div>
             <Label htmlFor="services-description">Description</Label>
             <TextArea
@@ -135,7 +175,6 @@ export function ServicesSectionEditor({
 
       <Card className="p-6">
         <h3 className="mb-4 text-lg font-semibold text-gray-900">Presentation</h3>
-
         <div className="space-y-4">
           <div>
             <Label htmlFor="services-layout">Layout Preset</Label>
@@ -153,7 +192,6 @@ export function ServicesSectionEditor({
               ]}
             />
           </div>
-
           {section.data.layout === 'grid' && (
             <div>
               <Label htmlFor="services-columns">Desktop Columns</Label>
@@ -169,7 +207,6 @@ export function ServicesSectionEditor({
               />
             </div>
           )}
-
           {section.data.layout !== 'editorial' && (
             <div>
               <Label htmlFor="services-card-style">Card Style</Label>
@@ -188,7 +225,6 @@ export function ServicesSectionEditor({
               />
             </div>
           )}
-
           <div className="flex items-center justify-between gap-4">
             <div>
               <Label>Show Service Images</Label>
@@ -199,13 +235,10 @@ export function ServicesSectionEditor({
               onChange={checked => updateData('showImages', checked)}
             />
           </div>
-
           <div className="flex items-center justify-between gap-4">
             <div>
               <Label>Show Prices</Label>
-              <p className="text-sm text-gray-500">
-                Transparent pricing improves booking confidence.
-              </p>
+              <p className="text-sm text-gray-500">Transparent pricing improves booking confidence.</p>
             </div>
             <Toggle
               checked={section.data.showPrices ?? true}
@@ -227,12 +260,16 @@ export function ServicesSectionEditor({
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
           </div>
+        ) : loadError ? (
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {loadError}
+          </div>
         ) : activeServices.length === 0 ? (
           <div className="rounded-lg bg-gray-50 py-8 text-center">
             <Package className="mx-auto mb-3 h-12 w-12 text-gray-400" />
-            <p className="mb-2 text-gray-600">No services created yet</p>
+            <p className="mb-2 text-gray-600">No active services created yet</p>
             <p className="text-sm text-gray-500">
-              Create services first, then choose which ones belong in this section.
+              Create or activate services first, then choose which ones belong in this section.
             </p>
           </div>
         ) : (
@@ -240,12 +277,7 @@ export function ServicesSectionEditor({
             <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
               <button
                 type="button"
-                onClick={() =>
-                  updateData(
-                    'serviceIds',
-                    activeServices.map(service => service.id)
-                  )
-                }
+                onClick={() => updateData('serviceIds', activeServices.map(service => service.id))}
                 className="text-sm text-onprez-blue hover:underline"
               >
                 Select all
@@ -263,7 +295,6 @@ export function ServicesSectionEditor({
             <div className="max-h-80 space-y-2 overflow-y-auto">
               {activeServices.map(service => {
                 const isSelected = section.data.serviceIds?.includes(service.id) || false
-
                 return (
                   <label
                     key={service.id}
@@ -278,7 +309,6 @@ export function ServicesSectionEditor({
                       onChange={() => toggleService(service.id)}
                       className="mt-1"
                     />
-
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <h4 className="font-medium text-gray-900">{service.name}</h4>
@@ -308,8 +338,8 @@ export function ServicesSectionEditor({
 
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-800">
-          Services remain connected to your Services dashboard, so prices, durations and
-          availability stay accurate everywhere.
+          Services remain connected to your Services dashboard, so prices, durations and availability
+          stay accurate everywhere.
         </p>
       </div>
     </div>
