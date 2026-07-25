@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
@@ -22,6 +23,11 @@ function serializeService<T extends { price: unknown }>(service: T) {
     ...service,
     price: Number(service.price),
   }
+}
+
+function getPrismaErrorCode(error: unknown) {
+  if (!error || typeof error !== 'object' || !('code' in error)) return undefined
+  return typeof error.code === 'string' ? error.code : undefined
 }
 
 type RouteContext = { params: Promise<{ businessId: string }> }
@@ -142,7 +148,45 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     const authResponse = platformAdminErrorResponse(error)
     if (authResponse) return authResponse
 
-    console.error('Admin create service error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to create service' }, { status: 500 })
+    const reference = randomUUID()
+    const errorCode = getPrismaErrorCode(error)
+
+    console.error('Admin create service error:', {
+      reference,
+      errorCode,
+      path: request.nextUrl.pathname,
+      error,
+    })
+
+    if (errorCode === 'P2021' || errorCode === 'P2022') {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'SERVICE_SCHEMA_OUT_OF_DATE',
+          error: `The service database schema is out of date. Apply pending migrations and try again. Reference: ${reference}`,
+        },
+        { status: 503 }
+      )
+    }
+
+    if (errorCode === 'P2002') {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'SERVICE_ORDER_CONFLICT',
+          error: 'Another service was created at the same time. Please try again.',
+        },
+        { status: 409 }
+      )
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'SERVICE_CREATE_FAILED',
+        error: `Failed to create service. Reference: ${reference}`,
+      },
+      { status: 500 }
+    )
   }
 }
