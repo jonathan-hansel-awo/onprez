@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
-import { getCurrentUser } from '@/lib/auth/get-user'
+import { getCurrentUser, isAdmin } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireBusinessRole } from '@/lib/auth/business-access'
 import { checkRateLimit } from '@/lib/services/rate-limit'
@@ -122,8 +122,11 @@ async function handlePost(request: NextRequest) {
     let folder = `onprez/users/${user.id}/${purpose}`
 
     if (isBusinessPurpose && businessId) {
-      // Authorize the destination before performing expensive image decoding.
-      await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+      // Platform admins may upload media while assisting a customer without impersonating them.
+      // Ordinary users must still hold an appropriate role in the target business.
+      if (!isAdmin(user)) {
+        await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+      }
 
       folder = `onprez/businesses/${businessId}/${purpose}`
     }
