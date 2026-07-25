@@ -87,7 +87,9 @@ export function ServicesSectionEditor({
       setLoadError('')
 
       try {
-        const response = await fetch(`/api/services?businessId=${encodeURIComponent(businessId!)}`)
+        const response = await fetch(
+          `/api/services?businessId=${encodeURIComponent(businessId!)}`
+        )
         const data = await response.json()
 
         if (!response.ok || !data.success) {
