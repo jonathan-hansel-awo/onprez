@@ -1,8 +1,9 @@
+import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { platformAdminErrorResponse, requirePlatformAdminApi } from '@/lib/admin/access'
-import { recordAdminAction } from '@/lib/admin/audit'
+import { recordAdminActionSafely } from '@/lib/admin/audit'
 
 type RouteContext = { params: Promise<{ businessId: string }> }
 
@@ -67,7 +68,11 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     const page = await prisma.page.findFirst({
       where: { id: pageId, businessId, slug: 'home' },
-      select: { id: true },
+      select: {
+        id: true,
+        isPublished: true,
+        business: { select: { slug: true } },
+      },
     })
 
     if (!page) {
@@ -77,12 +82,21 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       )
     }
 
+    const nextContent = content as Prisma.InputJsonValue
+
     await prisma.page.update({
       where: { id: pageId },
-      data: { content: content as Prisma.InputJsonValue },
+      data: {
+        content: nextContent,
+        ...(page.isPublished ? { publishedContent: nextContent } : {}),
+      },
     })
 
-    await recordAdminAction({
+    if (page.isPublished) {
+      revalidatePath(`/${page.business.slug}`)
+    }
+
+    await recordAdminActionSafely({
       adminUserId: admin.id,
       action: 'admin.presence.draft_saved',
       targetBusinessId: businessId,
@@ -90,7 +104,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       details: { pageId, sectionCount: content.length },
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({
+      success: true,
+      data: { publishedContentUpdated: page.isPublished },
+    })
   } catch (error) {
     const authResponse = platformAdminErrorResponse(error)
     if (authResponse) return authResponse

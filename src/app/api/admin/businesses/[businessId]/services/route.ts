@@ -1,9 +1,8 @@
-import { ServiceDepositMode } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { platformAdminErrorResponse, requirePlatformAdminApi } from '@/lib/admin/access'
-import { recordAdminAction } from '@/lib/admin/audit'
+import { recordAdminActionSafely } from '@/lib/admin/audit'
 
 const serviceSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -18,14 +17,10 @@ const serviceSchema = z.object({
   featured: z.boolean().optional().default(false),
 })
 
-function serializeService<T extends { price: unknown; depositAmount?: unknown }>(service: T) {
+function serializeService<T extends { price: unknown }>(service: T) {
   return {
     ...service,
     price: Number(service.price),
-    depositAmount:
-      service.depositAmount === null || service.depositAmount === undefined
-        ? null
-        : Number(service.depositAmount),
   }
 }
 
@@ -58,7 +53,6 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
         active: true,
         featured: true,
         order: true,
-        depositAmount: true,
         _count: { select: { appointments: true } },
       },
     })
@@ -116,9 +110,6 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         galleryImages: [],
         active: input.active,
         featured: input.featured,
-        depositMode: ServiceDepositMode.BUSINESS_DEFAULT,
-        requiresDeposit: false,
-        depositAmount: null,
         order: (lastService?.order ?? -1) + 1,
       },
       select: {
@@ -131,22 +122,17 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         active: true,
         featured: true,
         order: true,
-        depositAmount: true,
         _count: { select: { appointments: true } },
       },
     })
 
-    try {
-      await recordAdminAction({
-        adminUserId: admin.id,
-        action: 'admin.service.created',
-        targetBusinessId: businessId,
-        request,
-        details: { serviceId: service.id, serviceName: service.name },
-      })
-    } catch (auditError) {
-      console.error('Admin service audit log failed:', auditError)
-    }
+    await recordAdminActionSafely({
+      adminUserId: admin.id,
+      action: 'admin.service.created',
+      targetBusinessId: businessId,
+      request,
+      details: { serviceId: service.id, serviceName: service.name },
+    })
 
     return NextResponse.json(
       { success: true, data: { service: serializeService(service) } },

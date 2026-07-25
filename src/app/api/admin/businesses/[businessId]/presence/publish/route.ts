@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { platformAdminErrorResponse, requirePlatformAdminApi } from '@/lib/admin/access'
-import { recordAdminAction } from '@/lib/admin/audit'
+import { recordAdminActionSafely } from '@/lib/admin/audit'
 
 type RouteContext = { params: Promise<{ businessId: string }> }
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     revalidatePath(`/${page.business.slug}`)
 
-    await recordAdminAction({
+    await recordAdminActionSafely({
       adminUserId: admin.id,
       action: isPublished ? 'admin.presence.published' : 'admin.presence.unpublished',
       targetBusinessId: businessId,

@@ -46,3 +46,15 @@ export async function recordAdminAction({
     },
   })
 }
+
+export async function recordAdminActionSafely(
+  input: Parameters<typeof recordAdminAction>[0]
+): Promise<boolean> {
+  try {
+    await recordAdminAction(input)
+    return true
+  } catch (error) {
+    console.error(`Admin audit log failed for ${input.action}:`, error)
+    return false
+  }
+}
