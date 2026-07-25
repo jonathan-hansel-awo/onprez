@@ -199,10 +199,7 @@ export async function GET(
 
       return servicesResponse(transformedServices, categories)
     } catch (error) {
-      console.warn(
-        'Public service payment context unavailable; using catalogue fallback:',
-        error
-      )
+      console.warn('Public service payment context unavailable; using catalogue fallback:', error)
 
       const business = await prisma.business.findUnique({
         where: { slug: handle },
