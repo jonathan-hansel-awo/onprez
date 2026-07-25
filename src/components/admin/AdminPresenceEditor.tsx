@@ -23,11 +23,32 @@ export function AdminPresenceEditor({
   initialPublishStatus: boolean
 }) {
   const [sections, setSections] = useState(initialSections)
+  const [isPublished, setIsPublished] = useState(initialPublishStatus)
   const saveRequestRef = useRef<{
     fingerprint: string
     promise: Promise<AdminMutationResult>
   } | null>(null)
   const publishRequestRef = useRef<Promise<AdminMutationResult> | null>(null)
+
+  async function publishSavedDraft(nextPublishedState: boolean): Promise<AdminMutationResult> {
+    const response = await fetch(`/api/admin/businesses/${businessId}/presence/publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pageId, isPublished: nextPublishedState }),
+    })
+    const result = await response.json()
+
+    if (!response.ok || !result.success) {
+      return {
+        success: false,
+        error:
+          result.error || `Failed to ${nextPublishedState ? 'publish' : 'unpublish'} the page.`,
+      }
+    }
+
+    setIsPublished(nextPublishedState)
+    return { success: true }
+  }
 
   function handleSave(updatedSections: PageSection[]): Promise<AdminMutationResult> {
     const fingerprint = JSON.stringify(updatedSections)
@@ -49,6 +70,13 @@ export function AdminPresenceEditor({
           return { success: false, error: result.error || 'Failed to save the customer draft.' }
         }
 
+        // A saved edit to an already-live assisted-setup page should update its published snapshot.
+        // Draft pages remain private until the admin explicitly publishes them.
+        if (isPublished) {
+          const publishResult = await publishSavedDraft(true)
+          if (!publishResult.success) return publishResult
+        }
+
         setSections(updatedSections)
         return { success: true }
       } catch {
@@ -64,30 +92,16 @@ export function AdminPresenceEditor({
     return request
   }
 
-  function handlePublish(isPublished: boolean): Promise<AdminMutationResult> {
+  function handlePublish(nextPublishedState: boolean): Promise<AdminMutationResult> {
     if (publishRequestRef.current) return publishRequestRef.current
 
     const request: Promise<AdminMutationResult> = (async () => {
       try {
-        const response = await fetch(`/api/admin/businesses/${businessId}/presence/publish`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pageId, isPublished }),
-        })
-        const result = await response.json()
-
-        if (!response.ok || !result.success) {
-          return {
-            success: false,
-            error: result.error || `Failed to ${isPublished ? 'publish' : 'unpublish'} the page.`,
-          }
-        }
-
-        return { success: true }
+        return await publishSavedDraft(nextPublishedState)
       } catch {
         return {
           success: false,
-          error: `Failed to ${isPublished ? 'publish' : 'unpublish'} the page.`,
+          error: `Failed to ${nextPublishedState ? 'publish' : 'unpublish'} the page.`,
         }
       } finally {
         publishRequestRef.current = null
@@ -113,7 +127,7 @@ export function AdminPresenceEditor({
             Changes are made as platform admin and recorded in the security log.
           </p>
         </div>
-        {initialPublishStatus ? (
+        {isPublished ? (
           <Link
             href={`/${businessSlug}`}
             target="_blank"
