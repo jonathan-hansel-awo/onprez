@@ -122,8 +122,12 @@ async function handlePost(request: NextRequest) {
     let folder = `onprez/users/${user.id}/${purpose}`
 
     if (isBusinessPurpose && businessId) {
-      // Authorize the destination before performing expensive image decoding.
-      await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+      // Platform admins may upload media while assisting a customer without impersonating them.
+      // Ordinary users must still hold an appropriate role in the target business.
+      const isPlatformAdmin = user.role === 'ADMIN' || user.role === 'SUPERADMIN'
+      if (!isPlatformAdmin) {
+        await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+      }
 
       folder = `onprez/businesses/${businessId}/${purpose}`
     }

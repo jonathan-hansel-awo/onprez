@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     const page = await prisma.page.findFirst({
       where: { id: pageId, businessId, slug: 'home' },
-      select: { id: true, content: true },
+      select: { id: true, content: true, business: { select: { slug: true } } },
     })
 
     if (!page) {
@@ -50,6 +51,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         data: isPublished ? { isPublished: true, publishedAt: now } : { isPublished: false },
       }),
     ])
+
+    revalidatePath(`/${page.business.slug}`)
 
     await recordAdminAction({
       adminUserId: admin.id,
