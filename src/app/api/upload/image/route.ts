@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
-import { getCurrentUser, isAdmin } from '@/lib/auth/get-user'
+import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { requireBusinessRole } from '@/lib/auth/business-access'
 import { checkRateLimit } from '@/lib/services/rate-limit'
@@ -124,7 +124,8 @@ async function handlePost(request: NextRequest) {
     if (isBusinessPurpose && businessId) {
       // Platform admins may upload media while assisting a customer without impersonating them.
       // Ordinary users must still hold an appropriate role in the target business.
-      if (!isAdmin(user)) {
+      const isPlatformAdmin = user.role === 'ADMIN' || user.role === 'SUPERADMIN'
+      if (!isPlatformAdmin) {
         await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
       }
 
