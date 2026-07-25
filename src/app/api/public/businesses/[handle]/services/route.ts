@@ -1,10 +1,4 @@
-import { FeatureKey, ServiceDepositMode, StripeConnectedAccountStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  readBookingProtectionDefaults,
-  resolveEffectiveServiceDeposit,
-} from '@/lib/booking-protection/config'
-import { isFeatureEntitlementActive } from '@/lib/features/entitlements'
 import { prisma } from '@/lib/prisma'
 
 function parseIds(idsParam: string | null) {
@@ -37,18 +31,7 @@ export async function GET(
 
     const business = await prisma.business.findUnique({
       where: { slug: handle },
-      select: {
-        id: true,
-        isPublished: true,
-        settings: true,
-        featureEntitlements: {
-          where: { feature: FeatureKey.BOOKING_DEPOSITS },
-          take: 1,
-        },
-        stripeConnectedAccount: {
-          select: { status: true, chargesEnabled: true, payoutsEnabled: true },
-        },
-      },
+      select: { id: true, isPublished: true },
     })
 
     if (!business || !business.isPublished) {
@@ -66,17 +49,9 @@ export async function GET(
       active: true,
     }
 
-    if (ids) {
-      where.id = { in: ids }
-    }
-
-    if (categoryId) {
-      where.categoryId = categoryId
-    }
-
-    if (featured === 'true') {
-      where.featured = true
-    }
+    if (ids) where.id = { in: ids }
+    if (categoryId) where.categoryId = categoryId
+    if (featured === 'true') where.featured = true
 
     const services = await prisma.service.findMany({
       where,
@@ -95,9 +70,6 @@ export async function GET(
         bufferTime: true,
         imageUrl: true,
         featured: true,
-        requiresDeposit: true,
-        depositMode: true,
-        depositAmount: true,
         category: {
           select: {
             id: true,
@@ -112,11 +84,7 @@ export async function GET(
     const categories = await prisma.serviceCategory.findMany({
       where: {
         businessId: business.id,
-        services: {
-          some: {
-            active: true,
-          },
-        },
+        services: { some: { active: true } },
       },
       orderBy: { order: 'asc' },
       select: {
@@ -126,56 +94,27 @@ export async function GET(
         icon: true,
         _count: {
           select: {
-            services: {
-              where: { active: true },
-            },
+            services: { where: { active: true } },
           },
         },
       },
     })
 
-    const entitlement = business.featureEntitlements?.[0] ?? null
-    const entitled = isFeatureEntitlementActive(entitlement)
-    const account = business.stripeConnectedAccount ?? null
-    const stripeReady = Boolean(
-      account &&
-      account.status === StripeConnectedAccountStatus.READY &&
-      account.chargesEnabled &&
-      account.payoutsEnabled
-    )
-    const bookingProtectionDefaults = readBookingProtectionDefaults(business.settings)
-
     const transformedServices = services.map(service => {
       const price = Number(service.price)
-      const effectiveDeposit = resolveEffectiveServiceDeposit({
-        mode: service.depositMode || ServiceDepositMode.BUSINESS_DEFAULT,
-        customDepositAmount: service.depositAmount ? Number(service.depositAmount) : null,
-        servicePrice: price,
-        defaults: bookingProtectionDefaults,
-        entitled,
-        stripeReady,
-      })
 
       return {
-        id: service.id,
-        name: service.name,
-        description: service.description,
-        tagline: service.tagline,
+        ...service,
         price,
-        priceType: service.priceType,
-        priceRangeMin: service.priceRangeMin ? Number(service.priceRangeMin) : null,
-        priceRangeMax: service.priceRangeMax ? Number(service.priceRangeMax) : null,
-        currency: service.currency,
-        duration: service.duration,
-        bufferTime: service.bufferTime,
-        imageUrl: service.imageUrl,
-        featured: service.featured,
-        requiresDeposit: effectiveDeposit.requiresDeposit,
-        depositAmount: effectiveDeposit.depositAmount,
-        remainingAmount: effectiveDeposit.remainingAmount,
-        cancellationWindowHours: effectiveDeposit.cancellationWindowHours,
+        priceRangeMin:
+          service.priceRangeMin === null ? null : Number(service.priceRangeMin),
+        priceRangeMax:
+          service.priceRangeMax === null ? null : Number(service.priceRangeMax),
+        requiresDeposit: false,
+        depositAmount: null,
+        remainingAmount: price,
+        cancellationWindowHours: null,
         depositDeductedFromTotal: true,
-        category: service.category,
       }
     })
 
@@ -183,12 +122,12 @@ export async function GET(
       success: true,
       data: {
         services: transformedServices,
-        categories: categories.map(cat => ({
-          id: cat.id,
-          name: cat.name,
-          color: cat.color,
-          icon: cat.icon,
-          serviceCount: cat._count.services,
+        categories: categories.map(category => ({
+          id: category.id,
+          name: category.name,
+          color: category.color,
+          icon: category.icon,
+          serviceCount: category._count.services,
         })),
         total: transformedServices.length,
       },
