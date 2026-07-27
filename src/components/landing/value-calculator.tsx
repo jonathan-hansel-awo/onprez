@@ -24,7 +24,9 @@ export function ValueCalculator() {
     >
       <div className="mb-8 text-center">
         <h3 className="mb-2 text-2xl font-bold text-gray-900">Professional plan value</h3>
-        <p className="text-gray-600">Compare the £8 monthly plan with your estimated bookings.</p>
+        <p className="text-gray-600">
+          Compare the £8 monthly plan with your estimated bookings.
+        </p>
       </div>
 
       <div className="mb-8 space-y-6">
@@ -48,7 +50,10 @@ export function ValueCalculator() {
 
         <div>
           <div className="mb-3 flex items-center justify-between gap-4">
-            <label htmlFor="average-booking-price" className="text-sm font-semibold text-gray-700">
+            <label
+              htmlFor="average-booking-price"
+              className="text-sm font-semibold text-gray-700"
+            >
               Average booking value
             </label>
             <div className="flex items-center gap-2">
@@ -77,7 +82,9 @@ export function ValueCalculator() {
         <div className="grid gap-6 text-center md:grid-cols-3">
           <div>
             <p className="mb-2 text-sm text-gray-600">Estimated booking value</p>
-            <p className="text-3xl font-bold text-gray-900">£{monthlyRevenue.toLocaleString('en-GB')}</p>
+            <p className="text-3xl font-bold text-gray-900">
+              £{monthlyRevenue.toLocaleString('en-GB')}
+            </p>
           </div>
           <div>
             <p className="mb-2 text-sm text-gray-600">Estimated hours saved</p>
@@ -85,7 +92,9 @@ export function ValueCalculator() {
           </div>
           <div>
             <p className="mb-2 text-sm text-gray-600">After plan cost</p>
-            <p className="text-3xl font-bold text-onprez-purple">£{netBookingValue.toLocaleString('en-GB')}</p>
+            <p className="text-3xl font-bold text-onprez-purple">
+              £{netBookingValue.toLocaleString('en-GB')}
+            </p>
           </div>
         </div>
 
@@ -99,8 +108,8 @@ export function ValueCalculator() {
             <TrendingUp className="h-6 w-6 text-onprez-green" />
             <p className="text-gray-700">
               At this booking value, the Professional plan costs about{' '}
-              <strong className="text-onprez-blue">{paybackHours.toFixed(1)} hours</strong> of service
-              revenue.
+              <strong className="text-onprez-blue">{paybackHours.toFixed(1)} hours</strong> of
+              service revenue.
             </p>
           </div>
           <p className="mt-3 text-center text-xs text-gray-500">
