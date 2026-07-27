@@ -24,9 +24,7 @@ export function ValueCalculator() {
     >
       <div className="mb-8 text-center">
         <h3 className="mb-2 text-2xl font-bold text-gray-900">Professional plan value</h3>
-        <p className="text-gray-600">
-          Compare the £8 monthly plan with your estimated bookings.
-        </p>
+        <p className="text-gray-600">Compare the £8 monthly plan with your estimated bookings.</p>
       </div>
 
       <div className="mb-8 space-y-6">
@@ -50,10 +48,7 @@ export function ValueCalculator() {
 
         <div>
           <div className="mb-3 flex items-center justify-between gap-4">
-            <label
-              htmlFor="average-booking-price"
-              className="text-sm font-semibold text-gray-700"
-            >
+            <label htmlFor="average-booking-price" className="text-sm font-semibold text-gray-700">
               Average booking value
             </label>
             <div className="flex items-center gap-2">
