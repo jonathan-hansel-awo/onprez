@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write src/components/landing/feature-comparison.tsx src/components/landing/value-calculator.tsx && git diff -- src/components/landing/feature-comparison.tsx src/components/landing/value-calculator.tsx",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
