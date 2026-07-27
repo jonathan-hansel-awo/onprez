@@ -63,9 +63,9 @@ export function PricingSection({ showCalculator = true, showPageLink = true }: P
             Change plans as your service catalogue, media library and booking volume grow.
           </p>
           <p className="text-sm text-gray-500">
-            Need help choosing?{' '}
-            <Link href="/contact" className="font-semibold text-onprez-blue hover:underline">
-              Contact our team
+            Ready to create your online presence?{' '}
+            <Link href="/signup" className="font-semibold text-onprez-blue hover:underline">
+              Claim your handle free
             </Link>
           </p>
         </motion.div>
