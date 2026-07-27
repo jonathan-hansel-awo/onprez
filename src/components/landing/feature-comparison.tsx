@@ -14,18 +14,14 @@ function ComparisonValue({
 }) {
   if (typeof value === 'boolean') {
     return value ? (
-      <Check
-        className={`h-5 w-5 ${emphasis ? 'text-onprez-blue' : 'text-onprez-green'}`}
-      />
+      <Check className={`h-5 w-5 ${emphasis ? 'text-onprez-blue' : 'text-onprez-green'}`} />
     ) : (
       <X className="h-5 w-5 text-gray-300" />
     )
   }
 
   return (
-    <span
-      className={`text-sm font-semibold ${emphasis ? 'text-onprez-blue' : 'text-gray-900'}`}
-    >
+    <span className={`text-sm font-semibold ${emphasis ? 'text-onprez-blue' : 'text-gray-900'}`}>
       {value}
     </span>
   )
@@ -45,10 +41,7 @@ export function FeatureComparison() {
           aria-expanded={isExpanded}
         >
           <span>{isExpanded ? 'Hide' : 'See'} detailed comparison</span>
-          <motion.div
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
-          >
+          <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
             <ChevronDown className="h-5 w-5" />
           </motion.div>
         </motion.button>
