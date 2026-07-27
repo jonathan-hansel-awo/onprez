@@ -1,6 +1,6 @@
 export const homepagePositioning = {
-  badge: 'Your complete online presence',
-  headlineLines: ['A beautiful online home', 'for your business.'],
+  badge: 'For service professionals and small teams',
+  headlineLines: ['A beautiful online home for', 'your services, availability & bookings.'],
   summary:
     'Bring your brand, services, availability, and bookings together at one memorable OnPrez handle—so clients can understand, trust, and choose you.',
   audience:
