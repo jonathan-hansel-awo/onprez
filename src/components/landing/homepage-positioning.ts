@@ -1,23 +1,23 @@
 export const homepagePositioning = {
-  badge: 'For appointment-based service professionals',
-  headlineLines: ['One page for your services,', 'availability, and bookings.'],
+  badge: 'For service professionals and small teams',
+  headlineLines: ['A beautiful online home for', 'your services, availability & bookings.'],
   summary:
-    'Give clients one polished place to understand what you offer, see when you are free, and book without the back-and-forth.',
+    'Bring your brand, services, availability, and bookings together at one memorable OnPrez handle—so clients can understand, trust, and choose you.',
   audience:
     'Built for independent professionals and small teams in beauty, wellness, fitness, creative services, tutoring, home services, and more.',
-  primaryCta: 'Create Your Booking Page Free',
-  secondaryCta: 'See a Real Example',
+  primaryCta: 'Claim my handle',
+  secondaryCta: 'Explore a real presence page',
   outcomes: [
     {
-      title: 'Show what you offer',
+      title: 'Show your brand',
       description: 'Services, prices, photos, policies, and testimonials in one clear page.',
     },
     {
-      title: 'Let clients choose a time',
+      title: 'Share one link',
       description: 'Clients see your real availability and select the slot that works for them.',
     },
     {
-      title: 'Manage every booking',
+      title: 'Take bookings',
       description: 'Booking details, customer information, and confirmations stay together.',
     },
   ],
