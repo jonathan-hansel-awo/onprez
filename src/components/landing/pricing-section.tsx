@@ -12,9 +12,15 @@ interface PricingSectionProps {
   showPageLink?: boolean
 }
 
-export function PricingSection({ showCalculator = true, showPageLink = true }: PricingSectionProps) {
+export function PricingSection({
+  showCalculator = true,
+  showPageLink = true,
+}: PricingSectionProps) {
   return (
-    <section id="pricing" className="bg-gradient-to-b from-white via-blue-50 to-white py-24 md:py-32">
+    <section
+      id="pricing"
+      className="bg-gradient-to-b from-white via-blue-50 to-white py-24 md:py-32"
+    >
       <div className="container mx-auto px-4">
         <motion.div
           className="mx-auto mb-16 max-w-3xl text-center"
