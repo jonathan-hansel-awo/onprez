@@ -104,7 +104,7 @@ export function Hero() {
                     id="hero-handle"
                     name="handle"
                     value={handle}
-                    onChange={(event) => setHandle(event.target.value)}
+                    onChange={event => setHandle(event.target.value)}
                     placeholder="yourbusiness"
                     autoComplete="off"
                     spellCheck={false}
@@ -141,7 +141,7 @@ export function Hero() {
             </div>
 
             <ul className="mt-8 grid gap-2.5 text-left sm:grid-cols-3">
-              {homepagePositioning.outcomes.map((outcome) => (
+              {homepagePositioning.outcomes.map(outcome => (
                 <li
                   key={outcome.title}
                   className="flex items-center gap-2.5 rounded-xl border border-slate-900/8 bg-white/60 px-3 py-3 text-sm font-semibold text-slate-700"
@@ -231,7 +231,7 @@ export function Hero() {
                     </div>
 
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      {servicePreview.map((service) => (
+                      {servicePreview.map(service => (
                         <div
                           key={service.name}
                           className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3"
