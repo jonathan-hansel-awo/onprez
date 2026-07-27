@@ -1,86 +1,71 @@
-'use client'
-
-import { motion } from 'framer-motion'
-import type { HTMLMotionProps } from 'framer-motion'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useId } from 'react'
 
-interface LogoProps extends Omit<HTMLMotionProps<'a'>, 'children'> {
+type LogoVariant = 'gradient' | 'white' | 'ink'
+
+interface LogoProps {
   href?: string
   className?: string
-  variant?: 'gradient' | 'white'
+  variant?: LogoVariant
 }
 
-export function Logo({ variant = 'gradient', className = '', ...props }: LogoProps) {
-  const [mounted, setMounted] = useState(false)
+interface LogoSVGProps {
+  className?: string
+  variant?: LogoVariant
+  title?: string
+}
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const textClass =
-    variant === 'white'
-      ? 'text-white'
-      : 'bg-gradient-to-r from-onprez-blue to-onprez-purple bg-clip-text text-transparent'
-
-  // Prevent hydration mismatch by rendering consistent initial state
-  if (!mounted) {
-    return (
-      <Link
-        href="/"
-        className={`text-2xl font-bold ${textClass} ${className}`}
-        aria-label="OnPrez home"
-      >
-        OnPrez
-      </Link>
-    )
-  }
-
+export function Logo({ href = '/', className = 'h-8 w-auto', variant = 'gradient' }: LogoProps) {
   return (
-    <motion.a
-      href="/"
-      className={`text-2xl font-bold ${textClass} ${className}`}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+    <Link
+      href={href}
+      className="inline-flex rounded-sm transition-transform duration-200 hover:scale-[1.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-4"
       aria-label="OnPrez home"
-      {...props}
     >
-      OnPrez
-    </motion.a>
+      <LogoSVG className={className} variant={variant} />
+    </Link>
   )
 }
 
-export function LogoSVG({
-  className = '',
-  variant = 'gradient',
-}: {
-  className?: string
-  variant?: 'gradient' | 'white'
-}) {
+export function LogoSVG({ className = 'h-8 w-auto', variant = 'gradient', title }: LogoSVGProps) {
+  const gradientId = useId().replace(/:/g, '')
+  const paint =
+    variant === 'gradient' ? `url(#${gradientId})` : variant === 'white' ? '#FFFFFF' : '#172033'
+
   return (
     <svg
-      viewBox="0 0 200 60"
+      viewBox="0 0 154 44"
       className={className}
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="OnPrez"
+      role={title ? 'img' : undefined}
+      aria-hidden={title ? undefined : true}
+      aria-label={title}
     >
+      {title ? <title>{title}</title> : null}
       <defs>
-        <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#3B82F6" />
-          <stop offset="100%" stopColor="#8B5CF6" />
+        <linearGradient id={gradientId} x1="5" y1="7" x2="149" y2="37">
+          <stop offset="0" stopColor="#2563EB" />
+          <stop offset="1" stopColor="#7C3AED" />
         </linearGradient>
       </defs>
+
+      <path
+        d="M29.8 8.6A15.5 15.5 0 1 0 35.4 14.3"
+        fill="none"
+        stroke={paint}
+        strokeWidth="5.8"
+        strokeLinecap="round"
+      />
       <text
-        x="50%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fill={variant === 'white' ? 'white' : 'url(#logo-gradient)'}
-        fontSize="32"
-        fontWeight="700"
-        fontFamily="Inter, sans-serif"
+        x="43"
+        y="31.5"
+        fill={paint}
+        fontFamily="Inter, ui-sans-serif, system-ui, sans-serif"
+        fontSize="27"
+        fontWeight="750"
+        letterSpacing="-1.25"
       >
-        OnPrez
+        nPrez
       </text>
     </svg>
   )

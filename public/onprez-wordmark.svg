@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 616 176" role="img" aria-labelledby="title desc">
+  <title id="title">OnPrez</title>
+  <desc id="desc">The OnPrez wordmark with its signature open O</desc>
+  <defs>
+    <linearGradient id="onprez-gradient" x1="20" y1="28" x2="596" y2="148" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M119 34.3A62 62 0 1 0 141.7 57"
+    fill="none"
+    stroke="url(#onprez-gradient)"
+    stroke-width="23.2"
+    stroke-linecap="round"
+  />
+  <text
+    x="172"
+    y="126"
+    fill="url(#onprez-gradient)"
+    font-family="Inter, ui-sans-serif, system-ui, sans-serif"
+    font-size="108"
+    font-weight="750"
+    letter-spacing="-5"
+  >nPrez</text>
+</svg>
