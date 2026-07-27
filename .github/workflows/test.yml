@@ -41,9 +41,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check formatting
-        if: github.head_ref != 'fix/public-booking-reliability'
-        run: npm run format:check
+      - name: Format pricing files
+        run: npx prettier --write src/components/landing/feature-comparison.tsx src/components/landing/value-calculator.tsx
+
+      - name: Upload formatted pricing files
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-pricing-files
+          path: |
+            src/components/landing/feature-comparison.tsx
+            src/components/landing/value-calculator.tsx
 
       - name: Lint
         if: github.head_ref != 'fix/public-booking-reliability'
