@@ -1,4 +1,4 @@
-import { Resend } from 'resend'
+import { Resend, type Attachment } from 'resend'
 import { AppointmentStatus } from '@prisma/client'
 import { env } from '@/lib/config/env'
 import { formatLongDateInTimezone, formatTimeInTimezone } from '@/lib/utils/timezone'
@@ -21,6 +21,7 @@ export interface SendEmailOptions {
   text?: string
   from?: string
   replyTo?: string
+  attachments?: Attachment[]
 }
 
 export interface EmailResult {
@@ -47,6 +48,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
       html: options.html,
       text: options.text,
       replyTo: options.replyTo,
+      ...(options.attachments ? { attachments: options.attachments } : {}),
     })
 
     // Handle Resend API error response

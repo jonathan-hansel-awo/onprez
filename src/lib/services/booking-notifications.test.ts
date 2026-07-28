@@ -1,5 +1,7 @@
 import { sendEmail } from '@/lib/services/email'
 import {
+  buildBusinessBookingCalendarAttachment,
+  buildBusinessBookingCalendarUrl,
   buildBusinessBookingEmail,
   buildCustomerBookingEmail,
   sendBookingCreatedNotifications,
@@ -60,6 +62,13 @@ describe('booking creation notifications', () => {
         subject: 'New confirmed booking: Serenity Massage - Ada Okoro',
       })
     )
+    expect(mockSendEmail.mock.calls[1][0].html).toContain('Add to calendar')
+    expect(mockSendEmail.mock.calls[1][0].attachments).toEqual([
+      expect.objectContaining({
+        filename: 'booking-AB12CD34.ics',
+        contentType: 'text/calendar; charset=utf-8; method=PUBLISH',
+      }),
+    ])
     expect(result.customer.success).toBe(true)
     expect(result.business.success).toBe(true)
   })
@@ -100,6 +109,42 @@ describe('booking creation notifications', () => {
     expect(customerEmail.html).toContain('Ada &lt;script&gt;alert(1)&lt;/script&gt;')
     expect(businessEmail.html).not.toContain('<b>oil</b>')
     expect(businessEmail.html).toContain('Bring &lt;b&gt;oil&lt;/b&gt; &amp; towels')
+  })
+
+  it('builds a timezone-safe Google Calendar link for the business', () => {
+    const calendarUrl = new URL(buildBusinessBookingCalendarUrl(baseInput))
+
+    expect(calendarUrl.origin).toBe('https://calendar.google.com')
+    expect(calendarUrl.searchParams.get('action')).toBe('TEMPLATE')
+    expect(calendarUrl.searchParams.get('text')).toBe('Serenity Massage with Ada Okoro')
+    expect(calendarUrl.searchParams.get('dates')).toBe('20260722T090000Z/20260722T100000Z')
+    expect(calendarUrl.searchParams.get('location')).toBe('18 Willow Court')
+    expect(calendarUrl.searchParams.get('details')).toContain('Booking reference: AB12CD34')
+  })
+
+  it('attaches an escaped calendar event for non-Google calendar apps', () => {
+    const attachment = buildBusinessBookingCalendarAttachment({
+      ...baseInput,
+      customerName: 'Ada, Okoro',
+      serviceName: 'Massage; Glow',
+      businessAddress: '18 Willow Court\nEly',
+      status: 'PENDING',
+    })
+    const content = attachment.content?.toString()
+
+    expect(attachment.filename).toBe('booking-AB12CD34.ics')
+    expect(content).toContain('DTSTART:20260722T090000Z\r\n')
+    expect(content).toContain('DTEND:20260722T100000Z\r\n')
+    expect(content).toContain('SUMMARY:Massage\\; Glow with Ada\\, Okoro\r\n')
+    expect(content).toContain('LOCATION:18 Willow Court\\nEly\r\n')
+    expect(content).toContain('STATUS:TENTATIVE\r\n')
+  })
+
+  it('does not add calendar details to the customer email', () => {
+    const customerEmail = buildCustomerBookingEmail(baseInput)
+
+    expect(customerEmail.html).not.toContain('Add to calendar')
+    expect(customerEmail.attachments).toBeUndefined()
   })
 
   it('still returns the customer result when no business recipient is configured', async () => {
