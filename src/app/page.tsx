@@ -37,7 +37,9 @@ const LazyTestimonialsBento = dynamic(
 
 const LazyPricingSection = dynamic(
   () =>
-    import('@/components/landing/pricing-section').then(mod => ({ default: mod.PricingSection })),
+    import('@/components/landing/pricing-section').then(mod => ({
+      default: mod.PricingSection,
+    })),
   {
     loading: () => <div className="h-screen" />,
     ssr: true,
@@ -45,9 +47,12 @@ const LazyPricingSection = dynamic(
 )
 
 export const metadata: Metadata = {
-  title: 'OnPrez - One Page for Services, Availability and Bookings',
+  title: 'Online Presence and Booking for Service Professionals',
   description:
-    'Create one shareable page where clients can see your services and prices, check your availability, and book. Built for independent service professionals and small teams.',
+    'Give clients one memorable place to discover your brand, explore your services, see your availability, and book—at your own OnPrez handle.',
+  alternates: {
+    canonical: '/',
+  },
 }
 
 export default function LandingPage() {

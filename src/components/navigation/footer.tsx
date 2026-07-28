@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Heart, ShieldCheck } from 'lucide-react'
 import { footerLinks, socialLinks } from '@/data/footer'
 import { CookieSettingsButton } from '@/components/privacy/cookie-settings-button'
+import { Logo } from './logo'
 
 function FooterLink({ href, label }: { href: string; label: string }) {
   if (href.startsWith('mailto:')) {
@@ -25,12 +26,10 @@ export function Footer() {
       <div className="container mx-auto px-4 pb-8 pt-14">
         <div className="mb-12 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2">
-            <h2 className="mb-4 bg-gradient-to-r from-onprez-blue to-onprez-purple bg-clip-text text-3xl font-bold text-transparent">
-              OnPrez
-            </h2>
-            <p className="max-w-md leading-relaxed text-gray-600">
-              Your handle, your brand, and your bookings in one place—built for independent service
-              professionals.
+            <Logo className="h-10 w-auto" />
+            <p className="mt-4 max-w-md leading-relaxed text-gray-600">
+              Your online presence, brand, services, availability, and bookings in one memorable
+              place.
             </p>
             <div className="mt-6 flex gap-3">
               {socialLinks.map(social => (

@@ -1,26 +1,17 @@
-<!-- public/favicon.svg -->
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">OnPrez</title>
   <defs>
-    <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#3B82F6" />
-      <stop offset="100%" stop-color="#8B5CF6" />
+    <linearGradient id="background" x1="7" y1="5" x2="57" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#7C3AED"/>
     </linearGradient>
   </defs>
-  
-  <!-- Background circle for better visibility -->
-  <circle cx="50" cy="50" r="50" fill="white"/>
-  
-  <!-- Text logo centered -->
-  <text
-    x="50"
-    y="58"
-    dominant-baseline="middle"
-    text-anchor="middle"
-    fill="url(#logo-gradient)"
-    font-size="28"
-    font-weight="700"
-    font-family="Inter, system-ui, sans-serif"
-  >
-    OP
-  </text>
+  <rect width="64" height="64" rx="15" fill="url(#background)"/>
+  <path
+    d="M40.5 17.3A17 17 0 1 0 46.7 23.5"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="7"
+    stroke-linecap="round"
+  />
 </svg>

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import './legal.css'
@@ -16,51 +16,70 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
+const siteTitle = 'OnPrez — Your Online Presence, with Bookings Built In'
+const siteDescription =
+  'Build a memorable online presence, showcase your services, share availability, and take bookings from one OnPrez handle.'
+
+export const viewport: Viewport = {
+  themeColor: '#2563EB',
+  colorScheme: 'light',
+}
+
 export const metadata: Metadata = {
-  title: 'OnPrez - Your Complete Online Presence',
-  description:
-    'Create your customizable presence page with integrated booking. Perfect for service professionals. Get started free at onprez.com/yourname',
+  metadataBase: new URL('https://onprez.com'),
+  applicationName: 'OnPrez',
+  title: {
+    default: siteTitle,
+    template: '%s | OnPrez',
+  },
+  description: siteDescription,
   keywords: [
     'online presence',
-    'booking system',
+    'service business website',
+    'online booking',
+    'appointment scheduling',
     'service professionals',
-    'custom handle',
     'business page',
+    'OnPrez handle',
   ],
-  icons: {
-    icon: '/favicon.svg',
-  },
-  authors: [{ name: 'OnPrez' }],
-  creator: 'OnPrez',
+  authors: [{ name: 'Jonathan Hansel Awo' }],
+  creator: 'Jonathan Hansel Awo',
   publisher: 'OnPrez',
-  metadataBase: new URL('https://onprez.com'),
+  category: 'business',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'OnPrez - Your Complete Online Presence',
-    description:
-      'Create your customizable presence page with integrated booking. Perfect for service professionals.',
-    url: 'https://onprez.com',
+    title: siteTitle,
+    description: siteDescription,
+    url: '/',
     siteName: 'OnPrez',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image.png',
         width: 1200,
         height: 630,
-        alt: 'OnPrez - Your Complete Online Presence',
+        alt: 'OnPrez — your online presence, with bookings built in',
       },
     ],
-    locale: 'en_US',
+    locale: 'en_GB',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'OnPrez - Your Complete Online Presence',
-    description:
-      'Create your customizable presence page with integrated booking. Perfect for service professionals.',
-    images: ['/og-image.png'],
-    creator: '@onprez',
+    title: siteTitle,
+    description: siteDescription,
+    images: ['/opengraph-image.png'],
   },
   robots: {
     index: true,
@@ -73,9 +92,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'your-google-verification-code',
-  },
 }
 
 export default function RootLayout({
@@ -84,7 +100,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`scroll-smooth ${inter.variable}`}>
+    <html lang="en-GB" className={`scroll-smooth ${inter.variable}`}>
       <head>
         <PreloadResources />
       </head>
