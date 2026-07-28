@@ -71,7 +71,7 @@ export default function NewServicePage() {
 
         // Fetch categories for this business
         const categoriesRes = await fetch(
-          `/api/services/categories?businessId=${businessData.data.business.id}`
+          `/api/service-categories?businessId=${businessData.data.business.id}`
         )
         const categoriesData = await categoriesRes.json()
 

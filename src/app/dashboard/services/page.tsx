@@ -247,8 +247,14 @@ function ServicesPageContent() {
       }
 
       const data = await response.json()
-      setBusinessId(data.id)
-      return data.id
+      const currentBusinessId = data.data?.business?.id
+
+      if (!data.success || !currentBusinessId) {
+        throw new Error(data.error || 'Business response did not include a business')
+      }
+
+      setBusinessId(currentBusinessId)
+      return currentBusinessId
     } catch (error) {
       console.error('Fetch business error:', error)
       setError('Failed to load business information')
@@ -264,15 +270,21 @@ function ServicesPageContent() {
       if (!id) return
 
       try {
-        const response = await fetch(`/api/services?businessId=${id}`)
+        const response = await fetch(`/api/services?businessId=${id}&active=false`)
 
         if (!response.ok) {
           throw new Error('Failed to fetch services')
         }
 
         const data = await response.json()
-        setServices(data)
-        setFilteredServices(data)
+        const fetchedServices = data.data
+
+        if (!data.success || !Array.isArray(fetchedServices)) {
+          throw new Error(data.error || 'Services response did not include a service list')
+        }
+
+        setServices(fetchedServices)
+        setFilteredServices(fetchedServices)
       } catch (error) {
         console.error('Fetch services error:', error)
         setError('Failed to load services')
@@ -296,7 +308,13 @@ function ServicesPageContent() {
         }
 
         const data = await response.json()
-        setCategories(data)
+        const fetchedCategories = data.data?.categories
+
+        if (!data.success || !Array.isArray(fetchedCategories)) {
+          throw new Error(data.error || 'Categories response did not include a category list')
+        }
+
+        setCategories(fetchedCategories)
       } catch (error) {
         console.error('Fetch categories error:', error)
         setError('Failed to load categories')
@@ -472,7 +490,12 @@ function ServicesPageContent() {
         throw new Error('Failed to toggle service')
       }
 
-      const updatedService = await response.json()
+      const data = await response.json()
+      const updatedService = data.data?.service
+
+      if (!data.success || !updatedService) {
+        throw new Error(data.error || 'Toggle response did not include the updated service')
+      }
 
       // Update local state
       setServices(prev =>
