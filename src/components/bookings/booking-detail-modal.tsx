@@ -46,6 +46,8 @@ interface BookingDetails {
   endTime: string
   duration: number
   status: AppointmentStatus
+  approvalExpiresAt?: string | null
+  approvalRespondedAt?: string | null
   customerName: string
   customerEmail: string
   customerPhone: string | null
@@ -53,6 +55,8 @@ interface BookingDetails {
   businessNotes: string | null
   totalAmount: number
   paymentStatus: PaymentStatus
+  requiresDeposit?: boolean
+  depositPaid?: boolean
   deposit?: {
     paymentId: string
     status: string
@@ -94,6 +98,8 @@ interface BookingDetailModalProps {
   onCancel?: () => void
   onReconcilePayment?: () => void
   onRetryRefund?: () => void
+  onApprove?: () => void
+  onReject?: () => void
   paymentActionLoading?: boolean
 }
 
@@ -170,6 +176,8 @@ export function BookingDetailModal({
   onCancel,
   onReconcilePayment,
   onRetryRefund,
+  onApprove,
+  onReject,
   paymentActionLoading = false,
 }: BookingDetailModalProps) {
   const [copied, setCopied] = useState(false)
@@ -461,6 +469,21 @@ export function BookingDetailModal({
             </div>
 
             {/* Created At */}
+            {booking.status === 'PENDING' && booking.approvalExpiresAt && (
+              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-center">
+                <p className="text-sm font-medium text-amber-900">
+                  {booking.requiresDeposit && !booking.depositPaid
+                    ? 'Awaiting booking deposit'
+                    : 'Awaiting your approval'}
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  {booking.requiresDeposit && !booking.depositPaid
+                    ? 'Approval actions become available after Stripe confirms the deposit payment.'
+                    : `Respond by ${formatDateTime(booking.approvalExpiresAt)}. If unanswered, the request expires and any paid deposit is refunded.`}
+                </p>
+              </div>
+            )}
+
             <p className="text-sm text-gray-500 text-center">
               Booked on {formatDateTime(booking.createdAt)}
             </p>
@@ -468,6 +491,29 @@ export function BookingDetailModal({
 
           <ModalFooter className="flex-wrap gap-2">
             {/* Quick Status Actions */}
+            {booking.status === 'PENDING' &&
+              booking.approvalExpiresAt &&
+              (!booking.requiresDeposit || booking.depositPaid) && (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={onApprove}
+                    className="text-green-600 border-green-200 hover:bg-green-50"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={onReject}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject & refund
+                  </Button>
+                </>
+              )}
+
             {appointmentForChecks && canBeCompleted(appointmentForChecks) && (
               <Button
                 variant="secondary"

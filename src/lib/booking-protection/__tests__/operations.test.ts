@@ -64,6 +64,14 @@ const payment = {
   refundStatus: BookingRefundStatus.NOT_REQUESTED,
   refundAttempt: 0,
   policySnapshot: { cancellationWindowHours: 24 },
+  paidAt: new Date('2026-07-23T10:00:00.000Z'),
+  failedAt: null,
+  appointment: {
+    id: 'appointment-1',
+    depositPaid: true,
+    depositPaidAt: new Date('2026-07-23T10:00:00.000Z'),
+    totalAmount: 60,
+  },
 }
 
 describe('Booking Protection operations', () => {
@@ -193,8 +201,13 @@ describe('Booking Protection operations', () => {
       .mockResolvedValueOnce(payment)
       .mockResolvedValueOnce(payment)
     retrieveSession.mockResolvedValue({ id: 'cs_1', payment_status: 'unpaid', status: 'open' })
-    retrieveIntent.mockResolvedValue({ id: 'pi_1', latest_charge: { id: 'ch_1' } })
-    refundsList.mockResolvedValue({ data: [] })
+    retrieveIntent.mockResolvedValue({
+      id: 'pi_1',
+      status: 'succeeded',
+      latest_charge: { id: 'ch_1' },
+      last_payment_error: null,
+    })
+    refundsList.mockResolvedValue({ data: [], has_more: false })
 
     await expect(reconcileBookingPayment('payment-1', 'TEST')).resolves.toBe(true)
 
@@ -207,8 +220,46 @@ describe('Booking Protection operations', () => {
     expect(mockedPrisma.bookingPayment.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
+          status: BookingPaymentStatus.SUCCEEDED,
           providerChargeId: 'ch_1',
           reconciliationSource: 'TEST',
+        }),
+      })
+    )
+  })
+
+  it('reconciles every Stripe refund into one cumulative total with the requested source', async () => {
+    mockedPrisma.bookingPayment.findUnique
+      .mockResolvedValueOnce(payment)
+      .mockResolvedValueOnce(payment)
+    retrieveSession.mockResolvedValue({ id: 'cs_1', payment_status: 'paid', status: 'complete' })
+    retrieveIntent.mockResolvedValue({
+      id: 'pi_1',
+      status: 'succeeded',
+      latest_charge: 'ch_1',
+      last_payment_error: null,
+    })
+    refundsList.mockResolvedValue({
+      data: [
+        { id: 're_1', status: 'succeeded', amount: 400, created: 1, metadata: {} },
+        { id: 're_2', status: 'succeeded', amount: 600, created: 2, metadata: {} },
+      ],
+      has_more: false,
+    })
+
+    await reconcileBookingPayment('payment-1', 'DASHBOARD:user-1')
+
+    expect(refundsList).toHaveBeenCalledWith(
+      { payment_intent: 'pi_1', limit: 100 },
+      { stripeAccount: 'acct_1' }
+    )
+    expect(mockedPrisma.bookingPayment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          providerRefundId: 're_2',
+          refundedAmount: 10,
+          status: BookingPaymentStatus.REFUNDED,
+          reconciliationSource: 'DASHBOARD:user-1',
         }),
       })
     )

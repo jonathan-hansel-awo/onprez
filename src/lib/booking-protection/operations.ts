@@ -89,6 +89,118 @@ function targetRefundedAmount(refund: Stripe.Refund): number | null {
   return Number.isFinite(minor) && minor >= 0 ? fromMinorUnits(minor) : null
 }
 
+function paymentIntentBookingStatus(status: Stripe.PaymentIntent.Status): BookingPaymentStatus {
+  switch (status) {
+    case 'succeeded':
+      return BookingPaymentStatus.SUCCEEDED
+    case 'processing':
+    case 'requires_capture':
+    case 'requires_confirmation':
+      return BookingPaymentStatus.PROCESSING
+    case 'requires_action':
+      return BookingPaymentStatus.REQUIRES_ACTION
+    case 'canceled':
+      return BookingPaymentStatus.CANCELLED
+    case 'requires_payment_method':
+    default:
+      return BookingPaymentStatus.FAILED
+  }
+}
+
+async function listAllPaymentIntentRefunds(
+  paymentIntentId: string,
+  providerAccountId: string
+): Promise<Stripe.Refund[]> {
+  const refunds: Stripe.Refund[] = []
+  let startingAfter: string | undefined
+
+  do {
+    const page = await getStripeClient().refunds.list(
+      {
+        payment_intent: paymentIntentId,
+        limit: 100,
+        ...(startingAfter ? { starting_after: startingAfter } : {}),
+      },
+      { stripeAccount: providerAccountId }
+    )
+    refunds.push(...page.data)
+    startingAfter = page.has_more ? page.data.at(-1)?.id : undefined
+  } while (startingAfter)
+
+  return refunds
+}
+
+async function reconcileStripeRefundCollection(
+  payment: Awaited<ReturnType<typeof prisma.bookingPayment.findUnique>>,
+  refunds: Stripe.Refund[],
+  source: string
+): Promise<void> {
+  if (!payment) return
+
+  const ordered = [...refunds].sort((left, right) => left.created - right.created)
+  const latest = ordered.at(-1)
+  const succeeded = ordered.filter(refund => refundStatus(refund) === BookingRefundStatus.SUCCEEDED)
+  const refundedAmount = Math.min(
+    Number(payment.amount),
+    succeeded.reduce((total, refund) => total + fromMinorUnits(refund.amount), 0)
+  )
+  const fullyRefunded = refundedAmount >= Number(payment.amount)
+  const hasPendingRefund = ordered.some(
+    refund => refundStatus(refund) === BookingRefundStatus.PENDING
+  )
+  const hasFailedRefund = ordered.some(
+    refund => refundStatus(refund) === BookingRefundStatus.FAILED
+  )
+  const collectionStatus = hasPendingRefund
+    ? BookingRefundStatus.PENDING
+    : hasFailedRefund && !fullyRefunded
+      ? BookingRefundStatus.FAILED
+      : refundedAmount > 0
+        ? BookingRefundStatus.SUCCEEDED
+        : BookingRefundStatus.NOT_REQUESTED
+  const failedRefund = [...ordered]
+    .reverse()
+    .find(refund => refundStatus(refund) === BookingRefundStatus.FAILED)
+  const now = new Date()
+
+  await prisma.$transaction(async tx => {
+    await tx.bookingPayment.update({
+      where: { id: payment.id },
+      data: {
+        providerRefundId: latest?.id ?? null,
+        refundedAmount,
+        refundStatus: collectionStatus,
+        status:
+          refundedAmount > 0
+            ? fullyRefunded
+              ? BookingPaymentStatus.REFUNDED
+              : BookingPaymentStatus.PARTIALLY_REFUNDED
+            : undefined,
+        refundedAt: refundedAmount > 0 ? now : null,
+        refundFailureCode:
+          collectionStatus === BookingRefundStatus.FAILED
+            ? refundFailureReason(failedRefund!) || 'STRIPE_REFUND_FAILED'
+            : null,
+        refundFailureMessage:
+          collectionStatus === BookingRefundStatus.FAILED
+            ? 'Stripe reported that the booking deposit refund failed.'
+            : null,
+        lastReconciledAt: now,
+        reconciliationSource: source,
+      },
+    })
+
+    if (refundedAmount > 0) {
+      await tx.appointment.update({
+        where: { id: payment.appointmentId },
+        data: {
+          paymentStatus: fullyRefunded ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_PAID,
+        },
+      })
+    }
+  })
+}
+
 export async function applyStripeRefund(refund: Stripe.Refund): Promise<boolean> {
   const bookingPaymentId = paymentIdFromRefund(refund)
   const paymentIntentId = paymentIntentIdFromRefund(refund)
@@ -381,7 +493,10 @@ export async function reconcileBookingPayment(
   paymentId: string,
   source = 'MANUAL'
 ): Promise<boolean> {
-  let payment = await prisma.bookingPayment.findUnique({ where: { id: paymentId } })
+  let payment = await prisma.bookingPayment.findUnique({
+    where: { id: paymentId },
+    include: { appointment: true },
+  })
   if (!payment?.providerAccountId) return false
 
   const stripe = getStripeClient()
@@ -397,7 +512,10 @@ export async function reconcileBookingPayment(
     else if (session.status === 'expired') await releaseCheckoutSession(session)
   }
 
-  payment = await prisma.bookingPayment.findUnique({ where: { id: paymentId } })
+  payment = await prisma.bookingPayment.findUnique({
+    where: { id: paymentId },
+    include: { appointment: true },
+  })
   if (!payment?.providerAccountId) return false
 
   if (payment.providerPaymentIntentId) {
@@ -408,22 +526,51 @@ export async function reconcileBookingPayment(
     )
     const latestChargeId =
       typeof intent.latest_charge === 'string' ? intent.latest_charge : intent.latest_charge?.id
+    const reconciledStatus = paymentIntentBookingStatus(intent.status)
+    const paymentSucceeded = reconciledStatus === BookingPaymentStatus.SUCCEEDED
+    const paymentFailed =
+      reconciledStatus === BookingPaymentStatus.FAILED ||
+      reconciledStatus === BookingPaymentStatus.CANCELLED
 
-    await prisma.bookingPayment.update({
-      where: { id: payment.id },
-      data: {
-        providerChargeId: latestChargeId || undefined,
-        lastReconciledAt: new Date(),
-        reconciliationSource: source,
-      },
+    await prisma.$transaction(async tx => {
+      await tx.bookingPayment.update({
+        where: { id: payment.id },
+        data: {
+          status: reconciledStatus,
+          providerChargeId: latestChargeId || undefined,
+          paidAt: paymentSucceeded ? payment.paidAt || new Date() : payment.paidAt,
+          failedAt: paymentFailed ? payment.failedAt || new Date() : payment.failedAt,
+          failureCode: paymentFailed ? `PAYMENT_INTENT_${intent.status.toUpperCase()}` : null,
+          failureMessage: paymentFailed
+            ? intent.last_payment_error?.message || `Stripe PaymentIntent is ${intent.status}.`
+            : null,
+          lastReconciledAt: new Date(),
+          reconciliationSource: source,
+        },
+      })
+
+      if (paymentSucceeded || (paymentFailed && !payment.appointment.depositPaid)) {
+        await tx.appointment.update({
+          where: { id: payment.appointmentId },
+          data: paymentSucceeded
+            ? {
+                depositPaid: true,
+                depositPaidAt: payment.appointment.depositPaidAt || new Date(),
+                paymentStatus:
+                  Number(payment.amount) >= Number(payment.appointment.totalAmount)
+                    ? PaymentStatus.PAID
+                    : PaymentStatus.PARTIALLY_PAID,
+              }
+            : { paymentStatus: PaymentStatus.FAILED },
+        })
+      }
     })
 
-    const refunds = await stripe.refunds.list(
-      { payment_intent: payment.providerPaymentIntentId, limit: 10 },
-      { stripeAccount: payment.providerAccountId }
+    const refunds = await listAllPaymentIntentRefunds(
+      payment.providerPaymentIntentId,
+      payment.providerAccountId
     )
-    const latestRefund = [...refunds.data].sort((left, right) => right.created - left.created)[0]
-    if (latestRefund) await applyStripeRefund(latestRefund)
+    await reconcileStripeRefundCollection(payment, refunds, source)
   } else {
     await prisma.bookingPayment.update({
       where: { id: payment.id },

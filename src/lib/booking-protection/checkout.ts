@@ -335,6 +335,14 @@ export async function settleCheckoutSession(session: Stripe.Checkout.Session): P
         previousStatus:
           targetStatus === AppointmentStatus.CONFIRMED ? AppointmentStatus.PENDING : undefined,
         confirmedAt: targetStatus === AppointmentStatus.CONFIRMED ? now : null,
+        approvalExpiresAt:
+          targetStatus === AppointmentStatus.CONFIRMED
+            ? null
+            : payment.appointment.approvalExpiresAt,
+        approvalRespondedAt:
+          targetStatus === AppointmentStatus.CONFIRMED && payment.appointment.approvalExpiresAt
+            ? now
+            : undefined,
         depositPaid: true,
         depositPaidAt: now,
         paymentStatus: amount >= total ? PaymentStatus.PAID : PaymentStatus.PARTIALLY_PAID,

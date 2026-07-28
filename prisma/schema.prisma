@@ -622,6 +622,8 @@ model Appointment {
   totalAmount                  Decimal                       @db.Decimal(10, 2)
   paymentStatus                PaymentStatus                 @default(UNPAID)
   paidAt                       DateTime?
+  approvalExpiresAt            DateTime?
+  approvalRespondedAt          DateTime?
   reminderSentAt               DateTime?
   reminderCount                Int                           @default(0)
   bookingSource                String?
@@ -644,6 +646,7 @@ model Appointment {
   @@index([customerId])
   @@index([businessId, startTime])
   @@index([businessId, status, startTime])
+  @@index([status, approvalExpiresAt])
   @@index([businessId, createdAt])
   @@index([businessId, customerEmail])
   @@map("appointments")

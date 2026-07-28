@@ -20,6 +20,10 @@ export async function getAppointmentBusinessId(appointmentId: string) {
       businessNotes: true,
       customerNotes: true,
       totalAmount: true,
+      requiresDeposit: true,
+      depositPaid: true,
+      approvalExpiresAt: true,
+      approvalRespondedAt: true,
     },
   })
 

@@ -18,6 +18,11 @@ import { sendAppointmentStatusEmail } from '@/lib/services/email'
 import { logger } from '@/lib/observability/logger'
 import { deliverPushOutboxSafely } from '@/lib/push/delivery'
 import { enqueueBookingPushNotification } from '@/lib/push/outbox'
+import {
+  bookingRequiresApproval,
+  calculateApprovalExpiry,
+  readBookingApprovalSettings,
+} from '@/lib/booking-protection/approval'
 
 export { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 
@@ -245,6 +250,7 @@ export async function createBooking(
     }
     metadata?: Prisma.InputJsonValue
     countCustomerBooking?: boolean
+    approvalExpiresAt?: Date | null
   }
 ): Promise<BookingResult> {
   logger.info('booking.creation.started', { businessId, serviceId })
@@ -433,8 +439,14 @@ export async function createBooking(
     }
 
     // Determine initial status
-    const requiresApproval = service.requiresApproval || settings.requireApproval
+    const requiresApproval = bookingRequiresApproval(service.requiresApproval, business.settings)
     const status = options?.status || (requiresApproval ? 'PENDING' : 'CONFIRMED')
+    const approvalSettings = readBookingApprovalSettings(business.settings)
+    const approvalExpiresAt =
+      status === 'PENDING' && requiresApproval
+        ? (options?.approvalExpiresAt ??
+          calculateApprovalExpiry(startDateTime, approvalSettings.approvalWindowHours))
+        : null
 
     // Create appointment
     const appointment = await tx.appointment.create({
@@ -462,6 +474,7 @@ export async function createBooking(
         bookingSource: options?.bookingSource || 'website',
         bookingIp: options?.bookingIp,
         confirmedAt: status === 'CONFIRMED' ? new Date() : null,
+        approvalExpiresAt,
       },
       include: {
         service: true,

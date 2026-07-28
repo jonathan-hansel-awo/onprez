@@ -12,6 +12,7 @@ export type CancellationReason =
   | 'STAFF_UNAVAILABLE'
   | 'EMERGENCY'
   | 'DUPLICATE_BOOKING'
+  | 'PROFESSIONAL_REJECTED'
   | 'NO_SHOW_POLICY'
   | 'OTHER'
 
@@ -26,6 +27,7 @@ interface CancelBookingModalProps {
   ) => Promise<void>
   booking: {
     id: string
+    status?: string
     confirmationNumber: string
     startTime: string
     endTime: string
@@ -71,6 +73,11 @@ const CANCELLATION_REASONS: { value: CancellationReason; label: string; descript
     value: 'DUPLICATE_BOOKING',
     label: 'Duplicate Booking',
     description: 'This is a duplicate of another booking',
+  },
+  {
+    value: 'PROFESSIONAL_REJECTED',
+    label: 'Reject Booking Request',
+    description: 'The professional cannot accept this pending booking request',
   },
   {
     value: 'NO_SHOW_POLICY',
@@ -204,7 +211,9 @@ export function CancelBookingModal({
             Reason for cancellation <span className="text-red-500">*</span>
           </label>
           <div className="space-y-2">
-            {CANCELLATION_REASONS.map(reason => (
+            {CANCELLATION_REASONS.filter(
+              reason => reason.value !== 'PROFESSIONAL_REJECTED' || booking.status === 'PENDING'
+            ).map(reason => (
               <button
                 key={reason.value}
                 type="button"
@@ -217,6 +226,7 @@ export function CancelBookingModal({
                       'STAFF_UNAVAILABLE',
                       'EMERGENCY',
                       'DUPLICATE_BOOKING',
+                      'PROFESSIONAL_REJECTED',
                     ].includes(reason.value)
                   ) {
                     setRefundDeposit(true)
@@ -304,6 +314,7 @@ export function CancelBookingModal({
                       'STAFF_UNAVAILABLE',
                       'EMERGENCY',
                       'DUPLICATE_BOOKING',
+                      'PROFESSIONAL_REJECTED',
                     ].includes(selectedReason)
                   )
                 }
