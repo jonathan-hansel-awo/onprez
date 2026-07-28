@@ -170,6 +170,8 @@ function Bookings() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [businessSlug, setBusinessSlug] = useState<string>('')
+  const [linkedBookingId, setLinkedBookingId] = useState(searchParams.get('bookingId') || '')
+  const [linkedBusinessId] = useState(searchParams.get('businessId') || '')
 
   // Modal state
   const [selectedBooking, setSelectedBooking] = useState<BookingListItem | null>(null)
@@ -235,6 +237,8 @@ function Bookings() {
       if (debouncedSearch) params.set('search', debouncedSearch)
       if (startDate) params.set('startDate', startDate.toISOString().split('T')[0])
       if (endDate) params.set('endDate', endDate.toISOString().split('T')[0])
+      if (linkedBookingId) params.set('bookingId', linkedBookingId)
+      if (linkedBookingId && linkedBusinessId) params.set('businessId', linkedBusinessId)
 
       const response = await fetch(`/api/dashboard/bookings?${params.toString()}`)
       const result = await response.json()
@@ -247,12 +251,32 @@ function Bookings() {
       setPagination(result.data.pagination)
       setStatusCounts(result.data.statusCounts)
       setBusinessSlug(result.data.businessSlug || '')
+      if (linkedBookingId) {
+        const linkedBooking = result.data.appointments.find(
+          (booking: BookingListItem) => booking.id === linkedBookingId
+        )
+        if (linkedBooking) {
+          setSelectedBooking(linkedBooking)
+          setIsModalOpen(true)
+        }
+        setLinkedBookingId('')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
-  }, [pagination.page, pagination.limit, status, debouncedSearch, startDate, endDate, sortValue])
+  }, [
+    pagination.page,
+    pagination.limit,
+    status,
+    debouncedSearch,
+    startDate,
+    endDate,
+    sortValue,
+    linkedBookingId,
+    linkedBusinessId,
+  ])
 
   useEffect(() => {
     fetchBookings()
@@ -265,13 +289,15 @@ function Bookings() {
     if (search) params.set('search', search)
     if (startDate) params.set('startDate', startDate.toISOString().split('T')[0])
     if (endDate) params.set('endDate', endDate.toISOString().split('T')[0])
+    if (linkedBookingId) params.set('bookingId', linkedBookingId)
+    if (linkedBookingId && linkedBusinessId) params.set('businessId', linkedBusinessId)
 
     const [sortBy, sortOrder] = sortValue.split('-')
     if (sortBy !== 'startTime') params.set('sortBy', sortBy)
     if (sortOrder !== 'desc') params.set('sortOrder', sortOrder)
 
     router.replace(`/dashboard/bookings?${params.toString()}`, { scroll: false })
-  }, [status, search, startDate, endDate, sortValue, router])
+  }, [status, search, startDate, endDate, sortValue, linkedBookingId, linkedBusinessId, router])
 
   // Handlers
   const handleQuickCreateSuccess = () => {
@@ -427,12 +453,6 @@ function Bookings() {
 
   const handleRescheduleClose = () => {
     setIsRescheduleOpen(false)
-  }
-
-  const handleCancel = () => {
-    if (selectedBooking) {
-      handleStatusChange('CANCELLED')
-    }
   }
 
   // Handle cancel from detail modal

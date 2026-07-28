@@ -5,6 +5,7 @@ import { createBooking } from '@/lib/services/booking'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
 import { resolveWritableBusinessContext } from '@/lib/auth/business-route-utils'
 import { z } from 'zod'
+import { deliverPushOutboxSafely } from '@/lib/push/delivery'
 
 const quickCreateSchema = z
   .object({
@@ -131,6 +132,10 @@ export async function POST(request: NextRequest) {
         },
         { status: result.conflicts || result.idempotencyConflict ? 409 : 400 }
       )
+    }
+
+    if (result.pushOutboxId) {
+      await deliverPushOutboxSafely(result.pushOutboxId)
     }
 
     return NextResponse.json(

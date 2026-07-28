@@ -14,6 +14,7 @@ import { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 import { z } from 'zod'
 import { logApiError } from '@/lib/api/error-response'
 import { logger, withRequestLogging } from '@/lib/observability/logger'
+import { deliverPushOutboxSafely } from '@/lib/push/delivery'
 
 const createBookingSchema = z.object({
   businessId: z.string().min(1, 'Business ID is required').max(128),
@@ -459,24 +460,27 @@ async function handlePost(request: NextRequest) {
     }
 
     if (!result.replayed) {
-      const notifications = await sendBookingCreatedNotifications({
-        bookingId: appointment.id,
-        status: appointment.status,
-        customerName: appointment.customer.name,
-        customerEmail: appointment.customer.email,
-        customerPhone: appointment.customerPhone,
-        customerNotes: appointment.customerNotes,
-        businessName: appointment.business.name,
-        businessEmail: appointment.business.email,
-        businessOwnerEmail: appointment.business.owner.email,
-        businessAddress: appointment.business.address,
-        serviceName: appointment.service.name,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        timezone: appointment.business.timezone,
-        totalAmount: Number(appointment.totalAmount),
-        currency: appointment.service.currency,
-      })
+      const [notifications] = await Promise.all([
+        sendBookingCreatedNotifications({
+          bookingId: appointment.id,
+          status: appointment.status,
+          customerName: appointment.customer.name,
+          customerEmail: appointment.customer.email,
+          customerPhone: appointment.customerPhone,
+          customerNotes: appointment.customerNotes,
+          businessName: appointment.business.name,
+          businessEmail: appointment.business.email,
+          businessOwnerEmail: appointment.business.owner.email,
+          businessAddress: appointment.business.address,
+          serviceName: appointment.service.name,
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          timezone: appointment.business.timezone,
+          totalAmount: Number(appointment.totalAmount),
+          currency: appointment.service.currency,
+        }),
+        result.pushOutboxId ? deliverPushOutboxSafely(result.pushOutboxId) : Promise.resolve(null),
+      ])
       logger[notifications.customer.success && notifications.business.success ? 'info' : 'warn'](
         'booking.api.notifications_completed',
         {

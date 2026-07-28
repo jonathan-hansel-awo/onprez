@@ -12,6 +12,7 @@ const querySchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   search: z.string().optional(),
+  bookingId: z.string().min(1).max(128).optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
   sortBy: z.enum(['startTime', 'createdAt', 'customerName']).default('startTime'),
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest) {
       startDate: searchParams.get('startDate') || undefined,
       endDate: searchParams.get('endDate') || undefined,
       search: searchParams.get('search') || undefined,
+      bookingId: searchParams.get('bookingId') || undefined,
       page: searchParams.get('page') || 1,
       limit: searchParams.get('limit') || 10,
       sortBy: searchParams.get('sortBy') || 'startTime',
@@ -52,7 +54,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { status, startDate, endDate, search, page, limit, sortBy, sortOrder } = queryResult.data
+    const { status, startDate, endDate, search, bookingId, page, limit, sortBy, sortOrder } =
+      queryResult.data
 
     // Build where clause
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,6 +89,10 @@ export async function GET(request: NextRequest) {
         { customerEmail: { contains: search, mode: 'insensitive' } },
         { service: { name: { contains: search, mode: 'insensitive' } } },
       ]
+    }
+
+    if (bookingId) {
+      where.id = bookingId
     }
 
     // Get total count

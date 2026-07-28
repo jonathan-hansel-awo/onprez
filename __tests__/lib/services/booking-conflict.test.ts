@@ -1,6 +1,7 @@
 /** @jest-environment node */
 
 import { prisma } from '@/lib/prisma'
+import { enqueueBookingPushNotification } from '@/lib/push/outbox'
 import { checkBookingConflicts, createBooking, zonedDateTimeToUtc } from '@/lib/services/booking'
 
 jest.mock('@/lib/prisma', () => ({
@@ -11,6 +12,9 @@ jest.mock('@/lib/prisma', () => ({
     $transaction: jest.fn(),
   },
 }))
+jest.mock('@/lib/push/outbox', () => ({
+  enqueueBookingPushNotification: jest.fn(),
+}))
 
 const mockedPrisma = prisma as unknown as {
   service: { findUnique: jest.Mock }
@@ -18,9 +22,13 @@ const mockedPrisma = prisma as unknown as {
   appointment: { findMany: jest.Mock }
   $transaction: jest.Mock
 }
+const mockedEnqueuePush = enqueueBookingPushNotification as jest.Mock
 
 describe('transaction-safe booking conflicts', () => {
-  beforeEach(() => jest.resetAllMocks())
+  beforeEach(() => {
+    jest.resetAllMocks()
+    mockedEnqueuePush.mockResolvedValue({ id: 'outbox-1' })
+  })
 
   it('converts business-local times across daylight-saving offsets', () => {
     expect(zonedDateTimeToUtc('2030-01-01', '10:00', 'Europe/London').toISOString()).toBe(
