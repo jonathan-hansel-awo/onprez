@@ -34,6 +34,7 @@ model User {
   sessions                   Session[]
   pushSubscriptions          PushSubscription[]
   pushNotificationPreference PushNotificationPreference?
+  pushNotificationDeliveries PushNotificationDelivery[]
   invitationsSent            TeamInvitation[]            @relation("InvitedInvitations")
   trustedDevices             TrustedDevice[]
   businessMemberships        BusinessMember[]
@@ -42,20 +43,21 @@ model User {
 }
 
 model PushSubscription {
-  id            String    @id @default(cuid())
+  id            String                     @id @default(cuid())
   userId        String
-  endpoint      String    @unique
+  endpoint      String                     @unique
   p256dh        String
   auth          String
   deviceName    String?
   userAgent     String?
   expiresAt     DateTime?
-  lastSeenAt    DateTime  @default(now())
-  failureCount  Int       @default(0)
+  lastSeenAt    DateTime                   @default(now())
+  failureCount  Int                        @default(0)
   lastFailureAt DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+  user          User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries    PushNotificationDelivery[]
 
   @@index([userId, lastSeenAt])
   @@index([expiresAt])
@@ -73,6 +75,55 @@ model PushNotificationPreference {
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("push_notification_preferences")
+}
+
+model PushNotificationOutbox {
+  id            String                       @id @default(cuid())
+  eventKey      String                       @unique
+  businessId    String
+  appointmentId String
+  eventType     PushNotificationEventType
+  payload       Json
+  status        PushNotificationOutboxStatus @default(PENDING)
+  attempts      Int                          @default(0)
+  availableAt   DateTime                     @default(now())
+  lastAttemptAt DateTime?
+  processedAt   DateTime?
+  lastError     String?
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+  business      Business                     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointment   Appointment                  @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  deliveries    PushNotificationDelivery[]
+
+  @@index([status, availableAt])
+  @@index([businessId, createdAt])
+  @@index([appointmentId, createdAt])
+  @@map("push_notification_outbox")
+}
+
+model PushNotificationDelivery {
+  id             String                         @id @default(cuid())
+  outboxId       String
+  userId         String
+  subscriptionId String?
+  status         PushNotificationDeliveryStatus @default(PENDING)
+  attempts       Int                            @default(0)
+  lastAttemptAt  DateTime?
+  deliveredAt    DateTime?
+  failureCode    String?
+  lastError      String?
+  deviceName     String?
+  createdAt      DateTime                       @default(now())
+  updatedAt      DateTime                       @updatedAt
+  outbox         PushNotificationOutbox         @relation(fields: [outboxId], references: [id], onDelete: Cascade)
+  user           User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription   PushSubscription?              @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@unique([outboxId, subscriptionId])
+  @@index([outboxId, status])
+  @@index([userId, createdAt])
+  @@map("push_notification_deliveries")
 }
 
 model TeamInvitation {
@@ -332,6 +383,7 @@ model Business {
   featureEntitlements    FeatureEntitlement[]
   stripeConnectedAccount StripeConnectedAccount?
   bookingPayments        BookingPayment[]
+  pushNotificationOutbox PushNotificationOutbox[]
 
   @@index([ownerId])
   @@index([category])
@@ -586,6 +638,7 @@ model Appointment {
   idempotencyKeys              BookingIdempotencyKey[]
   statusTransitions            AppointmentStatusTransition[]
   payments                     BookingPayment[]
+  pushNotificationOutbox       PushNotificationOutbox[]
 
   @@index([serviceId])
   @@index([customerId])
@@ -977,6 +1030,29 @@ enum AppointmentStatus {
   CANCELLED
   NO_SHOW
   RESCHEDULED
+}
+
+enum PushNotificationEventType {
+  NEW_BOOKING
+  BOOKING_CANCELLED
+  BOOKING_RESCHEDULED
+}
+
+enum PushNotificationOutboxStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  PARTIAL
+  FAILED
+  NO_RECIPIENTS
+}
+
+enum PushNotificationDeliveryStatus {
+  PENDING
+  DELIVERED
+  RETRY
+  FAILED
+  EXPIRED
 }
 
 enum CancellationSource {

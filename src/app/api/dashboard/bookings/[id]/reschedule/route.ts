@@ -105,7 +105,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const oldStartTime = appointment.startTime
     const oldEndTime = appointment.endTime
-    const result = await rescheduleAppointment(id, businessId, date, startTime, reason, user.id)
+    const result = await rescheduleAppointment(
+      id,
+      businessId,
+      date,
+      startTime,
+      reason,
+      user.id,
+      notifyCustomer
+    )
 
     if (!result.success || !result.appointment) {
       return NextResponse.json(
@@ -115,11 +123,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const updatedAppointment = result.appointment
-
-    // TODO: Send notification email to customer if notifyCustomer is true (Milestone 9.10)
-    if (notifyCustomer) {
-      // await sendRescheduleNotification(updatedAppointment, oldStartTime, oldEndTime)
-    }
 
     return NextResponse.json({
       success: true,

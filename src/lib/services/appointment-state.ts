@@ -1,7 +1,14 @@
-import { AppointmentStatus, CancellationSource, Prisma } from '@prisma/client'
+import {
+  AppointmentStatus,
+  CancellationSource,
+  Prisma,
+  PushNotificationEventType,
+} from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { sendAppointmentStatusEmail } from '@/lib/services/email'
 import { logger } from '@/lib/observability/logger'
+import { deliverPushOutboxSafely } from '@/lib/push/delivery'
+import { enqueueBookingPushNotification } from '@/lib/push/outbox'
 
 export const VALID_APPOINTMENT_TRANSITIONS: Readonly<
   Record<AppointmentStatus, readonly AppointmentStatus[]>
@@ -67,7 +74,7 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
     toStatus: input.toStatus,
   })
 
-  const appointment = await prisma.$transaction(async tx => {
+  const transactionResult = await prisma.$transaction(async tx => {
     const current = await tx.appointment.findFirst({
       where: { id: input.appointmentId, businessId: input.businessId },
     })
@@ -158,7 +165,7 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
       },
     })
 
-    return tx.appointment.findUniqueOrThrow({
+    const appointment = await tx.appointment.findUniqueOrThrow({
       where: { id: current.id },
       include: {
         service: true,
@@ -173,7 +180,27 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
         },
       },
     })
+
+    const pushOutbox =
+      input.toStatus === 'CANCELLED' && input.cancellationSource !== 'SYSTEM'
+        ? await enqueueBookingPushNotification(tx, {
+            eventType: PushNotificationEventType.BOOKING_CANCELLED,
+            eventKey: `booking:${appointment.id}:cancelled:${changedAt.toISOString()}`,
+            businessId: input.businessId,
+            appointmentId: appointment.id,
+            customerName: appointment.customerName,
+            serviceName: appointment.service.name,
+            startTime: appointment.startTime,
+            timezone: appointment.business.timezone,
+          })
+        : null
+
+    return {
+      appointment,
+      pushOutboxId: pushOutbox?.id,
+    }
   })
+  const { appointment, pushOutboxId } = transactionResult
 
   logger.info('booking.transition.database_succeeded', {
     bookingId: appointment.id,
@@ -182,29 +209,35 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
     toStatus: appointment.status,
   })
 
+  const pushDelivery = pushOutboxId ? deliverPushOutboxSafely(pushOutboxId) : Promise.resolve(null)
   let notificationSent = false
   if (input.notifyCustomer) {
     logger.info('booking.transition.email_started', {
       bookingId: appointment.id,
       businessId: input.businessId,
     })
-    const emailResult = await sendAppointmentStatusEmail({
-      to: appointment.customerEmail,
-      customerName: appointment.customerName,
-      businessName: appointment.business.name,
-      serviceName: appointment.service.name,
-      startTime: appointment.startTime,
-      timezone: appointment.business.timezone,
-      fromStatus: appointment.previousStatus || input.toStatus,
-      toStatus: appointment.status,
-      reason: input.reason,
-    })
+    const [emailResult] = await Promise.all([
+      sendAppointmentStatusEmail({
+        to: appointment.customerEmail,
+        customerName: appointment.customerName,
+        businessName: appointment.business.name,
+        serviceName: appointment.service.name,
+        startTime: appointment.startTime,
+        timezone: appointment.business.timezone,
+        fromStatus: appointment.previousStatus || input.toStatus,
+        toStatus: appointment.status,
+        reason: input.reason,
+      }),
+      pushDelivery,
+    ])
     notificationSent = emailResult.success
     logger[notificationSent ? 'info' : 'warn']('booking.transition.email_completed', {
       bookingId: appointment.id,
       businessId: input.businessId,
       sent: notificationSent,
     })
+  } else {
+    await pushDelivery
   }
 
   logger.info('booking.transition.completed', {

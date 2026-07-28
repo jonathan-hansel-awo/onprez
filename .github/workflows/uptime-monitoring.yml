@@ -22,6 +22,7 @@ jobs:
       BASE_URL: ${{ vars.UPTIME_BASE_URL || 'https://onprez.com' }}
       PUBLIC_HANDLE: ${{ vars.UPTIME_PUBLIC_HANDLE }}
       RESEND_HEALTHCHECK_API_KEY: ${{ secrets.RESEND_HEALTHCHECK_API_KEY }}
+      PUSH_DELIVERY_CRON_SECRET: ${{ secrets.PUSH_DELIVERY_CRON_SECRET }}
 
     steps:
       - name: Check public, protected, database, and email-provider paths
@@ -70,6 +71,16 @@ jobs:
           else
             # A prompt 401 confirms provider reachability without exposing credentials.
             probe "Resend API availability" "https://api.resend.com/domains" "401"
+          fi
+
+          if [[ -n "$PUSH_DELIVERY_CRON_SECRET" ]]; then
+            curl --silent --show-error --fail --max-time 30 \
+              --request POST \
+              --header "Authorization: Bearer $PUSH_DELIVERY_CRON_SECRET" \
+              "$BASE_URL/api/cron/push-notifications" >/dev/null \
+              || echo "::warning::Push delivery retry dispatch did not complete"
+          else
+            echo "Push delivery retries skipped: PUSH_DELIVERY_CRON_SECRET is not configured"
           fi
 
           if (( ${#failures[@]} > 0 )); then

@@ -1,8 +1,16 @@
-import { AppointmentStatus, BookingPaymentStatus, PaymentStatus, Prisma } from '@prisma/client'
+import {
+  AppointmentStatus,
+  BookingPaymentStatus,
+  PaymentStatus,
+  Prisma,
+  PushNotificationEventType,
+} from '@prisma/client'
 import type Stripe from 'stripe'
 
 import { logger } from '@/lib/observability/logger'
 import { prisma } from '@/lib/prisma'
+import { deliverPushOutboxSafely } from '@/lib/push/delivery'
+import { enqueueBookingPushNotification } from '@/lib/push/outbox'
 import { sendBookingCreatedNotifications } from '@/lib/services/booking-notifications'
 import { getStripeClient } from '@/lib/stripe/config'
 
@@ -357,11 +365,34 @@ export async function settleCheckoutSession(session: Stripe.Checkout.Session): P
       })
     }
 
-    return true
+    const appointment = await tx.appointment.findUniqueOrThrow({
+      where: { id: payment.appointmentId },
+      include: {
+        service: { select: { name: true } },
+        business: { select: { timezone: true } },
+      },
+    })
+    const pushOutbox = await enqueueBookingPushNotification(tx, {
+      eventType: PushNotificationEventType.NEW_BOOKING,
+      eventKey: `booking:${appointment.id}:created`,
+      businessId: payment.businessId,
+      appointmentId: appointment.id,
+      customerName: appointment.customerName,
+      serviceName: appointment.service.name,
+      startTime: appointment.startTime,
+      timezone: appointment.business.timezone,
+    })
+
+    return pushOutbox.id
   })
 
-  if (firstSettlement) await sendPaymentConfirmedNotifications(payment.id)
-  return firstSettlement
+  if (firstSettlement) {
+    await Promise.all([
+      sendPaymentConfirmedNotifications(payment.id),
+      deliverPushOutboxSafely(firstSettlement),
+    ])
+  }
+  return Boolean(firstSettlement)
 }
 
 export async function releaseCheckoutSession(

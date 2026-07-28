@@ -10,6 +10,7 @@ import {
   resolveWritableBusinessContext,
 } from '@/lib/auth/business-route-utils'
 import { addCalendarDays, DEFAULT_TIMEZONE, zonedDateTimeToUtc } from '@/lib/utils/timezone'
+import { deliverPushOutboxSafely } from '@/lib/push/delivery'
 
 export async function GET(request: NextRequest) {
   try {
@@ -217,6 +218,10 @@ export async function POST(request: NextRequest) {
         { success: false, error: result.error, conflicts: result.conflicts },
         { status: result.conflicts ? 409 : 400 }
       )
+    }
+
+    if (result.pushOutboxId) {
+      await deliverPushOutboxSafely(result.pushOutboxId)
     }
 
     return NextResponse.json(

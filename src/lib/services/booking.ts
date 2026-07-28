@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { Prisma, PushNotificationEventType } from '@prisma/client'
 import { createHash } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import {
@@ -14,7 +14,10 @@ import {
   zonedDateTimeToUtc,
 } from '@/lib/utils/timezone'
 import { AppointmentTransitionError, transitionAppointment } from '@/lib/services/appointment-state'
+import { sendAppointmentStatusEmail } from '@/lib/services/email'
 import { logger } from '@/lib/observability/logger'
+import { deliverPushOutboxSafely } from '@/lib/push/delivery'
+import { enqueueBookingPushNotification } from '@/lib/push/outbox'
 
 export { zonedDateTimeToUtc } from '@/lib/utils/timezone'
 
@@ -37,6 +40,7 @@ export interface BookingResult {
   conflicts?: ConflictCheckResult['conflicts']
   replayed?: boolean
   idempotencyConflict?: boolean
+  pushOutboxId?: string
 }
 
 const BLOCKING_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED'] as const
@@ -291,7 +295,7 @@ export async function createBooking(
     return { success: false, error: timeValidation.reason }
   }
 
-  return prisma.$transaction(async tx => {
+  const result = await prisma.$transaction(async tx => {
     logger.info('booking.database.transaction_started', { businessId, serviceId })
     await lockBusinessBookingSchedule(tx, businessId)
 
@@ -492,13 +496,32 @@ export async function createBooking(
       })
     }
 
+    const pushOutbox = options?.deposit
+      ? null
+      : await enqueueBookingPushNotification(tx, {
+          eventType: PushNotificationEventType.NEW_BOOKING,
+          eventKey: `booking:${appointment.id}:created`,
+          businessId,
+          appointmentId: appointment.id,
+          customerName: customerData.name,
+          serviceName: service.name,
+          startTime: startDateTime,
+          timezone,
+        })
+
     logger.info('booking.database.appointment_created', {
       businessId,
       serviceId,
       bookingId: appointment.id,
     })
-    return { success: true, appointment }
+    return {
+      success: true,
+      appointment,
+      ...(pushOutbox && { pushOutboxId: pushOutbox.id }),
+    }
   })
+
+  return result
 }
 
 /**
@@ -510,7 +533,8 @@ export async function rescheduleAppointment(
   newDate: string,
   newStartTime: string,
   reason?: string,
-  rescheduledBy?: string
+  rescheduledBy?: string,
+  notifyCustomer = true
 ): Promise<BookingResult> {
   const appointment = await prisma.appointment.findFirst({
     where: { id: appointmentId, businessId },
@@ -549,7 +573,7 @@ export async function rescheduleAppointment(
     return { success: false, error: timeValidation.reason }
   }
 
-  return prisma.$transaction(async tx => {
+  const result = await prisma.$transaction(async tx => {
     await lockBusinessBookingSchedule(tx, businessId)
     const conflictCheck = await checkBookingConflicts(
       businessId,
@@ -599,8 +623,43 @@ export async function rescheduleAppointment(
       },
     })
 
-    return { success: true, appointment: updatedAppointment }
+    const rescheduledAt = updatedAppointment.rescheduledAt || new Date()
+    const pushOutbox = await enqueueBookingPushNotification(tx, {
+      eventType: PushNotificationEventType.BOOKING_RESCHEDULED,
+      eventKey: `booking:${updatedAppointment.id}:rescheduled:${rescheduledAt.toISOString()}`,
+      businessId,
+      appointmentId: updatedAppointment.id,
+      customerName: updatedAppointment.customerName,
+      serviceName: updatedAppointment.service.name,
+      startTime: updatedAppointment.startTime,
+      timezone: updatedAppointment.business.timezone,
+    })
+
+    return {
+      success: true,
+      appointment: updatedAppointment,
+      pushOutboxId: pushOutbox.id,
+    }
   })
+
+  await Promise.all([
+    result.pushOutboxId ? deliverPushOutboxSafely(result.pushOutboxId) : Promise.resolve(null),
+    notifyCustomer && result.appointment
+      ? sendAppointmentStatusEmail({
+          to: result.appointment.customerEmail,
+          customerName: result.appointment.customerName,
+          businessName: result.appointment.business.name,
+          serviceName: result.appointment.service.name,
+          startTime: result.appointment.startTime,
+          timezone: result.appointment.business.timezone,
+          fromStatus: result.appointment.status,
+          toStatus: 'RESCHEDULED',
+          reason,
+        })
+      : Promise.resolve(null),
+  ])
+
+  return result
 }
 
 /**

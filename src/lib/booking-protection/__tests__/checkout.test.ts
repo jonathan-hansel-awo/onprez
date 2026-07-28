@@ -9,6 +9,8 @@ import {
 } from '@/lib/booking-protection/checkout'
 import { prisma } from '@/lib/prisma'
 import { sendBookingCreatedNotifications } from '@/lib/services/booking-notifications'
+import { deliverPushOutboxSafely } from '@/lib/push/delivery'
+import { enqueueBookingPushNotification } from '@/lib/push/outbox'
 import { getStripeClient } from '@/lib/stripe/config'
 
 jest.mock('@/lib/prisma', () => ({
@@ -20,7 +22,7 @@ jest.mock('@/lib/prisma', () => ({
       update: jest.fn(),
       updateMany: jest.fn(),
     },
-    appointment: { update: jest.fn() },
+    appointment: { update: jest.fn(), findUniqueOrThrow: jest.fn() },
     appointmentStatusTransition: { create: jest.fn() },
     customer: { update: jest.fn(), updateMany: jest.fn() },
     $transaction: jest.fn(),
@@ -29,6 +31,12 @@ jest.mock('@/lib/prisma', () => ({
 jest.mock('@/lib/stripe/config', () => ({ getStripeClient: jest.fn() }))
 jest.mock('@/lib/services/booking-notifications', () => ({
   sendBookingCreatedNotifications: jest.fn(),
+}))
+jest.mock('@/lib/push/outbox', () => ({
+  enqueueBookingPushNotification: jest.fn(),
+}))
+jest.mock('@/lib/push/delivery', () => ({
+  deliverPushOutboxSafely: jest.fn(),
 }))
 jest.mock('@/lib/observability/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -43,6 +51,8 @@ const mockedPrisma = prisma as unknown as {
 }
 const mockedStripe = getStripeClient as jest.Mock
 const mockedNotifications = sendBookingCreatedNotifications as jest.Mock
+const mockedEnqueuePush = enqueueBookingPushNotification as jest.Mock
+const mockedDeliverPush = deliverPushOutboxSafely as jest.Mock
 const checkoutCreate = jest.fn()
 
 const appointment = {
@@ -80,6 +90,15 @@ describe('booking deposit Checkout', () => {
     mockedNotifications.mockResolvedValue({
       customer: { success: true },
       business: { success: true },
+    })
+    mockedEnqueuePush.mockResolvedValue({ id: 'outbox-1' })
+    mockedDeliverPush.mockResolvedValue('DELIVERED')
+    mockedPrisma.appointment.findUniqueOrThrow.mockResolvedValue({
+      ...appointment,
+      customerName: 'Customer',
+      startTime: new Date('2026-08-10T09:00:00.000Z'),
+      service: { name: 'Soft Glam' },
+      business: { timezone: 'Europe/London' },
     })
   })
 
@@ -172,6 +191,8 @@ describe('booking deposit Checkout', () => {
       })
     )
     expect(mockedNotifications).toHaveBeenCalled()
+    expect(mockedEnqueuePush).toHaveBeenCalled()
+    expect(mockedDeliverPush).toHaveBeenCalledWith('outbox-1')
   })
 
   it('keeps approval-required appointments pending after the deposit succeeds', async () => {
