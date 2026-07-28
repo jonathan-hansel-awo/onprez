@@ -9,9 +9,9 @@ import {
   Instagram,
   MapPin,
   ShieldCheck,
-  Sparkles,
   Star,
 } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import type { ReactNode } from 'react'
 
 interface ActionProps {
@@ -545,7 +545,8 @@ export function InstagramSocialSection({
             href={href}
             className="inline-flex items-center gap-2 font-semibold text-[var(--theme-primary)]"
           >
-            Follow on Instagram <Sparkles className="h-4 w-4" />
+            Follow on Instagram
+            <OnPrezMark className="h-4 w-4" variant="currentColor" />
           </Link>
         </div>
         {images.length > 0 && (

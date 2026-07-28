@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 'use client'
 
 import { FAQSection } from '@/types/page-sections'
@@ -7,6 +6,7 @@ import { TextArea } from '@/components/form/text-area'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/form/label'
 import { Button } from '@/components/ui/button'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { useState } from 'react'
 import { Plus, X, GripVertical, ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -234,9 +234,12 @@ export function FAQSectionEditor({ section, onUpdate }: FAQSectionEditorProps) {
         </div>
 
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <p className="text-sm text-purple-800">
-            ✨ <strong>SEO Benefit:</strong> FAQs help your page rank better in search engines and
-            can appear in Google's rich snippets
+          <p className="flex items-start gap-2 text-sm text-purple-800">
+            <OnPrezMark className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              <strong>SEO Benefit:</strong> FAQs help your page rank better in search engines and
+              can appear in Google's rich snippets
+            </span>
           </p>
         </div>
       </div>

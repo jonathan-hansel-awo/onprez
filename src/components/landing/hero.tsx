@@ -14,8 +14,8 @@ import {
   Link2,
   MapPin,
   MessageCircle,
-  Sparkles,
 } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { homepagePositioning } from './homepage-positioning'
 
 const servicePreview = [
@@ -72,7 +72,7 @@ export function Hero() {
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           >
             <p className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/75 px-3.5 py-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-700 shadow-sm backdrop-blur sm:text-sm">
-              <Sparkles className="h-4 w-4 text-blue-600" aria-hidden="true" />
+              <OnPrezMark className="h-4 w-4" />
               {homepagePositioning.badge}
             </p>
 

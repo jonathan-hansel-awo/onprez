@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
@@ -8,8 +7,9 @@ import { Label } from '@/components/form/label'
 import { Select } from '@/components/form/select'
 import { Button } from '@/components/ui/button'
 import { ColorPicker } from '@/components/ui/color-picker'
-import { Palette, Type, Layout, RotateCcw, Sparkles, Check, Layers } from 'lucide-react'
+import { Palette, Type, Layout, RotateCcw, Check, Layers } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 interface ThemeSettings {
   primaryColor?: string
@@ -140,6 +140,8 @@ export function ThemeCustomizer({ businessId, onUpdate, className }: ThemeCustom
 
   useEffect(() => {
     fetchTheme()
+    // fetchTheme is intentionally scoped to the current business.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessId])
 
   async function fetchTheme() {
@@ -223,7 +225,7 @@ export function ThemeCustomizer({ businessId, onUpdate, className }: ThemeCustom
       {/* Quick Color Palettes */}
       <Card className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 border-2">
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-onprez-purple" />
+          <OnPrezMark className="h-5 w-5" />
           <h3 className="text-lg font-semibold text-gray-900">Quick Color Palettes</h3>
         </div>
 

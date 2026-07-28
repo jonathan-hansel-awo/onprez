@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 interface ContextMockupProps {
   type: 'instagram' | 'business-card' | 'email' | 'google' | 'speech'
@@ -24,7 +25,10 @@ export function ContextMockup({ type, handle = 'your-name' }: ContextMockupProps
           </div>
           {/* Bio */}
           <div className="p-4 bg-white">
-            <p className="text-sm text-gray-700 mb-2">✨ Professional Services</p>
+            <p className="mb-2 flex items-center gap-1.5 text-sm text-gray-700">
+              <OnPrezMark className="h-4 w-4 shrink-0" />
+              Professional Services
+            </p>
             <p className="text-sm text-gray-700 mb-3">📍 Your Location</p>
             <motion.div
               className="bg-blue-50 border-2 border-onprez-blue rounded-lg p-2 text-center"

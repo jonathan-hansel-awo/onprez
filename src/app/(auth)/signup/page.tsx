@@ -18,6 +18,7 @@ import { LockIcon, EyeIcon, EyeOffIcon, Check, Copy } from 'lucide-react'
 import { useClipboard } from '@/lib/hooks/use-clipboard'
 import { sessionStorage } from '@/lib/utils/session-storage'
 import Loading from '@/app/[handle]/loading'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 const BUSINESS_CATEGORIES: SelectOption[] = [
   { value: 'SALON', label: 'Hair Salon' },
@@ -524,8 +525,9 @@ function SignupPageComponent() {
                       />
                     )}
 
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Claim Your Handle ✨
+                    <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                      Claim Your Handle
+                      <OnPrezMark className="h-4 w-4" />
                     </label>
                     <div className="relative">
                       <div

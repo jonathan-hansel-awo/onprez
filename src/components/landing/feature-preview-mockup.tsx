@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { cn } from '@/lib/utils/cn'
 
 interface FeaturePreviewMockupProps {
@@ -133,10 +134,16 @@ export function FeaturePreviewMockup({
             >
               {[
                 { icon: '💼', label: 'Service One' },
-                { icon: '✨', label: 'Service Two' },
+                { icon: 'onprez', label: 'Service Two' },
               ].map((service, i) => (
                 <motion.div key={i} className={cn('rounded-lg p-3', colors.secondary)} layout>
-                  <div className="text-2xl mb-1">{service.icon}</div>
+                  <div className="mb-1 flex h-8 items-center">
+                    {service.icon === 'onprez' ? (
+                      <OnPrezMark className="h-7 w-7" />
+                    ) : (
+                      <span className="text-2xl">{service.icon}</span>
+                    )}
+                  </div>
                   <p className={cn('text-xs font-semibold', colors.text)}>{service.label}</p>
                 </motion.div>
               ))}

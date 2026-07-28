@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { cn } from '@/lib/utils/cn'
 
 interface BrowserMockupProps {
@@ -356,7 +357,7 @@ export function BrowserMockup({ className }: BrowserMockupProps) {
 
       {/* Floating Badge */}
       <motion.div
-        className="absolute -top-4 -right-4 bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg z-10"
+        className="absolute -right-4 -top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-onprez-blue to-onprez-purple px-4 py-2 text-sm font-semibold text-white shadow-lg"
         animate={{
           y: [0, -10, 0],
         }}
@@ -366,7 +367,8 @@ export function BrowserMockup({ className }: BrowserMockupProps) {
           ease: 'easeInOut',
         }}
       >
-        ✨ Live Demo
+        <OnPrezMark className="h-4 w-4" variant="currentColor" />
+        Live Demo
       </motion.div>
 
       {/* Decorative Gradient Orbs */}

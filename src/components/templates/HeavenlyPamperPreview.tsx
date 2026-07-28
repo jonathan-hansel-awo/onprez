@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { TemplateCatalogueItem } from '@/data/presence-template-catalogue'
 import { realisticDemoBusiness } from '@/data/realistic-demo-business'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 interface DemoService {
   id: string
@@ -321,9 +322,10 @@ export function HeavenlyPamperPreview({
                 <ul className="mt-5 space-y-3 text-sm leading-6 text-[#725f47]">
                   {realisticDemoBusiness.policies.map(policy => (
                     <li key={policy} className="flex gap-3">
-                      <span aria-hidden="true" className="text-[#b88a22]">
-                        ✦
-                      </span>
+                      <OnPrezMark
+                        className="mt-1 h-4 w-4 shrink-0 text-[#b88a22]"
+                        variant="currentColor"
+                      />
                       <span>{policy}</span>
                     </li>
                   ))}
