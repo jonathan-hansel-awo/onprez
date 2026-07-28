@@ -26,8 +26,10 @@ describe('Installable PWA foundation', () => {
     expect(serviceWorker).toContain("request.mode !== 'navigate'")
     expect(serviceWorker).toContain('fetch(request).catch')
     expect(serviceWorker).toContain('caches.match(OFFLINE_URL)')
+    expect(serviceWorker).toContain(
+      "const OFFLINE_ASSETS = [OFFLINE_URL, '/favicon.svg', '/icon-192.png']"
+    )
     expect(serviceWorker).not.toContain('cache.put')
-    expect(serviceWorker).not.toContain("'/dashboard'")
     expect(serviceWorker).not.toContain("'/api/")
   })
 
@@ -40,5 +42,16 @@ describe('Installable PWA foundation', () => {
     )
     expect(offlinePage).not.toContain('booking reference')
     expect(offlinePage).not.toContain('@example.com')
+  })
+
+  it('handles push payloads without caching private notification data', () => {
+    expect(serviceWorker).toContain("self.addEventListener('push'")
+    expect(serviceWorker).toContain('self.registration.showNotification')
+    expect(serviceWorker).toContain("self.addEventListener('notificationclick'")
+    expect(serviceWorker).toContain('url.origin !== self.location.origin')
+    expect(serviceWorker).toContain("url.pathname === '/dashboard'")
+    expect(serviceWorker).toContain("url.pathname.startsWith('/dashboard/')")
+    expect(serviceWorker).not.toContain('event.data.text()')
+    expect(serviceWorker).not.toContain('cache.put')
   })
 })

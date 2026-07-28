@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, WifiOff } from 'lucide-react'
 import { InstallOnPrezCard } from '@/components/pwa/install-onprez-card'
+import { BookingAlertsCard } from '@/components/pwa/booking-alerts-card'
 import { Card, CardContent } from '@/components/ui/card'
 
 export const metadata: Metadata = {
-  title: 'Install the OnPrez App',
-  description: 'Add the OnPrez dashboard to your phone, tablet, or computer.',
+  title: 'OnPrez App and Booking Alerts',
+  description: 'Install the OnPrez dashboard and manage booking push notifications.',
 }
 
 export default function AppSettingsPage() {
@@ -22,12 +23,14 @@ export default function AppSettingsPage() {
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">OnPrez app</h1>
         <p className="mt-2 max-w-2xl text-gray-600">
-          Install your dashboard for quicker access and prepare this device for optional booking
-          alerts.
+          Install your dashboard for quicker access and enable optional booking alerts on your
+          devices.
         </p>
       </div>
 
       <InstallOnPrezCard />
+
+      <BookingAlertsCard />
 
       <div className="grid gap-5 md:grid-cols-2">
         <Card hover={false}>
