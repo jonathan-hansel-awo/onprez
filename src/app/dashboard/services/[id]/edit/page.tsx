@@ -136,7 +136,7 @@ export default function EditServicePage({ params }: { params: Promise<{ id: stri
         setVariants(variantsData.data.variants)
       }
       // Fetch categories
-      const categoriesRes = await fetch(`/api/services/categories?businessId=${service.businessId}`)
+      const categoriesRes = await fetch(`/api/service-categories?businessId=${service.businessId}`)
       const categoriesData = await categoriesRes.json()
 
       if (categoriesData.success) {
