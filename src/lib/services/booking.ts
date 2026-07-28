@@ -295,7 +295,7 @@ export async function createBooking(
     return { success: false, error: timeValidation.reason }
   }
 
-  const result = await prisma.$transaction(async tx => {
+  const result: BookingResult = await prisma.$transaction(async tx => {
     logger.info('booking.database.transaction_started', { businessId, serviceId })
     await lockBusinessBookingSchedule(tx, businessId)
 
@@ -496,30 +496,42 @@ export async function createBooking(
       })
     }
 
-    const pushOutbox = options?.deposit
-      ? null
-      : await enqueueBookingPushNotification(tx, {
-          eventType: PushNotificationEventType.NEW_BOOKING,
-          eventKey: `booking:${appointment.id}:created`,
-          businessId,
-          appointmentId: appointment.id,
-          customerName: customerData.name,
-          serviceName: service.name,
-          startTime: startDateTime,
-          timezone,
-        })
-
     logger.info('booking.database.appointment_created', {
       businessId,
       serviceId,
       bookingId: appointment.id,
     })
-    return {
-      success: true,
-      appointment,
-      ...(pushOutbox && { pushOutboxId: pushOutbox.id }),
-    }
+    return { success: true, appointment }
   })
+
+  if (!result.success || !result.appointment || result.replayed || options?.deposit) {
+    return result
+  }
+
+  // Push alerts are an optional delivery enhancement. Queue them only after the
+  // booking transaction commits so an unavailable or not-yet-migrated outbox
+  // cannot roll back a valid customer booking.
+  try {
+    const pushOutbox = await enqueueBookingPushNotification(prisma, {
+      eventType: PushNotificationEventType.NEW_BOOKING,
+      eventKey: `booking:${result.appointment.id}:created`,
+      businessId,
+      appointmentId: result.appointment.id,
+      customerName: customerData.name,
+      serviceName: service.name,
+      startTime: result.appointment.startTime,
+      timezone,
+    })
+
+    return { ...result, pushOutboxId: pushOutbox.id }
+  } catch (error) {
+    logger.warn('booking.push_notification_enqueue_failed', {
+      businessId,
+      serviceId,
+      bookingId: result.appointment.id,
+      error: error instanceof Error ? error.message : 'Unknown push outbox error',
+    })
+  }
 
   return result
 }
