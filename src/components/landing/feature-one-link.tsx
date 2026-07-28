@@ -1,10 +1,10 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { ContextMockup } from './context-mockups'
 import { useInView } from 'react-intersection-observer'
-import { Sparkles } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { useMediaQuery } from '@/lib/hooks/use-media-query'
 
 type ContextType = 'instagram' | 'business-card' | 'email' | 'google' | 'speech' | null
@@ -153,7 +153,7 @@ export function FeatureOneLink() {
               )}
             </div>
 
-            {/* Sparkle effect */}
+            {/* OnPrez brand mark */}
             <motion.div
               className="absolute -top-2 -right-2"
               animate={{
@@ -165,12 +165,13 @@ export function FeatureOneLink() {
                 repeat: Infinity,
               }}
             >
-              <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-onprez-purple" />
+              <OnPrezMark className="h-5 w-5 md:h-6 md:w-6" />
             </motion.div>
           </div>
 
-          <p className="text-center text-xs text-gray-500 mt-2">
-            ✨ Try it! Type your name to see it everywhere
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-xs text-gray-500">
+            <OnPrezMark className="h-3.5 w-3.5 shrink-0" />
+            <span>Try it! Type your name to see it everywhere</span>
           </p>
         </motion.div>
 

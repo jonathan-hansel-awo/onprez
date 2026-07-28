@@ -1,12 +1,13 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { FeaturePreviewMockup } from './feature-preview-mockup'
 import { ColorPickerPanel } from './panels/color-picker-panel'
 import { FontSelectorPanel } from './panels/font-selector-panel'
 import { LayoutOptionsPanel } from './panels/layout-options-panel'
-import { Palette, Type, LayoutGrid, Sparkles } from 'lucide-react'
+import { Palette, Type, LayoutGrid } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 export function FeatureCustomizable() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -222,7 +223,7 @@ export function FeatureCustomizable() {
                     >
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                          <Sparkles className="w-5 h-5 text-white" />
+                          <OnPrezMark className="h-5 w-5" variant="currentColor" />
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-900">Page Sections</h4>
@@ -425,7 +426,7 @@ export function FeatureCustomizable() {
               <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-6 h-6 text-white" />
+                    <OnPrezMark className="h-6 w-6" variant="currentColor" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900">Page Sections</h4>

@@ -1,8 +1,9 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Calendar, Check, CircleUser, Sparkles, BarChart3, Star } from 'lucide-react'
+import { Calendar, Check, CircleUser, BarChart3, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 type Phase = 'signup' | 'dashboard' | 'presence'
 
@@ -224,7 +225,7 @@ function DashboardScreen() {
         <div className="flex-1 rounded-xl border border-dashed border-slate-300 bg-white/60 p-6">
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50">
-              <Sparkles className="h-7 w-7 text-indigo-500" strokeWidth={2} />
+              <OnPrezMark className="h-7 w-7" />
             </div>
             <p className="text-base font-semibold text-slate-900">Your presence is live!</p>
             <p className="mt-1 text-sm text-slate-500">

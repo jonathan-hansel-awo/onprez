@@ -231,7 +231,7 @@ export const examples: Example[] = [
 ]
 
 export const categories = [
-  { id: 'all', label: 'All', icon: '✨' },
+  { id: 'all', label: 'All', icon: 'onprez' },
   { id: 'beauty', label: 'Beauty', icon: '💄' },
   { id: 'fitness', label: 'Fitness', icon: '💪' },
   { id: 'wellness', label: 'Wellness', icon: '🧘' },

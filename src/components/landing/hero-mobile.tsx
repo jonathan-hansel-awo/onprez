@@ -1,10 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
 import { AvatarStack } from '@/components/ui/avatar-stack'
 import { heroAvatars } from '@/data/avatars'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 export function HeroMobile() {
   return (
@@ -59,11 +58,12 @@ export function HeroMobile() {
         </div>
 
         <motion.div
-          className="absolute -top-3 -right-3 bg-gradient-to-r from-onprez-blue to-onprez-purple text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg"
+          className="absolute -right-3 -top-3 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-onprez-blue to-onprez-purple px-3 py-1.5 text-xs font-semibold text-white shadow-lg"
           animate={{ y: [0, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          ✨ Live
+          <OnPrezMark className="h-3.5 w-3.5" variant="currentColor" />
+          Live
         </motion.div>
       </motion.div>
 

@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { PricingPlan } from '@/data/pricing'
-import { Check, Sparkles } from 'lucide-react'
+import { Check } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { cn } from '@/lib/utils/cn'
 import { useRouter } from 'next/navigation'
 
@@ -41,7 +42,7 @@ export function PricingCard({ plan, index }: PricingCardProps) {
           viewport={{ once: true }}
           transition={{ type: 'spring', delay: 0.3 }}
         >
-          <Sparkles className="w-4 h-4" />
+          <OnPrezMark className="h-4 w-4" variant="currentColor" />
           Most Popular
         </motion.div>
       )}

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 export function CleanPresenceMockup() {
   return (
@@ -34,8 +35,8 @@ export function CleanPresenceMockup() {
         {/* Header */}
         <div className="bg-gradient-to-r from-onprez-blue to-onprez-purple p-4">
           <div className="flex items-center gap-3">
-            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-2xl shadow-lg">
-              ✨
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg">
+              <OnPrezMark className="h-9 w-9" />
             </div>
             <div>
               <h3 className="text-white font-bold text-lg">Your Business</h3>

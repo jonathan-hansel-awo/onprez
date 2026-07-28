@@ -2,7 +2,8 @@
 
 import { HeroSection as HeroSectionType } from '@/types/page-sections'
 import { motion } from 'framer-motion'
-import { ArrowDown, ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowDown, ArrowRight } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { cn } from '@/lib/utils/cn'
 import Image from 'next/image'
 import {
@@ -191,7 +192,7 @@ export function HeroSection({ section, bookingHref }: HeroSectionProps) {
       className="relative overflow-hidden border border-white/35 bg-white/88 p-5 text-gray-950 shadow-[0_24px_80px_rgba(0,0,0,0.2)] backdrop-blur-xl"
       style={{ borderRadius: 'calc(var(--theme-radius) + 0.75rem)' }}
     >
-      <Sparkles className="mb-4 h-5 w-5" style={{ color: accentColor }} aria-hidden="true" />
+      <OnPrezMark className="mb-4 h-5 w-5" variant="currentColor" style={{ color: accentColor }} />
       <p className="text-[0.65rem] font-semibold uppercase tracking-[0.25em] opacity-55">
         {floatingCard.eyebrow}
       </p>

@@ -9,6 +9,7 @@ import { ImageUpload } from '@/components/ui/image-upload'
 import { Toggle } from '@/components/ui/toggle'
 import { ColorPicker } from '@/components/ui/color-picker'
 import { Button } from '@/components/ui/button'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { Plus, X, GripVertical, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 
@@ -371,9 +372,12 @@ export function NavbarSectionEditor({ section, onUpdate, businessId }: NavbarSec
       {/* Tips */}
       <div className="space-y-3">
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <p className="text-sm text-purple-800">
-            ✨ <strong>Pro Tip:</strong> The transparent style works great with hero sections that
-            have background images
+          <p className="flex items-start gap-2 text-sm text-purple-800">
+            <OnPrezMark className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              <strong>Pro Tip:</strong> The transparent style works great with hero sections that
+              have background images
+            </span>
           </p>
         </div>
 

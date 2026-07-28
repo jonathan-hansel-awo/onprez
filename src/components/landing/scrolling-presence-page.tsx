@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Check, Star, Calendar } from 'lucide-react'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 
 interface ScrollingPresencePageProps {
   scrollProgress: number
@@ -54,7 +55,11 @@ export function ScrollingPresencePage({ scrollProgress }: ScrollingPresencePageP
               }}
             >
               <div className="w-full h-full flex items-center justify-center text-white text-xl">
-                {['🧘', '💆', '🌿', '✨'][i]}
+                {i === 3 ? (
+                  <OnPrezMark className="h-6 w-6" variant="white" />
+                ) : (
+                  ['🧘', '💆', '🌿'][i]
+                )}
               </div>
             </div>
           ))}

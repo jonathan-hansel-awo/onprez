@@ -21,9 +21,9 @@ import {
   Globe,
   GlobeIcon,
   FileText,
-  Sparkles,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { ThemeCustomizer } from './ThemeCustomizer'
 import { debounce } from '@/lib/utils/debounce'
 import { Confetti } from '@/components/animations/confetti'
@@ -369,7 +369,7 @@ export function PresenceEditorLayout({
               aria-busy={publishing}
               className="min-h-11 px-3 sm:px-4"
             >
-              <Sparkles className="mr-2 h-4 w-4" />
+              <OnPrezMark className="mr-2 h-4 w-4" variant="currentColor" />
               {publishing ? 'Publishing...' : 'Publish'}
             </Button>
           )}

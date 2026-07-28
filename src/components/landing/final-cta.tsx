@@ -2,8 +2,9 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useState, useRef, useEffect } from 'react'
-import { Check, X, Loader2, Sparkles } from 'lucide-react'
+import { Check, X, Loader2 } from 'lucide-react'
 import { Confetti } from '@/components/animations/confetti'
+import { OnPrezMark } from '@/components/brand/onprez-mark'
 import { useRouter } from 'next/navigation'
 
 export function FinalCTA() {
@@ -221,7 +222,7 @@ export function FinalCTA() {
                 repeatDelay: 3,
               }}
             >
-              <Sparkles className="w-16 h-16 text-yellow-300 mx-auto" />
+              <OnPrezMark className="mx-auto h-16 w-16" variant="white" />
             </motion.div>
 
             <h2 className="text-5xl md:text-7xl font-bold text-white mb-6">
