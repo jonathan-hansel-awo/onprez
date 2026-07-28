@@ -127,6 +127,30 @@ describe('Email Service', () => {
         })
       )
     })
+
+    it('should pass calendar attachments to Resend', async () => {
+      const attachments = [
+        {
+          filename: 'booking-AB12CD34.ics',
+          content: 'BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n',
+          contentType: 'text/calendar; charset=utf-8',
+        },
+      ]
+
+      await sendEmail({
+        to: 'business@example.com',
+        subject: 'New booking',
+        html: '<p>New booking</p>',
+        attachments,
+      })
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'business@example.com',
+          attachments,
+        })
+      )
+    })
   })
 
   describe('sendVerificationEmail', () => {

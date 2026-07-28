@@ -29,6 +29,12 @@ export interface BookingCreatedNotificationResult {
   business: EmailResult
 }
 
+interface EmailAction {
+  href: string
+  label: string
+  supportingText?: string
+}
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
@@ -90,7 +96,116 @@ function renderDetailRow(label: string, value: string): string {
   `.trim()
 }
 
-function renderEmailShell(heading: string, intro: string, details: string, footer: string): string {
+function formatCalendarUtc(date: Date): string {
+  return date
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z')
+}
+
+function escapeCalendarText(value: string): string {
+  return value
+    .replaceAll('\\', '\\\\')
+    .replaceAll('\r\n', '\\n')
+    .replaceAll('\n', '\\n')
+    .replaceAll('\r', '\\n')
+    .replaceAll(',', '\\,')
+    .replaceAll(';', '\\;')
+}
+
+export function buildBusinessBookingCalendarUrl(input: BookingCreatedNotificationInput): string {
+  const confirmationNumber = input.bookingId.slice(0, 8).toUpperCase()
+  const phone = input.customerPhone?.trim() || 'Not provided'
+  const calendarUrl = new URL('https://calendar.google.com/calendar/render')
+
+  calendarUrl.searchParams.set('action', 'TEMPLATE')
+  calendarUrl.searchParams.set('text', `${input.serviceName} with ${input.customerName}`)
+  calendarUrl.searchParams.set(
+    'dates',
+    `${formatCalendarUtc(input.startTime)}/${formatCalendarUtc(input.endTime)}`
+  )
+  calendarUrl.searchParams.set(
+    'details',
+    [
+      `Booking reference: ${confirmationNumber}`,
+      `Customer: ${input.customerName}`,
+      `Email: ${input.customerEmail}`,
+      `Phone: ${phone}`,
+      `Service: ${input.serviceName}`,
+    ].join('\n')
+  )
+
+  if (input.businessAddress) {
+    calendarUrl.searchParams.set('location', input.businessAddress)
+  }
+
+  return calendarUrl.toString()
+}
+
+export function buildBusinessBookingCalendarAttachment(
+  input: BookingCreatedNotificationInput
+): NonNullable<SendEmailOptions['attachments']>[number] {
+  const confirmationNumber = input.bookingId.slice(0, 8).toUpperCase()
+  const phone = input.customerPhone?.trim() || 'Not provided'
+  const status = input.status === 'PENDING' ? 'TENTATIVE' : 'CONFIRMED'
+  const description = [
+    `Booking reference: ${confirmationNumber}`,
+    `Customer: ${input.customerName}`,
+    `Email: ${input.customerEmail}`,
+    `Phone: ${phone}`,
+    `Service: ${input.serviceName}`,
+  ].join('\n')
+  const calendar = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//OnPrez//Business Booking//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${escapeCalendarText(input.bookingId)}@onprez.com`,
+    `DTSTAMP:${formatCalendarUtc(new Date())}`,
+    `DTSTART:${formatCalendarUtc(input.startTime)}`,
+    `DTEND:${formatCalendarUtc(input.endTime)}`,
+    `SUMMARY:${escapeCalendarText(`${input.serviceName} with ${input.customerName}`)}`,
+    `DESCRIPTION:${escapeCalendarText(description)}`,
+    ...(input.businessAddress ? [`LOCATION:${escapeCalendarText(input.businessAddress)}`] : []),
+    `STATUS:${status}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+    '',
+  ].join('\r\n')
+
+  return {
+    filename: `booking-${confirmationNumber}.ics`,
+    content: calendar,
+    contentType: 'text/calendar; charset=utf-8; method=PUBLISH',
+  }
+}
+
+function renderEmailShell(
+  heading: string,
+  intro: string,
+  details: string,
+  footer: string,
+  action?: EmailAction
+): string {
+  const actionHtml = action
+    ? `
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px 0 0;">
+                      <tr>
+                        <td style="border-radius: 10px; background: #2563eb;">
+                          <a href="${escapeHtml(action.href)}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 13px 20px; color: #ffffff; font-size: 15px; font-weight: 700; line-height: 1.2; text-decoration: none;">${escapeHtml(action.label)}</a>
+                        </td>
+                      </tr>
+                    </table>
+                    ${
+                      action.supportingText
+                        ? `<p style="margin: 12px 0 0; color: #6b7280; font-size: 13px; line-height: 1.5;">${escapeHtml(action.supportingText)}</p>`
+                        : ''
+                    }
+    `.trim()
+    : ''
+
   return `
     <!DOCTYPE html>
     <html>
@@ -116,6 +231,7 @@ function renderEmailShell(heading: string, intro: string, details: string, foote
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding: 14px 18px; border: 1px solid #e5e7eb; border-radius: 12px; background: #f9fafb;">
                       ${details}
                     </table>
+                    ${actionHtml}
                     <p style="margin: 24px 0 0; color: #6b7280; font-size: 14px; line-height: 1.6;">${escapeHtml(footer)}</p>
                   </td>
                 </tr>
@@ -208,6 +324,7 @@ export function buildBusinessBookingEmail(
   const price = formatCurrency(input.totalAmount, input.currency)
   const phone = input.customerPhone?.trim() || 'Not provided'
   const notes = input.customerNotes?.trim() || 'None provided'
+  const calendarUrl = buildBusinessBookingCalendarUrl(input)
 
   const details = [
     renderDetailRow('Customer', input.customerName),
@@ -246,6 +363,9 @@ export function buildBusinessBookingEmail(
     `Reference: ${confirmationNumber}`,
     `Customer notes: ${notes}`,
     '',
+    `Add to Google Calendar: ${calendarUrl}`,
+    'For Apple Calendar, Outlook, or another calendar app, open the attached .ics file.',
+    '',
     'Sign in to your OnPrez dashboard to review and manage this appointment.',
   ].join('\n')
 
@@ -256,10 +376,17 @@ export function buildBusinessBookingEmail(
       statusCopy.businessHeading,
       `${input.customerName} booked ${input.serviceName} with ${input.businessName}.`,
       details,
-      'Sign in to your OnPrez dashboard to review and manage this appointment.'
+      'Sign in to your OnPrez dashboard to review and manage this appointment.',
+      {
+        href: calendarUrl,
+        label: 'Add to calendar',
+        supportingText:
+          'Opens Google Calendar. You can also use the attached .ics file with Apple Calendar, Outlook, or another calendar app.',
+      }
     ),
     text,
     replyTo: normalizeEmail(input.customerEmail),
+    attachments: [buildBusinessBookingCalendarAttachment(input)],
   }
 }
 
