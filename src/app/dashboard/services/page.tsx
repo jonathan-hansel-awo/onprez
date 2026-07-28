@@ -104,26 +104,33 @@ function SortableServiceCard({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2">
+    <div ref={setNodeRef} style={style} className="flex min-w-0 items-stretch gap-1 sm:gap-2">
       <button
-        className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded touch-none"
+        className="min-h-11 min-w-8 touch-none self-center rounded p-1 hover:bg-gray-100 active:cursor-grabbing sm:min-w-11 sm:cursor-grab sm:p-2"
+        aria-label={`Reorder ${service.name}`}
         {...attributes}
         {...listeners}
       >
         <GripVertical className="w-5 h-5 text-gray-400" />
       </button>
-      <Card className="flex-1 hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex gap-4 flex-1">
+      <Card
+        data-testid={`service-card-${service.id}`}
+        className="min-w-0 flex-1 overflow-hidden transition-shadow hover:shadow-md"
+      >
+        <CardContent className="p-4 sm:p-6">
+          <div
+            data-testid={`service-card-layout-${service.id}`}
+            className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+          >
+            <div className="flex min-w-0 flex-1 gap-3 sm:gap-4">
               {service.imageUrl && (
-                <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:h-20 sm:w-20">
                   <Image src={service.imageUrl} alt={service.name} fill className="object-cover" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-lg">{service.name}</h3>
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <h3 className="min-w-0 break-words text-lg font-semibold">{service.name}</h3>
                   {!service.active && (
                     <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
                       Inactive
@@ -140,7 +147,7 @@ function SortableServiceCard({
                     {service.description}
                   </p>
                 )}
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <DollarSign className="w-4 h-4" />£{Number(service.price).toFixed(2)}
                   </span>
@@ -157,7 +164,10 @@ function SortableServiceCard({
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div
+              data-testid={`service-card-actions-${service.id}`}
+              className="flex w-full flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3 sm:w-auto sm:flex-nowrap sm:border-0 sm:pt-0"
+            >
               {/* Toggle Active/Inactive */}
               <Button
                 variant={service.active ? 'ghost' : 'outline'}
@@ -166,9 +176,10 @@ function SortableServiceCard({
                   // We need to pass this from parent
                   if (onToggle) onToggle(service)
                 }}
-                className={
+                className={`min-h-11 flex-shrink-0 ${
                   service.active ? '' : 'border-green-600 text-green-600 hover:bg-green-50'
-                }
+                }`}
+                aria-label={`${service.active ? 'Hide' : 'Show'} ${service.name}`}
               >
                 {service.active ? (
                   <>
@@ -183,10 +194,22 @@ function SortableServiceCard({
                 )}
               </Button>
 
-              <Button variant="ghost" size="sm" onClick={() => onEdit(service)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(service)}
+                className="min-h-11 min-w-11 flex-shrink-0 px-3"
+                aria-label={`Edit ${service.name}`}
+              >
                 <Edit className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onDelete(service)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(service)}
+                className="min-h-11 min-w-11 flex-shrink-0 px-3"
+                aria-label={`Delete ${service.name}`}
+              >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
@@ -547,21 +570,21 @@ function ServicesPageContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Services & Categories</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Services & Categories</h1>
           <p className="text-muted-foreground mt-1">Manage your bookable services and categories</p>
         </div>
         {currentTab === 'services' ? (
-          <Link href="/dashboard/services/new">
-            <Button>
+          <Link href="/dashboard/services/new" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Add Service
             </Button>
           </Link>
         ) : (
-          <Link href="/dashboard/categories/new">
-            <Button>
+          <Link href="/dashboard/categories/new" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Add Category
             </Button>
@@ -624,13 +647,14 @@ function ServicesPageContent() {
       {currentTab === 'services' ? (
         <>
           {/* Filters and Search */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-4">
             {/* Status Filter */}
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:flex">
               <Button
                 variant={activeFilter === 'all' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setActiveFilter('all')}
+                className="px-2 sm:px-4"
               >
                 All ({services.length})
               </Button>
@@ -638,6 +662,7 @@ function ServicesPageContent() {
                 variant={activeFilter === 'active' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setActiveFilter('active')}
+                className="px-2 sm:px-4"
               >
                 Active ({services.filter(s => s.active).length})
               </Button>
@@ -645,13 +670,14 @@ function ServicesPageContent() {
                 variant={activeFilter === 'inactive' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setActiveFilter('inactive')}
+                className="px-2 sm:px-4"
               >
                 Inactive ({services.filter(s => !s.active).length})
               </Button>
             </div>
 
             {/* Search */}
-            <div className="relative flex-1">
+            <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search services..."
