@@ -11,19 +11,17 @@ import {
   Users,
   Settings,
   Calendar,
-  Shield,
-  Bell,
   CreditCard,
   ChevronRight,
+  Smartphone,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface SettingsLink {
   href: string
   label: string
   description: string
   icon: React.ElementType
-  category: 'business' | 'booking' | 'team' | 'account'
+  category: 'business' | 'booking' | 'team' | 'app' | 'account'
 }
 
 const SETTINGS_LINKS: SettingsLink[] = [
@@ -89,6 +87,15 @@ const SETTINGS_LINKS: SettingsLink[] = [
     category: 'team',
   },
 
+  // App Settings
+  {
+    href: '/dashboard/settings/app',
+    label: 'OnPrez App',
+    description: 'Install OnPrez and prepare this device for booking alerts',
+    icon: Smartphone,
+    category: 'app',
+  },
+
   // Account Settings (future)
   // {
   //   href: '/dashboard/settings/notifications',
@@ -117,6 +124,7 @@ const CATEGORIES = [
   { id: 'business', label: 'Business', description: 'Configure your business information' },
   { id: 'booking', label: 'Booking', description: 'Control how customers book appointments' },
   { id: 'team', label: 'Team', description: 'Manage your team and access' },
+  { id: 'app', label: 'App', description: 'Install OnPrez on your devices' },
   // { id: 'account', label: 'Account', description: 'Your account and billing' },
 ]
 

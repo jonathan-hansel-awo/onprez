@@ -5,13 +5,20 @@ import nextConfig from '../next.config.js'
 describe('production security headers', () => {
   let rule
   let headers
+  let serviceWorkerHeaders
 
   beforeAll(async () => {
     const rules = await nextConfig.headers()
+    const globalRules = rules.filter(candidate => candidate.source === '/:path*')
+    const serviceWorkerRule = rules.find(candidate => candidate.source === '/sw.js')
 
-    expect(rules).toHaveLength(1)
-    rule = rules[0]
+    expect(globalRules).toHaveLength(1)
+    expect(serviceWorkerRule).toBeDefined()
+    rule = globalRules[0]
     headers = Object.fromEntries(rule.headers.map(header => [header.key, header.value]))
+    serviceWorkerHeaders = Object.fromEntries(
+      serviceWorkerRule.headers.map(header => [header.key, header.value])
+    )
   })
 
   it('applies the policy to every application response', () => {
@@ -43,5 +50,12 @@ describe('production security headers', () => {
     expect(policy).toContain('https://*.ingest.sentry.io')
     expect(policy).not.toContain("'unsafe-eval'")
     expect(policy).not.toMatch(/[\r\n]/)
+  })
+
+  it('serves the root-scoped service worker without stale browser caching', () => {
+    expect(serviceWorkerHeaders).toEqual({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Service-Worker-Allowed': '/',
+    })
   })
 })

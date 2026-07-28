@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/components/error-boundary'
 import { PreloadResources } from '@/components/preload-resources'
 import { AnalyticsWrapper } from '@/components/analytics/analytics-wrapper'
 import { CookieConsentBanner } from '@/components/privacy/cookie-consent-banner'
+import { ServiceWorkerRegistration } from '@/components/pwa/service-worker-registration'
 import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({
@@ -47,6 +48,11 @@ export const metadata: Metadata = {
   publisher: 'OnPrez',
   category: 'business',
   manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'OnPrez',
+    statusBarStyle: 'default',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -105,6 +111,7 @@ export default function RootLayout({
         <PreloadResources />
       </head>
       <body className={`${inter.className} antialiased`}>
+        <ServiceWorkerRegistration />
         <AuthProvider>
           <ErrorBoundary>
             <SmoothScroll>
