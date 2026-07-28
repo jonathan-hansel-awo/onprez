@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist'
+import { InstallOnPrezCard } from '@/components/pwa/install-onprez-card'
 import { Calendar, DollarSign, Users, Clock, Plus, ExternalLink, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -103,6 +104,8 @@ export default function DashboardPage() {
       </div>
 
       <OnboardingChecklist />
+
+      <InstallOnPrezCard compact />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
