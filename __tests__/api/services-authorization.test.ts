@@ -270,10 +270,70 @@ describe('services API authorization', () => {
             businessId: 'business-1',
             price: 25,
             duration: 30,
+            categoryId: 'category-1',
+            galleryImages: [],
             order: 3,
           }),
         })
       )
+    })
+
+    it('normalizes blank optional fields from the dashboard before creating a service', async () => {
+      mockedRequireBusinessRole.mockResolvedValue({ businessId: 'business-1' })
+      mockedPrisma.service.findFirst.mockResolvedValue(null)
+      mockedPrisma.service.create.mockResolvedValue({
+        id: 'service-1',
+        businessId: 'business-1',
+        name: 'Swedish Massage',
+      })
+
+      const response = await createServicePOST(
+        jsonRequest('/api/services', {
+          businessId: 'business-1',
+          name: ' Swedish Massage ',
+          description: '',
+          tagline: '',
+          price: '65',
+          priceType: 'FIXED',
+          duration: '60',
+          bufferTime: '0',
+          categoryId: '',
+          imageUrl: '',
+          requiresApproval: false,
+          maxAdvanceBookingDays: '',
+          featured: false,
+          active: true,
+        })
+      )
+
+      expect(response.status).toBe(201)
+      expect(mockedPrisma.serviceCategory.findFirst).not.toHaveBeenCalled()
+      expect(mockedPrisma.service.create).toHaveBeenCalledWith({
+        data: {
+          businessId: 'business-1',
+          name: 'Swedish Massage',
+          description: null,
+          tagline: null,
+          price: 65,
+          priceType: 'FIXED',
+          duration: 60,
+          bufferTime: 0,
+          categoryId: null,
+          imageUrl: null,
+          galleryImages: [],
+          requiresApproval: false,
+          depositMode: 'BUSINESS_DEFAULT',
+          requiresDeposit: false,
+          depositAmount: null,
+          maxAdvanceBookingDays: null,
+          featured: false,
+          active: true,
+          order: 0,
+        },
+        include: {
+          category: true,
+        },
+      })
     })
 
     it('rejects create requests without a businessId', async () => {
@@ -288,6 +348,34 @@ describe('services API authorization', () => {
       expect(response.status).toBe(400)
       expect(mockedRequireBusinessRole).not.toHaveBeenCalled()
       expect(mockedPrisma.service.create).not.toHaveBeenCalled()
+    })
+
+    it('reports service schema drift safely for normal-user creation', async () => {
+      mockedRequireBusinessRole.mockResolvedValue({ businessId: 'business-1' })
+      mockedPrisma.service.findFirst.mockResolvedValue(null)
+      mockedPrisma.service.create.mockRejectedValue(
+        Object.assign(new Error('column does not exist'), {
+          code: 'P2022',
+          meta: { column: 'services.galleryImages' },
+        })
+      )
+
+      const response = await createServicePOST(
+        jsonRequest('/api/services', {
+          businessId: 'business-1',
+          name: 'Haircut',
+          price: '25',
+          duration: '30',
+        })
+      )
+      const json = await response.json()
+
+      expect(response.status).toBe(503)
+      expect(json.success).toBe(false)
+      expect(json.code).toBe('SERVICE_SCHEMA_OUT_OF_DATE')
+      expect(json.error).toMatch(
+        /^The service database schema is out of date\. Apply pending migrations and try again\. Reference: [0-9a-f-]+$/
+      )
     })
   })
 

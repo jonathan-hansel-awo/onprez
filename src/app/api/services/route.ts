@@ -1,5 +1,12 @@
-import { FeatureKey, ServiceDepositMode, StripeConnectedAccountStatus } from '@prisma/client'
+import { randomUUID } from 'node:crypto'
+import {
+  FeatureKey,
+  PriceType,
+  ServiceDepositMode,
+  StripeConnectedAccountStatus,
+} from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import {
   readBookingProtectionDefaults,
   resolveEffectiveServiceDeposit,
@@ -7,12 +14,43 @@ import {
 import { isFeatureEntitlementActive } from '@/lib/features/entitlements'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/get-user'
-import { businessAuthErrorResponse, requireBusinessAccess } from '@/lib/auth/business-access'
-import { requireBusinessRole } from '@/lib/auth/business-access'
+import {
+  businessAuthErrorResponse,
+  requireBusinessAccess,
+  requireBusinessRole,
+} from '@/lib/auth/business-access'
 
-function parseNumber(value: unknown, fallback = 0) {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
+const nullableInteger = z.preprocess(
+  value => (value === '' || value === null || value === undefined ? null : value),
+  z.coerce.number().int().min(-1).max(3650).nullable()
+)
+
+const createServiceSchema = z.object({
+  businessId: z.string().trim().min(1),
+  name: z.string().trim().min(1).max(160),
+  description: z.string().trim().max(5000).optional().nullable(),
+  tagline: z.string().trim().max(100).optional().nullable(),
+  price: z.preprocess(
+    value => (value === '' || value === null || value === undefined ? 0 : value),
+    z.coerce.number().min(0).max(1000000)
+  ),
+  priceType: z.enum(PriceType).optional().default(PriceType.FIXED),
+  duration: z.coerce.number().int().min(5).max(1440),
+  bufferTime: z.coerce.number().int().min(0).max(1440).optional().default(0),
+  categoryId: z.string().trim().optional().nullable(),
+  imageUrl: z
+    .union([z.string().trim().url(), z.literal('')])
+    .optional()
+    .nullable(),
+  requiresApproval: z.boolean().optional().default(false),
+  maxAdvanceBookingDays: nullableInteger.optional().default(null),
+  featured: z.boolean().optional().default(false),
+  active: z.boolean().optional().default(true),
+})
+
+function getPrismaErrorCode(error: unknown) {
+  if (!error || typeof error !== 'object' || !('code' in error)) return undefined
+  return typeof error.code === 'string' ? error.code : undefined
 }
 
 export async function GET(request: NextRequest) {
@@ -124,22 +162,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { businessId, ...serviceData } = body
+    const parsed = createServiceSchema.safeParse(await request.json())
 
-    if (!businessId || typeof businessId !== 'string') {
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Business ID is required' },
+        {
+          success: false,
+          code: 'INVALID_SERVICE',
+          error: 'Please check the service name, price, duration, and optional settings.',
+        },
         { status: 400 }
       )
     }
 
+    const input = parsed.data
+    const businessId = input.businessId
     const context = await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
+    const categoryId = input.categoryId || null
 
-    if (serviceData.categoryId) {
+    if (categoryId) {
       const category = await prisma.serviceCategory.findFirst({
         where: {
-          id: serviceData.categoryId,
+          id: categoryId,
           businessId: context.businessId,
         },
         select: { id: true },
@@ -161,14 +205,24 @@ export async function POST(request: NextRequest) {
 
     const service = await prisma.service.create({
       data: {
-        ...serviceData,
         businessId: context.businessId,
+        name: input.name,
+        description: input.description?.trim() || null,
+        tagline: input.tagline?.trim() || null,
+        price: input.price,
+        priceType: input.priceType,
+        duration: input.duration,
+        bufferTime: input.bufferTime,
+        categoryId,
+        imageUrl: input.imageUrl?.trim() || null,
+        galleryImages: [],
+        requiresApproval: input.requiresApproval,
         depositMode: ServiceDepositMode.BUSINESS_DEFAULT,
         requiresDeposit: false,
         depositAmount: null,
-        price: parseNumber(serviceData.price),
-        duration: parseNumber(serviceData.duration),
-        bufferTime: serviceData.bufferTime ? parseNumber(serviceData.bufferTime) : 0,
+        maxAdvanceBookingDays: input.maxAdvanceBookingDays,
+        featured: input.featured,
+        active: input.active,
         order: (lastService?.order ?? -1) + 1,
       },
       include: {
@@ -188,7 +242,45 @@ export async function POST(request: NextRequest) {
     const authResponse = businessAuthErrorResponse(error)
     if (authResponse) return authResponse
 
-    console.error('Create service error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to create service' }, { status: 500 })
+    const reference = randomUUID()
+    const errorCode = getPrismaErrorCode(error)
+
+    console.error('Create service error:', {
+      reference,
+      errorCode,
+      path: request.nextUrl.pathname,
+      error,
+    })
+
+    if (errorCode === 'P2021' || errorCode === 'P2022') {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'SERVICE_SCHEMA_OUT_OF_DATE',
+          error: `The service database schema is out of date. Apply pending migrations and try again. Reference: ${reference}`,
+        },
+        { status: 503 }
+      )
+    }
+
+    if (errorCode === 'P2002') {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'SERVICE_ORDER_CONFLICT',
+          error: 'Another service was created at the same time. Please try again.',
+        },
+        { status: 409 }
+      )
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'SERVICE_CREATE_FAILED',
+        error: `Failed to create service. Reference: ${reference}`,
+      },
+      { status: 500 }
+    )
   }
 }
