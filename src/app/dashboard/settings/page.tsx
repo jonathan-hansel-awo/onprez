@@ -91,7 +91,7 @@ const SETTINGS_LINKS: SettingsLink[] = [
   {
     href: '/dashboard/settings/app',
     label: 'OnPrez App',
-    description: 'Install OnPrez and prepare this device for booking alerts',
+    description: 'Install OnPrez and manage booking push alerts',
     icon: Smartphone,
     category: 'app',
   },

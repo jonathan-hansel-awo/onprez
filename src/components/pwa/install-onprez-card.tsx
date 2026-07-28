@@ -298,7 +298,7 @@ export function InstallOnPrezCard({ compact = false }: InstallOnPrezCardProps) {
               </div>
               <p className="mt-4 text-sm leading-6 text-gray-700">
                 Installing OnPrez and enabling notifications are separate choices. Booking-alert
-                setup will use its own clear permission button when it becomes available.
+                setup uses its own clear permission button below.
               </p>
               <ul className="mt-4 space-y-3 text-sm leading-6 text-gray-700">
                 <li className="flex gap-2">
