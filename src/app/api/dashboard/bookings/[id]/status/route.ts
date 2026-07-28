@@ -46,6 +46,28 @@ async function handlePatch(request: NextRequest, { params }: { params: Promise<{
     }
 
     const { status: newStatus, reason, notes, notifyCustomer } = validation.data
+    if (newStatus === AppointmentStatus.CANCELLED) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Use the booking cancellation action so deposit refund rules are enforced.',
+        },
+        { status: 400 }
+      )
+    }
+    if (
+      newStatus === AppointmentStatus.CONFIRMED &&
+      appointmentAccess.status === AppointmentStatus.PENDING &&
+      appointmentAccess.approvalExpiresAt
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Use the booking approval action so its deadline and deposit state are enforced.',
+        },
+        { status: 400 }
+      )
+    }
     const result = await transitionAppointment({
       appointmentId: id,
       businessId,

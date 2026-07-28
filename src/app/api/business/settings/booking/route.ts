@@ -24,6 +24,7 @@ function getBookingSettings(settings: Record<string, unknown>) {
     sameDayBooking: bookingSettings.sameDayBooking ?? true,
     sameDayLeadTime: bookingSettings.sameDayLeadTime ?? 60,
     requireApproval: bookingSettings.requireApproval ?? false,
+    approvalWindowHours: bookingSettings.approvalWindowHours ?? 24,
     autoConfirm: bookingSettings.autoConfirm ?? true,
     cancellationDeadline: bookingSettings.cancellationDeadline ?? 24,
     allowRescheduling: bookingSettings.allowRescheduling ?? true,

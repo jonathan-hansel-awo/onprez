@@ -79,6 +79,11 @@ jobs:
               --header "Authorization: Bearer $PUSH_DELIVERY_CRON_SECRET" \
               "$BASE_URL/api/cron/push-notifications" >/dev/null \
               || echo "::warning::Push delivery retry dispatch did not complete"
+            curl --silent --show-error --fail --max-time 30 \
+              --request POST \
+              --header "Authorization: Bearer $PUSH_DELIVERY_CRON_SECRET" \
+              "$BASE_URL/api/cron/booking-approvals" >/dev/null \
+              || echo "::warning::Booking approval expiry dispatch did not complete"
           else
             echo "Push delivery retries skipped: PUSH_DELIVERY_CRON_SECRET is not configured"
           fi

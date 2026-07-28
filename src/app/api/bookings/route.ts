@@ -2,6 +2,11 @@ import { FeatureKey, StripeConnectedAccountStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createBooking } from '@/lib/services/booking'
+import {
+  bookingRequiresApproval,
+  calculateApprovalExpiry,
+  readBookingApprovalSettings,
+} from '@/lib/booking-protection/approval'
 import { createBookingDepositCheckout } from '@/lib/booking-protection/checkout'
 import {
   readBookingProtectionDefaults,
@@ -301,7 +306,18 @@ async function handlePost(request: NextRequest) {
         }
       : null
 
-    const targetStatus = service.requiresApproval ? 'PENDING' : 'CONFIRMED'
+    const approvalSettings = readBookingApprovalSettings(business.settings)
+    const targetStatus = bookingRequiresApproval(service.requiresApproval, business.settings)
+      ? 'PENDING'
+      : 'CONFIRMED'
+    const approvalExpiresAt =
+      targetStatus === 'PENDING'
+        ? calculateApprovalExpiry(
+            startDateTime,
+            approvalSettings.approvalWindowHours,
+            policyAcceptedAt
+          )
+        : null
     const result = await createBooking(
       data.businessId,
       data.serviceId,
@@ -319,6 +335,7 @@ async function handlePost(request: NextRequest) {
         bookingIp: clientIp,
         idempotencyKey,
         countCustomerBooking: !effectiveDeposit.requiresDeposit,
+        approvalExpiresAt,
         ...(effectiveDeposit.requiresDeposit && effectiveDeposit.depositAmount && policySnapshot
           ? {
               deposit: {

@@ -35,6 +35,12 @@ export const businessSettingsSchema = z.object({
   showPrices: z.boolean().optional(),
   showDuration: z.boolean().optional(),
   requireApproval: z.boolean().optional(),
+  approvalWindowHours: z
+    .number()
+    .int()
+    .min(1, 'Approval window must be at least 1 hour')
+    .max(168, 'Approval window cannot exceed 7 days')
+    .optional(),
   allowWaitlist: z.boolean().optional(),
   showTeamMembers: z.boolean().optional(),
 
@@ -258,6 +264,12 @@ export const bookingSettingsSchema = z.object({
     .max(480, 'Lead time cannot exceed 8 hours')
     .optional(),
   requireApproval: z.boolean().optional(),
+  approvalWindowHours: z
+    .number()
+    .int()
+    .min(1, 'Approval window must be at least 1 hour')
+    .max(168, 'Approval window cannot exceed 7 days')
+    .optional(),
   autoConfirm: z.boolean().optional(),
   cancellationDeadline: z
     .number()

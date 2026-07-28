@@ -41,6 +41,8 @@ interface BookingListItem {
   endTime: string
   duration: number
   status: AppointmentStatus
+  approvalExpiresAt: string | null
+  approvalRespondedAt: string | null
   customerName: string
   customerEmail: string
   customerPhone: string | null
@@ -48,6 +50,8 @@ interface BookingListItem {
   businessNotes: string | null
   totalAmount: number
   paymentStatus: PaymentStatus
+  requiresDeposit: boolean
+  depositPaid: boolean
   deposit: {
     paymentId: string
     status: string
@@ -192,6 +196,9 @@ function Bookings() {
   } | null>(null)
   const [isStatusChanging, setIsStatusChanging] = useState(false)
   const [statusChangeError, setStatusChangeError] = useState<string | null>(null)
+  const [pendingApprovalDecision, setPendingApprovalDecision] = useState<
+    'APPROVE' | 'REJECT' | null
+  >(null)
 
   // Filters
   const [status, setStatus] = useState(searchParams.get('status') || '')
@@ -392,6 +399,32 @@ function Bookings() {
   const cancelStatusChange = () => {
     setPendingStatusChange(null)
     setStatusChangeError(null)
+  }
+
+  const confirmApprovalDecision = async () => {
+    if (!selectedBooking || !pendingApprovalDecision) return
+    setIsStatusChanging(true)
+    setStatusChangeError(null)
+
+    try {
+      const response = await fetch(`/api/dashboard/bookings/${selectedBooking.id}/approval`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision: pendingApprovalDecision }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Failed to process booking request')
+
+      await fetchBookings()
+      setPendingApprovalDecision(null)
+      handleCloseModal()
+    } catch (error) {
+      setStatusChangeError(
+        error instanceof Error ? error.message : 'Failed to process booking request'
+      )
+    } finally {
+      setIsStatusChanging(false)
+    }
   }
 
   const handleReschedule = () => {
@@ -833,6 +866,8 @@ function Bookings() {
         onCancel={handleCancelFromModal}
         onReconcilePayment={handleReconcilePayment}
         onRetryRefund={handleRetryRefund}
+        onApprove={() => setPendingApprovalDecision('APPROVE')}
+        onReject={() => setPendingApprovalDecision('REJECT')}
         paymentActionLoading={isPaymentActionRunning}
       />
 
@@ -855,6 +890,34 @@ function Bookings() {
           )}
         </ConfirmDialog>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingApprovalDecision !== null}
+        onClose={() => {
+          setPendingApprovalDecision(null)
+          setStatusChangeError(null)
+        }}
+        onConfirm={confirmApprovalDecision}
+        title={
+          pendingApprovalDecision === 'REJECT'
+            ? 'Reject booking request'
+            : 'Approve booking request'
+        }
+        description={
+          pendingApprovalDecision === 'REJECT'
+            ? 'This will cancel the request, release the time slot, notify the customer, and refund any paid deposit.'
+            : 'This will confirm the appointment and notify the customer.'
+        }
+        confirmLabel={pendingApprovalDecision === 'REJECT' ? 'Reject & refund' : 'Approve booking'}
+        variant={pendingApprovalDecision === 'REJECT' ? 'danger' : 'success'}
+        isLoading={isStatusChanging}
+      >
+        {statusChangeError && (
+          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-700">{statusChangeError}</p>
+          </div>
+        )}
+      </ConfirmDialog>
 
       {/* Reschedule Modal */}
       <RescheduleModal

@@ -6,6 +6,7 @@ export type BookingCancellationReason =
   | 'STAFF_UNAVAILABLE'
   | 'EMERGENCY'
   | 'DUPLICATE_BOOKING'
+  | 'PROFESSIONAL_REJECTED'
   | 'NO_SHOW_POLICY'
   | 'OTHER'
 
@@ -33,6 +34,7 @@ const BUSINESS_FAULT_REASONS = new Set<BookingCancellationReason>([
   'STAFF_UNAVAILABLE',
   'EMERGENCY',
   'DUPLICATE_BOOKING',
+  'PROFESSIONAL_REJECTED',
 ])
 
 function readCancellationWindowHours(snapshot: Prisma.JsonValue | null | undefined): number {

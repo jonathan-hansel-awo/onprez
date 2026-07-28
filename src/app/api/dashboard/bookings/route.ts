@@ -172,6 +172,8 @@ export async function GET(request: NextRequest) {
           endTime: apt.endTime,
           duration: apt.duration,
           status: apt.status,
+          approvalExpiresAt: apt.approvalExpiresAt,
+          approvalRespondedAt: apt.approvalRespondedAt,
           customerName: apt.customerName,
           customerEmail: apt.customerEmail,
           customerPhone: apt.customerPhone,
@@ -179,6 +181,8 @@ export async function GET(request: NextRequest) {
           businessNotes: apt.businessNotes,
           totalAmount: Number(apt.totalAmount),
           paymentStatus: apt.paymentStatus,
+          requiresDeposit: apt.requiresDeposit,
+          depositPaid: apt.depositPaid,
           deposit: apt.payments[0]
             ? {
                 paymentId: apt.payments[0].id,

@@ -90,6 +90,16 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
       previousStatus: current.status,
     }
 
+    if (
+      current.status === AppointmentStatus.PENDING &&
+      current.approvalExpiresAt &&
+      (input.toStatus === AppointmentStatus.CONFIRMED ||
+        input.toStatus === AppointmentStatus.CANCELLED)
+    ) {
+      updateData.approvalExpiresAt = null
+      updateData.approvalRespondedAt = changedAt
+    }
+
     if (input.toStatus === 'CONFIRMED') {
       updateData.confirmedAt = changedAt
       updateData.confirmedBy = input.changedBy

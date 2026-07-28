@@ -21,6 +21,7 @@ const cancelSchema = z.object({
     'STAFF_UNAVAILABLE',
     'EMERGENCY',
     'DUPLICATE_BOOKING',
+    'PROFESSIONAL_REJECTED',
     'NO_SHOW_POLICY',
     'OTHER',
   ]),
@@ -38,6 +39,7 @@ const reasonLabels: Record<CancellationReason, string> = {
   STAFF_UNAVAILABLE: 'Staff unavailable',
   EMERGENCY: 'Emergency',
   DUPLICATE_BOOKING: 'Duplicate booking',
+  PROFESSIONAL_REJECTED: 'Booking request rejected by professional',
   NO_SHOW_POLICY: 'No-show policy applied',
   OTHER: 'Other reason',
 }

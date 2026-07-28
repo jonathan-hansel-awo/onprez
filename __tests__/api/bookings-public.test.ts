@@ -314,6 +314,60 @@ describe('public bookings API', () => {
       )
     })
 
+    it('creates pending bookings when business-wide approval is enabled', async () => {
+      mockedPrisma.business.findUnique.mockResolvedValue({
+        id: 'business-1',
+        name: 'Test Business',
+        timezone: 'Europe/London',
+        email: 'business@example.com',
+        address: '123 Test Street',
+        settings: {
+          booking: {
+            requireApproval: true,
+            approvalWindowHours: 48,
+          },
+        },
+      })
+      mockedPrisma.service.findFirst.mockResolvedValue({
+        id: 'service-1',
+        name: 'Haircut',
+        duration: 30,
+        requiresApproval: false,
+      })
+      mockedCreateBooking.mockResolvedValue({
+        success: true,
+        appointment: { id: 'abc12345bookingid' },
+      })
+      mockedPrisma.appointment.findFirst.mockResolvedValue({
+        ...mockAppointment,
+        status: 'PENDING',
+      })
+
+      const response = await POST(
+        jsonRequest('/api/bookings', {
+          businessId: 'business-1',
+          serviceId: 'service-1',
+          date: '2026-08-01',
+          startTime: '10:00',
+          customerName: 'John Customer',
+          customerEmail: 'john@example.com',
+        })
+      )
+
+      expect(response.status).toBe(201)
+      expect(mockedCreateBooking).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({
+          status: 'PENDING',
+          approvalExpiresAt: expect.any(Date),
+        })
+      )
+    })
+
     it('rejects a local time that does not exist during the DST jump', async () => {
       mockedPrisma.business.findUnique.mockResolvedValue({
         id: 'business-1',

@@ -31,6 +31,9 @@ The webhook secret must be stored as `STRIPE_WEBHOOK_SECRET`. Never log the secr
 ## Cancellation and refund rules
 
 - A business-caused cancellation always refunds the remaining deposit.
+- A professional rejection always refunds the remaining deposit.
+- An approval-required request that is not answered before its configured deadline is cancelled,
+  releases its slot, and automatically refunds the remaining deposit.
 - A no-show cancellation retains the deposit.
 - A customer-requested cancellation outside the configured late-cancellation window defaults to a refund.
 - A customer-requested cancellation inside the late-cancellation window defaults to retention, but an owner or authorised team member may waive the charge.
@@ -67,6 +70,16 @@ The booking detail view provides:
 - **Retry refund** — available after a recorded refund failure.
 
 Before retrying a refund, reconcile first when the outcome is uncertain. This reduces the risk of requesting a second refund after a delayed Stripe response.
+
+## Approval expiry worker
+
+The production monitor dispatches `POST /api/cron/booking-approvals` every five minutes with the
+same bearer secret used by the push-notification worker. Configure that value as `CRON_SECRET` in
+Vercel and `PUSH_DELIVERY_CRON_SECRET` in GitHub.
+
+The worker selects pending bookings whose `approvalExpiresAt` has passed, cancels them with
+`APPROVAL_EXPIRED`, releases their slots, notifies their customers, and requests a full refund for
+any paid deposit. Refund failures remain visible and retriable through the normal dashboard flow.
 
 ## Duplicate webhook protection
 

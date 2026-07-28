@@ -26,6 +26,7 @@ interface BookingSettings {
   sameDayBooking: boolean
   sameDayLeadTime: number
   requireApproval: boolean
+  approvalWindowHours: number
   autoConfirm: boolean
   cancellationDeadline: number
   allowRescheduling: boolean
@@ -88,6 +89,16 @@ const DEADLINE_OPTIONS = [
   { value: '168', label: '1 week before' },
 ]
 
+const APPROVAL_WINDOW_OPTIONS = [
+  { value: '1', label: '1 hour' },
+  { value: '4', label: '4 hours' },
+  { value: '12', label: '12 hours' },
+  { value: '24', label: '24 hours' },
+  { value: '48', label: '2 days' },
+  { value: '72', label: '3 days' },
+  { value: '168', label: '1 week' },
+]
+
 const DEFAULT_SETTINGS: BookingSettings = {
   bufferTime: 0,
   slotInterval: 15,
@@ -95,6 +106,7 @@ const DEFAULT_SETTINGS: BookingSettings = {
   sameDayBooking: true,
   sameDayLeadTime: 60,
   requireApproval: false,
+  approvalWindowHours: 24,
   autoConfirm: true,
   cancellationDeadline: 24,
   allowRescheduling: true,
@@ -398,16 +410,33 @@ export default function BookingSettingsPage() {
           </div>
 
           {settings.requireApproval && (
-            <div className="flex items-start gap-3 p-4 bg-yellow-50 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+            <>
               <div>
-                <p className="text-sm font-medium text-yellow-900">Manual Approval Enabled</p>
-                <p className="text-sm text-yellow-700">
-                  All new bookings will be in &quot;Pending&quot; status until you confirm them.
-                  Make sure to check your bookings regularly.
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Approval deadline
+                </label>
+                <Select
+                  value={settings.approvalWindowHours.toString()}
+                  onChange={event =>
+                    updateSetting('approvalWindowHours', parseInt(event.target.value))
+                  }
+                  options={APPROVAL_WINDOW_OPTIONS}
+                />
+                <p className="mt-2 text-sm text-gray-500">
+                  Unanswered requests expire automatically and any paid deposit is refunded.
                 </p>
               </div>
-            </div>
+              <div className="flex items-start gap-3 p-4 bg-yellow-50 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-900">Manual Approval Enabled</p>
+                  <p className="text-sm text-yellow-700">
+                    All new bookings remain pending until you approve them. Unanswered requests
+                    expire after {settings.approvalWindowHours} hours.
+                  </p>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
