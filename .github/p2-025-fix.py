@@ -97,5 +97,54 @@ source = replace_once(
 )
 email.write_text(source)
 
+notification_tests = Path('src/lib/services/booking-notifications.test.ts')
+source = notification_tests.read_text()
+source = replace_once(
+    source,
+    '''jest.mock('@/lib/services/email', () => ({
+  sendEmail: jest.fn(),
+}))''',
+    '''jest.mock('@/lib/services/email', () => ({
+  sendEmail: jest.fn(),
+}))
+
+jest.mock('@/lib/integrations/google-calendar', () => ({
+  syncAppointmentToGoogleCalendar: jest.fn().mockResolvedValue({ success: true }),
+}))''',
+    'Google Calendar notification mock',
+)
+source = replace_once(
+    source,
+    '''    expect(customerEmail.text).toContain('will review your request')
+    expect(businessEmail.subject).toBe('New booking request: Serenity Massage - Ada Okoro')''',
+    '''    expect(customerEmail.text).toContain('will review your request')
+    expect(customerEmail.attachments).toBeUndefined()
+    expect(businessEmail.subject).toBe('New booking request: Serenity Massage - Ada Okoro')''',
+    'Pending customer calendar expectation',
+)
+source = replace_once(
+    source,
+    '''  it('does not add calendar details to the customer email', () => {
+    const customerEmail = buildCustomerBookingEmail(baseInput)
+
+    expect(customerEmail.html).not.toContain('Add to calendar')
+    expect(customerEmail.attachments).toBeUndefined()
+  })''',
+    '''  it('adds calendar links and an .ics attachment to confirmed customer emails', () => {
+    const customerEmail = buildCustomerBookingEmail(baseInput)
+
+    expect(customerEmail.html).toContain('Add to Google Calendar')
+    expect(customerEmail.html).toContain('Add to Outlook Calendar')
+    expect(customerEmail.attachments).toEqual([
+      expect.objectContaining({
+        filename: 'booking-AB12CD34.ics',
+        contentType: 'text/calendar; charset=utf-8; method=PUBLISH',
+      }),
+    ])
+  })''',
+    'Confirmed customer calendar expectation',
+)
+notification_tests.write_text(source)
+
 Path('.github/workflows/p2-025-verify-fix.yml').unlink(missing_ok=True)
 Path('.github/p2-025-fix.py').unlink(missing_ok=True)
