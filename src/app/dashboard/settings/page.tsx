@@ -14,6 +14,7 @@ import {
   CreditCard,
   ChevronRight,
   Smartphone,
+  Bell,
 } from 'lucide-react'
 
 interface SettingsLink {
@@ -21,7 +22,7 @@ interface SettingsLink {
   label: string
   description: string
   icon: React.ElementType
-  category: 'business' | 'booking' | 'team' | 'app' | 'account'
+  category: 'business' | 'booking' | 'team' | 'communications' | 'app'
 }
 
 const SETTINGS_LINKS: SettingsLink[] = [
@@ -87,6 +88,15 @@ const SETTINGS_LINKS: SettingsLink[] = [
     category: 'team',
   },
 
+  // Communication Settings
+  {
+    href: '/dashboard/settings/notifications',
+    label: 'Notifications',
+    description: 'Booking, inquiry, reminder, and marketing email preferences',
+    icon: Bell,
+    category: 'communications',
+  },
+
   // App Settings
   {
     href: '/dashboard/settings/app',
@@ -95,37 +105,18 @@ const SETTINGS_LINKS: SettingsLink[] = [
     icon: Smartphone,
     category: 'app',
   },
-
-  // Account Settings (future)
-  // {
-  //   href: '/dashboard/settings/notifications',
-  //   label: 'Notifications',
-  //   description: 'Email and SMS notification preferences',
-  //   icon: Bell,
-  //   category: 'account',
-  // },
-  // {
-  //   href: '/dashboard/settings/security',
-  //   label: 'Security',
-  //   description: 'Password, two-factor authentication',
-  //   icon: Shield,
-  //   category: 'account',
-  // },
-  // {
-  //   href: '/dashboard/settings/billing',
-  //   label: 'Billing',
-  //   description: 'Subscription and payment methods',
-  //   icon: CreditCard,
-  //   category: 'account',
-  // },
 ]
 
 const CATEGORIES = [
   { id: 'business', label: 'Business', description: 'Configure your business information' },
   { id: 'booking', label: 'Booking', description: 'Control how customers book appointments' },
   { id: 'team', label: 'Team', description: 'Manage your team and access' },
+  {
+    id: 'communications',
+    label: 'Communications',
+    description: 'Control operational and optional email preferences',
+  },
   { id: 'app', label: 'App', description: 'Install OnPrez on your devices' },
-  // { id: 'account', label: 'Account', description: 'Your account and billing' },
 ]
 
 export default function SettingsPage() {
@@ -193,6 +184,9 @@ export default function SettingsPage() {
             </li>
             <li>
               • Configure <strong>Booking Rules</strong> to control buffer time and advance booking
+            </li>
+            <li>
+              • Review <strong>Notifications</strong> to choose which operational emails you receive
             </li>
             <li>
               • Connect <strong>Stripe</strong> before enabling payment-backed bookings
