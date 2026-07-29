@@ -45,23 +45,11 @@
         text-align: center;
       }
 
-      .mark {
-        width: 68px;
-        height: 68px;
+      .wordmark {
+        display: block;
+        width: min(100%, 250px);
+        height: auto;
         margin: 0 auto 24px;
-        border-radius: 18px;
-        display: grid;
-        place-items: center;
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-      }
-
-      .open-o {
-        width: 34px;
-        height: 34px;
-        border: 7px solid white;
-        border-right-color: transparent;
-        border-radius: 50%;
-        transform: rotate(-45deg);
       }
 
       h1 {
@@ -99,7 +87,13 @@
   </head>
   <body>
     <main>
-      <div class="mark" aria-hidden="true"><div class="open-o"></div></div>
+      <img
+        class="wordmark"
+        src="/onprez-wordmark.png"
+        alt="OnPrez"
+        width="616"
+        height="176"
+      />
       <h1>You’re currently offline</h1>
       <p>
         OnPrez needs an internet connection to show current bookings and customer information. No
