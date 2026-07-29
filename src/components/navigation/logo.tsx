@@ -25,7 +25,7 @@ export function Logo({ href = '/', className = 'h-8 w-auto', variant = 'gradient
     >
       {variant === 'gradient' ? (
         <Image
-          src="/onprez-wordmark.png"
+          src="/onprez-wordmark.svg"
           width={616}
           height={176}
           className={className}
