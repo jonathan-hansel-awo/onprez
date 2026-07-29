@@ -27,7 +27,16 @@ export async function GET(request: NextRequest) {
   const rounded = size !== 180 && !maskable
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'transparent',
+      }}
+    >
       <div
         style={{
           width: '100%',
@@ -35,30 +44,19 @@ export async function GET(request: NextRequest) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'transparent',
+          background: '#F7F7FF',
+          borderRadius: rounded ? Math.round(size * 0.21) : 0,
         }}
       >
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#F7F7FF',
-            borderRadius: rounded ? Math.round(size * 0.21) : 0,
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={WORDMARK_DATA_URI}
-            alt=""
-            width={wordmarkWidth}
-            style={{ width: wordmarkWidth, height: 'auto' }}
-          />
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={WORDMARK_DATA_URI}
+          alt=""
+          width={wordmarkWidth}
+          style={{ width: wordmarkWidth, height: 'auto' }}
+        />
       </div>
-    ),
+    </div>,
     {
       width: size,
       height: size,
