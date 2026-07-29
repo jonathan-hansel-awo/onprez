@@ -31,6 +31,20 @@ jobs:
         shell: bash
         run: |
           cat .github/p2-025-payload.part.* | base64 -d | gzip -d > /tmp/apply-p2-025.py
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('/tmp/apply-p2-025.py')
+          source = path.read_text()
+          source = source.replace(
+              '              phone: true,\n              timezone: true,',
+              '            phone: true,\n            timezone: true,',
+          ).replace(
+              '              phone: true,\n              address: true,\n              timezone: true,',
+              '            phone: true,\n            address: true,\n            timezone: true,',
+          )
+          path.write_text(source)
+          PY
           python /tmp/apply-p2-025.py
           npx prettier --write \
             src/lib/calendar/booking-calendar.ts \
