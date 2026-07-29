@@ -49,7 +49,11 @@ jobs:
       - name: Apply reviewed calendar fixes
         run: |
           python .github/p2-025-fix.py
-          npx prettier --write src/app/dashboard/settings/calendar/page.tsx src/lib/services/booking.ts
+          npx prettier --write \
+            src/app/dashboard/settings/calendar/page.tsx \
+            src/lib/services/booking.ts \
+            src/lib/services/email.ts \
+            src/lib/services/booking-notifications.test.ts
 
       - name: Check formatting
         run: npm run format:check
