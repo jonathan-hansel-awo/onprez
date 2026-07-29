@@ -1,0 +1,79 @@
+name: Deploy database migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY to apply all pending Prisma migrations to production'
+        required: true
+        type: string
+
+concurrency:
+  group: production-database-migrations
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Apply pending Prisma migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      CONFIRMATION: ${{ inputs.confirmation }}
+
+    steps:
+      - name: Validate deployment request
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "::error::Production migrations must be dispatched from the main branch."
+            exit 1
+          fi
+
+          if [[ "$CONFIRMATION" != "DEPLOY" ]]; then
+            echo "::error::Confirmation must be exactly DEPLOY."
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Validate database secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${DATABASE_URL:-}" ]]; then
+            echo "::error::The DATABASE_URL repository secret is missing or empty."
+            exit 1
+          fi
+
+          if [[ -z "${DIRECT_URL:-}" ]]; then
+            echo "::error::The DIRECT_URL repository secret is missing or empty."
+            exit 1
+          fi
+
+      - name: Install migration dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Validate Prisma schema
+        run: npx prisma validate --schema prisma/schema.prisma
+
+      - name: Apply pending migrations
+        run: npx prisma migrate deploy --schema prisma/schema.prisma
+
+      - name: Confirm migration status
+        run: npx prisma migrate status --schema prisma/schema.prisma
