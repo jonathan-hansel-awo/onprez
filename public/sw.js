@@ -1,8 +1,13 @@
 /* global self, caches, fetch */
 
-const CACHE_NAME = 'onprez-offline-v1'
+const CACHE_NAME = 'onprez-offline-v2'
 const OFFLINE_URL = '/offline.html'
-const OFFLINE_ASSETS = [OFFLINE_URL, '/favicon.svg', '/icon-192.png']
+const OFFLINE_ASSETS = [
+  OFFLINE_URL,
+  '/favicon.svg',
+  '/icon-192.png',
+  '/onprez-wordmark.png',
+]
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(OFFLINE_ASSETS)))
