@@ -41,6 +41,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Format wordmark files for handoff
+        run: npx prettier --write public/offline.html src/app/api/pwa/icon/route.tsx
+
+      - name: Upload formatted wordmark files
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-wordmark-files
+          path: |
+            public/offline.html
+            src/app/api/pwa/icon/route.tsx
+          if-no-files-found: error
+
       - name: Check formatting
         if: github.head_ref != 'fix/public-booking-reliability'
         run: npm run format:check
