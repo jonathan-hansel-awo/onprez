@@ -223,7 +223,7 @@ export default function CalendarSettingsPage() {
                   Open Google Calendar
                   <ExternalLink className="ml-2 h-4 w-4" />
                 </a>
-                <Button variant="danger" onClick={disconnect} disabled={working}>
+                <Button variant="destructive" onClick={disconnect} disabled={working}>
                   {working ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (

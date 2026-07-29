@@ -101,9 +101,9 @@ export interface AppointmentStatusEmailInput {
   customerName: string
   businessName: string
   serviceName: string
-  bookingId: string
+  bookingId?: string
   startTime: Date
-  endTime: Date
+  endTime?: Date
   timezone: string
   businessAddress?: string | null
   fromStatus: AppointmentStatus
@@ -135,19 +135,21 @@ export function renderAppointmentStatusEmail(input: AppointmentStatusEmailInput)
   const localTime = formatTimeInTimezone(input.startTime, input.timezone)
   const subject = `Appointment ${statusLabel} - ${input.businessName}`
   const reasonText = input.reason ? `\nReason: ${input.reason}` : ''
+  const hasCalendarDetails = Boolean(input.bookingId && input.endTime)
   const calendarInput = {
-    bookingId: input.bookingId,
+    bookingId: input.bookingId || 'calendar-details-unavailable',
     customerName: input.customerName,
     businessName: input.businessName,
     businessAddress: input.businessAddress,
     serviceName: input.serviceName,
     startTime: input.startTime,
-    endTime: input.endTime,
+    endTime: input.endTime || input.startTime,
     timezone: input.timezone,
   }
   const showCalendarLinks =
-    input.toStatus === AppointmentStatus.CONFIRMED ||
-    input.toStatus === AppointmentStatus.RESCHEDULED
+    hasCalendarDetails &&
+    (input.toStatus === AppointmentStatus.CONFIRMED ||
+      input.toStatus === AppointmentStatus.RESCHEDULED)
   const googleUrl = buildCustomerGoogleCalendarUrl(calendarInput)
   const outlookUrl = buildCustomerOutlookCalendarUrl(calendarInput)
   const cancellationGuidance =
@@ -183,7 +185,7 @@ export function renderAppointmentStatusEmail(input: AppointmentStatusEmailInput)
       <p>This notification reflects the ${input.fromStatus} → ${input.toStatus} status change.</p>
     `.trim(),
     attachments:
-      input.toStatus === AppointmentStatus.CANCELLED
+      input.toStatus === AppointmentStatus.CANCELLED && hasCalendarDetails
         ? [buildBookingCalendarAttachment(calendarInput, 'CANCEL')]
         : showCalendarLinks
           ? [buildBookingCalendarAttachment(calendarInput)]

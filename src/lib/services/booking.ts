@@ -644,6 +644,7 @@ export async function rescheduleAppointment(
             name: true,
             email: true,
             phone: true,
+            address: true,
             timezone: true,
           },
         },
