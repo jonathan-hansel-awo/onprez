@@ -1,19 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Toggle } from '@/components/ui/toggle'
 import { FormError, Input, TextArea } from '@/components/form'
-import { Save, Loader2, HelpCircle, Mail, MessageSquare } from 'lucide-react'
+import { Bell, Save, Loader2, HelpCircle, Mail, MessageSquare } from 'lucide-react'
 
 interface FeatureSettings {
   faqEnabled: boolean
   inquiryEnabled: boolean
   inquiryNotificationEmail: string
   inquiryAutoReply: string
-  bookingNotifications: boolean
-  emailReminders: boolean
 }
 
 export default function FeatureSettingsPage() {
@@ -27,12 +26,10 @@ export default function FeatureSettingsPage() {
     inquiryEnabled: true,
     inquiryNotificationEmail: '',
     inquiryAutoReply: '',
-    bookingNotifications: true,
-    emailReminders: true,
   })
 
   useEffect(() => {
-    fetchFeatureSettings()
+    void fetchFeatureSettings()
   }, [])
 
   async function fetchFeatureSettings() {
@@ -41,11 +38,16 @@ export default function FeatureSettingsPage() {
       const data = await response.json()
 
       if (data.success) {
-        setFeatures(data.data.features)
+        setFeatures({
+          faqEnabled: data.data.features.faqEnabled,
+          inquiryEnabled: data.data.features.inquiryEnabled,
+          inquiryNotificationEmail: data.data.features.inquiryNotificationEmail || '',
+          inquiryAutoReply: data.data.features.inquiryAutoReply || '',
+        })
       } else {
         setError('Failed to load feature settings')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load feature settings')
     } finally {
       setLoading(false)
@@ -73,7 +75,7 @@ export default function FeatureSettingsPage() {
       } else {
         setError(data.error || 'Failed to save settings')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to save settings')
     } finally {
       setSaving(false)
@@ -157,7 +159,7 @@ export default function FeatureSettingsPage() {
                       setFeatures({ ...features, inquiryNotificationEmail: e.target.value })
                     }
                     placeholder="inquiries@yourbusiness.com"
-                    helperText="Where should inquiry notifications be sent? (defaults to business email)"
+                    helperText="Where should enabled inquiry notifications be sent? (defaults to business email)"
                     leftIcon={<Mail className="w-5 h-5" />}
                   />
 
@@ -168,7 +170,7 @@ export default function FeatureSettingsPage() {
                       setFeatures({ ...features, inquiryAutoReply: e.target.value })
                     }
                     placeholder="Thank you for your inquiry! We'll get back to you within 24 hours."
-                    helperText="Automatically sent to customers when they submit an inquiry"
+                    helperText="Used when customer inquiry acknowledgements are enabled"
                     rows={3}
                     maxLength={500}
                     showCharCount
@@ -186,25 +188,22 @@ export default function FeatureSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Booking Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Booking Notifications</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Toggle
-              checked={features.bookingNotifications}
-              onChange={checked => setFeatures({ ...features, bookingNotifications: checked })}
-              label="Booking Notifications"
-              description="Receive email notifications for new bookings"
-            />
-
-            <Toggle
-              checked={features.emailReminders}
-              onChange={checked => setFeatures({ ...features, emailReminders: checked })}
-              label="Customer Email Reminders"
-              description="Send automatic email reminders to customers before appointments"
-            />
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="flex items-start gap-3 p-5">
+            <Bell className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
+            <div>
+              <h3 className="font-medium text-blue-950">Notification delivery has its own settings</h3>
+              <p className="mt-1 text-sm text-blue-800">
+                Choose booking, inquiry, reminder, customer-service, and marketing email preferences
+                from the Notifications page.
+              </p>
+              <Link
+                href="/dashboard/settings/notifications"
+                className="mt-2 inline-block text-sm font-semibold text-blue-700 hover:underline"
+              >
+                Manage notifications
+              </Link>
+            </div>
           </CardContent>
         </Card>
 
