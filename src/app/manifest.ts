@@ -1,5 +1,8 @@
 import type { MetadataRoute } from 'next'
 
+const pwaIcon = (size: 180 | 192 | 512, maskable = false) =>
+  `/api/pwa/icon?size=${size}${maskable ? '&maskable=1' : ''}`
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/dashboard',
@@ -19,14 +22,14 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: 'Dashboard',
         description: 'Open your OnPrez dashboard',
         url: '/dashboard',
-        icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
+        icons: [{ src: pwaIcon(192), sizes: '192x192', type: 'image/png' }],
       },
       {
         name: 'Bookings',
         short_name: 'Bookings',
         description: 'View and manage your bookings',
         url: '/dashboard/bookings',
-        icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
+        icons: [{ src: pwaIcon(192), sizes: '192x192', type: 'image/png' }],
       },
     ],
     icons: [
@@ -37,19 +40,19 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'any',
       },
       {
-        src: '/icon-192.png',
+        src: pwaIcon(192),
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icon-512.png',
+        src: pwaIcon(512),
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icon-maskable-512.png',
+        src: pwaIcon(512, true),
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
