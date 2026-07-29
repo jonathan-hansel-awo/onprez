@@ -54,7 +54,8 @@ describe('Installable PWA foundation', () => {
     expect(serviceWorker).toContain("const PWA_ICON_URL = '/api/pwa/icon?size=192'")
     expect(serviceWorker).toContain("'/onprez-wordmark.svg'")
     expect(serviceWorker).not.toContain('cache.put')
-    expect(serviceWorker).not.toContain("'/api/\n")
+    expect(serviceWorker).not.toContain("'/api/dashboard")
+    expect(serviceWorker).not.toContain("'/api/bookings")
   })
 
   it('uses the supplied wordmark for general OnPrez branding', () => {
