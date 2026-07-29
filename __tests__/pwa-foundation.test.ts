@@ -31,13 +31,13 @@ describe('Installable PWA foundation', () => {
     expect(serviceWorker).toContain('fetch(request).catch')
     expect(serviceWorker).toContain('caches.match(OFFLINE_URL)')
     expect(serviceWorker).toContain("const CACHE_NAME = 'onprez-offline-v2'")
-    expect(serviceWorker).toContain("'/onprez-wordmark.png'")
+    expect(serviceWorker).toContain("'/onprez-wordmark.svg'")
     expect(serviceWorker).not.toContain('cache.put')
     expect(serviceWorker).not.toContain("'/api/")
   })
 
   it('uses the supplied wordmark for general OnPrez branding', () => {
-    expect(navigationLogo).toContain('src="/onprez-wordmark.png"')
+    expect(navigationLogo).toContain('src="/onprez-wordmark.svg"')
     expect(navigationLogo).toContain('width={616}')
     expect(navigationLogo).toContain('height={176}')
   })
@@ -46,7 +46,7 @@ describe('Installable PWA foundation', () => {
     const normalisedOfflinePage = offlinePage.replace(/\s+/g, ' ')
 
     expect(normalisedOfflinePage).toContain('You’re currently offline')
-    expect(normalisedOfflinePage).toContain('src="/onprez-wordmark.png"')
+    expect(normalisedOfflinePage).toContain('src="/onprez-wordmark.svg"')
     expect(normalisedOfflinePage).toContain('alt="OnPrez"')
     expect(normalisedOfflinePage).not.toContain('class="open-o"')
     expect(normalisedOfflinePage).toContain(
