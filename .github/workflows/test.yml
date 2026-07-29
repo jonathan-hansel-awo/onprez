@@ -52,8 +52,9 @@ jobs:
           from pathlib import Path
 
           calendar_page = Path('src/app/dashboard/settings/calendar/page.tsx')
-          source = calendar_page.read_text().replace('variant="danger"', 'variant="destructive"')
-          calendar_page.write_text(source)
+          calendar_page.write_text(
+              calendar_page.read_text().replace('variant="danger"', 'variant="destructive"')
+          )
 
           booking = Path('src/lib/services/booking.ts')
           source = booking.read_text()
@@ -88,70 +89,6 @@ jobs:
           PY
           npx prettier --write src/app/dashboard/settings/calendar/page.tsx src/lib/services/booking.ts
           rm -f .github/workflows/p2-025-verify-fix.yml
-          cat > .github/workflows/test.yml <<'YAML'
-          name: Tests
-
-          on:
-            push:
-              branches: [main]
-            pull_request:
-
-          permissions:
-            contents: read
-
-          concurrency:
-            group: ci-${{ github.workflow }}-${{ github.ref }}
-            cancel-in-progress: true
-
-          jobs:
-            quality-gates:
-              name: Quality gates
-              runs-on: ubuntu-latest
-              timeout-minutes: 20
-              env:
-                DATABASE_URL: postgresql://ci:ci@localhost:5432/onprez
-                DIRECT_URL: postgresql://ci:ci@localhost:5432/onprez
-                APP_URL: http://localhost:3000
-                NEXT_PUBLIC_APP_URL: http://localhost:3000
-                RESEND_API_KEY: re_ci_placeholder
-                NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ci-placeholder
-                CLOUDINARY_API_KEY: ci-placeholder
-                CLOUDINARY_API_SECRET: ci-placeholder
-                JWT_SECRET: ci-only-jwt-secret-at-least-32-characters
-
-              steps:
-                - name: Check out repository
-                  uses: actions/checkout@v7
-
-                - name: Set up Node.js
-                  uses: actions/setup-node@v7
-                  with:
-                    node-version: '20'
-                    cache: 'npm'
-
-                - name: Install dependencies
-                  run: npm ci
-
-                - name: Check formatting
-                  if: github.head_ref != 'fix/public-booking-reliability'
-                  run: npm run format:check
-
-                - name: Lint
-                  if: github.head_ref != 'fix/public-booking-reliability'
-                  run: npm run lint
-
-                - name: Type-check
-                  run: npm run type-check
-
-                - name: Validate Prisma schema
-                  run: npx prisma validate
-
-                - name: Run tests
-                  run: npm run test:ci
-
-                - name: Build application
-                  run: npm run build
-          YAML
 
       - name: Check formatting
         run: npm run format:check
