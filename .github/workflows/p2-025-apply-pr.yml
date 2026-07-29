@@ -60,8 +60,7 @@ jobs:
             src/lib/services/appointment-state.ts \
             src/lib/services/booking.ts \
             __tests__/calendar/booking-calendar.test.ts \
-            __tests__/notifications/booking-notifications.test.ts \
-            .env.example
+            __tests__/notifications/booking-notifications.test.ts
           rm -f \
             .github/workflows/p2-025-apply.yml \
             .github/workflows/p2-025-apply-pr.yml \
