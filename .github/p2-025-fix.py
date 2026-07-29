@@ -146,5 +146,24 @@ source = replace_once(
 )
 notification_tests.write_text(source)
 
+appointment_state_tests = Path('__tests__/lib/services/appointment-state.test.ts')
+source = appointment_state_tests.read_text()
+source = replace_once(
+    source,
+    '''jest.mock('@/lib/services/email', () => ({
+  sendAppointmentStatusEmail: jest.fn(),
+}))''',
+    '''jest.mock('@/lib/services/email', () => ({
+  sendAppointmentStatusEmail: jest.fn(),
+}))
+
+jest.mock('@/lib/integrations/google-calendar', () => ({
+  syncAppointmentToGoogleCalendar: jest.fn().mockResolvedValue({ success: true }),
+  removeAppointmentFromGoogleCalendar: jest.fn().mockResolvedValue({ success: true }),
+}))''',
+    'Appointment state Google Calendar mock',
+)
+appointment_state_tests.write_text(source)
+
 Path('.github/workflows/p2-025-verify-fix.yml').unlink(missing_ok=True)
 Path('.github/p2-025-fix.py').unlink(missing_ok=True)
