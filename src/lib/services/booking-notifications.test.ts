@@ -12,6 +12,10 @@ jest.mock('@/lib/services/email', () => ({
   sendEmail: jest.fn(),
 }))
 
+jest.mock('@/lib/integrations/google-calendar', () => ({
+  syncAppointmentToGoogleCalendar: jest.fn().mockResolvedValue({ success: true }),
+}))
+
 const mockSendEmail = jest.mocked(sendEmail)
 
 const baseInput: BookingCreatedNotificationInput = {
@@ -91,6 +95,7 @@ describe('booking creation notifications', () => {
 
     expect(customerEmail.subject).toBe('Booking request received - Heavenly Pamper Palace')
     expect(customerEmail.text).toContain('will review your request')
+    expect(customerEmail.attachments).toBeUndefined()
     expect(businessEmail.subject).toBe('New booking request: Serenity Massage - Ada Okoro')
   })
 
@@ -140,11 +145,17 @@ describe('booking creation notifications', () => {
     expect(content).toContain('STATUS:TENTATIVE\r\n')
   })
 
-  it('does not add calendar details to the customer email', () => {
+  it('adds calendar links and an .ics attachment to confirmed customer emails', () => {
     const customerEmail = buildCustomerBookingEmail(baseInput)
 
-    expect(customerEmail.html).not.toContain('Add to calendar')
-    expect(customerEmail.attachments).toBeUndefined()
+    expect(customerEmail.html).toContain('Add to Google Calendar')
+    expect(customerEmail.html).toContain('Add to Outlook Calendar')
+    expect(customerEmail.attachments).toEqual([
+      expect.objectContaining({
+        filename: 'booking-AB12CD34.ics',
+        contentType: 'text/calendar; charset=utf-8; method=PUBLISH',
+      }),
+    ])
   })
 
   it('still returns the customer result when no business recipient is configured', async () => {

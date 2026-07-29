@@ -16,6 +16,11 @@ jest.mock('@/lib/services/email', () => ({
   sendAppointmentStatusEmail: jest.fn(),
 }))
 
+jest.mock('@/lib/integrations/google-calendar', () => ({
+  syncAppointmentToGoogleCalendar: jest.fn().mockResolvedValue({ success: true }),
+  removeAppointmentFromGoogleCalendar: jest.fn().mockResolvedValue({ success: true }),
+}))
+
 const mockedTransaction = prisma.$transaction as jest.Mock
 const mockedSendStatusEmail = sendAppointmentStatusEmail as jest.Mock
 

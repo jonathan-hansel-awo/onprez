@@ -13,6 +13,10 @@ jest.mock('@/lib/services/email', () => ({
   sendEmail: (...args: unknown[]) => mockSendEmail(...args),
 }))
 
+jest.mock('@/lib/integrations/google-calendar', () => ({
+  syncAppointmentToGoogleCalendar: jest.fn().mockResolvedValue({ success: true }),
+}))
+
 jest.mock('@/lib/observability/logger', () => ({
   logger: {
     info: jest.fn(),

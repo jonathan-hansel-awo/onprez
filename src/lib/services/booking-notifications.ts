@@ -1,4 +1,10 @@
 import type { AppointmentStatus } from '@prisma/client'
+import {
+  buildBookingCalendarAttachment,
+  buildCustomerGoogleCalendarUrl,
+  buildCustomerOutlookCalendarUrl,
+} from '@/lib/calendar/booking-calendar'
+import { syncAppointmentToGoogleCalendar } from '@/lib/integrations/google-calendar'
 import { readNotificationPreferences } from '@/lib/notifications/preferences'
 import { logger } from '@/lib/observability/logger'
 import { prisma } from '@/lib/prisma'
@@ -172,10 +178,17 @@ function renderEmailShell(
   intro: string,
   details: string,
   footer: string,
-  action?: EmailAction
+  actions?: EmailAction[]
 ): string {
-  const actionHtml = action
-    ? `<p style="margin:24px 0 0"><a href="${escapeHtml(action.href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 20px;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;text-decoration:none">${escapeHtml(action.label)}</a></p>${action.supportingText ? `<p style="margin:12px 0 0;color:#6b7280;font-size:13px">${escapeHtml(action.supportingText)}</p>` : ''}`
+  const actionHtml = actions?.length
+    ? `<div style="margin:24px 0 0">${actions
+        .map(
+          action =>
+            `<a href="${escapeHtml(action.href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 8px 8px 0;padding:13px 20px;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;text-decoration:none">${escapeHtml(action.label)}</a>`
+        )
+        .join(
+          ''
+        )}</div>${actions.find(action => action.supportingText)?.supportingText ? `<p style="margin:8px 0 0;color:#6b7280;font-size:13px">${escapeHtml(actions.find(action => action.supportingText)?.supportingText || '')}</p>` : ''}`
     : ''
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(heading)}</title></head><body style="margin:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#111827"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;background:#f3f4f6"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;border-radius:16px;background:#fff;overflow:hidden"><tr><td style="padding:24px 32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff"><div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">OnPrez</div><h1 style="margin:8px 0 0;font-size:26px">${escapeHtml(heading)}</h1></td></tr><tr><td style="padding:30px 32px"><p style="margin:0 0 22px;color:#374151;font-size:16px;line-height:1.65">${escapeHtml(intro)}</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:14px 18px;border:1px solid #e5e7eb;border-radius:12px;background:#f9fafb">${details}</table>${actionHtml}<p style="margin:24px 0 0;color:#6b7280;font-size:14px;line-height:1.6">${escapeHtml(footer)}</p></td></tr></table></td></tr></table></body></html>`
@@ -190,6 +203,20 @@ export function buildCustomerBookingEmail(
   const localStartTime = formatTimeInTimezone(input.startTime, input.timezone)
   const localEndTime = formatTimeInTimezone(input.endTime, input.timezone)
   const price = formatCurrency(input.totalAmount, input.currency)
+  const googleCalendarUrl = buildCustomerGoogleCalendarUrl(input)
+  const outlookCalendarUrl = buildCustomerOutlookCalendarUrl(input)
+  const calendarActions: EmailAction[] =
+    input.status === 'CONFIRMED'
+      ? [
+          { href: googleCalendarUrl, label: 'Add to Google Calendar' },
+          {
+            href: outlookCalendarUrl,
+            label: 'Add to Outlook Calendar',
+            supportingText:
+              'You can also open the attached .ics file with Apple Calendar or another calendar app.',
+          },
+        ]
+      : []
   const details = [
     renderDetailRow('Business', input.businessName),
     renderDetailRow('Service', input.serviceName),
@@ -218,7 +245,8 @@ export function buildCustomerBookingEmail(
       statusCopy.customerHeading,
       `Hi ${input.customerName}. ${statusCopy.customerSummary}`,
       details,
-      'Keep this booking reference for any questions. This is a service message about an appointment you requested.'
+      'Keep this booking reference for any questions. This is a service message about an appointment you requested.',
+      calendarActions
     ),
     text: [
       `Hi ${input.customerName},`,
@@ -231,8 +259,18 @@ export function buildCustomerBookingEmail(
       `Time: ${localStartTime}–${localEndTime} (${input.timezone})`,
       `Price: ${price}`,
       `Reference: ${confirmationNumber}`,
+      ...(input.status === 'CONFIRMED'
+        ? [
+            '',
+            `Add to Google Calendar: ${googleCalendarUrl}`,
+            `Add to Outlook Calendar: ${outlookCalendarUrl}`,
+          ]
+        : []),
     ].join('\n'),
     replyTo: normalizeEmail(input.businessEmail),
+    ...(input.status === 'CONFIRMED'
+      ? { attachments: [buildBookingCalendarAttachment(input)] }
+      : {}),
   }
 }
 
@@ -269,12 +307,14 @@ export function buildBusinessBookingEmail(
       `${input.customerName} booked ${input.serviceName} with ${input.businessName}.`,
       details,
       'Sign in to your OnPrez dashboard to review and manage this appointment.',
-      {
-        href: calendarUrl,
-        label: 'Add to calendar',
-        supportingText:
-          'Opens Google Calendar. You can also use the attached .ics file with Apple Calendar, Outlook, or another calendar app.',
-      }
+      [
+        {
+          href: calendarUrl,
+          label: 'Add to calendar',
+          supportingText:
+            'Opens Google Calendar. You can also use the attached .ics file with Apple Calendar, Outlook, or another calendar app.',
+        },
+      ]
     ),
     text: [
       statusCopy.businessHeading,
@@ -336,6 +376,9 @@ export async function sendBookingCreatedNotifications(
           })
 
     const [customer, business] = await Promise.all([customerPromise, businessPromise])
+    if (input.status === 'CONFIRMED') {
+      await syncAppointmentToGoogleCalendar(input.bookingId)
+    }
     const allSent = customer.success && business.success
 
     logger[allSent ? 'info' : 'warn']('booking.notifications.completed', {
