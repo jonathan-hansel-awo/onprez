@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/services/rate-limit'
-import { z } from 'zod'
+import { sendInquiryCreatedNotifications } from '@/lib/services/inquiry-notifications'
 
 const inquirySchema = z.object({
   businessId: z.string().min(1).max(128),
@@ -51,8 +53,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const validation = inquirySchema.safeParse(body)
+    const validation = inquirySchema.safeParse(await request.json())
 
     if (!validation.success) {
       return NextResponse.json(
@@ -67,7 +68,6 @@ export async function POST(request: NextRequest) {
 
     const data = validation.data
     const customerEmail = data.customerEmail.toLowerCase()
-
     const business = await prisma.business.findUnique({
       where: { id: data.businessId },
       select: {
@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
         email: true,
         settings: true,
         isPublished: true,
+        owner: { select: { email: true } },
       },
     })
 
@@ -93,15 +94,8 @@ export async function POST(request: NextRequest) {
     }
 
     let customer = await prisma.customer.findFirst({
-      where: {
-        businessId: business.id,
-        email: customerEmail,
-      },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-      },
+      where: { businessId: business.id, email: customerEmail },
+      select: { id: true, name: true, phone: true },
     })
 
     if (!customer) {
@@ -112,17 +106,11 @@ export async function POST(request: NextRequest) {
           name: data.customerName,
           phone: data.customerPhone || null,
         },
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-        },
+        select: { id: true, name: true, phone: true },
       })
     }
 
     const userAgent = request.headers.get('user-agent') || undefined
-
-    // Build payload as any to avoid strict Prisma type mismatch for optional/renamed fields
     const createPayload: any = {
       businessId: business.id,
       customerId: customer.id,
@@ -136,21 +124,32 @@ export async function POST(request: NextRequest) {
       isRead: false,
       ipAddress: ip,
       userAgent,
-    }
-
-    if (data.preferredContact) {
-      // include preferredContact only when provided to avoid TypeScript error if the DB field was renamed
-      createPayload.preferredContact = data.preferredContact
+      preferredContact: data.preferredContact,
     }
 
     const inquiry = await prisma.inquiry.create({
       data: createPayload,
-      select: {
-        id: true,
-        status: true,
-        createdAt: true,
-      },
+      select: { id: true, status: true, createdAt: true },
     })
+
+    try {
+      await sendInquiryCreatedNotifications({
+        inquiryId: inquiry.id,
+        customerName: data.customerName,
+        customerEmail,
+        customerPhone: data.customerPhone || null,
+        subject: data.subject,
+        message: data.message,
+        preferredContact: data.preferredContact,
+        businessName: business.name,
+        businessEmail: business.email,
+        businessOwnerEmail: business.owner.email,
+        businessSettings: business.settings,
+      })
+    } catch (notificationError) {
+      // The inquiry is already safely stored; an email provider failure must not lose it.
+      console.error('Inquiry notification delivery error:', notificationError)
+    }
 
     return NextResponse.json(
       {
