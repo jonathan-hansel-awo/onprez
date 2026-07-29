@@ -57,9 +57,7 @@ export default function NotificationSettingsPage() {
       setPreferences(data.data.preferences)
     } catch (fetchError) {
       setError(
-        fetchError instanceof Error
-          ? fetchError.message
-          : 'Failed to load notification preferences'
+        fetchError instanceof Error ? fetchError.message : 'Failed to load notification preferences'
       )
     } finally {
       setLoading(false)
@@ -106,9 +104,7 @@ export default function NotificationSettingsPage() {
       window.setTimeout(() => setSuccess(false), 3000)
     } catch (saveError) {
       setError(
-        saveError instanceof Error
-          ? saveError.message
-          : 'Failed to save notification preferences'
+        saveError instanceof Error ? saveError.message : 'Failed to save notification preferences'
       )
     } finally {
       setSaving(false)

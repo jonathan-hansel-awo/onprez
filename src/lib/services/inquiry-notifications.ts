@@ -123,13 +123,16 @@ export async function sendInquiryCreatedNotifications(
 
   const [customer, business] = await Promise.all([customerPromise, businessPromise])
 
-  logger[customer.success && business.success ? 'info' : 'warn']('inquiry.notifications.completed', {
-    inquiryId: input.inquiryId,
-    customerSent: preferences.customerInquiryAcknowledgements ? customer.success : false,
-    customerSkipped: !preferences.customerInquiryAcknowledgements,
-    businessSent: preferences.inquiryOwnerEmail ? business.success : false,
-    businessSkipped: !preferences.inquiryOwnerEmail,
-  })
+  logger[customer.success && business.success ? 'info' : 'warn'](
+    'inquiry.notifications.completed',
+    {
+      inquiryId: input.inquiryId,
+      customerSent: preferences.customerInquiryAcknowledgements ? customer.success : false,
+      customerSkipped: !preferences.customerInquiryAcknowledgements,
+      businessSent: preferences.inquiryOwnerEmail ? business.success : false,
+      businessSkipped: !preferences.inquiryOwnerEmail,
+    }
+  )
 
   return { customer, business }
 }

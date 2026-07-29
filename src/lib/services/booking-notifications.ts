@@ -200,7 +200,12 @@ export function buildCustomerBookingEmail(
       ? [renderDetailRow('Deposit paid', formatCurrency(input.depositPaid, input.currency))]
       : []),
     ...(input.remainingAmount !== undefined
-      ? [renderDetailRow('Balance at appointment', formatCurrency(input.remainingAmount, input.currency))]
+      ? [
+          renderDetailRow(
+            'Balance at appointment',
+            formatCurrency(input.remainingAmount, input.currency)
+          ),
+        ]
       : []),
     ...(input.businessAddress ? [renderDetailRow('Location', input.businessAddress)] : []),
     renderDetailRow('Reference', confirmationNumber),

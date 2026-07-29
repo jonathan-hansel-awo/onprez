@@ -192,7 +192,9 @@ export default function FeatureSettingsPage() {
           <CardContent className="flex items-start gap-3 p-5">
             <Bell className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
             <div>
-              <h3 className="font-medium text-blue-950">Notification delivery has its own settings</h3>
+              <h3 className="font-medium text-blue-950">
+                Notification delivery has its own settings
+              </h3>
               <p className="mt-1 text-sm text-blue-800">
                 Choose booking, inquiry, reminder, customer-service, and marketing email preferences
                 from the Notifications page.
