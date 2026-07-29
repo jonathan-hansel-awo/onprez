@@ -1,6 +1,8 @@
 import type { AppointmentStatus } from '@prisma/client'
-import { sendEmail, type EmailResult, type SendEmailOptions } from '@/lib/services/email'
+import { readNotificationPreferences } from '@/lib/notifications/preferences'
 import { logger } from '@/lib/observability/logger'
+import { prisma } from '@/lib/prisma'
+import { sendEmail, type EmailResult, type SendEmailOptions } from '@/lib/services/email'
 import { formatLongDateInTimezone, formatTimeInTimezone } from '@/lib/utils/timezone'
 
 export interface BookingCreatedNotificationInput {
@@ -51,22 +53,13 @@ function normalizeEmail(value?: string | null): string | undefined {
 
 function formatCurrency(amount: number, currency: string): string {
   try {
-    return new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency,
-    }).format(amount)
+    return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(amount)
   } catch {
     return `${currency} ${amount.toFixed(2)}`
   }
 }
 
-function formatBookingStatus(status: AppointmentStatus): {
-  customerSubject: string
-  customerHeading: string
-  customerSummary: string
-  businessSubjectPrefix: string
-  businessHeading: string
-} {
+function formatBookingStatus(status: AppointmentStatus) {
   if (status === 'PENDING') {
     return {
       customerSubject: 'Booking request received',
@@ -88,12 +81,7 @@ function formatBookingStatus(status: AppointmentStatus): {
 }
 
 function renderDetailRow(label: string, value: string): string {
-  return `
-    <tr>
-      <td style="padding: 7px 12px 7px 0; color: #6b7280; vertical-align: top; white-space: nowrap;">${escapeHtml(label)}</td>
-      <td style="padding: 7px 0; color: #111827; font-weight: 600;">${escapeHtml(value)}</td>
-    </tr>
-  `.trim()
+  return `<tr><td style="padding:7px 12px 7px 0;color:#6b7280;vertical-align:top;white-space:nowrap">${escapeHtml(label)}</td><td style="padding:7px 0;color:#111827;font-weight:600">${escapeHtml(value)}</td></tr>`
 }
 
 function formatCalendarUtc(date: Date): string {
@@ -135,9 +123,7 @@ export function buildBusinessBookingCalendarUrl(input: BookingCreatedNotificatio
     ].join('\n')
   )
 
-  if (input.businessAddress) {
-    calendarUrl.searchParams.set('location', input.businessAddress)
-  }
+  if (input.businessAddress) calendarUrl.searchParams.set('location', input.businessAddress)
 
   return calendarUrl.toString()
 }
@@ -147,7 +133,6 @@ export function buildBusinessBookingCalendarAttachment(
 ): NonNullable<SendEmailOptions['attachments']>[number] {
   const confirmationNumber = input.bookingId.slice(0, 8).toUpperCase()
   const phone = input.customerPhone?.trim() || 'Not provided'
-  const status = input.status === 'PENDING' ? 'TENTATIVE' : 'CONFIRMED'
   const description = [
     `Booking reference: ${confirmationNumber}`,
     `Customer: ${input.customerName}`,
@@ -169,7 +154,7 @@ export function buildBusinessBookingCalendarAttachment(
     `SUMMARY:${escapeCalendarText(`${input.serviceName} with ${input.customerName}`)}`,
     `DESCRIPTION:${escapeCalendarText(description)}`,
     ...(input.businessAddress ? [`LOCATION:${escapeCalendarText(input.businessAddress)}`] : []),
-    `STATUS:${status}`,
+    `STATUS:${input.status === 'PENDING' ? 'TENTATIVE' : 'CONFIRMED'}`,
     'END:VEVENT',
     'END:VCALENDAR',
     '',
@@ -190,58 +175,10 @@ function renderEmailShell(
   action?: EmailAction
 ): string {
   const actionHtml = action
-    ? `
-                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px 0 0;">
-                      <tr>
-                        <td style="border-radius: 10px; background: #2563eb;">
-                          <a href="${escapeHtml(action.href)}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 13px 20px; color: #ffffff; font-size: 15px; font-weight: 700; line-height: 1.2; text-decoration: none;">${escapeHtml(action.label)}</a>
-                        </td>
-                      </tr>
-                    </table>
-                    ${
-                      action.supportingText
-                        ? `<p style="margin: 12px 0 0; color: #6b7280; font-size: 13px; line-height: 1.5;">${escapeHtml(action.supportingText)}</p>`
-                        : ''
-                    }
-    `.trim()
+    ? `<p style="margin:24px 0 0"><a href="${escapeHtml(action.href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 20px;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;text-decoration:none">${escapeHtml(action.label)}</a></p>${action.supportingText ? `<p style="margin:12px 0 0;color:#6b7280;font-size:13px">${escapeHtml(action.supportingText)}</p>` : ''}`
     : ''
 
-  return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${escapeHtml(heading)}</title>
-      </head>
-      <body style="margin: 0; padding: 0; background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color: #111827;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding: 32px 16px; background: #f3f4f6;">
-          <tr>
-            <td align="center">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; overflow: hidden; border-radius: 16px; background: #ffffff; box-shadow: 0 8px 30px rgba(17, 24, 39, 0.08);">
-                <tr>
-                  <td style="padding: 24px 32px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #ffffff;">
-                    <div style="font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9;">OnPrez</div>
-                    <h1 style="margin: 8px 0 0; font-size: 26px; line-height: 1.25;">${escapeHtml(heading)}</h1>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 30px 32px;">
-                    <p style="margin: 0 0 22px; color: #374151; font-size: 16px; line-height: 1.65;">${escapeHtml(intro)}</p>
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding: 14px 18px; border: 1px solid #e5e7eb; border-radius: 12px; background: #f9fafb;">
-                      ${details}
-                    </table>
-                    ${actionHtml}
-                    <p style="margin: 24px 0 0; color: #6b7280; font-size: 14px; line-height: 1.6;">${escapeHtml(footer)}</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-    </html>
-  `.trim()
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(heading)}</title></head><body style="margin:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#111827"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;background:#f3f4f6"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;border-radius:16px;background:#fff;overflow:hidden"><tr><td style="padding:24px 32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff"><div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">OnPrez</div><h1 style="margin:8px 0 0;font-size:26px">${escapeHtml(heading)}</h1></td></tr><tr><td style="padding:30px 32px"><p style="margin:0 0 22px;color:#374151;font-size:16px;line-height:1.65">${escapeHtml(intro)}</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:14px 18px;border:1px solid #e5e7eb;border-radius:12px;background:#f9fafb">${details}</table>${actionHtml}<p style="margin:24px 0 0;color:#6b7280;font-size:14px;line-height:1.6">${escapeHtml(footer)}</p></td></tr></table></td></tr></table></body></html>`
 }
 
 export function buildCustomerBookingEmail(
@@ -253,8 +190,6 @@ export function buildCustomerBookingEmail(
   const localStartTime = formatTimeInTimezone(input.startTime, input.timezone)
   const localEndTime = formatTimeInTimezone(input.endTime, input.timezone)
   const price = formatCurrency(input.totalAmount, input.currency)
-  const replyTo = normalizeEmail(input.businessEmail)
-
   const details = [
     renderDetailRow('Business', input.businessName),
     renderDetailRow('Service', input.serviceName),
@@ -276,28 +211,6 @@ export function buildCustomerBookingEmail(
     renderDetailRow('Reference', confirmationNumber),
   ].join('')
 
-  const textLines = [
-    `Hi ${input.customerName},`,
-    '',
-    `${statusCopy.customerHeading}. ${statusCopy.customerSummary}`,
-    '',
-    `Business: ${input.businessName}`,
-    `Service: ${input.serviceName}`,
-    `Date: ${localDate}`,
-    `Time: ${localStartTime}–${localEndTime} (${input.timezone})`,
-    `Price: ${price}`,
-    ...(input.depositPaid !== undefined
-      ? [`Deposit paid: ${formatCurrency(input.depositPaid, input.currency)}`]
-      : []),
-    ...(input.remainingAmount !== undefined
-      ? [`Balance at appointment: ${formatCurrency(input.remainingAmount, input.currency)}`]
-      : []),
-    ...(input.businessAddress ? [`Location: ${input.businessAddress}`] : []),
-    `Reference: ${confirmationNumber}`,
-    '',
-    'Keep this reference for any questions about your booking.',
-  ]
-
   return {
     to: normalizeEmail(input.customerEmail) || input.customerEmail,
     subject: `${statusCopy.customerSubject} - ${input.businessName}`,
@@ -307,8 +220,19 @@ export function buildCustomerBookingEmail(
       details,
       'Keep this booking reference for any questions. This is a service message about an appointment you requested.'
     ),
-    text: textLines.join('\n'),
-    replyTo,
+    text: [
+      `Hi ${input.customerName},`,
+      '',
+      `${statusCopy.customerHeading}. ${statusCopy.customerSummary}`,
+      '',
+      `Business: ${input.businessName}`,
+      `Service: ${input.serviceName}`,
+      `Date: ${localDate}`,
+      `Time: ${localStartTime}–${localEndTime} (${input.timezone})`,
+      `Price: ${price}`,
+      `Reference: ${confirmationNumber}`,
+    ].join('\n'),
+    replyTo: normalizeEmail(input.businessEmail),
   }
 }
 
@@ -325,7 +249,6 @@ export function buildBusinessBookingEmail(
   const phone = input.customerPhone?.trim() || 'Not provided'
   const notes = input.customerNotes?.trim() || 'None provided'
   const calendarUrl = buildBusinessBookingCalendarUrl(input)
-
   const details = [
     renderDetailRow('Customer', input.customerName),
     renderDetailRow('Email', input.customerEmail),
@@ -334,40 +257,9 @@ export function buildBusinessBookingEmail(
     renderDetailRow('Date', localDate),
     renderDetailRow('Time', `${localStartTime}–${localEndTime} (${input.timezone})`),
     renderDetailRow('Value', price),
-    ...(input.depositPaid !== undefined
-      ? [renderDetailRow('Deposit paid', formatCurrency(input.depositPaid, input.currency))]
-      : []),
-    ...(input.remainingAmount !== undefined
-      ? [renderDetailRow('Balance due', formatCurrency(input.remainingAmount, input.currency))]
-      : []),
     renderDetailRow('Reference', confirmationNumber),
     renderDetailRow('Customer notes', notes),
   ].join('')
-
-  const text = [
-    statusCopy.businessHeading,
-    '',
-    `Customer: ${input.customerName}`,
-    `Email: ${input.customerEmail}`,
-    `Phone: ${phone}`,
-    `Service: ${input.serviceName}`,
-    `Date: ${localDate}`,
-    `Time: ${localStartTime}–${localEndTime} (${input.timezone})`,
-    `Value: ${price}`,
-    ...(input.depositPaid !== undefined
-      ? [`Deposit paid: ${formatCurrency(input.depositPaid, input.currency)}`]
-      : []),
-    ...(input.remainingAmount !== undefined
-      ? [`Balance due: ${formatCurrency(input.remainingAmount, input.currency)}`]
-      : []),
-    `Reference: ${confirmationNumber}`,
-    `Customer notes: ${notes}`,
-    '',
-    `Add to Google Calendar: ${calendarUrl}`,
-    'For Apple Calendar, Outlook, or another calendar app, open the attached .ics file.',
-    '',
-    'Sign in to your OnPrez dashboard to review and manage this appointment.',
-  ].join('\n')
 
   return {
     to: recipient,
@@ -384,32 +276,64 @@ export function buildBusinessBookingEmail(
           'Opens Google Calendar. You can also use the attached .ics file with Apple Calendar, Outlook, or another calendar app.',
       }
     ),
-    text,
+    text: [
+      statusCopy.businessHeading,
+      '',
+      `Customer: ${input.customerName}`,
+      `Email: ${input.customerEmail}`,
+      `Phone: ${phone}`,
+      `Service: ${input.serviceName}`,
+      `Date: ${localDate}`,
+      `Time: ${localStartTime}–${localEndTime} (${input.timezone})`,
+      `Value: ${price}`,
+      `Reference: ${confirmationNumber}`,
+      `Customer notes: ${notes}`,
+      '',
+      `Add to Google Calendar: ${calendarUrl}`,
+    ].join('\n'),
     replyTo: normalizeEmail(input.customerEmail),
     attachments: [buildBusinessBookingCalendarAttachment(input)],
+  }
+}
+
+async function shouldNotifyBusiness(bookingId: string): Promise<boolean> {
+  try {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: bookingId },
+      select: { business: { select: { settings: true } } },
+    })
+
+    return readNotificationPreferences(appointment?.business.settings).bookingOwnerEmail
+  } catch (error) {
+    // Preserve existing delivery behaviour if the preference lookup itself is unavailable.
+    logger.warn('booking.notifications.preference_lookup_failed', {
+      bookingId,
+      errorType: error instanceof Error ? error.name : typeof error,
+    })
+    return true
   }
 }
 
 export async function sendBookingCreatedNotifications(
   input: BookingCreatedNotificationInput
 ): Promise<BookingCreatedNotificationResult> {
-  logger.info('booking.notifications.started', {
-    bookingId: input.bookingId,
-    status: input.status,
-  })
+  logger.info('booking.notifications.started', { bookingId: input.bookingId, status: input.status })
 
   try {
     const businessRecipient =
       normalizeEmail(input.businessEmail) || normalizeEmail(input.businessOwnerEmail)
-    const customerMessage = buildCustomerBookingEmail(input)
+    const notifyBusiness = await shouldNotifyBusiness(input.bookingId)
 
-    const customerPromise = sendEmail(customerMessage)
-    const businessPromise = businessRecipient
-      ? sendEmail(buildBusinessBookingEmail(input, businessRecipient))
-      : Promise.resolve<EmailResult>({
-          success: false,
-          error: 'No business notification recipient is configured',
-        })
+    // Customer confirmation is a required transactional service email and always sends.
+    const customerPromise = sendEmail(buildCustomerBookingEmail(input))
+    const businessPromise = !notifyBusiness
+      ? Promise.resolve<EmailResult>({ success: true })
+      : businessRecipient
+        ? sendEmail(buildBusinessBookingEmail(input, businessRecipient))
+        : Promise.resolve<EmailResult>({
+            success: false,
+            error: 'No business notification recipient is configured',
+          })
 
     const [customer, business] = await Promise.all([customerPromise, businessPromise])
     const allSent = customer.success && business.success
@@ -418,7 +342,8 @@ export async function sendBookingCreatedNotifications(
       bookingId: input.bookingId,
       status: input.status,
       customerSent: customer.success,
-      businessSent: business.success,
+      businessSent: notifyBusiness ? business.success : false,
+      businessSkipped: !notifyBusiness,
     })
 
     return { customer, business }

@@ -9,6 +9,7 @@ import {
   formatLongDateInTimezone,
   formatTimeInTimezone,
 } from '@/lib/utils/timezone'
+import { readNotificationPreferences } from '@/lib/notifications/preferences'
 
 interface ReminderSettings {
   enabled: boolean
@@ -16,7 +17,8 @@ interface ReminderSettings {
   defaultMessage?: string
 }
 
-// Send a single reminder (manual trigger from dashboard)
+// Send a single reminder. Manual dashboard reminders remain explicit user actions;
+// scheduled/automated reminders follow the saved business preference.
 export async function sendAppointmentReminder(
   appointmentId: string,
   reminderType: string = 'manual'
@@ -54,6 +56,13 @@ export async function sendAppointmentReminder(
       return { success: false, error: 'Appointment not found' }
     }
 
+    const settings = (appointment.business.settings as Record<string, unknown>) || {}
+    const preferences = readNotificationPreferences(settings)
+
+    if (reminderType !== 'manual' && !preferences.customerReminders) {
+      return { success: true }
+    }
+
     const customerEmail = appointment.customerEmail || appointment.customer?.email
     const customerName = appointment.customerName || appointment.customer?.name
 
@@ -61,9 +70,7 @@ export async function sendAppointmentReminder(
       return { success: false, error: 'No customer email' }
     }
 
-    const settings = (appointment.business.settings as Record<string, unknown>) || {}
     const reminderSettings = settings.reminders as ReminderSettings | undefined
-
     const timezone = appointment.business.timezone || DEFAULT_TIMEZONE
     const appointmentStart = new Date(appointment.startTime)
     const emailData = {
