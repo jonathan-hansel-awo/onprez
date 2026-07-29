@@ -4,6 +4,10 @@ import {
   Prisma,
   PushNotificationEventType,
 } from '@prisma/client'
+import {
+  removeAppointmentFromGoogleCalendar,
+  syncAppointmentToGoogleCalendar,
+} from '@/lib/integrations/google-calendar'
 import { prisma } from '@/lib/prisma'
 import { sendAppointmentStatusEmail } from '@/lib/services/email'
 import { logger } from '@/lib/observability/logger'
@@ -185,6 +189,7 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
             name: true,
             email: true,
             phone: true,
+            address: true,
             timezone: true,
           },
         },
@@ -220,6 +225,12 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
   })
 
   const pushDelivery = pushOutboxId ? deliverPushOutboxSafely(pushOutboxId) : Promise.resolve(null)
+  const calendarSync =
+    input.toStatus === AppointmentStatus.CONFIRMED
+      ? syncAppointmentToGoogleCalendar(appointment.id)
+      : input.toStatus === AppointmentStatus.CANCELLED
+        ? removeAppointmentFromGoogleCalendar(appointment.id)
+        : Promise.resolve({ success: true, skipped: true })
   let notificationSent = false
   if (input.notifyCustomer) {
     logger.info('booking.transition.email_started', {
@@ -232,13 +243,17 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
         customerName: appointment.customerName,
         businessName: appointment.business.name,
         serviceName: appointment.service.name,
+        bookingId: appointment.id,
         startTime: appointment.startTime,
+        endTime: appointment.endTime,
         timezone: appointment.business.timezone,
+        businessAddress: appointment.business.address,
         fromStatus: appointment.previousStatus || input.toStatus,
         toStatus: appointment.status,
         reason: input.reason,
       }),
       pushDelivery,
+      calendarSync,
     ])
     notificationSent = emailResult.success
     logger[notificationSent ? 'info' : 'warn']('booking.transition.email_completed', {
@@ -247,7 +262,7 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
       sent: notificationSent,
     })
   } else {
-    await pushDelivery
+    await Promise.all([pushDelivery, calendarSync])
   }
 
   logger.info('booking.transition.completed', {

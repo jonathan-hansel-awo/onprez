@@ -1,5 +1,6 @@
 import { Prisma, PushNotificationEventType } from '@prisma/client'
 import { createHash } from 'crypto'
+import { syncAppointmentToGoogleCalendar } from '@/lib/integrations/google-calendar'
 import { prisma } from '@/lib/prisma'
 import {
   isSlotAvailable,
@@ -484,6 +485,7 @@ export async function createBooking(
             name: true,
             email: true,
             phone: true,
+            address: true,
             timezone: true,
           },
         },
@@ -669,14 +671,20 @@ export async function rescheduleAppointment(
 
   await Promise.all([
     result.pushOutboxId ? deliverPushOutboxSafely(result.pushOutboxId) : Promise.resolve(null),
+    result.appointment?.status === 'CONFIRMED'
+      ? syncAppointmentToGoogleCalendar(result.appointment.id)
+      : Promise.resolve({ success: true, skipped: true }),
     notifyCustomer && result.appointment
       ? sendAppointmentStatusEmail({
           to: result.appointment.customerEmail,
           customerName: result.appointment.customerName,
           businessName: result.appointment.business.name,
           serviceName: result.appointment.service.name,
+          bookingId: result.appointment.id,
           startTime: result.appointment.startTime,
+          endTime: result.appointment.endTime,
           timezone: result.appointment.business.timezone,
+          businessAddress: result.appointment.business.address,
           fromStatus: result.appointment.status,
           toStatus: 'RESCHEDULED',
           reason,

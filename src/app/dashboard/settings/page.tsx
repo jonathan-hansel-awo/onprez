@@ -72,6 +72,13 @@ const SETTINGS_LINKS: SettingsLink[] = [
     category: 'booking',
   },
   {
+    href: '/dashboard/settings/calendar',
+    label: 'Calendar Integration',
+    description: 'Automatically sync confirmed bookings to Google Calendar',
+    icon: CalendarDays,
+    category: 'booking',
+  },
+  {
     href: '/dashboard/settings/payments',
     label: 'Payments & Booking Protection',
     description: 'Connect Stripe and prepare to require booking deposits',
@@ -187,6 +194,9 @@ export default function SettingsPage() {
             </li>
             <li>
               • Review <strong>Notifications</strong> to choose which operational emails you receive
+            </li>
+            <li>
+              • Connect <strong>Google Calendar</strong> to add confirmed bookings automatically
             </li>
             <li>
               • Connect <strong>Stripe</strong> before enabling payment-backed bookings

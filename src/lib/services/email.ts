@@ -1,5 +1,10 @@
 import { Resend, type Attachment } from 'resend'
 import { AppointmentStatus } from '@prisma/client'
+import {
+  buildBookingCalendarAttachment,
+  buildCustomerGoogleCalendarUrl,
+  buildCustomerOutlookCalendarUrl,
+} from '@/lib/calendar/booking-calendar'
 import { env } from '@/lib/config/env'
 import { formatLongDateInTimezone, formatTimeInTimezone } from '@/lib/utils/timezone'
 import { logger } from '@/lib/observability/logger'
@@ -96,8 +101,11 @@ export interface AppointmentStatusEmailInput {
   customerName: string
   businessName: string
   serviceName: string
+  bookingId: string
   startTime: Date
+  endTime: Date
   timezone: string
+  businessAddress?: string | null
   fromStatus: AppointmentStatus
   toStatus: AppointmentStatus
   reason?: string
@@ -127,10 +135,39 @@ export function renderAppointmentStatusEmail(input: AppointmentStatusEmailInput)
   const localTime = formatTimeInTimezone(input.startTime, input.timezone)
   const subject = `Appointment ${statusLabel} - ${input.businessName}`
   const reasonText = input.reason ? `\nReason: ${input.reason}` : ''
-  const text = `Hi ${input.customerName},\n\nYour ${input.serviceName} appointment with ${input.businessName} is now ${statusLabel}.\n\nDate: ${localDate}\nTime: ${localTime} (${input.timezone})${reasonText}\n\nThis message reflects the change from ${input.fromStatus} to ${input.toStatus}.`
+  const calendarInput = {
+    bookingId: input.bookingId,
+    customerName: input.customerName,
+    businessName: input.businessName,
+    businessAddress: input.businessAddress,
+    serviceName: input.serviceName,
+    startTime: input.startTime,
+    endTime: input.endTime,
+    timezone: input.timezone,
+  }
+  const showCalendarLinks =
+    input.toStatus === AppointmentStatus.CONFIRMED ||
+    input.toStatus === AppointmentStatus.RESCHEDULED
+  const googleUrl = buildCustomerGoogleCalendarUrl(calendarInput)
+  const outlookUrl = buildCustomerOutlookCalendarUrl(calendarInput)
+  const cancellationGuidance =
+    input.toStatus === AppointmentStatus.CANCELLED
+      ? '\nThis booking has been cancelled. Remove it from any personal calendar where you previously added it.'
+      : ''
+  const calendarText = showCalendarLinks
+    ? `\n\nAdd or update in Google Calendar: ${googleUrl}\nAdd or update in Outlook Calendar: ${outlookUrl}`
+    : ''
+  const text = `Hi ${input.customerName},\n\nYour ${input.serviceName} appointment with ${input.businessName} is now ${statusLabel}.\n\nDate: ${localDate}\nTime: ${localTime} (${input.timezone})${reasonText}${cancellationGuidance}${calendarText}\n\nThis message reflects the change from ${input.fromStatus} to ${input.toStatus}.`
   const reasonHtml = input.reason
     ? `<p><strong>Reason:</strong> ${escapeHtml(input.reason)}</p>`
     : ''
+  const calendarHtml = showCalendarLinks
+    ? `<p style="margin-top:24px"><a href="${escapeHtml(googleUrl)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 18px;border-radius:8px;background:#2563eb;color:#fff;text-decoration:none;font-weight:700">Add to Google Calendar</a><a href="${escapeHtml(outlookUrl)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 18px;border-radius:8px;background:#2563eb;color:#fff;text-decoration:none;font-weight:700">Add to Outlook Calendar</a></p><p>You can also open the attached .ics file with Apple Calendar or another calendar app.</p>`
+    : ''
+  const cancellationHtml =
+    input.toStatus === AppointmentStatus.CANCELLED
+      ? '<p><strong>This booking has been cancelled.</strong> Remove it from any personal calendar where you previously added it.</p>'
+      : ''
 
   return {
     subject,
@@ -141,8 +178,16 @@ export function renderAppointmentStatusEmail(input: AppointmentStatusEmailInput)
       <p>Your <strong>${escapeHtml(input.serviceName)}</strong> appointment with ${escapeHtml(input.businessName)} is now <strong>${escapeHtml(statusLabel)}</strong>.</p>
       <p><strong>Date:</strong> ${escapeHtml(localDate)}<br><strong>Time:</strong> ${escapeHtml(localTime)} (${escapeHtml(input.timezone)})</p>
       ${reasonHtml}
+      ${cancellationHtml}
+      ${calendarHtml}
       <p>This notification reflects the ${input.fromStatus} → ${input.toStatus} status change.</p>
     `.trim(),
+    attachments:
+      input.toStatus === AppointmentStatus.CANCELLED
+        ? [buildBookingCalendarAttachment(calendarInput, 'CANCEL')]
+        : showCalendarLinks
+          ? [buildBookingCalendarAttachment(calendarInput)]
+          : undefined,
   }
 }
 
