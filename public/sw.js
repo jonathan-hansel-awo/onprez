@@ -6,7 +6,7 @@ const OFFLINE_ASSETS = [
   OFFLINE_URL,
   '/favicon.svg',
   '/icon-192.png',
-  '/onprez-wordmark.png',
+  '/onprez-wordmark.svg',
 ]
 
 self.addEventListener('install', event => {
