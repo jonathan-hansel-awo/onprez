@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
         email: true,
         settings: true,
         isPublished: true,
-        owner: { select: { email: true } },
       },
     })
 
@@ -143,7 +142,6 @@ export async function POST(request: NextRequest) {
         preferredContact: data.preferredContact,
         businessName: business.name,
         businessEmail: business.email,
-        businessOwnerEmail: business.owner.email,
         businessSettings: business.settings,
       })
     } catch (notificationError) {
