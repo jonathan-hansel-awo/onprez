@@ -6,6 +6,10 @@ describe('Installable PWA foundation', () => {
   const serviceWorkerPath = path.join(process.cwd(), 'public', 'sw.js')
   const serviceWorker = fs.readFileSync(serviceWorkerPath, 'utf8')
   const offlinePage = fs.readFileSync(path.join(process.cwd(), 'public', 'offline.html'), 'utf8')
+  const navigationLogo = fs.readFileSync(
+    path.join(process.cwd(), 'src', 'components', 'navigation', 'logo.tsx'),
+    'utf8'
+  )
 
   it('launches the installed app at the authenticated dashboard', () => {
     const appManifest = manifest()
@@ -26,17 +30,25 @@ describe('Installable PWA foundation', () => {
     expect(serviceWorker).toContain("request.mode !== 'navigate'")
     expect(serviceWorker).toContain('fetch(request).catch')
     expect(serviceWorker).toContain('caches.match(OFFLINE_URL)')
-    expect(serviceWorker).toContain(
-      "const OFFLINE_ASSETS = [OFFLINE_URL, '/favicon.svg', '/icon-192.png']"
-    )
+    expect(serviceWorker).toContain("const CACHE_NAME = 'onprez-offline-v2'")
+    expect(serviceWorker).toContain("'/onprez-wordmark.png'")
     expect(serviceWorker).not.toContain('cache.put')
     expect(serviceWorker).not.toContain("'/api/")
   })
 
-  it('explains that private dashboard data is unavailable offline', () => {
+  it('uses the supplied wordmark for general OnPrez branding', () => {
+    expect(navigationLogo).toContain('src="/onprez-wordmark.png"')
+    expect(navigationLogo).toContain('width={616}')
+    expect(navigationLogo).toContain('height={176}')
+  })
+
+  it('uses the OnPrez wordmark on the offline experience', () => {
     const normalisedOfflinePage = offlinePage.replace(/\s+/g, ' ')
 
     expect(normalisedOfflinePage).toContain('You’re currently offline')
+    expect(normalisedOfflinePage).toContain('src="/onprez-wordmark.png"')
+    expect(normalisedOfflinePage).toContain('alt="OnPrez"')
+    expect(normalisedOfflinePage).not.toContain('class="open-o"')
     expect(normalisedOfflinePage).toContain(
       'No private dashboard data has been stored for offline use.'
     )
