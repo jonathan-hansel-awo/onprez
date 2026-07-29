@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
   }
 
   const wordmarkWidth = size === 180 ? 150 : size === 192 ? 160 : maskable ? 360 : 430
+  const wordmarkHeight = Math.round((wordmarkWidth * 176) / 616)
   const rounded = size !== 180 && !maskable
 
   return new ImageResponse(
@@ -49,12 +50,7 @@ export async function GET(request: NextRequest) {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={WORDMARK_DATA_URI}
-          alt=""
-          width={wordmarkWidth}
-          style={{ width: wordmarkWidth, height: 'auto' }}
-        />
+        <img src={WORDMARK_DATA_URI} alt="" width={wordmarkWidth} height={wordmarkHeight} />
       </div>
     </div>,
     {
