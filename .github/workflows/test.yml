@@ -53,7 +53,8 @@ jobs:
             src/app/dashboard/settings/calendar/page.tsx \
             src/lib/services/booking.ts \
             src/lib/services/email.ts \
-            src/lib/services/booking-notifications.test.ts
+            src/lib/services/booking-notifications.test.ts \
+            __tests__/lib/services/appointment-state.test.ts
 
       - name: Check formatting
         run: npm run format:check
