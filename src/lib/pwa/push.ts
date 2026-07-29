@@ -11,6 +11,20 @@ export function urlBase64ToUint8Array(value: string): Uint8Array<ArrayBuffer> {
   return bytes
 }
 
+export function pushSubscriptionUsesVapidKey(
+  subscription: Pick<PushSubscription, 'options'>,
+  vapidPublicKey: string
+): boolean {
+  const applicationServerKey = subscription.options.applicationServerKey
+  if (!applicationServerKey) return false
+
+  const actual = new Uint8Array(applicationServerKey)
+  const expected = urlBase64ToUint8Array(vapidPublicKey)
+
+  if (actual.length !== expected.length) return false
+  return actual.every((byte, index) => byte === expected[index])
+}
+
 export function getPushDeviceName(platform: 'ios' | 'android' | 'desktop'): string {
   if (platform === 'ios') return 'iPhone or iPad'
   if (platform === 'android') return 'Android device'
