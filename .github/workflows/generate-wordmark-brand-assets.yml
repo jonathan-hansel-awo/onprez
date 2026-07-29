@@ -1,0 +1,68 @@
+name: Generate wordmark brand assets
+
+on:
+  push:
+    branches:
+      - agent/use-wordmark-brand-assets
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install image dependency
+        run: npm ci --ignore-scripts --omit=dev
+
+      - name: Generate wordmark icons
+        run: node scripts/generate-wordmark-brand-assets.mjs
+
+      - name: Verify generated dimensions
+        run: |
+          node --input-type=module <<'NODE'
+          import sharp from 'sharp'
+
+          const expected = new Map([
+            ['public/icon-192.png', [192, 192]],
+            ['public/icon-512.png', [512, 512]],
+            ['public/icon-maskable-512.png', [512, 512]],
+            ['public/apple-touch-icon.png', [180, 180]],
+          ])
+
+          for (const [file, [width, height]] of expected) {
+            const metadata = await sharp(file).metadata()
+            if (metadata.width !== width || metadata.height !== height) {
+              throw new Error(`${file} has ${metadata.width}x${metadata.height}`)
+            }
+          }
+          NODE
+
+      - name: Commit generated assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/icon-192.png public/icon-512.png public/icon-maskable-512.png \
+            public/apple-touch-icon.png src/app/favicon.ico
+
+          if git diff --cached --quiet; then
+            echo "Generated assets already match the wordmark."
+            exit 0
+          fi
+
+          git commit -m "chore: regenerate PWA icons from OnPrez wordmark"
+          git push
