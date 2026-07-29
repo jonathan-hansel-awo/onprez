@@ -1,17 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">OnPrez</title>
+  <desc id="desc">The OnPrez wordmark</desc>
   <defs>
-    <linearGradient id="background" x1="7" y1="5" x2="57" y2="60" gradientUnits="userSpaceOnUse">
+    <linearGradient id="onprez-gradient" x1="46" y1="178" x2="470" y2="312" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#2563EB"/>
       <stop offset="1" stop-color="#7C3AED"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="15" fill="url(#background)"/>
-  <path
-    d="M40.5 17.3A17 17 0 1 0 46.7 23.5"
-    fill="none"
-    stroke="#FFFFFF"
-    stroke-width="7"
-    stroke-linecap="round"
-  />
+  <rect width="512" height="512" rx="108" fill="#F7F7FF"/>
+  <g transform="translate(28.4 176.9) scale(.898)">
+    <path
+      d="M119 34.3A62 62 0 1 0 141.7 57"
+      fill="none"
+      stroke="url(#onprez-gradient)"
+      stroke-width="23.2"
+      stroke-linecap="round"
+    />
+    <text
+      x="172"
+      y="126"
+      fill="url(#onprez-gradient)"
+      font-family="Inter, ui-sans-serif, system-ui, sans-serif"
+      font-size="108"
+      font-weight="750"
+      letter-spacing="-5"
+    >nPrez</text>
+  </g>
 </svg>

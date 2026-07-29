@@ -1,8 +1,9 @@
 /* global self, caches, fetch */
 
-const CACHE_NAME = 'onprez-offline-v1'
+const CACHE_NAME = 'onprez-offline-v2'
 const OFFLINE_URL = '/offline.html'
-const OFFLINE_ASSETS = [OFFLINE_URL, '/favicon.svg', '/icon-192.png']
+const PWA_ICON_URL = '/api/pwa/icon?size=192'
+const OFFLINE_ASSETS = [OFFLINE_URL, '/favicon.svg', PWA_ICON_URL, '/onprez-wordmark.svg']
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(OFFLINE_ASSETS)))
@@ -76,8 +77,8 @@ self.addEventListener('push', event => {
     self.registration.showNotification(title, {
       body,
       tag,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: PWA_ICON_URL,
+      badge: PWA_ICON_URL,
       data: { url },
     })
   )

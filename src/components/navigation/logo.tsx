@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { useId } from 'react'
 
@@ -22,7 +23,18 @@ export function Logo({ href = '/', className = 'h-8 w-auto', variant = 'gradient
       className="inline-flex rounded-sm transition-transform duration-200 hover:scale-[1.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-4"
       aria-label="OnPrez home"
     >
-      <LogoSVG className={className} variant={variant} />
+      {variant === 'gradient' ? (
+        <Image
+          src="/onprez-wordmark.svg"
+          width={616}
+          height={176}
+          className={className}
+          alt=""
+          draggable={false}
+        />
+      ) : (
+        <LogoSVG className={className} variant={variant} />
+      )}
     </Link>
   )
 }
