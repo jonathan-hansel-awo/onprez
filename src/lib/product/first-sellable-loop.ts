@@ -80,10 +80,7 @@ export interface FirstSellableLoopProgress {
   withinTarget: boolean | null
 }
 
-const completionSourceByStep: Record<
-  FirstSellableLoopStepId,
-  keyof FirstSellableLoopSource
-> = {
+const completionSourceByStep: Record<FirstSellableLoopStepId, keyof FirstSellableLoopSource> = {
   'claim-handle': 'claimedHandleAt',
   'add-service': 'firstServiceAt',
   'set-availability': 'firstAvailabilityAt',
