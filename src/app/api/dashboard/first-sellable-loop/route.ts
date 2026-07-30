@@ -6,6 +6,9 @@ import { parseOnboardingState } from '@/lib/onboarding/progress'
 import { buildFirstSellableLoopProgress } from '@/lib/product/first-sellable-loop'
 import { prisma } from '@/lib/prisma'
 
+/**
+ * Access: business-scoped. Returns only milestones derived from the selected business.
+ */
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -53,7 +56,10 @@ export async function GET(request: NextRequest) {
     })
 
     if (!business) {
-      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: 'Business not found' },
+        { status: 404 }
+      )
     }
 
     const onboarding = parseOnboardingState(business.settings)
