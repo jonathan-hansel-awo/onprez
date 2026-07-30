@@ -60,10 +60,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!business) {
-      return NextResponse.json(
-        { success: false, error: 'Business not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: 'Business not found' }, { status: 404 })
     }
 
     const onboarding = parseOnboardingState(business.settings)
