@@ -6,10 +6,7 @@ import {
 
 describe('first sellable user loop', () => {
   it('keeps the complete acceptance budget below ten minutes', () => {
-    const budget = FIRST_SELLABLE_LOOP_STEPS.reduce(
-      (total, step) => total + step.targetSeconds,
-      0
-    )
+    const budget = FIRST_SELLABLE_LOOP_STEPS.reduce((total, step) => total + step.targetSeconds, 0)
 
     expect(budget).toBe(FIRST_SELLABLE_LOOP_TARGET_SECONDS)
     expect(budget).toBeLessThan(600)
