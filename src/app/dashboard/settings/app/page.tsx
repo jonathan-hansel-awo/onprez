@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, WifiOff } from 'lucide-react'
 import { InstallOnPrezCard } from '@/components/pwa/install-onprez-card'
 import { BookingAlertsCard } from '@/components/pwa/booking-alerts-card'
+import { PushDiagnosticsCard } from '@/components/pwa/push-diagnostics-card'
 import { Card, CardContent } from '@/components/ui/card'
 
 export const metadata: Metadata = {
@@ -31,6 +32,8 @@ export default function AppSettingsPage() {
       <InstallOnPrezCard />
 
       <BookingAlertsCard />
+
+      <PushDiagnosticsCard />
 
       <div className="grid gap-5 md:grid-cols-2">
         <Card hover={false}>

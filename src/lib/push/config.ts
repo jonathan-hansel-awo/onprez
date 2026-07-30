@@ -1,3 +1,5 @@
+import { createECDH, timingSafeEqual } from 'crypto'
+
 interface VapidDetails {
   subject: string
   publicKey: string
@@ -33,21 +35,48 @@ function isValidSubject(value: string | undefined): value is string {
   }
 }
 
+function isMatchingKeyPair(publicKey: string | undefined, privateKey: string | undefined): boolean {
+  if (!isBase64UrlKey(publicKey, 65) || !isBase64UrlKey(privateKey, 32)) return false
+
+  try {
+    const ecdh = createECDH('prime256v1')
+    ecdh.setPrivateKey(Buffer.from(privateKey, 'base64url'))
+    const configuredPublicKey = Buffer.from(publicKey, 'base64url')
+    const derivedPublicKey = ecdh.getPublicKey(undefined, 'uncompressed')
+
+    return (
+      configuredPublicKey.length === derivedPublicKey.length &&
+      timingSafeEqual(configuredPublicKey, derivedPublicKey)
+    )
+  } catch {
+    return false
+  }
+}
+
 export function getPushConfigurationStatus() {
   const publicKey = readEnvironmentValue('NEXT_PUBLIC_VAPID_PUBLIC_KEY')
   const privateKey = readEnvironmentValue('VAPID_PRIVATE_KEY')
   const subject = readEnvironmentValue('VAPID_SUBJECT')
+  const publicKeyConfigured = isBase64UrlKey(publicKey, 65)
+  const privateKeyConfigured = isBase64UrlKey(privateKey, 32)
 
   return {
-    publicKeyConfigured: isBase64UrlKey(publicKey, 65),
-    privateKeyConfigured: isBase64UrlKey(privateKey, 32),
+    publicKeyConfigured,
+    privateKeyConfigured,
     subjectConfigured: isValidSubject(subject),
+    keyPairMatches:
+      publicKeyConfigured && privateKeyConfigured && isMatchingKeyPair(publicKey, privateKey),
   }
 }
 
 export function isPushConfigured(): boolean {
   const status = getPushConfigurationStatus()
-  return status.publicKeyConfigured && status.privateKeyConfigured && status.subjectConfigured
+  return (
+    status.publicKeyConfigured &&
+    status.privateKeyConfigured &&
+    status.subjectConfigured &&
+    status.keyPairMatches
+  )
 }
 
 export function getPublicVapidKey(): string | null {
@@ -58,7 +87,7 @@ export function getPublicVapidKey(): string | null {
 export function getVapidDetails(): VapidDetails {
   if (!isPushConfigured()) {
     throw new Error(
-      'Web Push is not configured. Set NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and VAPID_SUBJECT.'
+      'Web Push is not configured. Set a matching NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY plus VAPID_SUBJECT.'
     )
   }
 
