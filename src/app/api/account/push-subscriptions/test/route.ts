@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'This account has no active push subscription. Repair or enable this device first.',
+          message:
+            'This account has no active push subscription. Repair or enable this device first.',
           data: result,
         },
         { status: 409 }
@@ -55,9 +56,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : 'OnPrez could not send the test notification.',
+          error instanceof Error ? error.message : 'OnPrez could not send the test notification.',
       },
       { status: 500 }
     )

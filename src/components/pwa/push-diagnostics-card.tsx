@@ -124,7 +124,9 @@ export function PushDiagnosticsCard() {
       let subscription = await registration.pushManager.getSubscription()
 
       if (subscription && !pushSubscriptionUsesVapidKey(subscription, data.vapidPublicKey)) {
-        const staleRecord = data.subscriptions.find(item => item.endpoint === subscription?.endpoint)
+        const staleRecord = data.subscriptions.find(
+          item => item.endpoint === subscription?.endpoint
+        )
         if (staleRecord) {
           await fetch(`/api/account/push-subscriptions/${staleRecord.id}`, {
             method: 'DELETE',

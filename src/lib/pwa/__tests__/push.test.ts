@@ -1,8 +1,4 @@
-import {
-  getPushDeviceName,
-  pushSubscriptionUsesVapidKey,
-  urlBase64ToUint8Array,
-} from '../push'
+import { getPushDeviceName, pushSubscriptionUsesVapidKey, urlBase64ToUint8Array } from '../push'
 
 describe('Web Push browser helpers', () => {
   it('converts URL-safe VAPID keys to bytes', () => {
