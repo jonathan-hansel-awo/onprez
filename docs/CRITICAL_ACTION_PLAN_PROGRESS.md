@@ -6,7 +6,7 @@
 **Audited branch:** `main`  
 **Audit baseline:** `3447f09`  
 **Current working phase:** Phase 5 — Product Scope Discipline  
-**Next planned item:** P2-001 — Define the First Sellable User Loop
+**Next planned item:** P2-001 — Complete observed user-loop validation, then P2-002
 
 ---
 
@@ -71,7 +71,7 @@ Whenever an action item is completed:
 
 ### Current priorities from this audit
 
-1. If following strict chronological order, complete **P2-001**, **P2-002**, and **P2-003** under Phase 5.
+1. Complete the observed mobile validation for **P2-001**, then complete **P2-002** and **P2-003** under Phase 5.
 2. Then complete **P2-010**, **P2-011**, and **P2-012** to finish Phase 7.
 3. Remove or clearly label the remaining fabricated homepage activity and testimonial claims under **P2-013** and **P2-016**.
 4. Add public-page caching and measured load tests before growth work under Phase 9.
@@ -198,10 +198,13 @@ Whenever an action item is completed:
 
 ## Phase 5 — Product Scope Discipline
 
-- [ ] **P2-001 — Define the First Sellable User Loop** — **Partial**
-  - The loop itself now exists in product code: claim handle, create account, configure presence, add services and availability, publish, share, receive a booking, and manage it.
-  - The guided checklist from [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56) supports the journey.
-  - Remaining: a canonical repository document defining the minimum sellable version, explicit event instrumentation for every step, a measured under-ten-minute acceptance test, and evidence that a new professional can complete it without assistance.
+- [ ] **P2-001 — Define the First Sellable User Loop** — **Partial; repository implementation complete in open PR #116**
+  - [PR #116](https://github.com/jonathan-hansel-awo/onprez/pull/116) defines the canonical loop as claim handle, add service, set availability, publish page, share link, receive booking, and manage booking.
+  - `docs/product/FIRST_SELLABLE_USER_LOOP.md` defines the minimum sellable version, a strict 8 minute 45 second target budget, the mobile acceptance-session protocol, and an evidence log for 3–5 fresh users.
+  - `GET /api/dashboard/first-sellable-loop` provides authenticated, tenant-scoped milestone analytics from durable OnPrez records without sending customer PII to a third-party analytics provider.
+  - Stable event names and regression tests cover milestone order, progress, elapsed time, the under-ten-minute target, authentication, tenant scoping, and the requirement for a real `USER` booking transition before the final milestone completes.
+  - The existing guided checklist from [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56) continues to support the setup journey.
+  - Remaining: merge PR #116, then record three consecutive fresh-account mobile sessions completed without assistance in less than ten minutes. Until that evidence exists, the human-usability acceptance criteria remain deliberately unchecked.
 
 - [ ] **P2-002 — Ruthlessly Defer Non-Core Features** — **Not started**
   - No repository-level Core/Support/Later classification or `LATER.md` was found.
@@ -387,5 +390,6 @@ Whenever an action item is completed:
 
 | Date         | Change                                                                                                                                | PR                                                                                                                              |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116) |
 | 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step. | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
 | 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                        | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                  |
