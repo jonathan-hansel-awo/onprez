@@ -83,7 +83,20 @@ describe('first sellable loop analytics API', () => {
       expect.any(NextRequest)
     )
     expect(mockedBusiness.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'business-1' } })
+      expect.objectContaining({
+        where: { id: 'business-1' },
+        select: expect.objectContaining({
+          appointments: expect.objectContaining({
+            where: { bookingSource: 'WEBSITE' },
+          }),
+          appointmentTransitions: expect.objectContaining({
+            where: {
+              changedByType: 'USER',
+              appointment: { bookingSource: 'WEBSITE' },
+            },
+          }),
+        }),
+      })
     )
     expect(result.data.firstSellableLoop).toMatchObject({
       completedCount: 7,
