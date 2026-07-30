@@ -27,14 +27,15 @@ export function ExamplesCarousel() {
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-onprez-blue">
-            Fully designed templates
+            Beauty and wellness presence pages
           </p>
           <h2 className="mt-4 text-4xl font-bold text-gray-900 md:text-5xl">
             Start with something worth sharing.
           </h2>
           <p className="mt-5 text-lg leading-8 text-gray-600">
-            Browse distinctive presence pages for real service-business needs. Every business,
-            service, price, and claim shown below is fictional demonstration content.
+            Explore realistic pages for massage, hair, makeup, barbering, and other appointment-led
+            beauty and wellness businesses. Every business, service, price, and claim shown below is
+            fictional demonstration content.
           </p>
         </div>
 
