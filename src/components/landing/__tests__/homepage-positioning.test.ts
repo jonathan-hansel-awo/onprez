@@ -11,10 +11,21 @@ describe('homepage positioning', () => {
     expect(homepagePositioning.summary.toLowerCase()).toContain('book')
   })
 
-  it('identifies the intended service-professional audience', () => {
-    expect(homepagePositioning.badge.toLowerCase()).toContain('service professionals')
-    expect(homepagePositioning.audience.toLowerCase()).toContain('independent professionals')
-    expect(homepagePositioning.audience.toLowerCase()).toContain('small teams')
+  it('identifies beauty and wellness as the first launch niche', () => {
+    const badge = homepagePositioning.badge.toLowerCase()
+    const audience = homepagePositioning.audience.toLowerCase()
+
+    expect(badge).toContain('beauty')
+    expect(badge).toContain('wellness')
+    expect(badge).toContain('small teams')
+    expect(audience).toContain('independent beauty and wellness professionals')
+    expect(audience).toContain('hair')
+    expect(audience).toContain('makeup')
+    expect(audience).toContain('nails')
+    expect(audience).toContain('massage')
+    expect(audience).toContain('spas')
+    expect(audience).toContain('salons')
+    expect(audience).toContain('mobile beauty')
   })
 
   it('avoids the previous broad homepage language', () => {
@@ -28,13 +39,16 @@ describe('homepage positioning', () => {
 
     expect(positioningCopy).not.toContain('complete online presence')
     expect(positioningCopy).not.toContain('all-in-one')
+    expect(positioningCopy).not.toContain('and more')
   })
 
-  it('shows the complete journey after a professional shares their link', () => {
+  it('shows the complete journey for a realistic beauty business', () => {
+    expect(homepageScenario.businessName).toBe('Crown & Canvas Studio')
     expect(homepageScenario.handle).toContain('onprez.com/')
     expect(homepageScenario.services).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'Soft Glam Makeup', price: '£65', duration: '90 min' }),
+        expect.objectContaining({ name: 'Silk Press', price: '£55', duration: '120 min' }),
       ])
     )
 
