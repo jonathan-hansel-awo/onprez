@@ -19,15 +19,15 @@ This loop is the MVP acceptance test. A feature is core only when it is required
 
 ## Minimum sellable version
 
-| Step | Minimum version | Durable completion signal | Analytics event | Target |
-|---|---|---|---|---:|
-| Claim handle | Create an account and claim one unique, valid public handle. | Business creation timestamp | `first_sellable_loop.claim_handle.completed` | 45 sec |
-| Add service | Create one active service with a name, price, and duration. | Earliest active service creation timestamp | `first_sellable_loop.add_service.completed` | 2 min |
-| Set availability | Configure at least one open bookable period. | Earliest non-closed business-hours record | `first_sellable_loop.set_availability.completed` | 1 min 30 sec |
-| Publish presence | Publish one public page that passes the existing readiness rules. | Business/page publication timestamp | `first_sellable_loop.publish_presence.completed` | 1 min |
-| Share link | Copy or share the live `onprez.com/[handle]` link. | Existing onboarding `sharedAt` timestamp | `first_sellable_loop.share_link.completed` | 30 sec |
-| Receive booking | A customer completes the first valid booking from the public page. | Earliest appointment creation timestamp | `first_sellable_loop.receive_booking.completed` | 2 min |
-| Manage booking | The professional performs the first booking status action. Automatic system transitions do not count. | Earliest appointment transition with `changedByType = USER` | `first_sellable_loop.manage_booking.completed` | 1 min |
+| Step             | Minimum version                                                                                       | Durable completion signal                                   | Analytics event                                  | Target       |
+| ---------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------ | -----------: |
+| Claim handle     | Create an account and claim one unique, valid public handle.                                          | Business creation timestamp                                 | `first_sellable_loop.claim_handle.completed`     |       45 sec |
+| Add service      | Create one active service with a name, price, and duration.                                           | Earliest active service creation timestamp                  | `first_sellable_loop.add_service.completed`      |        2 min |
+| Set availability | Configure at least one open bookable period.                                                          | Earliest non-closed business-hours record                   | `first_sellable_loop.set_availability.completed` | 1 min 30 sec |
+| Publish presence | Publish one public page that passes the existing readiness rules.                                     | Business/page publication timestamp                         | `first_sellable_loop.publish_presence.completed` |        1 min |
+| Share link       | Copy or share the live `onprez.com/[handle]` link.                                                    | Existing onboarding `sharedAt` timestamp                    | `first_sellable_loop.share_link.completed`       |       30 sec |
+| Receive booking  | A customer completes the first valid booking from the public page.                                    | Earliest appointment creation timestamp                     | `first_sellable_loop.receive_booking.completed`  |        2 min |
+| Manage booking   | The professional performs the first booking status action. Automatic system transitions do not count. | Earliest appointment transition with `changedByType = USER` | `first_sellable_loop.manage_booking.completed`   |        1 min |
 
 **Total acceptance budget:** 8 minutes 45 seconds.  
 **Safety margin:** 1 minute 15 seconds beneath the 10-minute limit.
@@ -95,13 +95,13 @@ Run the test on a small mobile viewport or physical phone. Use a fresh professio
 
 Do not mark the human-validation acceptance criterion complete until at least three observed sessions are recorded.
 
-| Session | Date | Participant/niche | Device | Completion time | Assistance required | Outcome | Main friction |
-|---|---|---|---|---:|---|---|---|
-| 1 |  |  |  |  |  | Pending |  |
-| 2 |  |  |  |  |  | Pending |  |
-| 3 |  |  |  |  |  | Pending |  |
-| 4 |  |  |  |  |  | Optional |  |
-| 5 |  |  |  |  |  | Optional |  |
+| Session | Date | Participant/niche | Device | Completion time | Assistance required | Outcome  | Main friction |
+| ------- | ---- | ----------------- | ------ | --------------: | ------------------- | -------- | ------------- |
+| 1       |      |                   |        |                 |                     | Pending  |               |
+| 2       |      |                   |        |                 |                     | Pending  |               |
+| 3       |      |                   |        |                 |                     | Pending  |               |
+| 4       |      |                   |        |                 |                     | Optional |               |
+| 5       |      |                   |        |                 |                     | Optional |               |
 
 ### Acceptance decision
 
