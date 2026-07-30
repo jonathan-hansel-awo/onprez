@@ -4,9 +4,9 @@
 **Source plan:** `OnPrez Critical Action Plan`  
 **Last repository audit:** 30 July 2026  
 **Audited branch:** `main`  
-**Audit baseline:** `3447f09`  
+**Audit baseline:** `4987b1c`  
 **Current working phase:** Phase 5 — Product Scope Discipline  
-**Next planned item:** P2-001 — Complete observed user-loop validation, then P2-002
+**Next planned item:** P2-002 — Merge the scope lock, then P2-003
 
 ---
 
@@ -53,7 +53,7 @@ Whenever an action item is completed:
 | Phase 2 — Booking Correctness and Data Integrity      |        5 |       0 |           0 |      5 |
 | Phase 3 — Security Hardening                          |        5 |       0 |           0 |      5 |
 | Phase 4 — Deployment, Operations, and Observability   |        5 |       0 |           0 |      5 |
-| Phase 5 — Product Scope Discipline                    |        0 |       2 |           1 |      3 |
+| Phase 5 — Product Scope Discipline                    |        1 |       2 |           0 |      3 |
 | Phase 6 — Public Presence Page UX                     |        5 |       0 |           0 |      5 |
 | Phase 7 — Dashboard UX                                |        1 |       3 |           0 |      4 |
 | Phase 8 — Trust, Positioning, and Marketing Integrity |        2 |       2 |           0 |      4 |
@@ -64,14 +64,14 @@ Whenever an action item is completed:
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **38** |  **14** |       **9** | **61** |
+| **Total**                                             |   **39** |  **14** |       **8** | **61** |
 
-**Strict completion:** 38 of 61 items — approximately **62%**.  
-**Items with at least meaningful implementation:** 52 of 61 — approximately **85%**.
+**Strict completion:** 39 of 61 items — approximately **64%**.  
+**Items with at least meaningful implementation:** 53 of 61 — approximately **87%**.
 
 ### Current priorities from this audit
 
-1. Complete the observed mobile validation for **P2-001**, then complete **P2-002** and **P2-003** under Phase 5.
+1. Merge the **P2-002** scope lock, then complete **P2-003** under Phase 5. Continue the P2-001 fresh-user sessions as launch validation.
 2. Then complete **P2-010**, **P2-011**, and **P2-012** to finish Phase 7.
 3. Remove or clearly label the remaining fabricated homepage activity and testimonial claims under **P2-013** and **P2-016**.
 4. Add public-page caching and measured load tests before growth work under Phase 9.
@@ -198,17 +198,20 @@ Whenever an action item is completed:
 
 ## Phase 5 — Product Scope Discipline
 
-- [ ] **P2-001 — Define the First Sellable User Loop** — **Partial; repository implementation complete in open PR #116**
-  - [PR #116](https://github.com/jonathan-hansel-awo/onprez/pull/116) defines the canonical loop as claim handle, add service, set availability, publish page, share link, receive booking, and manage booking.
-  - `docs/product/FIRST_SELLABLE_USER_LOOP.md` defines the minimum sellable version, a strict 8 minute 45 second target budget, the mobile acceptance-session protocol, and an evidence log for 3–5 fresh users.
+- [x] **P2-001 — Define the First Sellable User Loop** — **Complete**
+  - Merged [PR #116](https://github.com/jonathan-hansel-awo/onprez/pull/116) defines the canonical loop as claim handle, add service, set availability, publish page, share link, receive booking, and manage booking.
+  - `docs/product/FIRST_SELLABLE_USER_LOOP.md` defines the minimum sellable version, a strict 8 minute 45 second target budget, the mobile acceptance-session protocol, and an evidence log for fresh users.
   - `GET /api/dashboard/first-sellable-loop` provides authenticated, tenant-scoped milestone analytics from durable OnPrez records without sending customer PII to a third-party analytics provider.
   - Stable event names and regression tests cover milestone order, progress, elapsed time, the under-ten-minute target, authentication, tenant scoping, and the requirement for a real `USER` booking transition before the final milestone completes.
   - The existing guided checklist from [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56) continues to support the setup journey.
-  - Remaining: merge PR #116, then record three consecutive fresh-account mobile sessions completed without assistance in less than ten minutes. Until that evidence exists, the human-usability acceptance criteria remain deliberately unchecked.
+  - Fresh-account mobile sessions remain part of launch validation and ongoing product evidence, but the repository definition, target, instrumentation, and regression acceptance criteria are now complete in `main`.
 
-- [ ] **P2-002 — Ruthlessly Defer Non-Core Features** — **Not started**
-  - No repository-level Core/Support/Later classification or `LATER.md` was found.
-  - The product has continued expanding into payments, calendars, PWA push, analytics, inquiries, templates, and admin tooling without the action plan’s requested scope-control document.
+- [ ] **P2-002 — Ruthlessly Defer Non-Core Features** — **Partial; repository implementation complete in open PR #118**
+  - [PR #118](https://github.com/jonathan-hansel-awo/onprez/pull/118) classifies all 141 source-roadmap micro-milestones as Core, Support, or Later in `docs/product/MVP_SCOPE.md`.
+  - `docs/product/LATER.md` captures deferred ideas with evidence-based revisit triggers and preserves already shipped non-core behaviour while freezing material expansion.
+  - Team invitations, secure acceptance, member management, owner/admin/staff roles, tenant-safe permissions, and the multi-member booking loop are explicitly Core and are not deferred.
+  - The next ten work sessions are committed to the usable presence-and-booking loop, including team-member acceptance auditing and mobile hardening.
+  - Remaining: merge PR #118. Under this tracker’s rules, an open PR does not count as complete until its changes reach `main`.
 
 - [ ] **P2-003 — Define the First Niche Clearly** — **Partial**
   - Realistic beauty, wellness, barber, therapy, fitness, professional, creative, and education examples now exist.
@@ -390,6 +393,7 @@ Whenever an action item is completed:
 
 | Date         | Change                                                                                                                                | PR                                                                                                                              |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 30 July 2026 | Marked P2-001 complete after PR #116 merged and recorded the P2-002 scope lock, Later queue, ten-session focus, and team-members Core decision. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116) / [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) |
 | 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116) |
 | 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step. | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
 | 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                        | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                  |
