@@ -3,18 +3,20 @@ import { Suspense } from 'react'
 import { SignupTemplateSelection } from '@/components/templates/SignupTemplateSelection'
 
 export const metadata: Metadata = {
-  title: 'Create Your Account | OnPrez',
+  title: 'Create Your Beauty or Wellness Presence | OnPrez',
   description:
-    'Join thousands of professionals. Create your complete online presence in 15 minutes. No website needed.',
+    'Create a bookable beauty or wellness presence for your services, prices, photos, availability, and team at your own memorable OnPrez handle.',
   openGraph: {
-    title: 'Create Your OnPrez Account',
-    description: 'Get your own digital presence at onprez.com/yourname',
+    title: 'Create Your Beauty or Wellness Presence | OnPrez',
+    description:
+      'Give clients one place to discover your beauty or wellness business and book your services.',
     images: ['/og-signup.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Create Your OnPrez Account',
-    description: 'Get your own digital presence at onprez.com/yourname',
+    title: 'Create Your Beauty or Wellness Presence | OnPrez',
+    description:
+      'Give clients one place to discover your beauty or wellness business and book your services.',
     images: ['/og-signup.png'],
   },
 }
