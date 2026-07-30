@@ -46,25 +46,25 @@ Whenever an action item is completed:
 
 ## Progress summary
 
-| Phase | Complete | Partial | Not started | Total |
-|---|---:|---:|---:|---:|
-| Phase 0 — Stop-the-Bleed Hardening | 6 | 0 | 0 | 6 |
-| Phase 1 — Auth, Sessions, and Tenant Isolation | 5 | 0 | 0 | 5 |
-| Phase 2 — Booking Correctness and Data Integrity | 5 | 0 | 0 | 5 |
-| Phase 3 — Security Hardening | 5 | 0 | 0 | 5 |
-| Phase 4 — Deployment, Operations, and Observability | 5 | 0 | 0 | 5 |
-| Phase 5 — Product Scope Discipline | 0 | 2 | 1 | 3 |
-| Phase 6 — Public Presence Page UX | 5 | 0 | 0 | 5 |
-| Phase 7 — Dashboard UX | 1 | 3 | 0 | 4 |
-| Phase 8 — Trust, Positioning, and Marketing Integrity | 2 | 2 | 0 | 4 |
-| Phase 9 — Performance and Scalability | 0 | 2 | 2 | 4 |
-| Phase 10 — Privacy and Data Lifecycle | 1 | 1 | 1 | 3 |
-| Phase 11 — Communications | 2 | 1 | 0 | 3 |
-| Phase 12 — SEO and Handle Durability | 0 | 1 | 1 | 2 |
-| Phase 13 — Testing Maturity | 0 | 2 | 1 | 3 |
-| Phase 14 — Documentation and Architecture Discipline | 0 | 0 | 2 | 2 |
-| Phase 15 — Monetisation Readiness | 1 | 0 | 1 | 2 |
-| **Total** | **38** | **14** | **9** | **61** |
+| Phase                                                 | Complete | Partial | Not started |  Total |
+| ----------------------------------------------------- | -------: | ------: | ----------: | -----: |
+| Phase 0 — Stop-the-Bleed Hardening                    |        6 |       0 |           0 |      6 |
+| Phase 1 — Auth, Sessions, and Tenant Isolation        |        5 |       0 |           0 |      5 |
+| Phase 2 — Booking Correctness and Data Integrity      |        5 |       0 |           0 |      5 |
+| Phase 3 — Security Hardening                          |        5 |       0 |           0 |      5 |
+| Phase 4 — Deployment, Operations, and Observability   |        5 |       0 |           0 |      5 |
+| Phase 5 — Product Scope Discipline                    |        0 |       2 |           1 |      3 |
+| Phase 6 — Public Presence Page UX                     |        5 |       0 |           0 |      5 |
+| Phase 7 — Dashboard UX                                |        1 |       3 |           0 |      4 |
+| Phase 8 — Trust, Positioning, and Marketing Integrity |        2 |       2 |           0 |      4 |
+| Phase 9 — Performance and Scalability                 |        0 |       2 |           2 |      4 |
+| Phase 10 — Privacy and Data Lifecycle                 |        1 |       1 |           1 |      3 |
+| Phase 11 — Communications                             |        2 |       1 |           0 |      3 |
+| Phase 12 — SEO and Handle Durability                  |        0 |       1 |           1 |      2 |
+| Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
+| Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
+| Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
+| **Total**                                             |   **38** |  **14** |       **9** | **61** |
 
 **Strict completion:** 38 of 61 items — approximately **62%**.  
 **Items with at least meaningful implementation:** 52 of 61 — approximately **85%**.
@@ -385,7 +385,7 @@ Whenever an action item is completed:
 
 ## Change log
 
-| Date | Change | PR |
-|---|---|---|
+| Date         | Change                                                                                                                                | PR                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step. | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
-| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history. | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
+| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                        | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                  |
