@@ -42,12 +42,16 @@ export async function GET(request: NextRequest) {
           select: { createdAt: true, publishedAt: true },
         },
         appointments: {
+          where: { bookingSource: 'WEBSITE' },
           orderBy: { createdAt: 'asc' },
           take: 1,
           select: { createdAt: true },
         },
         appointmentTransitions: {
-          where: { changedByType: 'USER' },
+          where: {
+            changedByType: 'USER',
+            appointment: { bookingSource: 'WEBSITE' },
+          },
           orderBy: { changedAt: 'asc' },
           take: 1,
           select: { changedAt: true },
