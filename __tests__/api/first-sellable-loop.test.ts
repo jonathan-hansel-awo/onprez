@@ -78,7 +78,10 @@ describe('first sellable loop analytics API', () => {
     const result = await response.json()
 
     expect(response.status).toBe(200)
-    expect(mockedResolveReadableBusinessContext).toHaveBeenCalledWith('user-1', expect.any(NextRequest))
+    expect(mockedResolveReadableBusinessContext).toHaveBeenCalledWith(
+      'user-1',
+      expect.any(NextRequest)
+    )
     expect(mockedBusiness.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'business-1' } })
     )
