@@ -4,9 +4,9 @@
 **Source plan:** `OnPrez Critical Action Plan`  
 **Last repository audit:** 30 July 2026  
 **Audited branch:** `main`  
-**Audit baseline:** `bdbe514`  
-**Current working phase:** Phase 7 — Dashboard UX  
-**Next planned item:** P2-010 — Clarify Draft vs Published State
+**Audit baseline:** `3447f09`  
+**Current working phase:** Phase 5 — Product Scope Discipline  
+**Next planned item:** P2-001 — Define the First Sellable User Loop
 
 ---
 
@@ -50,7 +50,7 @@ Whenever an action item is completed:
 |---|---:|---:|---:|---:|
 | Phase 0 — Stop-the-Bleed Hardening | 6 | 0 | 0 | 6 |
 | Phase 1 — Auth, Sessions, and Tenant Isolation | 5 | 0 | 0 | 5 |
-| Phase 2 — Booking Correctness and Data Integrity | 4 | 1 | 0 | 5 |
+| Phase 2 — Booking Correctness and Data Integrity | 5 | 0 | 0 | 5 |
 | Phase 3 — Security Hardening | 5 | 0 | 0 | 5 |
 | Phase 4 — Deployment, Operations, and Observability | 5 | 0 | 0 | 5 |
 | Phase 5 — Product Scope Discipline | 0 | 2 | 1 | 3 |
@@ -64,15 +64,15 @@ Whenever an action item is completed:
 | Phase 13 — Testing Maturity | 0 | 2 | 1 | 3 |
 | Phase 14 — Documentation and Architecture Discipline | 0 | 0 | 2 | 2 |
 | Phase 15 — Monetisation Readiness | 1 | 0 | 1 | 2 |
-| **Total** | **37** | **15** | **9** | **61** |
+| **Total** | **38** | **14** | **9** | **61** |
 
-**Strict completion:** 37 of 61 items — approximately **61%**.  
+**Strict completion:** 38 of 61 items — approximately **62%**.  
 **Items with at least meaningful implementation:** 52 of 61 — approximately **85%**.
 
 ### Current priorities from this audit
 
-1. Complete **P2-010**, **P2-011**, and **P2-012** to finish Phase 7.
-2. Merge or otherwise resolve [PR #114](https://github.com/jonathan-hansel-awo/onprez/pull/114) before marking **P1-008** complete.
+1. If following strict chronological order, complete **P2-001**, **P2-002**, and **P2-003** under Phase 5.
+2. Then complete **P2-010**, **P2-011**, and **P2-012** to finish Phase 7.
 3. Remove or clearly label the remaining fabricated homepage activity and testimonial claims under **P2-013** and **P2-016**.
 4. Add public-page caching and measured load tests before growth work under Phase 9.
 
@@ -140,10 +140,10 @@ Whenever an action item is completed:
   - Booking idempotency records, replay handling, and client duplicate-submit protection exist.
   - Production migrations must remain current; [PR #110](https://github.com/jonathan-hansel-awo/onprez/pull/110) provides the controlled deployment path.
 
-- [ ] **P1-008 — Fix Timezone Model and DST Handling** — **Partial**
-  - UTC storage, IANA business timezones, local-date serialization, confirmation rendering, and several DST regressions are implemented; see [PR #61](https://github.com/jonathan-hansel-awo/onprez/pull/61).
-  - The current `main` branch can still expose a BST-shifted overlapping slot because detailed availability reconciliation mixes server/UTC and business-local time.
-  - [PR #114](https://github.com/jonathan-hansel-awo/onprez/pull/114) addresses the remaining defect but is open and therefore is not counted as complete.
+- [x] **P1-008 — Fix Timezone Model and DST Handling** — **Complete**
+  - UTC storage, IANA business timezones, local-date serialization, confirmation rendering, and DST regression coverage are implemented; see [PR #61](https://github.com/jonathan-hansel-awo/onprez/pull/61).
+  - [PR #114](https://github.com/jonathan-hansel-awo/onprez/pull/114) completed the remaining availability reconciliation by comparing appointments in the business timezone, preventing BST and server-timezone offsets from exposing overlapping slots.
+  - The final transactional conflict validation remains the race-condition safety net.
 
 - [x] **P1-009 — Add Booking State Machine Rules** — **Complete**
   - Delivered by [PR #7](https://github.com/jonathan-hansel-awo/onprez/pull/7), with later approval, payment, cancellation, reschedule, and refund lifecycle hardening.
@@ -387,4 +387,5 @@ Whenever an action item is completed:
 
 | Date | Change | PR |
 |---|---|---|
-| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history. | Pending |
+| 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step. | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
+| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history. | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
