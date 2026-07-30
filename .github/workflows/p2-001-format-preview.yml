@@ -1,0 +1,43 @@
+name: P2-001 format preview
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  format-preview:
+    if: github.head_ref == 'agent/p2-001-first-sellable-user-loop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format P2-001 files
+        run: >-
+          npx prettier --write
+          docs/product/FIRST_SELLABLE_USER_LOOP.md
+          src/app/api/dashboard/first-sellable-loop/route.ts
+          src/lib/product/first-sellable-loop.test.ts
+          src/lib/product/first-sellable-loop.ts
+
+      - name: Create formatting patch
+        run: git diff --binary > prettier.patch
+
+      - name: Upload formatting patch
+        uses: actions/upload-artifact@v4
+        with:
+          name: p2-001-prettier-patch
+          path: prettier.patch
+          if-no-files-found: error
