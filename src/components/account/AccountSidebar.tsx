@@ -2,46 +2,25 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Shield, User, CreditCard, Bell, LogOut, Monitor, Activity } from 'lucide-react'
+import { Activity, LogOut, Monitor, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navigation = [
   {
-    name: 'Profile',
-    href: '/account/profile',
-    icon: User,
-    badge: 'Soon',
-  },
-  {
     name: 'Security',
     href: '/account/security',
     icon: Shield,
-    badge: null,
   },
   {
     name: 'Sessions',
     href: '/account/sessions',
     icon: Monitor,
-    badge: null,
   },
   {
     name: 'Activity',
     href: '/account/activity',
     icon: Activity,
-    badge: null,
-  },
-  {
-    name: 'Billing',
-    href: '/account/billing',
-    icon: CreditCard,
-    badge: 'Soon',
-  },
-  {
-    name: 'Notifications',
-    href: '/account/notifications',
-    icon: Bell,
-    badge: 'Soon',
   },
 ]
 
@@ -50,7 +29,7 @@ export function AccountSidebar() {
   const { logout } = useAuth()
 
   return (
-    <nav className="space-y-1">
+    <nav className="space-y-1" aria-label="Account settings">
       {navigation.map(item => {
         const isActive = pathname === item.href
         const Icon = item.icon
@@ -59,39 +38,27 @@ export function AccountSidebar() {
           <Link
             key={item.name}
             href={item.href}
+            aria-current={isActive ? 'page' : undefined}
             className={cn(
-              'flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+              'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors',
               isActive
                 ? 'bg-onprez-blue text-white'
-                : item.badge
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-700 hover:bg-gray-100'
+                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-950'
             )}
-            onClick={e => {
-              if (item.badge) {
-                e.preventDefault()
-              }
-            }}
           >
-            <div className="flex items-center gap-3">
-              <Icon className="w-5 h-5" />
-              <span>{item.name}</span>
-            </div>
-            {item.badge && (
-              <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
-                {item.badge}
-              </span>
-            )}
+            <Icon className="h-5 w-5" aria-hidden="true" />
+            <span>{item.name}</span>
           </Link>
         )
       })}
 
-      <div className="pt-4 mt-4 border-t border-gray-200">
+      <div className="mt-4 border-t border-gray-200 pt-4">
         <button
+          type="button"
           onClick={logout}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full transition-colors"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="h-5 w-5" aria-hidden="true" />
           <span>Sign Out</span>
         </button>
       </div>

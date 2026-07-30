@@ -1,0 +1,3 @@
+.bookingAlerts :global(button[role='switch'] > span) {
+  left: 0;
+}

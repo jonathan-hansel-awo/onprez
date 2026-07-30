@@ -5,6 +5,7 @@ import { InstallOnPrezCard } from '@/components/pwa/install-onprez-card'
 import { BookingAlertsCard } from '@/components/pwa/booking-alerts-card'
 import { PushDiagnosticsCard } from '@/components/pwa/push-diagnostics-card'
 import { Card, CardContent } from '@/components/ui/card'
+import styles from './app-settings.module.css'
 
 export const metadata: Metadata = {
   title: 'OnPrez App and Booking Alerts',
@@ -31,7 +32,9 @@ export default function AppSettingsPage() {
 
       <InstallOnPrezCard />
 
-      <BookingAlertsCard />
+      <div className={styles.bookingAlerts}>
+        <BookingAlertsCard />
+      </div>
 
       <PushDiagnosticsCard />
 
