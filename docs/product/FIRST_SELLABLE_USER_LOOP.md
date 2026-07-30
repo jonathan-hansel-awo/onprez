@@ -19,7 +19,7 @@ This loop is the MVP acceptance test. A feature is core only when it is required
 
 ## Minimum sellable version
 
-| Step             | Minimum version                                                                                       | Durable completion signal                                   | Analytics event                                  | Target       |
+| Step             | Minimum version                                                                                       | Durable completion signal                                   | Analytics event                                  |       Target |
 | ---------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------ | -----------: |
 | Claim handle     | Create an account and claim one unique, valid public handle.                                          | Business creation timestamp                                 | `first_sellable_loop.claim_handle.completed`     |       45 sec |
 | Add service      | Create one active service with a name, price, and duration.                                           | Earliest active service creation timestamp                  | `first_sellable_loop.add_service.completed`      |        2 min |
