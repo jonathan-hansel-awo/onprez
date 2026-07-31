@@ -21,7 +21,9 @@ const REPORTING_ENDPOINT = '/api/monitoring/web-vitals'
 function sendToMonitoringEndpoint(payload: WebVitalPayload) {
   const body = JSON.stringify(payload)
   const beaconBody = new Blob([body], { type: 'application/json' })
-  const beaconSent = typeof navigator.sendBeacon === 'function' && navigator.sendBeacon(REPORTING_ENDPOINT, beaconBody)
+  const beaconSent =
+    typeof navigator.sendBeacon === 'function' &&
+    navigator.sendBeacon(REPORTING_ENDPOINT, beaconBody)
 
   if (!beaconSent) {
     void fetch(REPORTING_ENDPOINT, {
