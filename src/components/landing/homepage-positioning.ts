@@ -9,7 +9,7 @@ export const homepagePositioning = {
   audience:
     'Built first for independent beauty and wellness professionals and small teams—hair, makeup, nails, massage, spas, salons, and mobile beauty businesses.',
   primaryCta: 'Claim my handle',
-  secondaryCta: 'Explore a real beauty presence page',
+  secondaryCta: 'Explore a realistic beauty presence page',
   outcomes: [
     {
       title: 'Show your brand',
