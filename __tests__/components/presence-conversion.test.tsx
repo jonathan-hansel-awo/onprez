@@ -34,9 +34,7 @@ describe('public presence conversion controls', () => {
       />
     )
 
-    expect(
-      screen.getByRole('complementary', { name: 'Business highlights' })
-    ).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Business highlights' })).toBeInTheDocument()
     expect(screen.getByText('4.8 from 24 reviews')).toBeInTheDocument()
     expect(screen.getByText('Ely, Cambridgeshire')).toBeInTheDocument()
     expect(screen.getByText('Certified therapist')).toBeInTheDocument()
@@ -55,9 +53,7 @@ describe('public presence conversion controls', () => {
     expect(bookingLinks).toHaveLength(2)
     bookingLinks.forEach(link => expect(link).toHaveAttribute('href', '/sage-studio/book'))
 
-    expect(
-      container.querySelector('[data-presence-booking-cta="section"]')
-    ).toBeInTheDocument()
+    expect(container.querySelector('[data-presence-booking-cta="section"]')).toBeInTheDocument()
     expect(
       container.querySelector('[data-presence-booking-cta="sticky-mobile"]')
     ).toBeInTheDocument()
@@ -74,9 +70,9 @@ describe('public presence conversion controls', () => {
     expect(shortcut).toHaveClass('fixed', 'inset-x-0', 'bottom-0', 'md:hidden')
     expect(shortcut?.className).toContain('env(safe-area-inset-bottom)')
     expect(shortcut?.getAttribute('style')).toContain('var(--theme-bg')
-    expect(
-      screen.getByRole('link', { name: /book an appointment with sage studio/i })
-    ).toHaveClass('min-h-12')
+    expect(screen.getByRole('link', { name: /book an appointment with sage studio/i })).toHaveClass(
+      'min-h-12'
+    )
   })
 
   it('reserves safe-area-aware page space and repeats prompts after high-intent sections', () => {

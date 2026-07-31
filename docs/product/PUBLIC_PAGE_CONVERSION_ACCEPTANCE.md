@@ -10,16 +10,16 @@ A public OnPrez presence page must help a visitor understand the business quickl
 
 ## Repository acceptance matrix
 
-| Requirement | Repository evidence |
-| --- | --- |
-| Sticky mobile booking action | `StickyMobileBookingCta` remains fixed to the bottom edge, uses a safe-area-aware inset, links directly to `/{handle}/book`, and is hidden on desktop. |
-| Booking action does not cover content | `SectionRenderer` reserves mobile bottom space using the same safe-area boundary as the fixed action. The outer public-page shell does not add a second competing offset. |
-| Clear service decision information | `ServicesSection` displays the service name, description, price type and currency, duration, next live availability, and a service-specific booking link. |
-| Booking action after high-intent sections | Desktop conversion prompts follow Services, Testimonials, and FAQ sections while the mobile action remains continuously available. |
-| Genuine trust markers | The page derives published review count and average, configured location, credentials, cancellation notice, and response-time claims from stored business data. Missing claims are omitted rather than invented. |
-| Direct booking routes | Hero, navigation, service, section, contact, and sticky booking actions resolve to the real public booking flow. |
-| Reduced first-decision clutter | The hero leads with the business promise and primary action; compact trust signals follow it; secondary sections load below the initial decision area. |
-| Theme compatibility | Persistent and repeated conversion controls use the business theme surface and text variables rather than assuming a white page. |
+| Requirement                               | Repository evidence                                                                                                                                                                                              |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sticky mobile booking action              | `StickyMobileBookingCta` remains fixed to the bottom edge, uses a safe-area-aware inset, links directly to `/{handle}/book`, and is hidden on desktop.                                                           |
+| Booking action does not cover content     | `SectionRenderer` reserves mobile bottom space using the same safe-area boundary as the fixed action. The outer public-page shell does not add a second competing offset.                                        |
+| Clear service decision information        | `ServicesSection` displays the service name, description, price type and currency, duration, next live availability, and a service-specific booking link.                                                        |
+| Booking action after high-intent sections | Desktop conversion prompts follow Services, Testimonials, and FAQ sections while the mobile action remains continuously available.                                                                               |
+| Genuine trust markers                     | The page derives published review count and average, configured location, credentials, cancellation notice, and response-time claims from stored business data. Missing claims are omitted rather than invented. |
+| Direct booking routes                     | Hero, navigation, service, section, contact, and sticky booking actions resolve to the real public booking flow.                                                                                                 |
+| Reduced first-decision clutter            | The hero leads with the business promise and primary action; compact trust signals follow it; secondary sections load below the initial decision area.                                                           |
+| Theme compatibility                       | Persistent and repeated conversion controls use the business theme surface and text variables rather than assuming a white page.                                                                                 |
 
 ## Automated regression contract
 
@@ -40,15 +40,15 @@ Give the tester no explanation beyond: **“You are considering booking this bus
 
 Record:
 
-| Field | Evidence |
-| --- | --- |
-| Business and device | Handle, template, viewport, browser |
-| Time to describe the offer | Target: under 10 seconds |
-| First booking action used | Hero, navbar, service card, repeated prompt, contact, or sticky mobile action |
-| Taps or clicks to enter booking | Target: one from the current public-page position |
-| Content obstruction | None; especially above the mobile safe area |
-| Trust information noticed | Only claims genuinely present on the page |
-| Confusion or hesitation | Exact words and page position |
+| Field                           | Evidence                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| Business and device             | Handle, template, viewport, browser                                           |
+| Time to describe the offer      | Target: under 10 seconds                                                      |
+| First booking action used       | Hero, navbar, service card, repeated prompt, contact, or sticky mobile action |
+| Taps or clicks to enter booking | Target: one from the current public-page position                             |
+| Content obstruction             | None; especially above the mobile safe area                                   |
+| Trust information noticed       | Only claims genuinely present on the page                                     |
+| Confusion or hesitation         | Exact words and page position                                                 |
 
 Do not fabricate participant results. Record genuine sessions as ongoing launch evidence and turn repeated friction from three independent businesses into a Core improvement under the MVP scope rules.
 
