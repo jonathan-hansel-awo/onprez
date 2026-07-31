@@ -50,6 +50,13 @@ function isDraftPreviewClaims(payload: string | JwtPayload): payload is DraftPre
   )
 }
 
+export function isPresenceDraftPreviewVersionCurrent(
+  tokenPageVersion: number,
+  currentPageVersion: number
+) {
+  return tokenPageVersion === currentPageVersion
+}
+
 export function createPresenceDraftPreviewToken(input: {
   pageId: string
   businessId: string
