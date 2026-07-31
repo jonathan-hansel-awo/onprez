@@ -140,6 +140,8 @@ function PremiumResponsiveStyles() {
   )
 }
 
+export const CONVERSION_CTA_SECTION_TYPES = ['SERVICES', 'TESTIMONIALS', 'FAQ'] as const
+
 interface SectionRendererProps {
   sections: PageSection[]
   businessHandle: string
@@ -193,11 +195,15 @@ export function SectionRenderer({
 
   const bookingHref = bookingHrefOverride || `/${businessHandle}/book`
   const showTrustStrip = hasMeaningfulTrustSignals(trustSignals)
-  const ctaSectionTypes = new Set(['SERVICES', 'FAQ'])
+  const ctaSectionTypes = new Set<string>(CONVERSION_CTA_SECTION_TYPES)
   const showInlineConversionCtas = showConversionCtas && !premiumTemplateSlug
 
   return (
-    <div className="pb-24 md:pb-0" data-presence-root data-presence-template={premiumTemplateSlug}>
+    <div
+      className="pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0"
+      data-presence-root
+      data-presence-template={premiumTemplateSlug}
+    >
       {premiumTemplateSlug && <PremiumResponsiveStyles />}
 
       {visibleSections.map((section, index) => {
