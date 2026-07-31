@@ -113,4 +113,25 @@ describe('public presence cache', () => {
     })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/aurelia-wellness')
   })
+
+  it('ignores missing or blank handles', () => {
+    invalidatePublicPresence()
+    invalidatePublicPresence('   ')
+
+    expect(mockRevalidateTag).not.toHaveBeenCalled()
+    expect(mockRevalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('does not turn a successful mutation into a failure when cache revalidation is unavailable', () => {
+    mockRevalidateTag.mockImplementationOnce(() => {
+      throw new Error('Missing cache context')
+    })
+    mockRevalidatePath.mockImplementationOnce(() => {
+      throw new Error('Missing cache context')
+    })
+
+    expect(() => invalidatePublicPresence('aurelia-wellness')).not.toThrow()
+    expect(mockRevalidateTag).toHaveBeenCalledTimes(1)
+    expect(mockRevalidatePath).toHaveBeenCalledTimes(1)
+  })
 })
