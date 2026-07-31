@@ -32,6 +32,14 @@ export const metadata: Metadata = {
   },
 }
 
+const fallbackTheme: CanonicalPresenceTheme = {
+  primaryColor: '#2563EB',
+  secondaryColor: '#10B981',
+  backgroundColor: '#FFFFFF',
+  textColor: '#111827',
+  fontFamily: 'Inter',
+}
+
 interface DraftPreviewPageProps {
   params: Promise<{
     token: string
@@ -148,7 +156,7 @@ export default async function DraftPresencePreviewPage({ params }: DraftPreviewP
   }
 
   const settings = (business.settings || {}) as PreviewSettings
-  const theme = settings.theme || {}
+  const theme: CanonicalPresenceTheme = settings.theme || fallbackTheme
   const bookingSettings = settings.booking || {}
   const fullAddress = [business.address, business.city, business.state, business.zipCode]
     .filter(Boolean)
@@ -207,8 +215,8 @@ export default async function DraftPresencePreviewPage({ params }: DraftPreviewP
         <div
           className="min-h-screen overflow-x-clip"
           style={{
-            backgroundColor: theme.backgroundColor || '#FFFFFF',
-            fontFamily: theme.fontFamily || 'Inter',
+            backgroundColor: theme.backgroundColor,
+            fontFamily: theme.fontFamily,
           }}
         >
           <SectionRenderer
