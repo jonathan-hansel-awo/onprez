@@ -40,12 +40,12 @@ Page groups are deliberately coarse:
 Public, booking, marketing, authentication, and other pages use the standard field-performance boundaries. Dashboard pages have explicit, slightly wider application targets because they load authenticated operational UI.
 
 | Metric | Public good | Public poor | Dashboard good | Dashboard poor |
-| --- | ---: | ---: | ---: | ---: |
-| LCP | ≤ 2,500 ms | > 4,000 ms | ≤ 3,000 ms | > 4,500 ms |
-| INP | ≤ 200 ms | > 500 ms | ≤ 250 ms | > 600 ms |
-| CLS | ≤ 0.10 | > 0.25 | ≤ 0.10 | > 0.25 |
-| FCP | ≤ 1,800 ms | > 3,000 ms | ≤ 2,000 ms | > 3,500 ms |
-| TTFB | ≤ 800 ms | > 1,800 ms | ≤ 1,000 ms | > 2,000 ms |
+| ------ | ----------: | ----------: | -------------: | -------------: |
+| LCP    |  ≤ 2,500 ms |  > 4,000 ms |     ≤ 3,000 ms |     > 4,500 ms |
+| INP    |    ≤ 200 ms |    > 500 ms |       ≤ 250 ms |       > 600 ms |
+| CLS    |      ≤ 0.10 |      > 0.25 |         ≤ 0.10 |         > 0.25 |
+| FCP    |  ≤ 1,800 ms |  > 3,000 ms |     ≤ 2,000 ms |     > 3,500 ms |
+| TTFB   |    ≤ 800 ms |  > 1,800 ms |     ≤ 1,000 ms |     > 2,000 ms |
 
 Values between good and poor are classified as `needs-improvement`.
 
