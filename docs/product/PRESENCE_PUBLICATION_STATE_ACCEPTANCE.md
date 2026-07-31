@@ -9,12 +9,12 @@ A business owner must be able to tell, without inference, whether customers can 
 
 ## Canonical states
 
-| State | Meaning | Customer view |
-| --- | --- | --- |
-| Draft — not live | The page is saved privately and is not publicly accessible. | Customers cannot open the page. |
-| Live — up to date | The editable draft matches the protected published snapshot. | Customers see the same content shown in the editor. |
+| State                         | Meaning                                                        | Customer view                                                                          |
+| ----------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Draft — not live              | The page is saved privately and is not publicly accessible.    | Customers cannot open the page.                                                        |
+| Live — up to date             | The editable draft matches the protected published snapshot.   | Customers see the same content shown in the editor.                                    |
 | Live with unpublished changes | The saved draft differs from the protected published snapshot. | Customers continue seeing the last published snapshot until the owner publishes again. |
-| Live — republish recommended | A legacy published page has no protected snapshot yet. | Customers see the saved content; republishing establishes the separate live snapshot. |
+| Live — republish recommended  | A legacy published page has no protected snapshot yet.         | Customers see the saved content; republishing establishes the separate live snapshot.  |
 
 ## Acceptance contract
 

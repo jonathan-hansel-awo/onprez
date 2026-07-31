@@ -36,7 +36,9 @@ function normaliseJson(value: unknown): unknown {
 }
 
 export function presenceContentsMatch(draftContent: unknown, publishedContent: unknown): boolean {
-  return JSON.stringify(normaliseJson(draftContent)) === JSON.stringify(normaliseJson(publishedContent))
+  return (
+    JSON.stringify(normaliseJson(draftContent)) === JSON.stringify(normaliseJson(publishedContent))
+  )
 }
 
 function toIsoString(value: string | Date | null): string | null {
@@ -97,7 +99,8 @@ export function getPresencePublicationState({
     kind: 'published',
     label: 'Live — up to date',
     shortDescription: 'Your saved draft matches the version customers can currently see.',
-    customerViewDescription: 'The editor and the public page are showing the same published content.',
+    customerViewDescription:
+      'The editor and the public page are showing the same published content.',
     hasUnpublishedChanges: false,
     publishedAt: publishedAtIso,
   }

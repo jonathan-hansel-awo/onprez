@@ -107,7 +107,9 @@ export function PresencePublicationStatus() {
   const content = (
     <div className={`rounded-2xl border p-4 shadow-sm ${toneClasses[state.kind]}`}>
       <div className="flex items-start gap-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconClasses[state.kind]}`}>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconClasses[state.kind]}`}
+        >
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
 
