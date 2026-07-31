@@ -4,10 +4,7 @@ import {
   getTemplateBookingDemoFixture,
   RealisticDemoBookingJourney,
 } from '@/components/templates/RealisticDemoBookingJourney'
-import {
-  getPresenceTemplate,
-  presenceTemplateCatalogue,
-} from '@/data/presence-template-catalogue'
+import { getPresenceTemplate, presenceTemplateCatalogue } from '@/data/presence-template-catalogue'
 
 function requireTemplate(slug: string) {
   const template = getPresenceTemplate(slug)
@@ -94,7 +91,9 @@ describe('RealisticDemoBookingJourney', () => {
       />
     )
 
-    expect(screen.getByRole('button', { name: 'Signature Cut, £28, 45 minutes' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Signature Cut, £28, 45 minutes' })
+    ).toBeInTheDocument()
     expect(screen.getByText('12 Market Street, Cambridge, CB1 2AB')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Review demo booking' }))
