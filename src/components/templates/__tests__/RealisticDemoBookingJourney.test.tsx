@@ -10,20 +10,17 @@ describe('RealisticDemoBookingJourney', () => {
     const signupHref = '/signup?template=heavenly-pamper-palace'
 
     render(
-      <RealisticDemoBookingJourney
-        templateSlug="heavenly-pamper-palace"
-        signupHref={signupHref}
-      />
+      <RealisticDemoBookingJourney templateSlug="heavenly-pamper-palace" signupHref={signupHref} />
     )
 
     expect(screen.getByRole('heading', { name: /try the client journey/i })).toBeInTheDocument()
     expect(screen.getByText('Opening hours')).toBeInTheDocument()
     expect(screen.getByText('Tuesday')).toBeInTheDocument()
-    expect(screen.getByText('A 30% deposit secures treatments of 60 minutes or longer.')).toBeInTheDocument()
+    expect(
+      screen.getByText('A 30% deposit secures treatments of 60 minutes or longer.')
+    ).toBeInTheDocument()
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Serenity Massage, £70, 60 min' })
-    )
+    fireEvent.click(screen.getByRole('button', { name: 'Serenity Massage, £70, 60 min' }))
     fireEvent.click(screen.getByRole('button', { name: 'Thursday · 14:00' }))
     fireEvent.click(screen.getByRole('button', { name: 'Review demo booking' }))
 
