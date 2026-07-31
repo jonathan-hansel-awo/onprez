@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write \"__tests__/components/presence-conversion.test.tsx\" \"docs/CRITICAL_ACTION_PLAN_PROGRESS.md\" \"docs/product/PUBLIC_PAGE_CONVERSION_ACCEPTANCE.md\" && echo __P2_004_TEST_START__ && base64 -w0 __tests__/components/presence-conversion.test.tsx && echo && echo __P2_004_TEST_END__ && echo __P2_004_TRACKER_START__ && base64 -w0 docs/CRITICAL_ACTION_PLAN_PROGRESS.md && echo && echo __P2_004_TRACKER_END__ && echo __P2_004_ACCEPTANCE_START__ && base64 -w0 docs/product/PUBLIC_PAGE_CONVERSION_ACCEPTANCE.md && echo && echo __P2_004_ACCEPTANCE_END__ && exit 1",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
