@@ -1,0 +1,145 @@
+name: Apply Regent Barber contrast fix
+
+on:
+  push:
+    branches:
+      - agent/p2-004-conversion-revalidation
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/onprez
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/onprez
+      APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      RESEND_API_KEY: re_ci_placeholder
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ci-placeholder
+      CLOUDINARY_API_KEY: ci-placeholder
+      CLOUDINARY_API_SECRET: ci-placeholder
+      JWT_SECRET: ci-only-jwt-secret-at-least-32-characters
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v7
+        with:
+          ref: agent/p2-004-conversion-revalidation
+          fetch-depth: 0
+
+      - name: Apply targeted contrast and documentation changes
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: Path, old: str, new: str, label: str) -> None:
+              text = path.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one match, found {count}")
+              path.write_text(text.replace(old, new, 1))
+
+          engine = Path('src/lib/templates/canonical-template-engine.ts')
+          replace_once(
+              engine,
+              """      appearance: {
+                backgroundColor: '#ffffff',
+                textColor: template.palette.text,
+                accentColor: template.palette.primary,
+""",
+              """      appearance: {
+                backgroundColor:
+                  template.slug === 'regent-barber' ? template.palette.surface : '#ffffff',
+                textColor: template.palette.text,
+                accentColor: template.palette.primary,
+""",
+              'Regent Barber about background',
+          )
+
+          test_path = Path('src/lib/templates/__tests__/canonical-template-engine.test.ts')
+          insert_before = """  it('does not copy fictional preview services, prices, reviews, or FAQs into accounts', () => {
+"""
+          test_block = """  it('keeps Regent Barber experience copy readable on its charcoal surface', () => {
+    const regent = createCanonicalPresencePageContent(
+      'Regent Barber Co.',
+      BusinessCategory.BEAUTY,
+      'regent-barber',
+      { mode: 'preview' }
+    )
+    const experience = regent.sections.find(section => section.type === 'ABOUT')
+
+    expect(experience).toMatchObject({
+      appearance: {
+        backgroundColor: '#191916',
+        textColor: '#f5f0e8',
+        accentColor: '#c87941',
+      },
+      data: {
+        eyebrow: 'The experience',
+        title: 'Built around Regent Barber Co.',
+      },
+    })
+    expect(experience?.appearance?.backgroundColor).not.toBe('#ffffff')
+  })
+
+"""
+          replace_once(test_path, insert_before, test_block + insert_before, 'Regent contrast test')
+
+          acceptance = Path('docs/product/PUBLIC_PAGE_CONVERSION_ACCEPTANCE.md')
+          replace_once(
+              acceptance,
+              """| Theme compatibility                       | Persistent and repeated conversion controls use the business theme surface and text variables rather than assuming a white page.                                                                                 |
+""",
+              """| Theme compatibility                       | Persistent and repeated conversion controls use the business theme surface and text variables rather than assuming a white page.                                                                                 |
+| Readable themed contrast                   | Premium sections preserve a deliberate foreground/background pair. Regent Barber's pale cream copy is rendered on its charcoal surface rather than a white section.                                               |
+""",
+              'acceptance contrast row',
+          )
+          replace_once(
+              acceptance,
+              """- the renderer reserves sufficient bottom space for the fixed mobile action.
+""",
+              """- the renderer reserves sufficient bottom space for the fixed mobile action;
+- premium sections preserve readable foreground/background pairings, including Regent Barber's charcoal experience section.
+""",
+              'acceptance contrast bullet',
+          )
+
+          tracker = Path('docs/CRITICAL_ACTION_PLAN_PROGRESS.md')
+          replace_once(
+              tracker,
+              """  - Focused regression coverage protects genuine trust claims, direct hero/service/section/sticky booking links, accessible mobile touch height, safe-area behaviour, and the renderer's non-obstruction spacing.
+""",
+              """  - Focused regression coverage protects genuine trust claims, direct hero/service/section/sticky booking links, accessible mobile touch height, safe-area behaviour, the renderer's non-obstruction spacing, and readable premium-template colour pairings. Regent Barber's experience section now uses its charcoal surface behind pale cream copy.
+""",
+              'tracker P2-004 contrast evidence',
+          )
+          PY
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format changed files
+        run: npx prettier --write "src/lib/templates/canonical-template-engine.ts" "src/lib/templates/__tests__/canonical-template-engine.test.ts" "docs/product/PUBLIC_PAGE_CONVERSION_ACCEPTANCE.md" "docs/CRITICAL_ACTION_PLAN_PROGRESS.md"
+
+      - name: Run focused tests
+        run: npm test -- --runInBand src/lib/templates/__tests__/canonical-template-engine.test.ts __tests__/components/presence-conversion.test.tsx
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "src/lib/templates/canonical-template-engine.ts" "src/lib/templates/__tests__/canonical-template-engine.test.ts" "docs/product/PUBLIC_PAGE_CONVERSION_ACCEPTANCE.md" "docs/CRITICAL_ACTION_PLAN_PROGRESS.md"
+          git commit -m "fix: restore Regent Barber text contrast"
+          git push
