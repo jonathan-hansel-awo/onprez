@@ -9,7 +9,6 @@ import {
   Hero,
   HomepageScenario,
   HowItWorks,
-  SocialProofStreamDual,
 } from '@/components/landing'
 
 // Lazy load below-the-fold components
@@ -17,17 +16,6 @@ const LazyExamplesCarousel = dynamic(
   () =>
     import('@/components/landing/examples-carousel').then(mod => ({
       default: mod.ExamplesCarousel,
-    })),
-  {
-    loading: () => <div className="h-screen" />,
-    ssr: true,
-  }
-)
-
-const LazyTestimonialsBento = dynamic(
-  () =>
-    import('@/components/landing/testimonials-bento').then(mod => ({
-      default: mod.TestimonialsBento,
     })),
   {
     loading: () => <div className="h-screen" />,
@@ -69,16 +57,12 @@ export default function LandingPage() {
         {/* Early sections - High priority */}
         <HowItWorks />
 
-        <SocialProofStreamDual />
-
-        {/* <ProblemSolutionSplit /> */}
         <FeatureCustomizable />
         <FeatureDiscovery />
         <FeatureOneLink />
 
-        {/* Below the fold - Lazy loaded */}
+        {/* Demonstrable product proof and transparent pricing */}
         <LazyExamplesCarousel />
-        <LazyTestimonialsBento />
         <LazyPricingSection />
 
         {/* Final sections */}
