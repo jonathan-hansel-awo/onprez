@@ -60,9 +60,7 @@ describe('public presence cache', () => {
 
   it('normalises handles and creates a stable handle-scoped tag', () => {
     expect(normalizePublicPresenceHandle('  Aurelia-Wellness  ')).toBe('aurelia-wellness')
-    expect(publicPresenceCacheTag(' Aurelia-Wellness ')).toBe(
-      'public-presence:aurelia-wellness'
-    )
+    expect(publicPresenceCacheTag(' Aurelia-Wellness ')).toBe('public-presence:aurelia-wellness')
   })
 
   it('caches the published shell and rating summary by normalised handle', async () => {

@@ -35,16 +35,16 @@ The short fallback lifetime bounds staleness if a new mutation path is introduce
 
 The shared `invalidatePublicPresence(handle)` operation expires both the handle data tag and the rendered route. It runs after:
 
-| Mutation | Invalidation behaviour |
-| --- | --- |
-| Owner publishes or republishes | Expire the handle immediately |
-| Owner unpublishes | Expire the handle immediately so the next request returns `404` |
-| Platform admin publishes or unpublishes | Expire the handle immediately |
-| Platform admin saves an already-live snapshot | Expire the handle immediately |
-| Platform admin changes public profile content | Expire the handle immediately |
-| Owner or manager changes profile, branding, social, or public settings | Expire the old handle and, defensively, a new handle if it differs |
-| Owner or manager changes the public theme | Expire the handle immediately |
-| Ordinary editor auto-save or draft save | Do not invalidate; customers must continue seeing the last published snapshot |
+| Mutation                                                               | Invalidation behaviour                                                        |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Owner publishes or republishes                                         | Expire the handle immediately                                                 |
+| Owner unpublishes                                                      | Expire the handle immediately so the next request returns `404`               |
+| Platform admin publishes or unpublishes                                | Expire the handle immediately                                                 |
+| Platform admin saves an already-live snapshot                          | Expire the handle immediately                                                 |
+| Platform admin changes public profile content                          | Expire the handle immediately                                                 |
+| Owner or manager changes profile, branding, social, or public settings | Expire the old handle and, defensively, a new handle if it differs            |
+| Owner or manager changes the public theme                              | Expire the handle immediately                                                 |
+| Ordinary editor auto-save or draft save                                | Do not invalidate; customers must continue seeing the last published snapshot |
 
 Any future mutation that changes a field read by the cached loader must call the same invalidation helper in the successful write path.
 
