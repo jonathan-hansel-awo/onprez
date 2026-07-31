@@ -47,9 +47,9 @@ const LazyPricingSection = dynamic(
 )
 
 export const metadata: Metadata = {
-  title: 'Online Presence and Booking for Service Professionals',
+  title: 'Online Presence and Booking for Beauty & Wellness Professionals',
   description:
-    'Give clients one memorable place to discover your brand, explore your services, see your availability, and book—at your own OnPrez handle.',
+    'Give beauty and wellness clients one memorable place to discover your brand, compare services and prices, see your availability, and book at your own OnPrez handle.',
   alternates: {
     canonical: '/',
   },

@@ -1,12 +1,15 @@
 export const homepagePositioning = {
-  badge: 'For service professionals and small teams',
-  headlineLines: ['A beautiful online presence for', 'your services, availability & bookings.'],
+  badge: 'For beauty & wellness professionals and small teams',
+  headlineLines: [
+    'Your beauty business, services and brand—',
+    'with availability & bookings in one place.',
+  ],
   summary:
-    'Bring your brand, services, availability, and bookings together at one memorable OnPrez handle—so clients can understand, trust, and choose you.',
+    'Give clients one memorable place to discover your work, compare services and prices, see when you are available, and book with confidence.',
   audience:
-    'Built for independent professionals and small teams in beauty, wellness, fitness, creative services, tutoring, home services, and more.',
+    'Built first for independent beauty and wellness professionals and small teams—hair, makeup, nails, massage, spas, salons, and mobile beauty businesses.',
   primaryCta: 'Claim my handle',
-  secondaryCta: 'Explore a real presence page',
+  secondaryCta: 'Explore a realistic beauty presence page',
   outcomes: [
     {
       title: 'Show your brand',

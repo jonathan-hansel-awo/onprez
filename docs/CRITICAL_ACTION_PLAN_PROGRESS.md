@@ -2,11 +2,11 @@
 
 **Document type:** Living progress tracker  
 **Source plan:** `OnPrez Critical Action Plan`  
-**Last repository audit:** 30 July 2026  
+**Last repository audit:** 31 July 2026  
 **Audited branch:** `main`  
-**Audit baseline:** `4987b1c`  
+**Audit baseline:** `af1eefa`  
 **Current working phase:** Phase 5 — Product Scope Discipline  
-**Next planned item:** P2-002 — Merge the scope lock, then P2-003
+**Next planned item:** P2-003 — Merge the niche focus and run real-user sessions, then P2-010
 
 ---
 
@@ -53,7 +53,7 @@ Whenever an action item is completed:
 | Phase 2 — Booking Correctness and Data Integrity      |        5 |       0 |           0 |      5 |
 | Phase 3 — Security Hardening                          |        5 |       0 |           0 |      5 |
 | Phase 4 — Deployment, Operations, and Observability   |        5 |       0 |           0 |      5 |
-| Phase 5 — Product Scope Discipline                    |        1 |       2 |           0 |      3 |
+| Phase 5 — Product Scope Discipline                    |        2 |       1 |           0 |      3 |
 | Phase 6 — Public Presence Page UX                     |        5 |       0 |           0 |      5 |
 | Phase 7 — Dashboard UX                                |        1 |       3 |           0 |      4 |
 | Phase 8 — Trust, Positioning, and Marketing Integrity |        2 |       2 |           0 |      4 |
@@ -64,15 +64,15 @@ Whenever an action item is completed:
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **39** |  **14** |       **8** | **61** |
+| **Total**                                             |   **40** |  **13** |       **8** | **61** |
 
-**Strict completion:** 39 of 61 items — approximately **64%**.  
+**Strict completion:** 40 of 61 items — approximately **66%**.  
 **Items with at least meaningful implementation:** 53 of 61 — approximately **87%**.
 
 ### Current priorities from this audit
 
-1. Merge the **P2-002** scope lock, then complete **P2-003** under Phase 5. Continue the P2-001 fresh-user sessions as launch validation.
-2. Then complete **P2-010**, **P2-011**, and **P2-012** to finish Phase 7.
+1. Merge the **P2-003** beauty-and-wellness niche focus, run its 3–5 real-user onboarding sessions, then complete **P2-010**. Continue the P2-001 fresh-user sessions as launch validation.
+2. Then complete **P2-011** and **P2-012** to finish Phase 7.
 3. Remove or clearly label the remaining fabricated homepage activity and testimonial claims under **P2-013** and **P2-016**.
 4. Add public-page caching and measured load tests before growth work under Phase 9.
 
@@ -206,17 +206,18 @@ Whenever an action item is completed:
   - The existing guided checklist from [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56) continues to support the setup journey.
   - Fresh-account mobile sessions remain part of launch validation and ongoing product evidence, but the repository definition, target, instrumentation, and regression acceptance criteria are now complete in `main`.
 
-- [ ] **P2-002 — Ruthlessly Defer Non-Core Features** — **Partial; repository implementation complete in open PR #118**
-  - [PR #118](https://github.com/jonathan-hansel-awo/onprez/pull/118) classifies all 141 source-roadmap micro-milestones as Core, Support, or Later in `docs/product/MVP_SCOPE.md`.
+- [x] **P2-002 — Ruthlessly Defer Non-Core Features** — **Complete**
+  - Merged [PR #118](https://github.com/jonathan-hansel-awo/onprez/pull/118) classifies all 141 source-roadmap micro-milestones as Core, Support, or Later in `docs/product/MVP_SCOPE.md`.
   - `docs/product/LATER.md` captures deferred ideas with evidence-based revisit triggers and preserves already shipped non-core behaviour while freezing material expansion.
   - Team invitations, secure acceptance, member management, owner/admin/staff roles, tenant-safe permissions, and the multi-member booking loop are explicitly Core and are not deferred.
   - The next ten work sessions are committed to the usable presence-and-booking loop, including team-member acceptance auditing and mobile hardening.
-  - Remaining: merge PR #118. Under this tracker’s rules, an open PR does not count as complete until its changes reach `main`.
 
-- [ ] **P2-003 — Define the First Niche Clearly** — **Partial**
-  - Realistic beauty, wellness, barber, therapy, fitness, professional, creative, and education examples now exist.
-  - The homepage still positions OnPrez broadly for service professionals rather than committing to one initial niche.
-  - Remaining: select one first niche, align primary homepage/onboarding copy to it, and document 3–5 observed onboarding sessions with real professionals from that niche.
+- [ ] **P2-003 — Define the First Niche Clearly** — **Partial; repository implementation complete in open PR #119**
+  - [PR #119](https://github.com/jonathan-hansel-awo/onprez/pull/119) selects independent beauty and wellness professionals and small teams as the first launch niche without restricting other supported service categories.
+  - Homepage hero copy, SEO metadata, signup metadata, and featured examples now lead with hair, makeup, nails, massage, spas, salons, barbering, and mobile beauty.
+  - `docs/product/FIRST_LAUNCH_NICHE.md` defines the target user, problem, value proposition, product assumptions, realistic-demo standard, and a 3–5 participant onboarding protocol that includes at least one multi-member business.
+  - Heavenly Pamper Palace, Crown & Canvas Studio, and Regent Barber provide niche-specific demo and template evidence, while regression tests lock the intended audience and concrete presence-plus-booking journey.
+  - Remaining: merge PR #119 and record the real-participant sessions. Real-user evidence is deliberately not fabricated in the repository.
 
 ---
 
@@ -391,8 +392,9 @@ Whenever an action item is completed:
 
 ## Change log
 
-| Date         | Change                                                                                                                                                           | PR                                                                                                                              |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                  |
-| 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                            | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
-| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                                                   | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                  |
+| Date         | Change                                                                                                                                                                 | PR                                                                                                                              |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 31 July 2026 | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol. | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) |
+| 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement.       | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                  |
+| 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                                  | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
+| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                                                         | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                  |
