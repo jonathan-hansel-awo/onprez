@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -31,67 +31,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-
-      - name: Reconcile merged action-plan items
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('docs/CRITICAL_ACTION_PLAN_PROGRESS.md')
-          text = path.read_text()
-          original = text
-
-          text = text.replace('**Audit baseline:** `e91a08f`', '**Audit baseline:** `e4fe8dd`')
-          text = text.replace(
-              '6. Do not mark an item complete from a draft or open PR.\n',
-              '6. Do not mark an item complete from a draft or open PR.\n'
-              '7. When the user says “next item”, first reconcile merged PRs against this tracker, skip every Complete item, and select the earliest Partial or Not started item.\n',
-          )
-          text = text.replace(
-              '  - The existing guided checklist from [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56) continues to support the setup journey.\n',
-              '  - The existing guided checklist from [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56) continues to support the setup journey. Merged [PR #117](https://github.com/jonathan-hansel-awo/onprez/pull/117) restored the repository quality-gate formatting without changing behaviour.\n',
-          )
-          text = text.replace(
-              '  - Heavenly Pamper Palace, Crown & Canvas Studio, and Regent Barber provide niche-specific demo and template evidence, while regression tests lock the intended audience and concrete presence-plus-booking journey.\n',
-              '  - Aurelia Wellness House, Crown & Canvas Studio, and Regent Barber provide niche-specific demo and template evidence, while regression tests lock the intended audience and concrete presence-plus-booking journey. The real Heavenly Pamper Palace identity is no longer used as fictional demo content.\n',
-          )
-          text = text.replace(
-              '  - [PR #120](https://github.com/jonathan-hansel-awo/onprez/pull/120) revalidates the original acceptance criteria, makes persistent conversion controls theme-aware, reserves safe-area-aware mobile content space, and adds Testimonials to the high-intent desktop prompt points.\n',
-              '  - Merged [PR #120](https://github.com/jonathan-hansel-awo/onprez/pull/120) revalidates the original acceptance criteria, makes persistent conversion controls theme-aware, reserves safe-area-aware mobile content space, adds Testimonials to the high-intent desktop prompt points, and fixes Regent Barber contrast.\n',
-          )
-          text = text.replace(
-              '- [x] **P2-005 — Create a Realistic Demo Presence Page** — **Complete**\n  - Heavenly Pamper Palace was completed in [PR #51](https://github.com/jonathan-hansel-awo/onprez/pull/51), followed by Crown & Canvas Studio in [PR #52](https://github.com/jonathan-hansel-awo/onprez/pull/52).\n',
-              '- [x] **P2-005 — Create a Realistic Demo Presence Page** — **Complete**\n'
-              '  - Merged [PR #51](https://github.com/jonathan-hansel-awo/onprez/pull/51) delivered the original detailed wellness demonstration, followed by the Crown & Canvas Studio sector example in merged [PR #52](https://github.com/jonathan-hansel-awo/onprez/pull/52).\n'
-              '  - Merged [PR #121](https://github.com/jonathan-hansel-awo/onprez/pull/121) applies the privacy-safe interactive service-and-time booking journey to every public example and catalogue template.\n'
-              '  - The fictional flagship wellness example is now Aurelia Wellness House and the visible template name is Golden Serenity; the legacy `heavenly-pamper-palace` slug remains only for backwards-compatible links.\n'
-              '  - `docs/product/REALISTIC_DEMO_ACCEPTANCE.md` and catalogue-wide regression tests protect fictional identity separation, services, hours, policies, sample availability, booking review, signup handoff, and the no-PII/no-record safety boundary.\n',
-          )
-
-          marker = '| 31 July 2026 | Marked P2-003 complete after PR #119 merged'
-          row = '| 31 July 2026 | Reconciled all successfully merged P2-001 through P2-005 work, recorded PR #121’s catalogue-wide booking demos and fictional identity separation, and formalised the “next item” selection rule. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)–[#121](https://github.com/jonathan-hansel-awo/onprez/pull/121) |\n'
-          if row not in text:
-              text = text.replace(marker, row + marker)
-
-          if text != original:
-              path.write_text(text)
-          PY
-
-          if git diff --quiet -- docs/CRITICAL_ACTION_PLAN_PROGRESS.md; then
-            echo 'Tracker already reconciled.'
-            exit 0
-          fi
-
-          npx prettier --write docs/CRITICAL_ACTION_PLAN_PROGRESS.md
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/CRITICAL_ACTION_PLAN_PROGRESS.md
-          git commit -m 'docs: reconcile completed action-plan merges'
-          git push origin HEAD:${{ github.head_ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
