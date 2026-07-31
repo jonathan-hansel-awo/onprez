@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
         id: true,
         businessId: true,
         content: true,
-        business: { select: { slug: true } },
       },
     })
 
@@ -89,7 +88,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     })
 
-    invalidatePublicPresence(currentPage.business.slug)
+    invalidatePublicPresence(context.business.slug)
 
     return NextResponse.json({
       success: true,
