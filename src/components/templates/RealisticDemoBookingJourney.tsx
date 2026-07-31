@@ -6,39 +6,172 @@ import {
   hairMakeupDemoBusiness,
   type HairMakeupDemoBusiness,
 } from '@/data/hair-makeup-demo-business'
+import {
+  type TemplateCatalogueItem,
+  type TemplateCategory,
+} from '@/data/presence-template-catalogue'
 import { realisticDemoBusiness, type RealisticDemoBusiness } from '@/data/realistic-demo-business'
 
 type RealisticDemoFixture = RealisticDemoBusiness | HairMakeupDemoBusiness
+
+type PublicTemplateCategory = Exclude<TemplateCategory, 'ALL'>
+
+interface BookingDemoService {
+  id: string
+  name: string
+  price: string
+  duration: string
+}
+
+export interface TemplateBookingDemoFixture {
+  name: string
+  services: BookingDemoService[]
+  bookingSlots: string[]
+  hours: Array<{ day: string; time: string }>
+  location: { address: string; city: string; postcode: string }
+  contact: { phone: string; email: string }
+  policies: string[]
+  trustSignals: string[]
+  isDetailedFixture: boolean
+}
 
 const realisticDemoFixtures: RealisticDemoFixture[] = [
   realisticDemoBusiness,
   hairMakeupDemoBusiness,
 ]
 
+const sharedPreviewHours = [
+  { day: 'Monday', time: '09:00–17:30' },
+  { day: 'Tuesday', time: '09:00–17:30' },
+  { day: 'Wednesday', time: '10:00–19:00' },
+  { day: 'Thursday', time: '10:00–19:00' },
+  { day: 'Friday', time: '09:00–17:30' },
+  { day: 'Saturday', time: '10:00–15:00' },
+  { day: 'Sunday', time: 'Closed' },
+]
+
+const sharedPreviewSlots = [
+  'Tuesday · 10:30',
+  'Wednesday · 14:00',
+  'Friday · 11:30',
+  'Saturday · 13:00',
+]
+
+const categoryPolicies: Record<PublicTemplateCategory, string[]> = {
+  WELLNESS: [
+    'Please give at least 24 hours’ notice when cancelling or moving an appointment.',
+    'Share allergies, sensitivities or accessibility needs in the real booking form.',
+    'Arrive five minutes early for a short consultation before the appointment begins.',
+  ],
+  BEAUTY: [
+    'A deposit may be required for longer appointments or specialist preparation.',
+    'Patch tests are arranged in advance whenever the chosen service requires one.',
+    'Please give at least 24 hours’ notice when cancelling or moving an appointment.',
+  ],
+  FITNESS: [
+    'Share relevant injuries, health conditions and training experience before the first session.',
+    'Sessions begin at the booked time, so arrive ready to start a few minutes beforehand.',
+    'Please give at least 24 hours’ notice when cancelling or moving an appointment.',
+  ],
+  PROFESSIONAL: [
+    'The first appointment confirms scope, expectations and any follow-up work required.',
+    'Online-session details are sent only after a real appointment has been confirmed.',
+    'Please give at least 24 hours’ notice when cancelling or moving an appointment.',
+  ],
+  CREATIVE: [
+    'A booking deposit may be required before production or location time is reserved.',
+    'Final scope, usage and delivery expectations are confirmed before the appointment.',
+    'Please give at least 48 hours’ notice when cancelling or moving a session.',
+  ],
+  EDUCATION: [
+    'Learning goals and current support needs are discussed before the first full session.',
+    'Online-session details are sent only after a real lesson has been confirmed.',
+    'Please give at least 24 hours’ notice when cancelling or moving a lesson.',
+  ],
+}
+
 export function getRealisticDemoFixture(templateSlug: string) {
   return realisticDemoFixtures.find(demo => demo.templateSlug === templateSlug)
 }
 
+export function getTemplateBookingDemoFixture(
+  template: TemplateCatalogueItem,
+  businessName = template.preview.businessName
+): TemplateBookingDemoFixture {
+  const detailedDemo = getRealisticDemoFixture(template.slug)
+
+  if (detailedDemo) {
+    return {
+      name: businessName,
+      services: detailedDemo.services.map(service => ({
+        id: service.id,
+        name: service.name,
+        price: service.price,
+        duration: service.duration,
+      })),
+      bookingSlots: detailedDemo.bookingSlots,
+      hours: detailedDemo.hours,
+      location: detailedDemo.location,
+      contact: {
+        phone: detailedDemo.contact.phone,
+        email: detailedDemo.contact.email,
+      },
+      policies: detailedDemo.policies,
+      trustSignals: detailedDemo.owner.credentials,
+      isDetailedFixture: true,
+    }
+  }
+
+  return {
+    name: businessName,
+    services: template.preview.services.map(service => ({
+      id: service.id,
+      name: service.name,
+      price: service.price,
+      duration: service.duration,
+    })),
+    bookingSlots: sharedPreviewSlots,
+    hours: sharedPreviewHours,
+    location: {
+      address: '12 Market Street',
+      city: 'Cambridge',
+      postcode: 'CB1 2AB',
+    },
+    contact: {
+      phone: '01223 555 010',
+      email: 'hello@preview.example',
+    },
+    policies: categoryPolicies[template.category],
+    trustSignals: ['Detailed services', 'Sample availability', 'Online booking preview'],
+    isDetailedFixture: false,
+  }
+}
+
 interface RealisticDemoBookingJourneyProps {
-  templateSlug: string
+  template: TemplateCatalogueItem
+  businessName: string
   signupHref: string
 }
 
 export function RealisticDemoBookingJourney({
-  templateSlug,
+  template,
+  businessName,
   signupHref,
 }: RealisticDemoBookingJourneyProps) {
-  const demo = getRealisticDemoFixture(templateSlug)
-  const [selectedServiceId, setSelectedServiceId] = useState(demo?.services[0]?.id || '')
-  const [selectedSlot, setSelectedSlot] = useState(demo?.bookingSlots[0] || '')
+  const demo = useMemo(
+    () => getTemplateBookingDemoFixture(template, businessName),
+    [businessName, template]
+  )
+  const [selectedServiceId, setSelectedServiceId] = useState(demo.services[0]?.id || '')
+  const [selectedSlot, setSelectedSlot] = useState(demo.bookingSlots[0] || '')
   const [isReviewing, setIsReviewing] = useState(false)
 
   const selectedService = useMemo(
-    () => demo?.services.find(service => service.id === selectedServiceId) || demo?.services[0],
-    [demo, selectedServiceId]
+    () => demo.services.find(service => service.id === selectedServiceId) || demo.services[0],
+    [demo.services, selectedServiceId]
   )
 
-  if (!demo || !selectedService) return null
+  if (!selectedService) return null
 
   return (
     <section
@@ -55,8 +188,8 @@ export function RealisticDemoBookingJourney({
             Try the client journey before creating your page.
           </h2>
           <p className="mt-5 text-base leading-7 text-slate-300 sm:text-lg">
-            Choose a realistic service and sample appointment time. This is fictional demonstration
-            content: no appointment or customer record will be created.
+            Choose a fictional service and sample appointment time. This demonstration creates no
+            appointment, customer record, email or payment.
           </p>
         </div>
 
