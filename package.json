@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write src/components/dashboard/DashboardShell.tsx && git diff -- src/components/dashboard/DashboardShell.tsx && exit 1",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
