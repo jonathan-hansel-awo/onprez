@@ -12,6 +12,7 @@ interface DraftPreviewClaims extends JwtPayload {
   pageId: string
   businessId: string
   pageVersion: number
+  exp: number
 }
 
 export interface PresenceDraftPreviewToken {
