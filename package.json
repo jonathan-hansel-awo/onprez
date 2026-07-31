@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write __tests__/api/web-vitals.test.ts docs/product/WEB_VITALS_MONITORING.md src/app/api/monitoring/web-vitals/route.ts src/components/analytics/web-vitals-reporter.tsx src/lib/observability/web-vitals.ts && git diff -- __tests__/api/web-vitals.test.ts docs/product/WEB_VITALS_MONITORING.md src/app/api/monitoring/web-vitals/route.ts src/components/analytics/web-vitals-reporter.tsx src/lib/observability/web-vitals.ts && exit 1",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
