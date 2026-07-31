@@ -19,7 +19,11 @@ const NO_STORE_HEADERS = {
 
 const payloadSchema = z
   .object({
-    id: z.string().min(1).max(128).regex(/^[A-Za-z0-9._:-]+$/),
+    id: z
+      .string()
+      .min(1)
+      .max(128)
+      .regex(/^[A-Za-z0-9._:-]+$/),
     name: z.enum(WEB_VITAL_NAMES),
     value: z.number().finite().nonnegative().max(120_000),
     delta: z.number().finite().nonnegative().max(120_000),
