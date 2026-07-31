@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -31,86 +31,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-
-      - name: Reconcile action-plan tracker
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('docs/CRITICAL_ACTION_PLAN_PROGRESS.md')
-          text = path.read_text()
-          original = text
-
-          text = text.replace('**Audit baseline:** `e4fe8dd`', '**Audit baseline:** `f9a495a`')
-          text = text.replace(
-              '**Next planned item:** P2-010 — Clarify Draft vs Published State',
-              '**Next planned item:** P2-011 — Add Better Preview Workflows',
-          )
-          text = text.replace(
-              '| Phase 7 — Dashboard UX                                |        1 |       3 |           0 |      4 |',
-              '| Phase 7 — Dashboard UX                                |        2 |       2 |           0 |      4 |',
-          )
-          text = text.replace(
-              '| **Total**                                             |   **41** |  **12** |       **8** | **61** |',
-              '| **Total**                                             |   **42** |  **11** |       **8** | **61** |',
-          )
-          text = text.replace(
-              '**Strict completion:** 41 of 61 items — approximately **67%**.',
-              '**Strict completion:** 42 of 61 items — approximately **69%**.',
-          )
-          text = text.replace(
-              '1. Complete **P2-010**, **P2-011**, and **P2-012** to finish Phase 7. Continue the P2-001 and P2-003 real-user sessions as launch validation.',
-              '1. Complete **P2-011** and **P2-012** to finish Phase 7. Continue the P2-001 and P2-003 real-user sessions as launch validation.',
-          )
-
-          old_p2010 = '''- [ ] **P2-010 — Clarify Draft vs Published State** — **Partial**
-            - The presence dashboard and editor clearly distinguish Draft and Published states, hide the live link for drafts, support publish/unpublish, preserve draft-only template changes, and warn before destructive or unsaved actions.
-            - Evidence: [PR #69](https://github.com/jonathan-hansel-awo/onprez/pull/69), [PR #75](https://github.com/jonathan-hansel-awo/onprez/pull/75), `src/app/dashboard/presence/page.tsx`, and `PresenceEditorLayout.tsx`.
-            - Remaining: show the last-published timestamp and make the relationship between current draft content and the last live snapshot explicit after further edits.
-          '''.replace('          ', '')
-          new_p2010 = '''- [x] **P2-010 — Clarify Draft vs Published State** — **Complete**
-            - Merged [PR #123](https://github.com/jonathan-hansel-awo/onprez/pull/123) defines explicit Draft, Live and up to date, Live with unpublished changes, and legacy published-without-snapshot states.
-            - The state is derived from the saved draft, published snapshot, visibility, and publication timestamp rather than trusting a client-only flag.
-            - The Presence dashboard and editor show what customers currently see, the last-published date and time, whether changes remain unpublished, and a direct live-page link when one exists.
-            - Unpublishing preserves the historical published snapshot and timestamp while correctly removing public visibility.
-            - `docs/product/PRESENCE_PUBLICATION_STATE_ACCEPTANCE.md` and focused regression tests protect the state transitions and snapshot relationship.
-          '''.replace('          ', '')
-          text = text.replace(old_p2010, new_p2010)
-
-          old_p2011 = '''- [ ] **P2-011 — Add Better Preview Workflows** — **Partial**
-            - The editor includes real mobile and desktop rendering modes, and the same canonical renderer is reused across examples, editor previews, saved drafts, and public pages.
-            - Remaining: provide a private, non-indexed draft preview URL, a copy-preview-link action, safe expiry/access rules, and explicit draft preview metadata.
-          '''.replace('          ', '')
-          new_p2011 = '''- [ ] **P2-011 — Add Better Preview Workflows** — **Partial — implementation awaiting merge**
-            - The editor includes real mobile and desktop rendering modes, and the same canonical renderer is reused across examples, editor previews, saved drafts, and public pages.
-            - [PR #124](https://github.com/jonathan-hansel-awo/onprez/pull/124) adds an authenticated copy-preview-link action and a private route that renders the latest saved draft through the canonical renderer.
-            - Preview links are signed to one business, page, and publication version, expire after 24 hours, become invalid after publishing, and receive no-cache, no-index, and no-referrer controls.
-            - The private route carries explicit draft metadata and disables booking and inquiry creation while preserving genuine services, theme, contact data, and trust signals.
-            - Mark Complete after PR #124 merges successfully into `main`.
-          '''.replace('          ', '')
-          text = text.replace(old_p2011, new_p2011)
-
-          marker = '| 31 July 2026 | Reconciled all successfully merged P2-001 through P2-005 work'
-          row = '| 31 July 2026 | Marked merged P2-010 complete and recorded P2-011 private, expiring, non-indexed draft-preview implementation pending PR #124 merge. | [#123](https://github.com/jonathan-hansel-awo/onprez/pull/123) / [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124) |\n'
-          if row not in text:
-              text = text.replace(marker, row + marker)
-
-          if text == original:
-              raise SystemExit('Tracker replacements did not apply')
-
-          path.write_text(text)
-          PY
-
-          npx prettier --write docs/CRITICAL_ACTION_PLAN_PROGRESS.md
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/CRITICAL_ACTION_PLAN_PROGRESS.md
-          git commit -m 'docs: reconcile P2-010 and P2-011 progress'
-          git push origin HEAD:${{ github.head_ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
