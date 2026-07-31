@@ -7,7 +7,10 @@ import type {
   CanonicalPresenceTheme,
   CanonicalPreviewService,
 } from '@/lib/templates/canonical-template-engine'
-import { verifyPresenceDraftPreviewToken } from '@/lib/presence/draft-preview-token'
+import {
+  isPresenceDraftPreviewVersionCurrent,
+  verifyPresenceDraftPreviewToken,
+} from '@/lib/presence/draft-preview-token'
 import { prisma } from '@/lib/prisma'
 import type { PageSection } from '@/types/page-sections'
 
@@ -136,7 +139,11 @@ export default async function DraftPresencePreviewPage({ params }: DraftPreviewP
     }),
   ])
 
-  if (!page || !business || page.version !== claims.pageVersion) {
+  if (
+    !page ||
+    !business ||
+    !isPresenceDraftPreviewVersionCurrent(claims.pageVersion, page.version)
+  ) {
     notFound()
   }
 
