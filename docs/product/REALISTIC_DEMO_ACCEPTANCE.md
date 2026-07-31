@@ -12,10 +12,10 @@ The demo data remains code-backed and explicitly fictional. It must not create f
 
 ## Canonical demos
 
-| Demo | Sector | Route |
-| --- | --- | --- |
+| Demo                   | Sector                             | Route                                                                                   |
+| ---------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- |
 | Heavenly Pamper Palace | Private wellness and beauty studio | `/templates/heavenly-pamper-palace?businessName=Heavenly%20Pamper%20Palace&view=client` |
-| Crown & Canvas Studio | Textured hair and makeup studio | `/templates/editorial-beauty?businessName=Crown%20%26%20Canvas%20Studio&view=client` |
+| Crown & Canvas Studio  | Textured hair and makeup studio    | `/templates/editorial-beauty?businessName=Crown%20%26%20Canvas%20Studio&view=client`    |
 
 ## Acceptance contract
 
