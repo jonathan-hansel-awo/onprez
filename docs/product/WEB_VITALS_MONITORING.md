@@ -96,6 +96,7 @@ After every major homepage, public renderer, booking-flow, or dashboard UI chang
 5. Check the 75th percentile for LCP, INP, and CLS first, then use FCP and TTFB to diagnose loading regressions.
 6. Investigate any Sentry threshold warning and document whether it is fixed, accepted temporarily, or caused by insufficient sample size.
 7. Do not claim an improvement from one device, one page load, or a laboratory-only Lighthouse run.
+8. Record the review date, releases compared, sample limitations, and resulting action in the relevant deployment note or issue.
 
 ## Operational notes
 
