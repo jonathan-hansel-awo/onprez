@@ -58,6 +58,8 @@ Automated tests protect:
 - signup handoff without personal-data collection;
 - exclusion of the real Heavenly Pamper Palace name from current demo business identities.
 
+The catalogue-wide test iterates over `presenceTemplateCatalogue`, so adding a new public template without usable services, hours, policies, trust signals, or sample slots fails the regression contract.
+
 ## Manual review
 
 Before using any template in screenshots or onboarding:
