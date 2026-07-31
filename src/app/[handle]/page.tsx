@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
 import { SectionRenderer } from '@/components/presence/sections/SectionRenderer'
-import { PageSection } from '@/types/page-sections'
-import { ThemeProvider } from '@/contexts/ThemeProvider'
-import { Metadata } from 'next'
 import { StructuredData } from '@/components/seo/structured-data'
 import type { PresenceTrustSignals } from '@/components/presence/PresenceConversion'
+import { ThemeProvider } from '@/contexts/ThemeProvider'
+import { getCachedPublicPresence } from '@/lib/presence/public-presence-cache'
+import type { PageSection } from '@/types/page-sections'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 interface PresencePageProps {
   params: Promise<{
@@ -18,68 +18,12 @@ interface PresencePageProps {
 
 export default async function PresencePage({ params }: PresencePageProps) {
   const { handle } = await params
+  const presence = await getCachedPublicPresence(handle)
 
-  // Fetch business with all necessary data
-  const business = await prisma.business.findUnique({
-    where: { slug: handle },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      phone: true,
-      email: true,
-      address: true,
-      city: true,
-      state: true,
-      zipCode: true,
-      country: true,
-      website: true,
-      socialLinks: true,
-      settings: true,
-      branding: true,
-      isPublished: true,
-      logoUrl: true,
-      description: true,
-    },
-  })
+  if (!presence) notFound()
 
-  // 404 if business doesn't exist or isn't published
-  if (!business || !business.isPublished) {
-    notFound()
-  }
-
-  // Fetch published page (use publishedContent if available)
-  const [page, reviewSummary] = await Promise.all([
-    prisma.page.findFirst({
-      where: {
-        businessId: business.id,
-        slug: 'home',
-        isPublished: true,
-      },
-      select: {
-        id: true,
-        content: true,
-        publishedContent: true,
-        isPublished: true,
-        publishedAt: true,
-        version: true,
-      },
-    }),
-    prisma.review.aggregate({
-      where: { businessId: business.id, isPublished: true },
-      _avg: { rating: true },
-      _count: { rating: true },
-    }),
-  ])
-
-  // 404 if no published page found
-  if (!page || !page.isPublished) {
-    notFound()
-  }
-
-  // Use publishedContent if available, otherwise fall back to content
+  const { business, page, reviewSummary } = presence
   const sections = (page.publishedContent || page.content) as unknown as PageSection[]
-
   const settings = business.settings as any
   const theme = settings?.theme || {}
   const showInquiryForm = settings?.inquiriesEnabled !== false
@@ -91,8 +35,8 @@ export default async function PresencePage({ params }: PresencePageProps) {
 
   const trustSignals: PresenceTrustSignals = {
     location: [business.city, business.state].filter(Boolean).join(', ') || undefined,
-    reviewCount: reviewSummary._count.rating || undefined,
-    averageRating: reviewSummary._avg.rating || undefined,
+    reviewCount: reviewSummary.reviewCount || undefined,
+    averageRating: reviewSummary.averageRating || undefined,
     cancellationNoticeHours:
       typeof bookingSettings.cancellationDeadline === 'number'
         ? bookingSettings.cancellationDeadline
@@ -111,7 +55,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
         business={{
           name: business.name,
           description: business.description || undefined,
-          url: `https://onprez.com/${handle}`,
+          url: `https://onprez.com/${business.slug}`,
           logo: business.logoUrl || undefined,
           address: fullAddress || undefined,
           phone: business.phone || undefined,
@@ -129,7 +73,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
         >
           <SectionRenderer
             sections={sections}
-            businessHandle={handle}
+            businessHandle={business.slug}
             businessId={business.id}
             businessName={business.name}
             businessData={{
@@ -148,32 +92,19 @@ export default async function PresencePage({ params }: PresencePageProps) {
   )
 }
 
-// Generate metadata for SEO
 export async function generateMetadata({ params }: PresencePageProps): Promise<Metadata> {
   const { handle } = await params
+  const presence = await getCachedPublicPresence(handle)
 
-  const business = await prisma.business.findUnique({
-    where: { slug: handle },
-    select: {
-      name: true,
-      description: true,
-      seoTitle: true,
-      seoDescription: true,
-      seoKeywords: true,
-      logoUrl: true,
-      coverImageUrl: true,
-      city: true,
-      country: true,
-    },
-  })
-
-  if (!business) {
+  if (!presence) {
     return {
       title: 'Not Found - OnPrez',
       description: 'This page could not be found.',
+      robots: { index: false, follow: false },
     }
   }
 
+  const { business } = presence
   const title = business.seoTitle || `${business.name} - OnPrez`
   const description =
     business.seoDescription ||
@@ -181,6 +112,7 @@ export async function generateMetadata({ params }: PresencePageProps): Promise<M
     `Visit ${business.name} on OnPrez. Professional services and booking in ${business.city || business.country}.`
 
   const imageUrl = business.coverImageUrl || business.logoUrl || '/og-default.png'
+  const canonicalUrl = `https://onprez.com/${business.slug}`
 
   return {
     title,
@@ -189,7 +121,7 @@ export async function generateMetadata({ params }: PresencePageProps): Promise<M
     openGraph: {
       title,
       description,
-      url: `https://onprez.com/${handle}`,
+      url: canonicalUrl,
       siteName: 'OnPrez',
       images: [
         {
@@ -209,7 +141,7 @@ export async function generateMetadata({ params }: PresencePageProps): Promise<M
       images: [imageUrl],
     },
     alternates: {
-      canonical: `https://onprez.com/${handle}`,
+      canonical: canonicalUrl,
     },
     robots: {
       index: true,
