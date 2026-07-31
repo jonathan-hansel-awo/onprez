@@ -1,0 +1,42 @@
+name: P2-005 rename demo template
+
+on:
+  push:
+    branches:
+      - agent/p2-005-realistic-demo-revalidation
+
+permissions:
+  contents: write
+
+jobs:
+  rename-template:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: agent/p2-005-realistic-demo-revalidation
+          fetch-depth: 0
+
+      - name: Replace the real customer-facing template name
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/data/presence-template-catalogue.ts')
+          content = path.read_text()
+          old = "    slug: 'heavenly-pamper-palace',\n    name: 'Heavenly Pamper Palace',"
+          new = "    slug: 'heavenly-pamper-palace',\n    name: 'Golden Serenity',"
+          if old not in content:
+              raise SystemExit('Expected template catalogue text was not found')
+          path.write_text(content.replace(old, new, 1))
+          PY
+
+      - name: Remove temporary workflow and commit
+        run: |
+          rm .github/workflows/p2-005-rename-demo-template.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/presence-template-catalogue.ts .github/workflows/p2-005-rename-demo-template.yml
+          git commit -m "refactor: rename customer-derived template"
+          git push origin HEAD:agent/p2-005-realistic-demo-revalidation
