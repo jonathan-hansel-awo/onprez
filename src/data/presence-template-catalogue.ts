@@ -76,7 +76,7 @@ export const presenceTemplateCatalogue: TemplateCatalogueItem[] = [
   },
   {
     slug: 'heavenly-pamper-palace',
-    name: 'Heavenly Pamper Palace',
+    name: 'Golden Serenity',
     category: 'WELLNESS',
     description:
       'A bright cream-and-gold flagship spa template with glamorous serenity and a guided booking preview.',
