@@ -62,9 +62,6 @@ export async function POST(request: NextRequest) {
       updateData.publishedAt = new Date()
       updateData.lastPublishedBy = user.id
       updateData.version = { increment: 1 }
-    } else {
-      updateData.publishedAt = null
-      updateData.lastPublishedBy = null
     }
 
     const page = await prisma.page.update({
