@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth/get-user'
-import { updateBusinessSchema, businessSettingsQuerySchema } from '@/lib/validation/business'
-import { DEFAULT_BUSINESS_SETTINGS } from '@/types/business'
 import { businessAuthErrorResponse } from '@/lib/auth/business-access'
+import { getCurrentUser } from '@/lib/auth/get-user'
 import {
   resolveReadableBusinessContext,
   resolveWritableBusinessContext,
 } from '@/lib/auth/business-route-utils'
+import { invalidatePublicPresence } from '@/lib/presence/public-presence-cache'
+import { prisma } from '@/lib/prisma'
+import { DEFAULT_BUSINESS_SETTINGS } from '@/types/business'
+import { businessSettingsQuerySchema, updateBusinessSchema } from '@/lib/validation/business'
 
 function getClientIp(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -184,6 +185,7 @@ export async function PUT(request: NextRequest) {
       where: { id: context.businessId },
       select: {
         id: true,
+        slug: true,
         settings: true,
         socialLinks: true,
         branding: true,
@@ -247,6 +249,11 @@ export async function PUT(request: NextRequest) {
         updatedAt: true,
       },
     })
+
+    invalidatePublicPresence(existingBusiness.slug)
+    if (updatedBusiness.slug !== existingBusiness.slug) {
+      invalidatePublicPresence(updatedBusiness.slug)
+    }
 
     await prisma.securityLog.create({
       data: {
