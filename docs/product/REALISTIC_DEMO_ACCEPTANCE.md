@@ -8,14 +8,14 @@
 
 An OnPrez template preview must behave like a credible service-business page rather than a decorative mock-up. It should expose long-copy, service-card, mobile, operational-detail, and booking-flow weaknesses before customers encounter them.
 
-All preview data remains code-backed and explicitly fictional. It must not create fake production businesses, customers, reviews, appointments, emails, payments, or analytics records.
+All preview data remains code-backed and explicitly fictional. It must not create fake production businesses, customers, reviews, appointments, emails, payments, or analytics records. This contract also applies when a visitor enters a template through the homepage or `/examples` gallery.
 
 ## Detailed canonical demos
 
-| Demo                    | Sector                             | Route                                                                                    |
-| ----------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- |
-| Aurelia Wellness House  | Private wellness and beauty studio | `/templates/heavenly-pamper-palace?businessName=Aurelia%20Wellness%20House&view=client`  |
-| Crown & Canvas Studio   | Textured hair and makeup studio    | `/templates/editorial-beauty?businessName=Crown%20%26%20Canvas%20Studio&view=client`     |
+| Demo                   | Sector                             | Route                                                                                   |
+| ---------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- |
+| Aurelia Wellness House | Private wellness and beauty studio | `/templates/heavenly-pamper-palace?businessName=Aurelia%20Wellness%20House&view=client` |
+| Crown & Canvas Studio  | Textured hair and makeup studio    | `/templates/editorial-beauty?businessName=Crown%20%26%20Canvas%20Studio&view=client`    |
 
 The original `heavenly-pamper-palace` route slug remains for backwards compatibility, but the visible template is now named **Golden Serenity** and its fictional business identity is **Aurelia Wellness House**. The real Heavenly Pamper Palace business is not represented as demo content.
 
