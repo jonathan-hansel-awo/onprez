@@ -3,7 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { Clock3, ExternalLink, FilePenLine, Globe2, RefreshCw } from 'lucide-react'
+import {
+  Clock3,
+  Copy,
+  ExternalLink,
+  FilePenLine,
+  Globe2,
+  LoaderCircle,
+  RefreshCw,
+} from 'lucide-react'
 import {
   formatPublishedAt,
   getPresencePublicationState,
@@ -11,16 +19,30 @@ import {
 } from '@/lib/presence/publication-state'
 
 interface PresencePageRecord {
+  id: string
   slug: string
   content: unknown
   publishedContent: unknown | null
   isPublished: boolean
   publishedAt: string | null
+  version: number
 }
 
 interface PublicationStatusData {
+  businessId: string
   businessSlug: string
+  pageId: string
+  pageVersion: number
   state: PresencePublicationState
+}
+
+interface PreviewLinkResponse {
+  success: boolean
+  data?: {
+    previewUrl: string
+    expiresAt: string
+  }
+  error?: string
 }
 
 const toneClasses: Record<PresencePublicationState['kind'], string> = {
@@ -37,11 +59,38 @@ const iconClasses: Record<PresencePublicationState['kind'], string> = {
   'published-without-snapshot': 'bg-blue-200 text-blue-800',
 }
 
+async function copyText(value: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = value
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  const copied = document.execCommand('copy')
+  document.body.removeChild(textarea)
+
+  if (!copied) {
+    throw new Error('Clipboard access is unavailable')
+  }
+}
+
 export function PresencePublicationStatus() {
   const pathname = usePathname()
   const isEditor = pathname.endsWith('/editor')
   const [status, setStatus] = useState<PublicationStatusData | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [generatingPreview, setGeneratingPreview] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewFeedback, setPreviewFeedback] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
 
   const refreshStatus = useCallback(async () => {
     setRefreshing(true)
@@ -70,7 +119,10 @@ export function PresencePublicationStatus() {
       }
 
       setStatus({
+        businessId: business.id,
         businessSlug: business.slug,
+        pageId: page.id,
+        pageVersion: page.version,
         state: getPresencePublicationState({
           isPublished: page.isPublished,
           draftContent: page.content,
@@ -97,6 +149,59 @@ export function PresencePublicationStatus() {
       window.removeEventListener('focus', handleFocus)
     }
   }, [isEditor, refreshStatus])
+
+  useEffect(() => {
+    setPreviewUrl(null)
+    setPreviewFeedback(null)
+  }, [status?.pageVersion])
+
+  async function copyDraftPreviewLink() {
+    if (!status || generatingPreview) return
+
+    setGeneratingPreview(true)
+    setPreviewFeedback(null)
+
+    try {
+      const response = await fetch('/api/presence/preview-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: status.businessId,
+          pageId: status.pageId,
+        }),
+      })
+      const payload = (await response.json()) as PreviewLinkResponse
+
+      if (!response.ok || !payload.success || !payload.data) {
+        throw new Error(payload.error || 'The private preview link could not be created.')
+      }
+
+      setPreviewUrl(payload.data.previewUrl)
+
+      try {
+        await copyText(payload.data.previewUrl)
+        setPreviewFeedback({
+          type: 'success',
+          message: `Copied. The link expires ${formatPublishedAt(payload.data.expiresAt)} and becomes invalid when you publish.`,
+        })
+      } catch {
+        setPreviewFeedback({
+          type: 'success',
+          message: `Private link ready. Open it below and copy it from the address bar. It expires ${formatPublishedAt(payload.data.expiresAt)}.`,
+        })
+      }
+    } catch (error) {
+      setPreviewFeedback({
+        type: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'The private preview link could not be created.',
+      })
+    } finally {
+      setGeneratingPreview(false)
+    }
+  }
 
   if (!status) return null
 
@@ -143,16 +248,55 @@ export function PresencePublicationStatus() {
             {state.hasUnpublishedChanges && <span>Publish again to update the live page.</span>}
           </div>
 
-          {state.kind !== 'draft' && (
-            <Link
-              href={`/${businessSlug}`}
-              target="_blank"
-              className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border border-current/20 bg-white/70 px-3 py-2 text-sm font-bold transition hover:bg-white"
+          <div className="mt-3 flex flex-wrap gap-2">
+            {state.kind !== 'draft' && (
+              <Link
+                href={`/${businessSlug}`}
+                target="_blank"
+                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-current/20 bg-white/70 px-3 py-2 text-sm font-bold transition hover:bg-white"
+              >
+                View what customers see
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            )}
+
+            <button
+              type="button"
+              onClick={() => void copyDraftPreviewLink()}
+              disabled={generatingPreview}
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-current/20 bg-white/70 px-3 py-2 text-sm font-bold transition hover:bg-white disabled:cursor-wait disabled:opacity-60"
             >
-              View what customers see
-              <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          )}
+              {generatingPreview ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              )}
+              {generatingPreview ? 'Creating private link...' : 'Copy draft preview link'}
+            </button>
+
+            {previewUrl && (
+              <Link
+                href={previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-current/20 bg-white/70 px-3 py-2 text-sm font-bold transition hover:bg-white"
+              >
+                Open draft preview
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            )}
+          </div>
+
+          <p
+            className={`mt-2 text-xs leading-5 ${
+              previewFeedback?.type === 'error' ? 'font-semibold text-red-700' : 'opacity-80'
+            }`}
+            role={previewFeedback?.type === 'error' ? 'alert' : 'status'}
+            aria-live="polite"
+          >
+            {previewFeedback?.message ||
+              'Private preview links show the latest saved draft, expire after 24 hours, and stop working when you publish.'}
+          </p>
         </div>
       </div>
     </div>
