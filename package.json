@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --write docs/product/REALISTIC_DEMO_ACCEPTANCE.md src/components/templates/RealisticDemoBookingJourney.tsx src/components/templates/__tests__/RealisticDemoBookingJourney.test.tsx && git diff -- docs/product/REALISTIC_DEMO_ACCEPTANCE.md src/components/templates/RealisticDemoBookingJourney.tsx src/components/templates/__tests__/RealisticDemoBookingJourney.test.tsx && exit 1",
+    "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
