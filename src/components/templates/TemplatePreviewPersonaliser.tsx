@@ -4,6 +4,10 @@ import type { BusinessCategory } from '@prisma/client'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { SectionRenderer } from '@/components/presence/sections/SectionRenderer'
+import {
+  getRealisticDemoFixture,
+  RealisticDemoBookingJourney,
+} from '@/components/templates/RealisticDemoBookingJourney'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
 import type { TemplateCatalogueItem } from '@/data/presence-template-catalogue'
 import { createCanonicalPresencePageContent } from '@/lib/templates/canonical-template-engine'
@@ -41,6 +45,8 @@ export function TemplatePreviewPersonaliser({
       }),
     [businessName, template.slug]
   )
+  const realisticDemo = getRealisticDemoFixture(template.slug)
+  const bookingHref = realisticDemo ? '#demo-booking' : signupHref
 
   return (
     <main className="min-h-screen bg-white">
@@ -128,13 +134,25 @@ export function TemplatePreviewPersonaliser({
             businessName={businessName}
             businessData={canonicalPage.previewBusinessData || {}}
             servicesOverride={canonicalPage.previewServices}
-            bookingHrefOverride={signupHref}
+            bookingHrefOverride={bookingHref}
             showInquiryForm={false}
-            trustSignals={{
-              responseTime: 'Replies within one business day',
-              credentials: ['Clear services', 'Live availability', 'Mobile booking'],
-            }}
+            trustSignals={
+              realisticDemo
+                ? {
+                    location: `${realisticDemo.location.city}, ${realisticDemo.location.postcode}`,
+                    responseTime: 'Replies within one business day',
+                    credentials: realisticDemo.owner.credentials,
+                  }
+                : {
+                    responseTime: 'Replies within one business day',
+                    credentials: ['Clear services', 'Live availability', 'Mobile booking'],
+                  }
+            }
           />
+
+          {realisticDemo && (
+            <RealisticDemoBookingJourney templateSlug={template.slug} signupHref={signupHref} />
+          )}
         </div>
       </ThemeProvider>
 
