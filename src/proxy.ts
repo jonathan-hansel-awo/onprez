@@ -18,10 +18,18 @@ function getTraceIds(request: NextRequest) {
 
 function addTraceHeaders(
   response: NextResponse,
-  trace: { requestId: string; correlationId: string }
+  trace: { requestId: string; correlationId: string },
+  pathname?: string
 ) {
   response.headers.set('x-request-id', trace.requestId)
   response.headers.set('x-correlation-id', trace.correlationId)
+
+  if (pathname && matchesRoute(pathname, '/preview/presence')) {
+    response.headers.set('Cache-Control', 'private, no-store')
+    response.headers.set('Referrer-Policy', 'no-referrer')
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet')
+  }
+
   return response
 }
 
@@ -32,7 +40,11 @@ function continueWithTrace(
   const headers = new Headers(request.headers)
   headers.set('x-request-id', trace.requestId)
   headers.set('x-correlation-id', trace.correlationId)
-  return addTraceHeaders(NextResponse.next({ request: { headers } }), trace)
+  return addTraceHeaders(
+    NextResponse.next({ request: { headers } }),
+    trace,
+    request.nextUrl.pathname
+  )
 }
 
 function matchesRoute(pathname: string, route: string) {
@@ -133,7 +145,7 @@ export async function proxy(request: NextRequest) {
 
   try {
     if (stateChangingApiRequest && !isCsrfSafe(request)) {
-      return addTraceHeaders(csrfRejectedResponse(), trace)
+      return addTraceHeaders(csrfRejectedResponse(), trace, request.nextUrl.pathname)
     }
 
     const { pathname } = request.nextUrl
@@ -147,7 +159,7 @@ export async function proxy(request: NextRequest) {
     const accessToken = request.cookies.get('accessToken')?.value?.trim()
 
     if (!accessToken) {
-      return addTraceHeaders(redirectToLogin(request), trace)
+      return addTraceHeaders(redirectToLogin(request), trace, request.nextUrl.pathname)
     }
 
     // Important:
@@ -171,11 +183,11 @@ export async function proxy(request: NextRequest) {
 
     // Fail closed for protected pages and unsafe API mutations.
     if (stateChangingApiRequest) {
-      return addTraceHeaders(csrfRejectedResponse(), trace)
+      return addTraceHeaders(csrfRejectedResponse(), trace, request.nextUrl.pathname)
     }
 
     if (isProtectedRoute(request.nextUrl.pathname)) {
-      return addTraceHeaders(redirectToLogin(request), trace)
+      return addTraceHeaders(redirectToLogin(request), trace, request.nextUrl.pathname)
     }
 
     return continueWithTrace(request, trace)
