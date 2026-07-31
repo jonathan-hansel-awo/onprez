@@ -110,8 +110,7 @@ export function PresencePublicationStatus() {
       })
       const pagePayload = await pageResponse.json()
       const page = (pagePayload.success ? pagePayload.data?.pages?.[0] : null) as
-        | PresencePageRecord
-        | undefined
+        PresencePageRecord | undefined
 
       if (!page) {
         setStatus(null)
@@ -194,9 +193,7 @@ export function PresencePublicationStatus() {
       setPreviewFeedback({
         type: 'error',
         message:
-          error instanceof Error
-            ? error.message
-            : 'The private preview link could not be created.',
+          error instanceof Error ? error.message : 'The private preview link could not be created.',
       })
     } finally {
       setGeneratingPreview(false)

@@ -86,9 +86,7 @@ describe('proxy route protection', () => {
     expectNext(response)
     expect(response.headers.get('cache-control')).toBe('private, no-store')
     expect(response.headers.get('referrer-policy')).toBe('no-referrer')
-    expect(response.headers.get('x-robots-tag')).toBe(
-      'noindex, nofollow, noarchive, nosnippet'
-    )
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow, noarchive, nosnippet')
   })
 
   it('allows auth routes through', async () => {

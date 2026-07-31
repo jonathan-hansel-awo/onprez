@@ -106,9 +106,7 @@ export function createPresenceDraftPreviewToken(input: {
   }
 }
 
-export function verifyPresenceDraftPreviewToken(
-  token: string
-): VerifiedPresenceDraftPreviewToken {
+export function verifyPresenceDraftPreviewToken(token: string): VerifiedPresenceDraftPreviewToken {
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET, {
       algorithms: ['HS256'],
