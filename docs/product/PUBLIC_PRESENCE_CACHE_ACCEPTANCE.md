@@ -46,6 +46,8 @@ The shared `invalidatePublicPresence(handle)` operation expires both the handle 
 | Owner or manager changes the public theme                              | Expire the handle immediately                                                 |
 | Ordinary editor auto-save or draft save                                | Do not invalidate; customers must continue seeing the last published snapshot |
 
+Invalidation must run only after the durable write succeeds. Authentication failures, validation failures, missing records, and failed database writes must not evict a valid public page.
+
 Any future mutation that changes a field read by the cached loader must call the same invalidation helper in the successful write path.
 
 ## Metadata and indexing
