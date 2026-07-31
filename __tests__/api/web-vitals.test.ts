@@ -25,7 +25,9 @@ jest.mock('@/lib/observability/logger', () => ({
     error: jest.fn(),
     debug: jest.fn(),
   },
-  withRequestLogging: jest.fn((_request: NextRequest, handler: () => Promise<Response>) => handler()),
+  withRequestLogging: jest.fn((_request: NextRequest, handler: () => Promise<Response>) =>
+    handler()
+  ),
 }))
 
 const mockLoggerInfo = jest.mocked(logger.info)
@@ -93,10 +95,7 @@ describe('POST /api/monitoring/web-vitals', () => {
       'web_vital.reported',
       expect.objectContaining({ rating: 'poor', poorThreshold: 4_500 })
     )
-    expect(mockCaptureMessage).toHaveBeenCalledWith(
-      'Core Web Vital threshold breached',
-      'warning'
-    )
+    expect(mockCaptureMessage).toHaveBeenCalledWith('Core Web Vital threshold breached', 'warning')
   })
 
   it('rejects invalid or oversized reports without logging them', async () => {
