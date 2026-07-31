@@ -1,3 +1,4 @@
+# Trigger after workflow creation
 name: Apply Regent Barber contrast fix
 
 on:
