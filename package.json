@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
-    "format:check": "python scripts/reconcile-p2-012-tracker.py && npx prettier --write docs/CRITICAL_ACTION_PLAN_PROGRESS.md && echo TRACKER_BASE64_START && base64 -w0 docs/CRITICAL_ACTION_PLAN_PROGRESS.md && echo && echo TRACKER_BASE64_END && exit 1",
+    "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
