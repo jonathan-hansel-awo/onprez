@@ -56,17 +56,25 @@ export function PresenceTrustStrip({ signals }: { signals: PresenceTrustSignals 
 
 export function SectionBookingCta({ bookingHref, businessName }: BookingLinkProps) {
   return (
-    <div className="hidden border-y border-gray-200 bg-white px-4 py-6 md:block">
+    <div
+      data-presence-booking-cta="section"
+      className="hidden border-y border-current/10 px-4 py-6 md:block"
+      style={{
+        backgroundColor: 'var(--theme-bg, #ffffff)',
+        color: 'var(--theme-text, #111827)',
+      }}
+    >
       <div className="container mx-auto flex max-w-4xl items-center justify-between gap-6">
         <div>
-          <p className="font-semibold text-gray-900">Ready to book with {businessName}?</p>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="font-semibold">Ready to book with {businessName}?</p>
+          <p className="mt-1 text-sm opacity-70">
             Choose a service and see live appointment times.
           </p>
         </div>
         <Link
           href={bookingHref}
           className="theme-button-primary inline-flex shrink-0 items-center gap-2 px-6 py-3 font-semibold"
+          aria-label={`Check live availability with ${businessName}`}
         >
           <Calendar className="h-4 w-4" aria-hidden="true" />
           Check availability
@@ -78,7 +86,16 @@ export function SectionBookingCta({ bookingHref, businessName }: BookingLinkProp
 
 export function StickyMobileBookingCta({ bookingHref, businessName }: BookingLinkProps) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[80] border-t border-gray-200 bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur md:hidden">
+    <div
+      role="region"
+      aria-label="Booking shortcut"
+      data-presence-booking-cta="sticky-mobile"
+      className="fixed inset-x-0 bottom-0 z-[80] border-t border-current/10 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur md:hidden"
+      style={{
+        backgroundColor: 'var(--theme-bg, #ffffff)',
+        color: 'var(--theme-text, #111827)',
+      }}
+    >
       <Link
         href={bookingHref}
         className="theme-button-primary flex min-h-12 w-full items-center justify-center gap-2 px-5 py-3 text-center font-semibold"

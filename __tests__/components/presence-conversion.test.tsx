@@ -4,6 +4,10 @@ import {
   SectionBookingCta,
   StickyMobileBookingCta,
 } from '@/components/presence/PresenceConversion'
+import {
+  CONVERSION_CTA_SECTION_TYPES,
+  SectionRenderer,
+} from '@/components/presence/sections/SectionRenderer'
 import { HeroSection } from '@/components/presence/sections/HeroSection'
 import { ServicesSection } from '@/components/presence/sections/ServicesSection'
 import type {
@@ -38,7 +42,7 @@ describe('public presence conversion controls', () => {
   })
 
   it('links both repeated and sticky booking calls to the public booking flow', () => {
-    render(
+    const { container } = render(
       <>
         <SectionBookingCta bookingHref="/sage-studio/book" businessName="Sage Studio" />
         <StickyMobileBookingCta bookingHref="/sage-studio/book" businessName="Sage Studio" />
@@ -48,6 +52,56 @@ describe('public presence conversion controls', () => {
     const bookingLinks = screen.getAllByRole('link')
     expect(bookingLinks).toHaveLength(2)
     bookingLinks.forEach(link => expect(link).toHaveAttribute('href', '/sage-studio/book'))
+
+    expect(container.querySelector('[data-presence-booking-cta="section"]')).toBeInTheDocument()
+    expect(
+      container.querySelector('[data-presence-booking-cta="sticky-mobile"]')
+    ).toBeInTheDocument()
+  })
+
+  it('keeps the mobile booking shortcut fixed, safe-area aware, and touch accessible', () => {
+    const { container } = render(
+      <StickyMobileBookingCta bookingHref="/sage-studio/book" businessName="Sage Studio" />
+    )
+
+    const shortcut = container.querySelector('[data-presence-booking-cta="sticky-mobile"]')
+    expect(shortcut).toHaveAttribute('role', 'region')
+    expect(shortcut).toHaveAttribute('aria-label', 'Booking shortcut')
+    expect(shortcut).toHaveClass('fixed', 'inset-x-0', 'bottom-0', 'md:hidden')
+    expect(shortcut?.className).toContain('env(safe-area-inset-bottom)')
+    expect(shortcut?.getAttribute('style')).toContain('var(--theme-bg')
+    expect(screen.getByRole('link', { name: /book an appointment with sage studio/i })).toHaveClass(
+      'min-h-12'
+    )
+  })
+
+  it('reserves safe-area-aware page space and repeats prompts after high-intent sections', () => {
+    const section: HeroSectionType = {
+      id: 'hero',
+      type: 'HERO',
+      order: 0,
+      isVisible: true,
+      data: {
+        title: 'Professional massage in Ely',
+        ctaText: 'Book an appointment',
+        ctaLink: '#contact',
+      },
+    }
+
+    const { container } = render(
+      <SectionRenderer
+        sections={[section]}
+        businessHandle="sage-studio"
+        businessId="business-1"
+        businessName="Sage Studio"
+        businessData={{}}
+        showInquiryForm={false}
+      />
+    )
+
+    const root = container.querySelector('[data-presence-root]')
+    expect(root?.className).toContain('env(safe-area-inset-bottom)')
+    expect(CONVERSION_CTA_SECTION_TYPES).toEqual(['SERVICES', 'TESTIMONIALS', 'FAQ'])
   })
 
   it('turns the default hero contact CTA into a direct booking action', () => {

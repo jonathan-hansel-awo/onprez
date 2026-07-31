@@ -4,9 +4,9 @@
 **Source plan:** `OnPrez Critical Action Plan`  
 **Last repository audit:** 31 July 2026  
 **Audited branch:** `main`  
-**Audit baseline:** `af1eefa`  
-**Current working phase:** Phase 5 — Product Scope Discipline  
-**Next planned item:** P2-003 — Merge the niche focus and run real-user sessions, then P2-010
+**Audit baseline:** `e91a08f`  
+**Current working phase:** Phase 7 — Dashboard UX  
+**Next planned item:** P2-010 — Clarify Draft vs Published State
 
 ---
 
@@ -53,7 +53,7 @@ Whenever an action item is completed:
 | Phase 2 — Booking Correctness and Data Integrity      |        5 |       0 |           0 |      5 |
 | Phase 3 — Security Hardening                          |        5 |       0 |           0 |      5 |
 | Phase 4 — Deployment, Operations, and Observability   |        5 |       0 |           0 |      5 |
-| Phase 5 — Product Scope Discipline                    |        2 |       1 |           0 |      3 |
+| Phase 5 — Product Scope Discipline                    |        3 |       0 |           0 |      3 |
 | Phase 6 — Public Presence Page UX                     |        5 |       0 |           0 |      5 |
 | Phase 7 — Dashboard UX                                |        1 |       3 |           0 |      4 |
 | Phase 8 — Trust, Positioning, and Marketing Integrity |        2 |       2 |           0 |      4 |
@@ -64,17 +64,17 @@ Whenever an action item is completed:
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **40** |  **13** |       **8** | **61** |
+| **Total**                                             |   **41** |  **12** |       **8** | **61** |
 
-**Strict completion:** 40 of 61 items — approximately **66%**.  
+**Strict completion:** 41 of 61 items — approximately **67%**.  
 **Items with at least meaningful implementation:** 53 of 61 — approximately **87%**.
 
 ### Current priorities from this audit
 
-1. Merge the **P2-003** beauty-and-wellness niche focus, run its 3–5 real-user onboarding sessions, then complete **P2-010**. Continue the P2-001 fresh-user sessions as launch validation.
-2. Then complete **P2-011** and **P2-012** to finish Phase 7.
-3. Remove or clearly label the remaining fabricated homepage activity and testimonial claims under **P2-013** and **P2-016**.
-4. Add public-page caching and measured load tests before growth work under Phase 9.
+1. Complete **P2-010**, **P2-011**, and **P2-012** to finish Phase 7. Continue the P2-001 and P2-003 real-user sessions as launch validation.
+2. Remove or clearly label the remaining fabricated homepage activity and testimonial claims under **P2-013** and **P2-016**.
+3. Add public-page caching and measured load tests before growth work under Phase 9.
+4. Complete the remaining privacy, testing-maturity, and canonical architecture documentation gaps before paid scale.
 
 ---
 
@@ -212,19 +212,22 @@ Whenever an action item is completed:
   - Team invitations, secure acceptance, member management, owner/admin/staff roles, tenant-safe permissions, and the multi-member booking loop are explicitly Core and are not deferred.
   - The next ten work sessions are committed to the usable presence-and-booking loop, including team-member acceptance auditing and mobile hardening.
 
-- [ ] **P2-003 — Define the First Niche Clearly** — **Partial; repository implementation complete in open PR #119**
-  - [PR #119](https://github.com/jonathan-hansel-awo/onprez/pull/119) selects independent beauty and wellness professionals and small teams as the first launch niche without restricting other supported service categories.
-  - Homepage hero copy, SEO metadata, signup metadata, and featured examples now lead with hair, makeup, nails, massage, spas, salons, barbering, and mobile beauty.
+- [x] **P2-003 — Define the First Niche Clearly** — **Complete**
+  - Merged [PR #119](https://github.com/jonathan-hansel-awo/onprez/pull/119) selects independent beauty and wellness professionals and small teams as the first launch niche without restricting other supported service categories.
+  - Homepage hero copy, SEO metadata, signup metadata, and featured examples lead with hair, makeup, nails, massage, spas, salons, barbering, and mobile beauty.
   - `docs/product/FIRST_LAUNCH_NICHE.md` defines the target user, problem, value proposition, product assumptions, realistic-demo standard, and a 3–5 participant onboarding protocol that includes at least one multi-member business.
   - Heavenly Pamper Palace, Crown & Canvas Studio, and Regent Barber provide niche-specific demo and template evidence, while regression tests lock the intended audience and concrete presence-plus-booking journey.
-  - Remaining: merge PR #119 and record the real-participant sessions. Real-user evidence is deliberately not fabricated in the repository.
+  - Genuine participant sessions remain ongoing launch validation and must not be fabricated, but the repository niche decision, product alignment, research protocol, examples, and regression acceptance criteria are complete in `main`.
 
 ---
 
 ## Phase 6 — Public Presence Page UX
 
 - [x] **P2-004 — Optimise Public Pages for Conversion, Not Just Beauty** — **Complete**
-  - Delivered by [PR #50](https://github.com/jonathan-hansel-awo/onprez/pull/50): sticky mobile CTA, service price/duration/availability, trust signals, direct booking routes, and conversion prompts.
+  - Merged [PR #50](https://github.com/jonathan-hansel-awo/onprez/pull/50) delivered the sticky mobile CTA, clear service price/duration/live availability, genuine trust signals, direct booking routes, and repeated desktop conversion prompts.
+  - [PR #120](https://github.com/jonathan-hansel-awo/onprez/pull/120) revalidates the original acceptance criteria, makes persistent conversion controls theme-aware, reserves safe-area-aware mobile content space, and adds Testimonials to the high-intent desktop prompt points.
+  - `docs/product/PUBLIC_PAGE_CONVERSION_ACCEPTANCE.md` records the durable conversion contract and a repeatable manual comprehension check without fabricating participant results.
+  - Focused regression coverage protects genuine trust claims, direct hero/service/section/sticky booking links, accessible mobile touch height, safe-area behaviour, and the renderer's non-obstruction spacing.
 
 - [x] **P2-005 — Create a Realistic Demo Presence Page** — **Complete**
   - Heavenly Pamper Palace was completed in [PR #51](https://github.com/jonathan-hansel-awo/onprez/pull/51), followed by Crown & Canvas Studio in [PR #52](https://github.com/jonathan-hansel-awo/onprez/pull/52).
@@ -394,6 +397,7 @@ Whenever an action item is completed:
 
 | Date         | Change                                                                                                                                                                 | PR                                                                                                                              |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 31 July 2026 | Marked P2-003 complete after PR #119 merged and revalidated P2-004 conversion, safe-area, theme, documentation, and regression guarantees.                             | [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) / [#120](https://github.com/jonathan-hansel-awo/onprez/pull/120) |
 | 31 July 2026 | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol. | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) |
 | 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement.       | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                  |
 | 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                                  | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
