@@ -4,8 +4,8 @@ import { prisma } from '@/lib/prisma'
 export const PUBLIC_PRESENCE_REVALIDATE_SECONDS = 300
 const PUBLIC_PRESENCE_CACHE_KEY = 'public-presence-by-handle'
 
-export function normalizePublicPresenceHandle(handle: string): string {
-  return handle.trim().toLowerCase()
+export function normalizePublicPresenceHandle(handle?: string | null): string {
+  return typeof handle === 'string' ? handle.trim().toLowerCase() : ''
 }
 
 export function publicPresenceCacheTag(handle: string): string {
@@ -89,10 +89,29 @@ export async function getCachedPublicPresence(handle: string) {
   )()
 }
 
-export function invalidatePublicPresence(handle: string) {
+function reportInvalidationFailure(
+  operation: 'tag' | 'path',
+  normalizedHandle: string,
+  error: unknown
+) {
+  if (process.env.NODE_ENV === 'test') return
+
+  console.error(`Failed to revalidate public presence ${operation} for ${normalizedHandle}:`, error)
+}
+
+export function invalidatePublicPresence(handle?: string | null) {
   const normalizedHandle = normalizePublicPresenceHandle(handle)
   if (!normalizedHandle) return
 
-  revalidateTag(publicPresenceCacheTag(normalizedHandle), { expire: 0 })
-  revalidatePath(`/${normalizedHandle}`)
+  try {
+    revalidateTag(publicPresenceCacheTag(normalizedHandle), { expire: 0 })
+  } catch (error) {
+    reportInvalidationFailure('tag', normalizedHandle, error)
+  }
+
+  try {
+    revalidatePath(`/${normalizedHandle}`)
+  } catch (error) {
+    reportInvalidationFailure('path', normalizedHandle, error)
+  }
 }
