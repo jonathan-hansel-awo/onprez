@@ -4,7 +4,7 @@
 **Source plan:** `OnPrez Critical Action Plan`  
 **Last repository audit:** 31 July 2026  
 **Audited branch:** `main`  
-**Audit baseline:** `e91a08f`  
+**Audit baseline:** `e4fe8dd`  
 **Current working phase:** Phase 7 — Dashboard UX  
 **Next planned item:** P2-010 — Clarify Draft vs Published State
 
@@ -41,6 +41,7 @@ Whenever an action item is completed:
 4. Update the phase summary, overall totals, audit date, current phase, and next planned item.
 5. Record any production migration, secret, provider configuration, or manual verification still required.
 6. Do not mark an item complete from a draft or open PR.
+7. When the user says “next item”, first reconcile merged PRs against this tracker, skip every Complete item, and select the earliest Partial or Not started item.
 
 ---
 
@@ -203,7 +204,7 @@ Whenever an action item is completed:
   - `docs/product/FIRST_SELLABLE_USER_LOOP.md` defines the minimum sellable version, a strict 8 minute 45 second target budget, the mobile acceptance-session protocol, and an evidence log for fresh users.
   - `GET /api/dashboard/first-sellable-loop` provides authenticated, tenant-scoped milestone analytics from durable OnPrez records without sending customer PII to a third-party analytics provider.
   - Stable event names and regression tests cover milestone order, progress, elapsed time, the under-ten-minute target, authentication, tenant scoping, and the requirement for a real `USER` booking transition before the final milestone completes.
-  - The existing guided checklist from [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56) continues to support the setup journey.
+  - The existing guided checklist from [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56) continues to support the setup journey. Merged [PR #117](https://github.com/jonathan-hansel-awo/onprez/pull/117) restored the repository quality-gate formatting without changing behaviour.
   - Fresh-account mobile sessions remain part of launch validation and ongoing product evidence, but the repository definition, target, instrumentation, and regression acceptance criteria are now complete in `main`.
 
 - [x] **P2-002 — Ruthlessly Defer Non-Core Features** — **Complete**
@@ -216,7 +217,7 @@ Whenever an action item is completed:
   - Merged [PR #119](https://github.com/jonathan-hansel-awo/onprez/pull/119) selects independent beauty and wellness professionals and small teams as the first launch niche without restricting other supported service categories.
   - Homepage hero copy, SEO metadata, signup metadata, and featured examples lead with hair, makeup, nails, massage, spas, salons, barbering, and mobile beauty.
   - `docs/product/FIRST_LAUNCH_NICHE.md` defines the target user, problem, value proposition, product assumptions, realistic-demo standard, and a 3–5 participant onboarding protocol that includes at least one multi-member business.
-  - Heavenly Pamper Palace, Crown & Canvas Studio, and Regent Barber provide niche-specific demo and template evidence, while regression tests lock the intended audience and concrete presence-plus-booking journey.
+  - Aurelia Wellness House, Crown & Canvas Studio, and Regent Barber provide niche-specific demo and template evidence, while regression tests lock the intended audience and concrete presence-plus-booking journey. The real Heavenly Pamper Palace identity is no longer used as fictional demo content.
   - Genuine participant sessions remain ongoing launch validation and must not be fabricated, but the repository niche decision, product alignment, research protocol, examples, and regression acceptance criteria are complete in `main`.
 
 ---
@@ -225,12 +226,15 @@ Whenever an action item is completed:
 
 - [x] **P2-004 — Optimise Public Pages for Conversion, Not Just Beauty** — **Complete**
   - Merged [PR #50](https://github.com/jonathan-hansel-awo/onprez/pull/50) delivered the sticky mobile CTA, clear service price/duration/live availability, genuine trust signals, direct booking routes, and repeated desktop conversion prompts.
-  - [PR #120](https://github.com/jonathan-hansel-awo/onprez/pull/120) revalidates the original acceptance criteria, makes persistent conversion controls theme-aware, reserves safe-area-aware mobile content space, and adds Testimonials to the high-intent desktop prompt points.
+  - Merged [PR #120](https://github.com/jonathan-hansel-awo/onprez/pull/120) revalidates the original acceptance criteria, makes persistent conversion controls theme-aware, reserves safe-area-aware mobile content space, adds Testimonials to the high-intent desktop prompt points, and fixes Regent Barber contrast.
   - `docs/product/PUBLIC_PAGE_CONVERSION_ACCEPTANCE.md` records the durable conversion contract and a repeatable manual comprehension check without fabricating participant results.
   - Focused regression coverage protects genuine trust claims, direct hero/service/section/sticky booking links, accessible mobile touch height, safe-area behaviour, and the renderer's non-obstruction spacing.
 
 - [x] **P2-005 — Create a Realistic Demo Presence Page** — **Complete**
-  - Heavenly Pamper Palace was completed in [PR #51](https://github.com/jonathan-hansel-awo/onprez/pull/51), followed by Crown & Canvas Studio in [PR #52](https://github.com/jonathan-hansel-awo/onprez/pull/52).
+  - Merged [PR #51](https://github.com/jonathan-hansel-awo/onprez/pull/51) delivered the original detailed wellness demonstration, followed by the Crown & Canvas Studio sector example in merged [PR #52](https://github.com/jonathan-hansel-awo/onprez/pull/52).
+  - Merged [PR #121](https://github.com/jonathan-hansel-awo/onprez/pull/121) applies the privacy-safe interactive service-and-time booking journey to every public example and catalogue template.
+  - The fictional flagship wellness example is now Aurelia Wellness House and the visible template name is Golden Serenity; the legacy `heavenly-pamper-palace` slug remains only for backwards-compatible links.
+  - `docs/product/REALISTIC_DEMO_ACCEPTANCE.md` and catalogue-wide regression tests protect fictional identity separation, services, hours, policies, sample availability, booking review, signup handoff, and the no-PII/no-record safety boundary.
 
 - [x] **P2-006 — Improve Empty States** — **Complete**
   - Delivered by [PR #53](https://github.com/jonathan-hansel-awo/onprez/pull/53) for services, bookings, customers, and analytics.
@@ -395,10 +399,11 @@ Whenever an action item is completed:
 
 ## Change log
 
-| Date         | Change                                                                                                                                                                 | PR                                                                                                                              |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 31 July 2026 | Marked P2-003 complete after PR #119 merged and revalidated P2-004 conversion, safe-area, theme, documentation, and regression guarantees.                             | [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) / [#120](https://github.com/jonathan-hansel-awo/onprez/pull/120) |
-| 31 July 2026 | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol. | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) |
-| 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement.       | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                  |
-| 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                                  | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
-| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                                                         | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                  |
+| Date         | Change                                                                                                                                                                                           | PR                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| 31 July 2026 | Reconciled all successfully merged P2-001 through P2-005 work, recorded PR #121’s catalogue-wide booking demos and fictional identity separation, and formalised the “next item” selection rule. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)–[#121](https://github.com/jonathan-hansel-awo/onprez/pull/121)   |
+| 31 July 2026 | Marked P2-003 complete after PR #119 merged and revalidated P2-004 conversion, safe-area, theme, documentation, and regression guarantees.                                                       | [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) / [#120](https://github.com/jonathan-hansel-awo/onprez/pull/120) |
+| 31 July 2026 | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol.                           | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) |
+| 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement.                                 | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                  |
+| 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                                                            | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
+| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                                                                                   | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                  |
