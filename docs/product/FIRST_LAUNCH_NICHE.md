@@ -59,13 +59,13 @@ The first target user is an independent beauty or wellness professional, or the 
 
 ## Product assumptions to validate
 
-| Assumption | Evidence to collect | Failure signal |
-| --- | --- | --- |
-| A branded page is more shareable than a booking-only link. | Participants choose whether they would place the page in Instagram, WhatsApp, or Google profiles. | Participants prefer their current social profile or booking link and see no added value. |
-| A visible service menu reduces repetitive enquiries. | Participants identify questions clients currently ask that the page answers. | The page lacks important service detail or participants still expect the same message volume. |
-| Setup can be completed without technical help. | Fresh-account mobile sessions complete the core loop without intervention. | Participants stall, need explanation, or cannot publish and share. |
-| Small teams need team access during launch. | Team businesses complete invite, acceptance, permission, booking, and management tasks. | Owners must share credentials or cannot delegate normal work. |
-| Beauty-specific examples improve comprehension. | Participants can explain OnPrez after seeing the hero and one realistic demo. | Participants describe it as generic software or misunderstand it as only a booking calendar. |
+| Assumption                                                 | Evidence to collect                                                                               | Failure signal                                                                                |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| A branded page is more shareable than a booking-only link. | Participants choose whether they would place the page in Instagram, WhatsApp, or Google profiles. | Participants prefer their current social profile or booking link and see no added value.      |
+| A visible service menu reduces repetitive enquiries.       | Participants identify questions clients currently ask that the page answers.                      | The page lacks important service detail or participants still expect the same message volume. |
+| Setup can be completed without technical help.             | Fresh-account mobile sessions complete the core loop without intervention.                        | Participants stall, need explanation, or cannot publish and share.                            |
+| Small teams need team access during launch.                | Team businesses complete invite, acceptance, permission, booking, and management tasks.           | Owners must share credentials or cannot delegate normal work.                                 |
+| Beauty-specific examples improve comprehension.            | Participants can explain OnPrez after seeing the hero and one realistic demo.                     | Participants describe it as generic software or misunderstand it as only a booking calendar.  |
 
 ## Homepage and onboarding message
 
@@ -134,12 +134,12 @@ P2-003 validation succeeds when:
 ## Evidence log
 
 | Session | Participant type | Solo/team | Product understood in five seconds | Core loop completed | Assistance required | Would share | Key evidence/action |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
-| 2 | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
-| 3 | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
-| 4 | Optional | Pending | Pending | Pending | Pending | Pending | Pending |
-| 5 | Optional | Pending | Pending | Pending | Pending | Pending | Pending |
+| ------- | ---------------- | --------- | ---------------------------------- | ------------------- | ------------------- | ----------- | ------------------- |
+| 1       | Pending          | Pending   | Pending                            | Pending             | Pending             | Pending     | Pending             |
+| 2       | Pending          | Pending   | Pending                            | Pending             | Pending             | Pending     | Pending             |
+| 3       | Pending          | Pending   | Pending                            | Pending             | Pending             | Pending     | Pending             |
+| 4       | Optional         | Pending   | Pending                            | Pending             | Pending             | Pending     | Pending             |
+| 5       | Optional         | Pending   | Pending                            | Pending             | Pending             | Pending     | Pending             |
 
 ## Scope boundary
 
