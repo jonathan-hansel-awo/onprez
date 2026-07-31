@@ -4,9 +4,9 @@
 **Source plan:** `OnPrez Critical Action Plan`  
 **Last repository audit:** 31 July 2026  
 **Audited branch:** `main`  
-**Audit baseline:** `e4fe8dd`  
+**Audit baseline:** `f9a495a`  
 **Current working phase:** Phase 7 — Dashboard UX  
-**Next planned item:** P2-010 — Clarify Draft vs Published State
+**Next planned item:** P2-011 — Add Better Preview Workflows
 
 ---
 
@@ -56,7 +56,7 @@ Whenever an action item is completed:
 | Phase 4 — Deployment, Operations, and Observability   |        5 |       0 |           0 |      5 |
 | Phase 5 — Product Scope Discipline                    |        3 |       0 |           0 |      3 |
 | Phase 6 — Public Presence Page UX                     |        5 |       0 |           0 |      5 |
-| Phase 7 — Dashboard UX                                |        1 |       3 |           0 |      4 |
+| Phase 7 — Dashboard UX                                |        2 |       2 |           0 |      4 |
 | Phase 8 — Trust, Positioning, and Marketing Integrity |        2 |       2 |           0 |      4 |
 | Phase 9 — Performance and Scalability                 |        0 |       2 |           2 |      4 |
 | Phase 10 — Privacy and Data Lifecycle                 |        1 |       1 |           1 |      3 |
@@ -65,14 +65,14 @@ Whenever an action item is completed:
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **41** |  **12** |       **8** | **61** |
+| **Total**                                             |   **42** |  **11** |       **8** | **61** |
 
-**Strict completion:** 41 of 61 items — approximately **67%**.  
+**Strict completion:** 42 of 61 items — approximately **69%**.  
 **Items with at least meaningful implementation:** 53 of 61 — approximately **87%**.
 
 ### Current priorities from this audit
 
-1. Complete **P2-010**, **P2-011**, and **P2-012** to finish Phase 7. Continue the P2-001 and P2-003 real-user sessions as launch validation.
+1. Complete **P2-011** and **P2-012** to finish Phase 7. Continue the P2-001 and P2-003 real-user sessions as launch validation.
 2. Remove or clearly label the remaining fabricated homepage activity and testimonial claims under **P2-013** and **P2-016**.
 3. Add public-page caching and measured load tests before growth work under Phase 9.
 4. Complete the remaining privacy, testing-maturity, and canonical architecture documentation gaps before paid scale.
@@ -253,14 +253,19 @@ Whenever an action item is completed:
   - Delivered by [PR #56](https://github.com/jonathan-hansel-awo/onprez/pull/56).
   - Progress is derived from tenant-scoped data and links each incomplete step to a real next action.
 
-- [ ] **P2-010 — Clarify Draft vs Published State** — **Partial**
-  - The presence dashboard and editor clearly distinguish Draft and Published states, hide the live link for drafts, support publish/unpublish, preserve draft-only template changes, and warn before destructive or unsaved actions.
-  - Evidence: [PR #69](https://github.com/jonathan-hansel-awo/onprez/pull/69), [PR #75](https://github.com/jonathan-hansel-awo/onprez/pull/75), `src/app/dashboard/presence/page.tsx`, and `PresenceEditorLayout.tsx`.
-  - Remaining: show the last-published timestamp and make the relationship between current draft content and the last live snapshot explicit after further edits.
+- [x] **P2-010 — Clarify Draft vs Published State** — **Complete**
+  - Merged [PR #123](https://github.com/jonathan-hansel-awo/onprez/pull/123) defines explicit Draft, Live and up to date, Live with unpublished changes, and legacy published-without-snapshot states.
+  - The state is derived from the saved draft, published snapshot, visibility, and publication timestamp rather than trusting a client-only flag.
+  - The Presence dashboard and editor show what customers currently see, the last-published date and time, whether changes remain unpublished, and a direct live-page link when one exists.
+  - Unpublishing preserves the historical published snapshot and timestamp while correctly removing public visibility.
+  - `docs/product/PRESENCE_PUBLICATION_STATE_ACCEPTANCE.md` and focused regression tests protect the state transitions and snapshot relationship.
 
-- [ ] **P2-011 — Add Better Preview Workflows** — **Partial**
+- [ ] **P2-011 — Add Better Preview Workflows** — **Partial — implementation awaiting merge**
   - The editor includes real mobile and desktop rendering modes, and the same canonical renderer is reused across examples, editor previews, saved drafts, and public pages.
-  - Remaining: provide a private, non-indexed draft preview URL, a copy-preview-link action, safe expiry/access rules, and explicit draft preview metadata.
+  - [PR #124](https://github.com/jonathan-hansel-awo/onprez/pull/124) adds an authenticated copy-preview-link action and a private route that renders the latest saved draft through the canonical renderer.
+  - Preview links are signed to one business, page, and publication version, expire after 24 hours, become invalid after publishing, and receive no-cache, no-index, and no-referrer controls.
+  - The private route carries explicit draft metadata and disables booking and inquiry creation while preserving genuine services, theme, contact data, and trust signals.
+  - Mark Complete after PR #124 merges successfully into `main`.
 
 - [ ] **P2-012 — Simplify Dashboard Navigation** — **Partial**
   - Mobile and desktop navigation, collapsible sidebar behaviour, accessible touch targets, and breadcrumbs are implemented.
@@ -401,6 +406,7 @@ Whenever an action item is completed:
 
 | Date         | Change                                                                                                                                                                                           | PR                                                                                                                              |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| 31 July 2026 | Marked merged P2-010 complete and recorded P2-011 private, expiring, non-indexed draft-preview implementation pending PR #124 merge.                                                             | [#123](https://github.com/jonathan-hansel-awo/onprez/pull/123) / [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124) |
 | 31 July 2026 | Reconciled all successfully merged P2-001 through P2-005 work, recorded PR #121’s catalogue-wide booking demos and fictional identity separation, and formalised the “next item” selection rule. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)–[#121](https://github.com/jonathan-hansel-awo/onprez/pull/121)   |
 | 31 July 2026 | Marked P2-003 complete after PR #119 merged and revalidated P2-004 conversion, safe-area, theme, documentation, and regression guarantees.                                                       | [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) / [#120](https://github.com/jonathan-hansel-awo/onprez/pull/120) |
 | 31 July 2026 | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol.                           | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) |
