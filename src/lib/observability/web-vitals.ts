@@ -104,7 +104,11 @@ export function classifyPerformancePage(pathname: string): PerformancePageGroup 
     return 'dashboard'
   }
 
-  if (AUTH_PATH_PREFIXES.some(prefix => normalisedPath === prefix || normalisedPath.startsWith(`${prefix}/`))) {
+  if (
+    AUTH_PATH_PREFIXES.some(
+      prefix => normalisedPath === prefix || normalisedPath.startsWith(`${prefix}/`)
+    )
+  ) {
     return 'auth'
   }
 
