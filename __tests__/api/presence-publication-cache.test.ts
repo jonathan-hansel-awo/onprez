@@ -55,12 +55,14 @@ describe('presence publication cache invalidation', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockGetCurrentUser.mockResolvedValue({ id: 'user-1' } as never)
-    mockRequireBusinessRole.mockResolvedValue({ businessId: 'business-1' } as never)
+    mockRequireBusinessRole.mockResolvedValue({
+      businessId: 'business-1',
+      business: { slug: 'aurelia-wellness' },
+    } as never)
     mockFindPage.mockResolvedValue({
       id: 'page-1',
       businessId: 'business-1',
       content: [{ id: 'hero-1', type: 'HERO' }],
-      business: { slug: 'aurelia-wellness' },
     } as never)
     mockUpdatePage.mockResolvedValue({
       id: 'page-1',
