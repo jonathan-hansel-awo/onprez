@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { WebVitalsReporter } from '@/components/analytics/web-vitals-reporter'
 import {
   COOKIE_CONSENT_CHANGED_EVENT,
   COOKIE_CONSENT_STORAGE_KEY,
@@ -55,8 +56,11 @@ function AnalyticsContent() {
 
 export function AnalyticsWrapper() {
   return (
-    <Suspense fallback={null}>
-      <AnalyticsContent />
-    </Suspense>
+    <>
+      <WebVitalsReporter />
+      <Suspense fallback={null}>
+        <AnalyticsContent />
+      </Suspense>
+    </>
   )
 }

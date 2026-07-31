@@ -4,9 +4,9 @@
 **Source plan:** `OnPrez Critical Action Plan`  
 **Last repository audit:** 31 July 2026  
 **Audited branch:** `main`  
-**Audit baseline:** `f9a495a`  
-**Current working phase:** Phase 7 — Dashboard UX  
-**Next planned item:** P2-011 — Add Better Preview Workflows
+**Audit baseline:** `1226a07`  
+**Current working phase:** Phase 9 — Performance and Scalability  
+**Next planned item:** P2-017 — Add Core Web Vitals Monitoring
 
 ---
 
@@ -56,8 +56,8 @@ Whenever an action item is completed:
 | Phase 4 — Deployment, Operations, and Observability   |        5 |       0 |           0 |      5 |
 | Phase 5 — Product Scope Discipline                    |        3 |       0 |           0 |      3 |
 | Phase 6 — Public Presence Page UX                     |        5 |       0 |           0 |      5 |
-| Phase 7 — Dashboard UX                                |        2 |       2 |           0 |      4 |
-| Phase 8 — Trust, Positioning, and Marketing Integrity |        2 |       2 |           0 |      4 |
+| Phase 7 — Dashboard UX                                |        4 |       0 |           0 |      4 |
+| Phase 8 — Trust, Positioning, and Marketing Integrity |        4 |       0 |           0 |      4 |
 | Phase 9 — Performance and Scalability                 |        0 |       2 |           2 |      4 |
 | Phase 10 — Privacy and Data Lifecycle                 |        1 |       1 |           1 |      3 |
 | Phase 11 — Communications                             |        2 |       1 |           0 |      3 |
@@ -65,17 +65,17 @@ Whenever an action item is completed:
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **42** |  **11** |       **8** | **61** |
+| **Total**                                             |   **46** |   **7** |       **8** | **61** |
 
-**Strict completion:** 42 of 61 items — approximately **69%**.  
+**Strict completion:** 46 of 61 items — approximately **75%**.  
 **Items with at least meaningful implementation:** 53 of 61 — approximately **87%**.
 
 ### Current priorities from this audit
 
-1. Complete **P2-011** and **P2-012** to finish Phase 7. Continue the P2-001 and P2-003 real-user sessions as launch validation.
-2. Remove or clearly label the remaining fabricated homepage activity and testimonial claims under **P2-013** and **P2-016**.
-3. Add public-page caching and measured load tests before growth work under Phase 9.
-4. Complete the remaining privacy, testing-maturity, and canonical architecture documentation gaps before paid scale.
+1. Complete **P2-017**, then add public-page caching and measured load tests under **P2-018** and **P2-020**. Continue the P2-001 and P2-003 real-user sessions as launch validation.
+2. Optimise image delivery under **P2-019** and review real-user mobile and desktop performance separately after major UI releases.
+3. Complete the remaining privacy, testing-maturity, and canonical architecture documentation gaps before paid scale.
+4. Add usage and provider-cost tracking before enforcing paid-plan limits.
 
 ---
 
@@ -260,27 +260,29 @@ Whenever an action item is completed:
   - Unpublishing preserves the historical published snapshot and timestamp while correctly removing public visibility.
   - `docs/product/PRESENCE_PUBLICATION_STATE_ACCEPTANCE.md` and focused regression tests protect the state transitions and snapshot relationship.
 
-- [ ] **P2-011 — Add Better Preview Workflows** — **Partial — implementation awaiting merge**
-  - The editor includes real mobile and desktop rendering modes, and the same canonical renderer is reused across examples, editor previews, saved drafts, and public pages.
-  - [PR #124](https://github.com/jonathan-hansel-awo/onprez/pull/124) adds an authenticated copy-preview-link action and a private route that renders the latest saved draft through the canonical renderer.
-  - Preview links are signed to one business, page, and publication version, expire after 24 hours, become invalid after publishing, and receive no-cache, no-index, and no-referrer controls.
-  - The private route carries explicit draft metadata and disables booking and inquiry creation while preserving genuine services, theme, contact data, and trust signals.
-  - Mark Complete after PR #124 merges successfully into `main`.
+- [x] **P2-011 — Add Better Preview Workflows** — **Complete**
+  - Merged [PR #124](https://github.com/jonathan-hansel-awo/onprez/pull/124) adds an authenticated copy-preview-link action and a private route that renders the latest saved draft through the canonical presence renderer.
+  - Preview links are signed to one business, page, and publication version, expire after 24 hours, and become invalid automatically when publishing increments the page version.
+  - The private preview preserves real services, theme, contact data, and genuine trust signals while disabling booking and inquiry creation.
+  - Private responses use no-cache, no-index, and no-referrer controls, and focused tests cover authorization, expiry, invalidation, and response headers.
+  - `docs/product/PRIVATE_DRAFT_PREVIEW_ACCEPTANCE.md` distinguishes immediate editor preview, shareable saved-draft preview, and the live customer snapshot.
 
-- [ ] **P2-012 — Simplify Dashboard Navigation** — **Partial**
-  - Mobile and desktop navigation, collapsible sidebar behaviour, accessible touch targets, and breadcrumbs are implemented.
-  - The current top-level navigation still exposes Overview, Presence, Services, Bookings, Customers, Inquiries, Analytics, Sharing, and Settings as one flat list.
-  - Remaining: group routes by intent, reduce the primary list, and move advanced/low-frequency destinations deeper without breaking discoverability.
+- [x] **P2-012 — Simplify Dashboard Navigation** — **Complete**
+  - Merged [PR #125](https://github.com/jonathan-hansel-awo/onprez/pull/125) reduces the always-visible navigation to five core destinations grouped under Daily work and Your presence.
+  - Inquiries, Analytics, Sharing, and Settings remain available behind one accessible More tools disclosure that automatically opens for an active advanced route.
+  - The mobile drawer, desktop collapse behaviour, breadcrumbs, 44-pixel touch targets, `aria-current`, and disclosure semantics remain intact.
+  - Exact route matching prevents Overview from appearing active on every nested dashboard route while preserving nested ownership for routes such as Settings and Presence.
+  - `docs/product/DASHBOARD_NAVIGATION_ACCEPTANCE.md` and focused tests protect the information architecture, route preservation, and active-route rules.
 
 ---
 
 ## Phase 8 — Trust, Positioning, and Marketing Integrity
 
-- [ ] **P2-013 — Remove Unverified Metrics** — **Partial**
-  - Several fabricated hero and examples claims were removed in [PR #29](https://github.com/jonathan-hansel-awo/onprez/pull/29) and [PR #95](https://github.com/jonathan-hansel-awo/onprez/pull/95).
-  - However, `SocialProofStreamDual` currently says “Join Thousands of Professionals,” “Real activity happening right now,” and “Live activity from professionals worldwide.”
-  - `TestimonialsBento` also says OnPrez is loved by and used by thousands of professionals while rendering testimonial fixture data.
-  - Remaining: remove these claims or label the whole experience unmistakably as fictional product demonstration content.
+- [x] **P2-013 — Remove Unverified Metrics** — **Complete**
+  - Merged [PR #126](https://github.com/jonathan-hansel-awo/onprez/pull/126) removes the fabricated live-activity stream, fictional testimonials, booking and visit counts, upgrades, ratings, time-saving claims, and before/after outcome metrics from the public homepage.
+  - The underlying fictional activity and testimonial fixtures and rendering components were deleted rather than merely relabelled.
+  - `docs/product/MARKETING_CLAIMS_POLICY.md` requires durable evidence, an owner, a measurement window, appropriately scoped wording, consent where relevant, and a review date before future quantitative or testimonial claims are published.
+  - Regression coverage prevents the deleted sources and known unsupported claims from returning.
 
 - [x] **P2-014 — Sharpen Homepage Positioning** — **Complete**
   - Delivered explicitly by [PR #65](https://github.com/jonathan-hansel-awo/onprez/pull/65) and strengthened by the redesigned product-led hero in [PR #95](https://github.com/jonathan-hansel-awo/onprez/pull/95).
@@ -289,17 +291,22 @@ Whenever an action item is completed:
   - Privacy Policy, Terms of Service, Cookie Policy, consent controls, support/security contact routes, and legal metadata were delivered by [PR #62](https://github.com/jonathan-hansel-awo/onprez/pull/62).
   - Formal legal review and final operator address remain pre-paid-launch operational requirements, not missing product routes.
 
-- [ ] **P2-016 — Replace Generic Social Proof with Product Proof** — **Partial**
-  - Realistic interactive examples, templates, a client journey scenario, and working booking previews now provide strong product proof.
-  - The remaining fabricated activity stream and testimonial language still competes with that proof and prevents completion.
+- [x] **P2-016 — Replace Generic Social Proof with Product Proof** — **Complete**
+  - Realistic interactive examples, catalogue templates, the client journey scenario, working booking previews, feature walkthroughs, and transparent pricing provide inspectable product proof.
+  - Merged [PR #126](https://github.com/jonathan-hansel-awo/onprez/pull/126) removes the remaining fabricated activity and testimonial system so unsupported social proof no longer competes with demonstrable product behaviour.
+  - Future customer evidence must satisfy the repository marketing-claims policy before it can replace or supplement product proof.
 
 ---
 
 ## Phase 9 — Performance and Scalability
 
-- [ ] **P2-017 — Add Core Web Vitals Monitoring** — **Partial**
-  - The `web-vitals` package is installed, performance-oriented lazy loading exists, and consent-gated GA page-view reporting is implemented.
-  - No active Web Vitals reporter, regression dashboard, alert threshold, or release comparison was found in `main`.
+- [ ] **P2-017 — Add Core Web Vitals Monitoring** — **Partial — implementation awaiting merge**
+  - [PR #127](https://github.com/jonathan-hansel-awo/onprez/pull/127) adds consent-gated production reporting for LCP, INP, CLS, FCP, and TTFB through Next.js `useReportWebVitals`.
+  - Measurements use coarse page groups and separate mobile and desktop classes without sending business handles, customer routes, query strings, full URLs, or form data.
+  - A strict same-origin endpoint recomputes ratings server-side, records structured metrics with environment and release data, and creates grouped Sentry warnings for poor results.
+  - Public and dashboard thresholds are explicit, Google Analytics receives the same dimensions when configured, and `docs/product/WEB_VITALS_MONITORING.md` defines 75th-percentile, release-comparison, and major-UI-change review procedures.
+  - Focused tests protect metric coverage, segmentation, thresholds, privacy-safe payloads, server-side rating, validation, and alert behaviour.
+  - Mark Complete after PR #127 merges successfully into `main`.
 
 - [ ] **P2-018 — Cache Public Presence Pages by Handle** — **Not started**
   - `src/app/[handle]/page.tsx` is currently `force-dynamic` and performs direct Prisma queries on each request.
@@ -404,12 +411,13 @@ Whenever an action item is completed:
 
 ## Change log
 
-| Date         | Change                                                                                                                                                                                           | PR                                                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| 31 July 2026 | Marked merged P2-010 complete and recorded P2-011 private, expiring, non-indexed draft-preview implementation pending PR #124 merge.                                                             | [#123](https://github.com/jonathan-hansel-awo/onprez/pull/123) / [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124) |
-| 31 July 2026 | Reconciled all successfully merged P2-001 through P2-005 work, recorded PR #121’s catalogue-wide booking demos and fictional identity separation, and formalised the “next item” selection rule. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)–[#121](https://github.com/jonathan-hansel-awo/onprez/pull/121)   |
-| 31 July 2026 | Marked P2-003 complete after PR #119 merged and revalidated P2-004 conversion, safe-area, theme, documentation, and regression guarantees.                                                       | [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) / [#120](https://github.com/jonathan-hansel-awo/onprez/pull/120) |
-| 31 July 2026 | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol.                           | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) |
-| 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement.                                 | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                  |
-| 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                                                            | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115) |
-| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                                                                                   | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                  |
+| Date         | Change                                                                                                                                                                                           | PR                                                                                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 31 July 2026 | Marked merged P2-011, P2-012, P2-013, and P2-016 complete and recorded consented Core Web Vitals monitoring pending PR #127 merge.                                                               | [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124) / [#125](https://github.com/jonathan-hansel-awo/onprez/pull/125) / [#126](https://github.com/jonathan-hansel-awo/onprez/pull/126) / [#127](https://github.com/jonathan-hansel-awo/onprez/pull/127) |
+| 31 July 2026 | Marked merged P2-010 complete and recorded P2-011 private, expiring, non-indexed draft-preview implementation pending PR #124 merge.                                                             | [#123](https://github.com/jonathan-hansel-awo/onprez/pull/123) / [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124)                                                                                                                                   |
+| 31 July 2026 | Reconciled all successfully merged P2-001 through P2-005 work, recorded PR #121’s catalogue-wide booking demos and fictional identity separation, and formalised the “next item” selection rule. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)–[#121](https://github.com/jonathan-hansel-awo/onprez/pull/121)                                                                                                                                     |
+| 31 July 2026 | Marked P2-003 complete after PR #119 merged and revalidated P2-004 conversion, safe-area, theme, documentation, and regression guarantees.                                                       | [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) / [#120](https://github.com/jonathan-hansel-awo/onprez/pull/120)                                                                                                                                   |
+| 31 July 2026 | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol.                           | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119)                                                                                                                                   |
+| 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement.                                 | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                                                                                                                                                    |
+| 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                                                            | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                                                                                   |
+| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                                                                                   | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                                                                                                                                                    |
