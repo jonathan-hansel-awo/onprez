@@ -29,7 +29,7 @@ This boundary means a cached presence shell cannot expose stale appointment avai
 - Full-route and data-cache fallback lifetime: five minutes.
 - Handle normalisation trims whitespace and uses lowercase.
 
-The short fallback lifetime bounds staleness if a new mutation path is introduced before its explicit invalidation is added. Normal product writes use immediate invalidation and should not wait for the fallback.
+The short fallback lifetime bounds staleness if a new mutation path is introduced before its explicit invalidation is added. Normal product writes use immediate invalidation and should not wait for the fallback. Published-review aggregate changes are also bounded by this fallback until a dedicated review-moderation write path calls the shared invalidation helper.
 
 ## Explicit invalidation matrix
 
