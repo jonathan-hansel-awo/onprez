@@ -45,7 +45,7 @@ const mockedPrisma = prisma as unknown as {
 }
 const mockedRequirePlatformAdmin = requirePlatformAdminApi as jest.Mock
 const mockedRecordAdminActionSafely = recordAdminActionSafely as jest.Mock
-const mockedInvalidatePublicPresence = invalidatePublicPresence as jest.Mock
+const mockedInvalidatePublicPresence = jest.mocked(invalidatePublicPresence)
 
 function jsonRequest(path: string, method: 'POST' | 'PUT', body: unknown) {
   return new NextRequest(`http://localhost:3000${path}`, {
