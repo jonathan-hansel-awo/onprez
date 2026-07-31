@@ -1,10 +1,10 @@
-import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
 import { platformAdminErrorResponse, requirePlatformAdminApi } from '@/lib/admin/access'
 import { recordAdminAction } from '@/lib/admin/audit'
+import { invalidatePublicPresence } from '@/lib/presence/public-presence-cache'
+import { prisma } from '@/lib/prisma'
 
 const nullableText = (max: number) => z.string().trim().max(max).optional().nullable()
 
@@ -212,7 +212,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       return updatedBusiness
     })
 
-    revalidatePath(`/${existingBusiness.slug}`)
+    invalidatePublicPresence(existingBusiness.slug)
 
     await recordAdminAction({
       adminUserId: admin.id,
