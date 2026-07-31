@@ -6,56 +6,65 @@
 
 ## Purpose
 
-A realistic OnPrez demo must behave like a credible service business page rather than a decorative template mock-up. It should expose long-copy, service-card, mobile, operational-detail, and booking-flow weaknesses before customers encounter them.
+An OnPrez template preview must behave like a credible service-business page rather than a decorative mock-up. It should expose long-copy, service-card, mobile, operational-detail, and booking-flow weaknesses before customers encounter them.
 
-The demo data remains code-backed and explicitly fictional. It must not create fake production businesses, customers, reviews, or appointments.
+All preview data remains code-backed and explicitly fictional. It must not create fake production businesses, customers, reviews, appointments, emails, payments, or analytics records.
 
-## Canonical demos
+## Detailed canonical demos
 
-| Demo                   | Sector                             | Route                                                                                   |
-| ---------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- |
-| Heavenly Pamper Palace | Private wellness and beauty studio | `/templates/heavenly-pamper-palace?businessName=Heavenly%20Pamper%20Palace&view=client` |
-| Crown & Canvas Studio  | Textured hair and makeup studio    | `/templates/editorial-beauty?businessName=Crown%20%26%20Canvas%20Studio&view=client`    |
+| Demo                    | Sector                             | Route                                                                                    |
+| ----------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| Aurelia Wellness House  | Private wellness and beauty studio | `/templates/heavenly-pamper-palace?businessName=Aurelia%20Wellness%20House&view=client`  |
+| Crown & Canvas Studio   | Textured hair and makeup studio    | `/templates/editorial-beauty?businessName=Crown%20%26%20Canvas%20Studio&view=client`     |
 
-## Acceptance contract
+The original `heavenly-pamper-palace` route slug remains for backwards compatibility, but the visible template is now named **Golden Serenity** and its fictional business identity is **Aurelia Wellness House**. The real Heavenly Pamper Palace business is not represented as demo content.
 
-A full realistic demo must provide and visibly exercise:
+## Catalogue-wide booking contract
 
-- a credible business name, niche, positioning statement, owner biography, credentials, contact details, and location;
-- at least five realistically named services with production-length descriptions, prices, durations, and suitable imagery;
+Every public template must provide and visibly exercise:
+
+- at least one realistically named service with a price and duration;
+- sample appointment times that can be selected in an interactive booking journey;
 - a complete seven-day opening-hours schedule;
-- realistic appointment examples that can be selected in an interactive booking journey;
-- policies or preparation guidance that affect a booking decision;
-- realistic FAQs and clearly fictional testimonial content;
-- a direct path from homepage and examples pages;
-- the same canonical template engine and section renderer used by account previews and published pages;
-- a client-view route suitable for screenshots and onboarding demonstrations;
-- mobile-safe controls and no collection of personal information in the booking simulation.
+- category-appropriate policies or preparation guidance;
+- fictional contact and location details;
+- a review step showing the selected business, service, date, duration, and price;
+- a direct handoff to signup without collecting personal information;
+- mobile-safe controls and accessible pressed-state feedback;
+- the same canonical template engine and section renderer used by account previews and published pages.
+
+The two detailed canonical demos additionally include production-length service descriptions, owner biographies, credentials, richer policies, FAQs, reviews, imagery, and sector-specific appointment examples.
 
 ## Booking-demo safety
 
-The interactive booking example intentionally stops before customer details or confirmation. It demonstrates service and time selection, presents a booking summary, and then routes the visitor to template signup. No database record, email, payment, or analytics event representing a real booking is created.
+The interactive booking example intentionally stops before customer details or confirmation. It demonstrates service and time selection, presents a booking summary, and then routes the visitor to template signup.
 
-All Book actions on the two canonical realistic previews resolve to `#demo-booking`. Ordinary template previews continue to route their actions directly to signup.
+All Book actions across the catalogue resolve to `#demo-booking`. No template preview creates a database record, sends an email, initiates payment, or records a fictional conversion.
+
+## Identity safety
+
+A demo identity must not reuse the name, contact details, reviews, or branding of a real OnPrez business unless that business has explicitly approved a case study. When a fictional demo name becomes a real customer identity, the demo must be renamed while preserving old template links where practical.
 
 ## Regression coverage
 
 Automated tests protect:
 
-- fixture depth: services, opening hours, policies, FAQs, reviews, credentials, images, and sample slots;
+- fixture depth for the two detailed demos;
+- a complete generated booking fixture for every catalogue template;
 - secure image URLs and stable client-view routes;
-- rendering of opening hours and policies in both realistic sectors;
+- rendering of opening hours and category-appropriate policies;
 - service and appointment-time selection;
-- the review summary and signup handoff;
-- exclusion of demo-only operational content from ordinary templates.
+- personalised business names in the review summary;
+- signup handoff without personal-data collection;
+- exclusion of the real Heavenly Pamper Palace name from current demo business identities.
 
 ## Manual review
 
-Before using a demo in screenshots or onboarding:
+Before using any template in screenshots or onboarding:
 
-1. Open the client-view route at 375px width and on a desktop viewport.
+1. Open its client-view route at 375px width and on a desktop viewport.
 2. Confirm long business and service copy does not overflow.
-3. Use a hero, service, or sticky Book action and confirm it reaches the interactive demo.
+3. Use a hero, service, section, or sticky Book action and confirm it reaches the interactive demo.
 4. Select a non-default service and appointment time, then review the summary.
 5. Confirm opening hours, location, contact details, and policies are readable.
 6. Confirm the final action routes to signup and that no personal details are requested.
