@@ -110,7 +110,8 @@ export function PresencePublicationStatus() {
       })
       const pagePayload = await pageResponse.json()
       const page = (pagePayload.success ? pagePayload.data?.pages?.[0] : null) as
-        PresencePageRecord | undefined
+        | PresencePageRecord
+        | undefined
 
       if (!page) {
         setStatus(null)
