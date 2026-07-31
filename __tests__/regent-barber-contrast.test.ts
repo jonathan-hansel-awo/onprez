@@ -9,9 +9,7 @@ describe('Regent Barber colour contrast', () => {
     const layout = fs.readFileSync(layoutPath, 'utf8')
 
     expect(layout).toContain("import './legal.css'")
-    expect(stylesheet).toContain(
-      "[data-presence-template='regent-barber'] section[id*='-about-']"
-    )
+    expect(stylesheet).toContain("[data-presence-template='regent-barber'] section[id*='-about-']")
     expect(stylesheet).toContain('background-color: #191916 !important;')
     expect(stylesheet).toContain('color: #f5f0e8 !important;')
   })
