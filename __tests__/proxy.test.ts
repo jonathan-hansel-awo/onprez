@@ -80,6 +80,17 @@ describe('proxy route protection', () => {
     expectNext(response)
   })
 
+  it('keeps private draft previews out of caches, indexes, and referrer headers', async () => {
+    const response = await proxy(createRequest('/preview/presence/signed-token'))
+
+    expectNext(response)
+    expect(response.headers.get('cache-control')).toBe('private, no-store')
+    expect(response.headers.get('referrer-policy')).toBe('no-referrer')
+    expect(response.headers.get('x-robots-tag')).toBe(
+      'noindex, nofollow, noarchive, nosnippet'
+    )
+  })
+
   it('allows auth routes through', async () => {
     const routes = ['/login', '/signup', '/forgot-password', '/reset-password', '/invite']
 
