@@ -87,10 +87,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const pathname = usePathname()
-  const moreToolsActive = isDashboardNavigationGroupActive(
-    pathname,
-    dashboardMoreToolsNavigation
-  )
+  const moreToolsActive = isDashboardNavigationGroupActive(pathname, dashboardMoreToolsNavigation)
   const [moreToolsOpen, setMoreToolsOpen] = useState(moreToolsActive)
 
   useEffect(() => {
