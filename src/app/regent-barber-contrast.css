@@ -1,0 +1,10 @@
+/*
+ * Regent Barber uses pale cream typography across its charcoal palette.
+ * Earlier canonical data paired that text with a white About section, making
+ * the experience copy unreadable. This template-scoped override also repairs
+ * already-saved pages without mutating their stored content.
+ */
+[data-presence-template='regent-barber'] section[id*='-about-'] {
+  background-color: #191916 !important;
+  color: #f5f0e8 !important;
+}
