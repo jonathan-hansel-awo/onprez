@@ -52,7 +52,7 @@ export interface RealisticDemoBusiness {
  * owner, reviews or appointments in customer data.
  */
 export const realisticDemoBusiness: RealisticDemoBusiness = {
-  name: 'Heavenly Pamper Palace',
+  name: 'Aurelia Wellness House',
   templateSlug: 'heavenly-pamper-palace',
   category: 'Luxury wellness and beauty',
   tagline: 'A brighter kind of serenity',
@@ -62,7 +62,7 @@ export const realisticDemoBusiness: RealisticDemoBusiness = {
     name: 'Amara Cole',
     role: 'Founder and senior therapist',
     biography:
-      'Amara founded Heavenly Pamper Palace after twelve years in luxury spa therapy. Her approach combines careful consultation, evidence-informed techniques and the small details that make an appointment feel genuinely personal.',
+      'Amara founded Aurelia Wellness House after twelve years in luxury spa therapy. Her approach combines careful consultation, evidence-informed techniques and the small details that make an appointment feel genuinely personal.',
     credentials: ['Level 3 Massage Therapy', 'Level 3 Facial Treatments', 'Fully insured'],
   },
   location: {
@@ -72,8 +72,8 @@ export const realisticDemoBusiness: RealisticDemoBusiness = {
   },
   contact: {
     phone: '01353 555 018',
-    email: 'hello@heavenlypamper.example',
-    instagram: '@heavenlypamperpalace',
+    email: 'hello@aureliawellness.example',
+    instagram: '@aureliawellnesshouse',
   },
   images: {
     hero: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1800&q=85',
@@ -209,4 +209,4 @@ export const realisticDemoBusiness: RealisticDemoBusiness = {
 }
 
 export const realisticDemoHref =
-  '/templates/heavenly-pamper-palace?businessName=Heavenly%20Pamper%20Palace&view=client'
+  '/templates/heavenly-pamper-palace?businessName=Aurelia%20Wellness%20House&view=client'

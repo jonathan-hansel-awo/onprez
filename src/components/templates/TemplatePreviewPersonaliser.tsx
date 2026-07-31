@@ -4,6 +4,10 @@ import type { BusinessCategory } from '@prisma/client'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { SectionRenderer } from '@/components/presence/sections/SectionRenderer'
+import {
+  getTemplateBookingDemoFixture,
+  RealisticDemoBookingJourney,
+} from '@/components/templates/RealisticDemoBookingJourney'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
 import type { TemplateCatalogueItem } from '@/data/presence-template-catalogue'
 import { createCanonicalPresencePageContent } from '@/lib/templates/canonical-template-engine'
@@ -40,6 +44,10 @@ export function TemplatePreviewPersonaliser({
         mode: 'preview',
       }),
     [businessName, template.slug]
+  )
+  const bookingDemo = useMemo(
+    () => getTemplateBookingDemoFixture(template, businessName),
+    [businessName, template]
   )
 
   return (
@@ -128,21 +136,28 @@ export function TemplatePreviewPersonaliser({
             businessName={businessName}
             businessData={canonicalPage.previewBusinessData || {}}
             servicesOverride={canonicalPage.previewServices}
-            bookingHrefOverride={signupHref}
+            bookingHrefOverride="#demo-booking"
             showInquiryForm={false}
             trustSignals={{
+              location: `${bookingDemo.location.city}, ${bookingDemo.location.postcode}`,
               responseTime: 'Replies within one business day',
-              credentials: ['Clear services', 'Live availability', 'Mobile booking'],
+              credentials: bookingDemo.trustSignals,
             }}
+          />
+
+          <RealisticDemoBookingJourney
+            template={template}
+            businessName={businessName}
+            signupHref={signupHref}
           />
         </div>
       </ThemeProvider>
 
       {!isClientView && (
         <footer className="border-t border-gray-200 bg-white px-5 py-8 text-center text-xs leading-6 text-gray-600">
-          Demo services, imagery, contact details, and reviews are clearly fictional preview
-          content. The selected design, section structure, typography, spacing, and responsive
-          renderer are the same ones applied to the account.
+          Every template uses fictional preview services, availability, contact details and booking
+          policies. The selected design, section structure, typography, spacing, responsive renderer
+          and booking handoff are the same ones applied to the account.
         </footer>
       )}
     </main>
