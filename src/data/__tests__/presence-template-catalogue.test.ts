@@ -25,6 +25,11 @@ describe('presence template catalogue', () => {
         template.preview.businessName.toLowerCase().includes('hanseljonathan')
       )
     ).toBe(false)
+    expect(
+      presenceTemplateCatalogue.some(
+        template => template.preview.businessName === 'Heavenly Pamper Palace'
+      )
+    ).toBe(false)
   })
 
   it('resolves templates by slug', () => {
@@ -34,14 +39,15 @@ describe('presence template catalogue', () => {
     expect(getPresenceTemplate('missing-template')).toBeUndefined()
   })
 
-  it('keeps Heavenly Pamper Palace separate from Serene Wellness', () => {
+  it('keeps Golden Serenity separate from Serene Wellness', () => {
     const serene = getPresenceTemplate('serene-wellness')
-    const heavenly = getPresenceTemplate('heavenly-pamper-palace')
+    const golden = getPresenceTemplate('heavenly-pamper-palace')
 
     expect(serene?.name).toBe('Serene Wellness')
-    expect(heavenly?.name).toBe('Heavenly Pamper Palace')
-    expect(heavenly?.palette.primary).toBe('#b88a22')
-    expect(heavenly?.preview.services).toHaveLength(5)
+    expect(golden?.name).toBe('Golden Serenity')
+    expect(golden?.preview.businessName).toBe('Aurelia Wellness House')
+    expect(golden?.palette.primary).toBe('#b88a22')
+    expect(golden?.preview.services).toHaveLength(5)
   })
 
   it('uses the complete hair and makeup demo in Editorial Beauty', () => {
