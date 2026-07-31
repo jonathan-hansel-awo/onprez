@@ -6,10 +6,7 @@ import {
   hairMakeupDemoBusiness,
   type HairMakeupDemoBusiness,
 } from '@/data/hair-makeup-demo-business'
-import {
-  realisticDemoBusiness,
-  type RealisticDemoBusiness,
-} from '@/data/realistic-demo-business'
+import { realisticDemoBusiness, type RealisticDemoBusiness } from '@/data/realistic-demo-business'
 
 type RealisticDemoFixture = RealisticDemoBusiness | HairMakeupDemoBusiness
 
@@ -218,7 +215,10 @@ export function RealisticDemoBookingJourney({
               <ul className="mt-5 space-y-4 text-sm leading-6 text-slate-300">
                 {demo.policies.map(policy => (
                   <li key={policy} className="flex gap-3">
-                    <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300" />
+                    <span
+                      aria-hidden="true"
+                      className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300"
+                    />
                     <span>{policy}</span>
                   </li>
                 ))}
