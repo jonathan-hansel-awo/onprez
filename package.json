@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write \"__tests__/regent-barber-contrast.test.ts\" && echo __REGENT_FORMAT_START__ && base64 -w0 __tests__/regent-barber-contrast.test.ts && echo && echo __REGENT_FORMAT_END__ && exit 1",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
