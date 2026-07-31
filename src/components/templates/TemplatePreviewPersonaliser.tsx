@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { SectionRenderer } from '@/components/presence/sections/SectionRenderer'
 import {
-  getRealisticDemoFixture,
+  getTemplateBookingDemoFixture,
   RealisticDemoBookingJourney,
 } from '@/components/templates/RealisticDemoBookingJourney'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
@@ -45,8 +45,10 @@ export function TemplatePreviewPersonaliser({
       }),
     [businessName, template.slug]
   )
-  const realisticDemo = getRealisticDemoFixture(template.slug)
-  const bookingHref = realisticDemo ? '#demo-booking' : signupHref
+  const bookingDemo = useMemo(
+    () => getTemplateBookingDemoFixture(template, businessName),
+    [businessName, template]
+  )
 
   return (
     <main className="min-h-screen bg-white">
@@ -134,33 +136,28 @@ export function TemplatePreviewPersonaliser({
             businessName={businessName}
             businessData={canonicalPage.previewBusinessData || {}}
             servicesOverride={canonicalPage.previewServices}
-            bookingHrefOverride={bookingHref}
+            bookingHrefOverride="#demo-booking"
             showInquiryForm={false}
-            trustSignals={
-              realisticDemo
-                ? {
-                    location: `${realisticDemo.location.city}, ${realisticDemo.location.postcode}`,
-                    responseTime: 'Replies within one business day',
-                    credentials: realisticDemo.owner.credentials,
-                  }
-                : {
-                    responseTime: 'Replies within one business day',
-                    credentials: ['Clear services', 'Live availability', 'Mobile booking'],
-                  }
-            }
+            trustSignals={{
+              location: `${bookingDemo.location.city}, ${bookingDemo.location.postcode}`,
+              responseTime: 'Replies within one business day',
+              credentials: bookingDemo.trustSignals,
+            }}
           />
 
-          {realisticDemo && (
-            <RealisticDemoBookingJourney templateSlug={template.slug} signupHref={signupHref} />
-          )}
+          <RealisticDemoBookingJourney
+            template={template}
+            businessName={businessName}
+            signupHref={signupHref}
+          />
         </div>
       </ThemeProvider>
 
       {!isClientView && (
         <footer className="border-t border-gray-200 bg-white px-5 py-8 text-center text-xs leading-6 text-gray-600">
-          Demo services, imagery, contact details, and reviews are clearly fictional preview
-          content. The selected design, section structure, typography, spacing, and responsive
-          renderer are the same ones applied to the account.
+          Every template uses fictional preview services, availability, contact details and booking
+          policies. The selected design, section structure, typography, spacing, responsive renderer
+          and booking handoff are the same ones applied to the account.
         </footer>
       )}
     </main>
