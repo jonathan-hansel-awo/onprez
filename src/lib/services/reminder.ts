@@ -1,5 +1,7 @@
+import { EmailDeliveryAudience, EmailDeliveryCategory } from '@prisma/client'
+import { sendTrackedEmail } from '@/lib/email-delivery/delivery'
 import { prisma } from '@/lib/prisma'
-import { sendEmail } from '@/lib/services/email'
+import type { SendEmailOptions } from '@/lib/services/email'
 import {
   generateReminderEmailHtml,
   generateReminderEmailText,
@@ -17,6 +19,60 @@ interface ReminderSettings {
   defaultMessage?: string
 }
 
+type ReminderAppointment = NonNullable<Awaited<ReturnType<typeof loadReminderAppointment>>>
+
+async function loadReminderAppointment(appointmentId: string) {
+  return prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    include: {
+      business: {
+        select: {
+          name: true,
+          email: true,
+          phone: true,
+          address: true,
+          settings: true,
+          timezone: true,
+        },
+      },
+      customer: { select: { name: true, email: true } },
+      service: { select: { name: true, duration: true } },
+    },
+  })
+}
+
+export function buildAppointmentReminderEmail(
+  appointment: ReminderAppointment
+): SendEmailOptions | null {
+  const settings = (appointment.business.settings as Record<string, unknown>) || {}
+  const customerEmail = appointment.customerEmail || appointment.customer?.email
+  const customerName = appointment.customerName || appointment.customer?.name
+  if (!customerEmail) return null
+
+  const reminderSettings = settings.reminders as ReminderSettings | undefined
+  const timezone = appointment.business.timezone || DEFAULT_TIMEZONE
+  const appointmentStart = new Date(appointment.startTime)
+  const emailData = {
+    customerName: customerName || 'Customer',
+    businessName: appointment.business.name,
+    serviceName: appointment.service.name,
+    appointmentDate: formatLongDateInTimezone(appointmentStart, timezone),
+    appointmentTime: `${formatTimeInTimezone(appointmentStart, timezone)} (${timezone})`,
+    duration: appointment.duration,
+    businessPhone: appointment.business.phone || undefined,
+    businessEmail: appointment.business.email || undefined,
+    businessAddress: appointment.business.address || undefined,
+    customMessage: reminderSettings?.defaultMessage,
+  }
+
+  return {
+    to: customerEmail,
+    subject: `Appointment Reminder - ${appointment.business.name}`,
+    html: generateReminderEmailHtml(emailData),
+    text: generateReminderEmailText(emailData),
+  }
+}
+
 // Send a single reminder. Manual dashboard reminders remain explicit user actions;
 // scheduled/automated reminders follow the saved business preference.
 export async function sendAppointmentReminder(
@@ -24,33 +80,7 @@ export async function sendAppointmentReminder(
   reminderType: string = 'manual'
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const appointment = await prisma.appointment.findUnique({
-      where: { id: appointmentId },
-      include: {
-        business: {
-          select: {
-            name: true,
-            email: true,
-            phone: true,
-            address: true,
-            settings: true,
-            timezone: true,
-          },
-        },
-        customer: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-        service: {
-          select: {
-            name: true,
-            duration: true,
-          },
-        },
-      },
-    })
+    const appointment = await loadReminderAppointment(appointmentId)
 
     if (!appointment) {
       return { success: false, error: 'Appointment not found' }
@@ -63,38 +93,24 @@ export async function sendAppointmentReminder(
       return { success: true }
     }
 
-    const customerEmail = appointment.customerEmail || appointment.customer?.email
-    const customerName = appointment.customerName || appointment.customer?.name
-
-    if (!customerEmail) {
+    const email = buildAppointmentReminderEmail(appointment)
+    if (!email) {
       return { success: false, error: 'No customer email' }
     }
 
-    const reminderSettings = settings.reminders as ReminderSettings | undefined
-    const timezone = appointment.business.timezone || DEFAULT_TIMEZONE
-    const appointmentStart = new Date(appointment.startTime)
-    const emailData = {
-      customerName: customerName || 'Customer',
-      businessName: appointment.business.name,
-      serviceName: appointment.service.name,
-      appointmentDate: formatLongDateInTimezone(appointmentStart, timezone),
-      appointmentTime: `${formatTimeInTimezone(appointmentStart, timezone)} (${timezone})`,
-      duration: appointment.duration,
-      businessPhone: appointment.business.phone || undefined,
-      businessEmail: appointment.business.email || undefined,
-      businessAddress: appointment.business.address || undefined,
-      customMessage: reminderSettings?.defaultMessage,
-    }
-
-    const html = generateReminderEmailHtml(emailData)
-    const text = generateReminderEmailText(emailData)
-
-    await sendEmail({
-      to: customerEmail,
-      subject: `Appointment Reminder - ${appointment.business.name}`,
-      html,
-      text,
-    })
+    const result = await sendTrackedEmail(
+      {
+        businessId: appointment.businessId,
+        appointmentId,
+        dedupeKey: `booking:${appointmentId}:reminder:${reminderType}:${appointment.reminderCount + 1}`,
+        category: EmailDeliveryCategory.APPOINTMENT_REMINDER,
+        audience: EmailDeliveryAudience.CUSTOMER,
+        appointmentStatus: appointment.status,
+        reminderType,
+      },
+      email
+    )
+    if (!result.success) throw new Error(result.error || 'Email provider rejected the reminder')
 
     // Log the reminder
     await prisma.reminderLog.create({

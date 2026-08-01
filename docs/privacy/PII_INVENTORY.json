@@ -1,5 +1,5 @@
 {
-  "version": "2026-08-01",
+  "version": "2026-08-01-p2-024",
   "reviewedAt": "2026-08-01",
   "nextReviewDue": "2026-11-01",
   "reviewCadence": "quarterly and before any new provider or personal-data field ships",
@@ -379,6 +379,28 @@
       "retention": "short delivery/retry audit window",
       "deletionOwner": "security_operations",
       "deletionAction": "delete with appointment/subscription or after delivery audit retention"
+    },
+    {
+      "fields": [
+        "EmailDelivery.recipientHash",
+        "EmailDelivery.recipientMasked",
+        "EmailDelivery.providerMessageId",
+        "EmailDelivery.lastErrorCode",
+        "EmailDelivery.lastError",
+        "EmailDelivery.retriedByUserId",
+        "EmailDeliveryEvent.providerEventId",
+        "EmailDeliveryEvent.source",
+        "EmailDeliveryEvent.errorCode",
+        "EmailDeliveryEvent.errorMessage",
+        "EmailSuppression.recipientHash",
+        "EmailSuppression.recipientMasked",
+        "EmailSuppression.providerMessageId"
+      ],
+      "classification": "email_delivery_pseudonymous_and_provider_metadata",
+      "protection": "recipient uses a keyed one-way hash plus a masked display value; no plaintext recipient, subject or body is stored; provider errors are scrubbed and tenant-scoped",
+      "retention": "delivery history normally 90 days; active bounce/complaint suppression retained while needed to protect sender reputation",
+      "deletionOwner": "security_operations",
+      "deletionAction": "delete delivery events with booking/inquiry or after audit retention; remove suppression only after provider and recipient verification"
     }
   ]
 }

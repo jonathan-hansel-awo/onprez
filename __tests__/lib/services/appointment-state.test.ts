@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { sendAppointmentStatusEmail } from '@/lib/services/email'
+import { sendTrackedAppointmentStatusEmail } from '@/lib/email-delivery/tracked-notifications'
 import {
   AppointmentTransitionError,
   VALID_APPOINTMENT_TRANSITIONS,
@@ -12,8 +12,8 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
-jest.mock('@/lib/services/email', () => ({
-  sendAppointmentStatusEmail: jest.fn(),
+jest.mock('@/lib/email-delivery/tracked-notifications', () => ({
+  sendTrackedAppointmentStatusEmail: jest.fn(),
 }))
 
 jest.mock('@/lib/integrations/google-calendar', () => ({
@@ -22,7 +22,7 @@ jest.mock('@/lib/integrations/google-calendar', () => ({
 }))
 
 const mockedTransaction = prisma.$transaction as jest.Mock
-const mockedSendStatusEmail = sendAppointmentStatusEmail as jest.Mock
+const mockedSendStatusEmail = sendTrackedAppointmentStatusEmail as jest.Mock
 
 function createTransaction(status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' = 'PENDING') {
   const current = {
@@ -148,6 +148,7 @@ describe('appointment state machine', () => {
     })
 
     expect(mockedSendStatusEmail).toHaveBeenCalledWith(
+      'business-1',
       expect.objectContaining({
         to: 'alex@example.com',
         fromStatus: 'PENDING',

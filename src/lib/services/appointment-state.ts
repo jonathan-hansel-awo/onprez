@@ -9,7 +9,7 @@ import {
   syncAppointmentToGoogleCalendar,
 } from '@/lib/integrations/google-calendar'
 import { prisma } from '@/lib/prisma'
-import { sendAppointmentStatusEmail } from '@/lib/services/email'
+import { sendTrackedAppointmentStatusEmail } from '@/lib/email-delivery/tracked-notifications'
 import { logger } from '@/lib/observability/logger'
 import { deliverPushOutboxSafely } from '@/lib/push/delivery'
 import { enqueueBookingPushNotification } from '@/lib/push/outbox'
@@ -237,7 +237,7 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
       businessId: input.businessId,
     })
     const [emailResult] = await Promise.all([
-      sendAppointmentStatusEmail({
+      sendTrackedAppointmentStatusEmail(input.businessId, {
         to: appointment.customerEmail,
         customerName: appointment.customerName,
         businessName: appointment.business.name,

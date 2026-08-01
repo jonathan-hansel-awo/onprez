@@ -15,6 +15,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required'),
+  RESEND_WEBHOOK_SECRET: z.string().min(1).optional(),
   FROM_EMAIL: z.string().email().default('noreply@onprez.com'),
   FROM_NAME: z.string().default('OnPrez'),
   SUPPORT_EMAIL: z.string().email().default('support@onprez.com'),

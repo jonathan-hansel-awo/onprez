@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Toggle } from '@/components/ui/toggle'
 import { FormError } from '@/components/form'
+import { EmailDeliveryHistory } from '@/components/email-delivery/email-delivery-history'
 
 interface NotificationPreferences {
   bookingOwnerEmail: boolean
@@ -256,6 +257,8 @@ export default function NotificationSettingsPage() {
           </Button>
         </div>
       </form>
+
+      <EmailDeliveryHistory />
     </div>
   )
 }

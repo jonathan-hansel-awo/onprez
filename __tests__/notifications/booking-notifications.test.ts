@@ -1,5 +1,6 @@
 const mockAppointmentFindUnique = jest.fn()
 const mockSendEmail = jest.fn()
+const mockSendTrackedEmail = jest.fn()
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
@@ -11,6 +12,10 @@ jest.mock('@/lib/prisma', () => ({
 
 jest.mock('@/lib/services/email', () => ({
   sendEmail: (...args: unknown[]) => mockSendEmail(...args),
+}))
+
+jest.mock('@/lib/email-delivery/delivery', () => ({
+  sendTrackedEmail: (...args: unknown[]) => mockSendTrackedEmail(...args),
 }))
 
 jest.mock('@/lib/integrations/google-calendar', () => ({
@@ -59,6 +64,7 @@ describe('booking notification preferences', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockSendEmail.mockResolvedValue({ success: true, messageId: 'email-1' })
+    mockSendTrackedEmail.mockResolvedValue({ success: true, messageId: 'email-1' })
     restoreEnv('CI', originalCi)
     restoreEnv('APP_URL', originalAppUrl)
     restoreEnv('LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS', originalLoadTestFlag)
@@ -72,27 +78,29 @@ describe('booking notification preferences', () => {
 
   it('always sends the customer transactional email when owner alerts are disabled', async () => {
     mockAppointmentFindUnique.mockResolvedValue({
+      businessId: 'business-1',
       business: { settings: { notifications: { bookingOwnerEmail: false } } },
     })
 
     const result = await sendBookingCreatedNotifications(input)
 
     expect(result.customer.success).toBe(true)
-    expect(mockSendEmail).toHaveBeenCalledTimes(1)
-    expect(mockSendEmail.mock.calls[0][0]).toEqual(
+    expect(mockSendTrackedEmail).toHaveBeenCalledTimes(1)
+    expect(mockSendTrackedEmail.mock.calls[0][1]).toEqual(
       expect.objectContaining({ to: 'ada@example.com' })
     )
   })
 
   it('sends both customer and owner emails when owner alerts are enabled', async () => {
     mockAppointmentFindUnique.mockResolvedValue({
+      businessId: 'business-1',
       business: { settings: { notifications: { bookingOwnerEmail: true } } },
     })
 
     await sendBookingCreatedNotifications(input)
 
-    expect(mockSendEmail).toHaveBeenCalledTimes(2)
-    expect(mockSendEmail.mock.calls[1][0]).toEqual(
+    expect(mockSendTrackedEmail).toHaveBeenCalledTimes(2)
+    expect(mockSendTrackedEmail.mock.calls[1][1]).toEqual(
       expect.objectContaining({ to: 'bookings@example-studio.com' })
     )
   })
@@ -110,5 +118,6 @@ describe('booking notification preferences', () => {
     })
     expect(mockAppointmentFindUnique).not.toHaveBeenCalled()
     expect(mockSendEmail).not.toHaveBeenCalled()
+    expect(mockSendTrackedEmail).not.toHaveBeenCalled()
   })
 })
