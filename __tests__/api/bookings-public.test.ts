@@ -81,8 +81,8 @@ function jsonRequest(
 const mockAppointment = {
   id: 'abc12345bookingid',
   status: 'CONFIRMED',
-  startTime: new Date('2026-08-01T10:00:00.000Z'),
-  endTime: new Date('2026-08-01T10:30:00.000Z'),
+  startTime: new Date('2035-08-01T10:00:00.000Z'),
+  endTime: new Date('2035-08-01T10:30:00.000Z'),
   duration: 30,
   customerNotes: 'Please call on arrival',
   customerPhone: '07123456789',
@@ -137,7 +137,7 @@ describe('public bookings API', () => {
         jsonRequest('/api/bookings', {
           businessId: 'business-1',
           serviceId: 'service-1',
-          date: '2026-08-01',
+          date: '2035-08-01',
           startTime: '10:00',
           customerName: 'John Customer',
           customerEmail: 'john@example.com',
@@ -184,7 +184,7 @@ describe('public bookings API', () => {
         jsonRequest('/api/bookings', {
           businessId: 'business-1',
           serviceId: 'service-1',
-          date: '2026-08-01',
+          date: '2035-08-01',
           startTime: '10:00',
           endTime: '10:30',
           customerName: 'John Customer',
@@ -220,7 +220,7 @@ describe('public bookings API', () => {
       expect(mockedCreateBooking).toHaveBeenCalledWith(
         'business-1',
         'service-1',
-        '2026-08-01',
+        '2035-08-01',
         '10:00',
         {
           name: 'John Customer',
@@ -281,7 +281,7 @@ describe('public bookings API', () => {
       mockedPrisma.appointment.findFirst.mockResolvedValue({
         ...mockAppointment,
         status: 'PENDING',
-        endTime: new Date('2026-08-01T11:00:00.000Z'),
+        endTime: new Date('2035-08-01T11:00:00.000Z'),
         duration: 60,
       })
 
@@ -289,7 +289,7 @@ describe('public bookings API', () => {
         jsonRequest('/api/bookings', {
           businessId: 'business-1',
           serviceId: 'service-1',
-          date: '2026-08-01',
+          date: '2035-08-01',
           startTime: '10:00',
           endTime: '11:00',
           customerName: 'John Customer',
@@ -347,7 +347,7 @@ describe('public bookings API', () => {
         jsonRequest('/api/bookings', {
           businessId: 'business-1',
           serviceId: 'service-1',
-          date: '2026-08-01',
+          date: '2035-08-01',
           startTime: '10:00',
           customerName: 'John Customer',
           customerEmail: 'john@example.com',
@@ -429,7 +429,7 @@ describe('public bookings API', () => {
           {
             businessId: 'business-1',
             serviceId: 'service-1',
-            date: '2026-08-01',
+            date: '2035-08-01',
             startTime: '10:00',
             customerName: 'John Customer',
             customerEmail: 'john@example.com',
@@ -490,7 +490,7 @@ describe('public bookings API', () => {
         jsonRequest('/api/bookings', {
           businessId: 'business-1',
           serviceId: 'service-1',
-          date: '2026-08-01',
+          date: '2035-08-01',
           startTime: '10:00',
           customerName: 'John Customer',
           customerEmail: 'john@example.com',
@@ -550,7 +550,7 @@ describe('public bookings API', () => {
       mockedCreateCheckout.mockResolvedValue({
         checkoutUrl: 'https://checkout.stripe.test/session',
         checkoutSessionId: 'cs_test',
-        expiresAt: new Date('2026-08-01T09:30:00.000Z'),
+        expiresAt: new Date('2035-08-01T09:30:00.000Z'),
         replayed: false,
       })
 
@@ -558,7 +558,7 @@ describe('public bookings API', () => {
         jsonRequest('/api/bookings', {
           businessId: 'business-1',
           serviceId: 'service-1',
-          date: '2026-08-01',
+          date: '2035-08-01',
           startTime: '10:00',
           customerName: 'John Customer',
           customerEmail: 'john@example.com',
@@ -607,7 +607,7 @@ describe('public bookings API', () => {
         jsonRequest('/api/bookings', {
           businessId: 'business-1',
           serviceId: 'other-service',
-          date: '2026-08-01',
+          date: '2035-08-01',
           startTime: '10:00',
           endTime: '10:30',
           customerName: 'John Customer',
@@ -639,7 +639,7 @@ describe('public bookings API', () => {
         jsonRequest('/api/bookings', {
           businessId: 'business-1',
           serviceId: 'service-1',
-          date: '2026-08-01',
+          date: '2035-08-01',
           startTime: '10:00',
           endTime: '11:00',
           customerName: 'John Customer',

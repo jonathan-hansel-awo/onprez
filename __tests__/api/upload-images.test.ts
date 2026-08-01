@@ -10,10 +10,16 @@ import { POST } from '@/app/api/upload/image/route'
 
 const mockUploadStreamEnd = jest.fn()
 const mockUploadStream = jest.fn()
+const mockResource = jest.fn()
 
 jest.mock('cloudinary', () => ({
   v2: {
     config: jest.fn(),
+    api: {
+      resource: jest.fn((publicId: string, options?: Record<string, unknown>) =>
+        mockResource(publicId, options)
+      ),
+    },
     uploader: {
       upload_stream: jest.fn((options, callback) => {
         mockUploadStream(options, callback)
@@ -135,6 +141,7 @@ describe('POST /api/upload/images', () => {
       },
     })
     mockedBusinessAuthErrorResponse.mockReturnValue(undefined)
+    mockResource.mockRejectedValue({ http_code: 404 })
 
     mockUploadStream.mockImplementation((_options, callback) => {
       callback(null, {
@@ -288,7 +295,7 @@ describe('POST /api/upload/images', () => {
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
         backup: true,
         overwrite: false,
-        unique_filename: true,
+        unique_filename: false,
         use_filename: false,
       }),
       expect.any(Function)
