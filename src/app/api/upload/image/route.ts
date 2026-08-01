@@ -1,16 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
-import { getCurrentUser } from '@/lib/auth/get-user'
-import { businessAuthErrorResponse } from '@/lib/auth/business-access'
-import { requireBusinessRole } from '@/lib/auth/business-access'
-import { checkRateLimit } from '@/lib/services/rate-limit'
-import { ImageUploadValidationError, sanitizeImageUpload } from '@/lib/uploads/image-security'
+import { NextRequest, NextResponse } from 'next/server'
 import { logApiError } from '@/lib/api/error-response'
+import { businessAuthErrorResponse, requireBusinessRole } from '@/lib/auth/business-access'
+import { getCurrentUser } from '@/lib/auth/get-user'
 import { logger, withRequestLogging } from '@/lib/observability/logger'
+import { checkRateLimit } from '@/lib/services/rate-limit'
+import {
+  fingerprintImageUpload,
+  ImageUploadValidationError,
+  type ImageUploadPurpose,
+  sanitizeImageUpload,
+} from '@/lib/uploads/image-security'
 
-const PERSONAL_PURPOSES = new Set(['profile'])
-const BUSINESS_PURPOSES = new Set(['business-logo', 'business-cover', 'service', 'gallery'])
+const PERSONAL_PURPOSES = new Set<ImageUploadPurpose>(['profile'])
+const BUSINESS_PURPOSES = new Set<ImageUploadPurpose>([
+  'business-logo',
+  'business-cover',
+  'service',
+  'gallery',
+])
 const BUSINESS_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/
+const REUSED_IMAGE_MESSAGE =
+  'This image already exists in your media library, so OnPrez reused it instead of uploading a duplicate.'
+
+type StoredCloudinaryImage = {
+  secure_url: string
+  public_id: string
+  width: number
+  height: number
+  format: string
+  bytes: number
+}
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -24,21 +44,60 @@ function getStringFormValue(formData: FormData, key: string) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
-function uploadToCloudinary(buffer: Buffer, folder: string, mimeType: string) {
+function isCloudinaryNotFound(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+
+  const candidate = error as { http_code?: unknown; error?: { http_code?: unknown } }
+  return candidate.http_code === 404 || candidate.error?.http_code === 404
+}
+
+function toStoredImage(resource: unknown): StoredCloudinaryImage {
+  const image = resource as Partial<StoredCloudinaryImage>
+
+  if (
+    typeof image.secure_url !== 'string' ||
+    typeof image.public_id !== 'string' ||
+    typeof image.width !== 'number' ||
+    typeof image.height !== 'number' ||
+    typeof image.format !== 'string' ||
+    typeof image.bytes !== 'number'
+  ) {
+    throw new Error('Cloudinary returned incomplete image metadata')
+  }
+
+  return image as StoredCloudinaryImage
+}
+
+async function findStoredImage(publicId: string) {
+  try {
+    return toStoredImage(
+      await cloudinary.api.resource(publicId, {
+        resource_type: 'image',
+      })
+    )
+  } catch (error) {
+    if (isCloudinaryNotFound(error)) return null
+    throw error
+  }
+}
+
+function uploadToCloudinary(buffer: Buffer, folder: string, mimeType: string, fingerprint: string) {
   return new Promise<UploadApiResponse>((resolve, reject) => {
     cloudinary.uploader
       .upload_stream(
         {
           folder,
+          public_id: fingerprint,
           resource_type: 'image',
           allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
           backup: true,
           overwrite: false,
-          unique_filename: true,
+          unique_filename: false,
           use_filename: false,
           context: {
             source: 'onprez',
             mimeType,
+            fingerprint,
           },
         },
         (error, result) => {
@@ -56,6 +115,22 @@ function uploadToCloudinary(buffer: Buffer, folder: string, mimeType: string) {
         }
       )
       .end(buffer)
+  })
+}
+
+function imageResponse(image: StoredCloudinaryImage, reused: boolean) {
+  return NextResponse.json({
+    success: true,
+    message: reused ? REUSED_IMAGE_MESSAGE : 'Image uploaded successfully.',
+    data: {
+      url: image.secure_url,
+      publicId: image.public_id,
+      width: image.width,
+      height: image.height,
+      format: image.format,
+      bytes: image.bytes,
+      reused,
+    },
   })
 }
 
@@ -97,7 +172,8 @@ async function handlePost(request: NextRequest) {
     }
 
     const businessId = getStringFormValue(formData, 'businessId')
-    const purpose = getStringFormValue(formData, 'purpose') || 'profile'
+    const purposeValue = getStringFormValue(formData, 'purpose') || 'profile'
+    const purpose = purposeValue as ImageUploadPurpose
     const isPersonalPurpose = PERSONAL_PURPOSES.has(purpose)
     const isBusinessPurpose = BUSINESS_PURPOSES.has(purpose)
 
@@ -122,8 +198,8 @@ async function handlePost(request: NextRequest) {
     let folder = `onprez/users/${user.id}/${purpose}`
 
     if (isBusinessPurpose && businessId) {
-      // Platform admins may upload media while assisting a customer without impersonating them.
-      // Ordinary users must still hold an appropriate role in the target business.
+      // Resolve authorization before checking storage so an upload cannot reveal whether
+      // another tenant already owns a particular image.
       const isPlatformAdmin = user.role === 'ADMIN' || user.role === 'SUPERADMIN'
       if (!isPlatformAdmin) {
         await requireBusinessRole(user.id, businessId, ['ADMIN', 'MANAGER'])
@@ -132,28 +208,55 @@ async function handlePost(request: NextRequest) {
       folder = `onprez/businesses/${businessId}/${purpose}`
     }
 
-    const sanitizedImage = await sanitizeImageUpload(fileValue)
-    const result = await uploadToCloudinary(sanitizedImage.buffer, folder, sanitizedImage.mimeType)
+    const { buffer: sourceBuffer, fingerprint } = await fingerprintImageUpload(fileValue)
+    const publicId = `${folder}/${fingerprint}`
+    const existingImage = await findStoredImage(publicId)
 
-    logger.info('upload.image.succeeded', {
-      userId: user.id,
-      businessId,
-      purpose,
-      mimeType: sanitizedImage.mimeType,
-      bytes: result.bytes,
-      publicId: result.public_id,
-    })
-    return NextResponse.json({
-      success: true,
-      data: {
-        url: result.secure_url,
-        publicId: result.public_id,
-        width: result.width,
-        height: result.height,
-        format: result.format,
+    if (existingImage) {
+      logger.info('upload.image.reused', {
+        userId: user.id,
+        businessId,
+        purpose,
+        publicId,
+      })
+      return imageResponse(existingImage, true)
+    }
+
+    const sanitizedImage = await sanitizeImageUpload(fileValue, purpose, sourceBuffer)
+
+    try {
+      const result = await uploadToCloudinary(
+        sanitizedImage.buffer,
+        folder,
+        sanitizedImage.mimeType,
+        fingerprint
+      )
+
+      logger.info('upload.image.succeeded', {
+        userId: user.id,
+        businessId,
+        purpose,
+        mimeType: sanitizedImage.mimeType,
         bytes: result.bytes,
-      },
-    })
+        publicId: result.public_id,
+      })
+
+      return imageResponse(toStoredImage(result), false)
+    } catch (uploadError) {
+      // A concurrent request may have stored the same content after our first lookup.
+      const racedImage = await findStoredImage(publicId)
+      if (racedImage) {
+        logger.info('upload.image.reused_after_race', {
+          userId: user.id,
+          businessId,
+          purpose,
+          publicId,
+        })
+        return imageResponse(racedImage, true)
+      }
+
+      throw uploadError
+    }
   } catch (error) {
     const authResponse = businessAuthErrorResponse(error)
     if (authResponse) return authResponse
