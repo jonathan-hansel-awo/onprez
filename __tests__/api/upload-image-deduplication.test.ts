@@ -55,9 +55,12 @@ const storedImage = {
 
 function request() {
   const formData = new FormData()
-  formData.append('file', new File([new Uint8Array([0xff, 0xd8, 0xff])], 'service.jpg', {
-    type: 'image/jpeg',
-  }))
+  formData.append(
+    'file',
+    new File([new Uint8Array([0xff, 0xd8, 0xff])], 'service.jpg', {
+      type: 'image/jpeg',
+    })
+  )
   formData.append('businessId', 'business-1')
   formData.append('purpose', 'service')
 
@@ -91,7 +94,9 @@ describe('image upload duplicate prevention', () => {
     const json = await response.json()
 
     expect(response.status).toBe(200)
-    expect(json.data).toEqual(expect.objectContaining({ url: storedImage.secure_url, reused: true }))
+    expect(json.data).toEqual(
+      expect.objectContaining({ url: storedImage.secure_url, reused: true })
+    )
     expect(json.message).toContain('reused it instead of uploading a duplicate')
     expect(mockRequireBusinessRole).toHaveBeenCalledBefore(mockResource)
     expect(mockResource).toHaveBeenCalledWith(storedImage.public_id, {
