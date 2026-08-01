@@ -26,6 +26,7 @@ This boundary means a cached presence shell cannot expose stale appointment avai
 ## Cache identity and lifetime
 
 - Cache key: `public-presence-by-handle` plus the normalised handle.
+- Retired-handle cache key: `public-handle-redirect` plus the normalised source handle.
 - Cache tag: `public-presence:{handle}`.
 - Full-route and data-cache fallback lifetime: five minutes.
 - Handle normalisation trims whitespace and uses lowercase.
@@ -45,6 +46,7 @@ The shared `invalidatePublicPresence(handle)` operation expires both the handle 
 | Platform admin changes public profile content                          | Expire the handle immediately                                                 |
 | Owner or manager changes profile, branding, social, or public settings | Expire the old handle and, defensively, a new handle if it differs            |
 | Owner or manager changes the public theme                              | Expire the handle immediately                                                 |
+| Owner changes the handle                                               | Expire old, new, and every earlier alias immediately                          |
 | Ordinary editor auto-save or draft save                                | Do not invalidate; customers must continue seeing the last published snapshot |
 
 Invalidation must run only after the durable write succeeds. Authentication failures, validation failures, missing records, and failed database writes must not evict a valid public page.
@@ -66,6 +68,7 @@ After deployment:
 5. Change the theme or business contact data and confirm the public page and metadata refresh.
 6. Save an unpublished draft change without publishing and confirm the live page still shows the previous snapshot.
 7. Confirm service pricing and next availability continue to update through their public APIs.
+8. Change a handle twice and confirm both earlier URLs redirect directly to the current handle.
 
 ## Acceptance criteria
 
@@ -76,5 +79,8 @@ After deployment:
 - Draft-only saves do not disturb the live snapshot.
 - Real-time service and availability data remain outside the cache.
 - Automated tests cover key construction, TTL, publication filtering, invalidation, and architectural mutation coverage.
+- Historical handles resolve only after a current-handle miss and never store redirect-to-redirect chains.
 
 P2-027 adds migration `20260801180000_presence_seo_controls`; no new environment variable is required.
+
+P2-028 adds migration `20260802000000_business_handle_redirects`; no new environment variable is required.

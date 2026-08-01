@@ -17,8 +17,13 @@ export default function ProfileSettingsPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [canManageIndexing, setCanManageIndexing] = useState(false)
+  const [canManageOwnerSettings, setCanManageOwnerSettings] = useState(false)
   const [seoKeywordsInput, setSeoKeywordsInput] = useState('')
+  const [handleInput, setHandleInput] = useState('')
+  const [handleSaving, setHandleSaving] = useState(false)
+  const [handleError, setHandleError] = useState('')
+  const [confirmHandleChange, setConfirmHandleChange] = useState(false)
+  const [previousHandles, setPreviousHandles] = useState<string[]>([])
 
   const [formData, setFormData] = useState({
     name: '',
@@ -59,7 +64,23 @@ export default function ProfileSettingsPage() {
           allowSearchEngineIndexing: data.data.allowSearchEngineIndexing !== false,
         }))
         setSeoKeywordsInput(Array.isArray(seoKeywords) ? seoKeywords.join(', ') : '')
-        setCanManageIndexing(Boolean(access?.isOwner))
+        setHandleInput(data.data.slug || '')
+        setCanManageOwnerSettings(Boolean(access?.isOwner))
+
+        try {
+          const historyResponse = await fetch('/api/business/handle')
+          const historyData = await historyResponse.json()
+          if (historyData.success) {
+            setPreviousHandles(
+              historyData.data.previousHandles.map(
+                (item: { sourceHandle: string }) => item.sourceHandle
+              )
+            )
+          }
+        } catch {
+          // Handle history is supplementary; profile editing must remain
+          // available if this secondary request is temporarily unavailable.
+        }
       } else {
         setError('Failed to load business data')
       }
@@ -78,13 +99,13 @@ export default function ProfileSettingsPage() {
     setErrors({})
 
     try {
-      const { allowSearchEngineIndexing, ...sharedProfileFields } = formData
+      const { allowSearchEngineIndexing, slug: _slug, ...sharedProfileFields } = formData
       const seoKeywords = seoKeywordsInput
         .split(',')
         .map(keyword => keyword.trim())
         .filter(Boolean)
         .slice(0, 20)
-      const profile = canManageIndexing
+      const profile = canManageOwnerSettings
         ? { ...sharedProfileFields, seoKeywords, allowSearchEngineIndexing }
         : { ...sharedProfileFields, seoKeywords }
       const response = await fetch('/api/business/settings', {
@@ -113,6 +134,39 @@ export default function ProfileSettingsPage() {
       setError('Failed to save settings')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function changeHandle() {
+    setHandleSaving(true)
+    setHandleError('')
+
+    try {
+      const response = await fetch('/api/business/handle', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handle: handleInput }),
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        setHandleError(data.error || 'Failed to change handle')
+        return
+      }
+
+      const nextHandle = data.data.business.slug
+      setFormData(current => ({ ...current, slug: nextHandle }))
+      setHandleInput(nextHandle)
+      setPreviousHandles(
+        data.data.previousHandles.map((item: { sourceHandle: string }) => item.sourceHandle)
+      )
+      setConfirmHandleChange(false)
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch {
+      setHandleError('Failed to change handle')
+    } finally {
+      setHandleSaving(false)
     }
   }
 
@@ -173,17 +227,79 @@ export default function ProfileSettingsPage() {
               placeholder="Enter your business name"
             />
 
-            <div>
+            <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Handle
                 <Badge variant="default" size="sm" className="ml-2">
                   onprez.com/{formData.slug}
                 </Badge>
               </label>
-              <Input value={formData.slug} disabled className="bg-gray-50" />
-              <p className="text-xs text-gray-500 mt-1">
-                Your handle cannot be changed after creation
-              </p>
+              <Input
+                value={handleInput}
+                disabled={!canManageOwnerSettings || handleSaving}
+                onChange={event => {
+                  setHandleInput(event.target.value.toLowerCase().trim())
+                  setConfirmHandleChange(false)
+                  setHandleError('')
+                }}
+                error={handleError}
+                className={!canManageOwnerSettings ? 'bg-gray-50' : undefined}
+                helperText="Use 3–30 lowercase letters, numbers, or hyphens. Old links will redirect permanently to the new handle."
+              />
+
+              {canManageOwnerSettings && handleInput !== formData.slug && !confirmHandleChange && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setConfirmHandleChange(true)}
+                >
+                  Review handle change
+                </Button>
+              )}
+
+              {confirmHandleChange && handleInput !== formData.slug && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-medium text-amber-900">
+                    Change onprez.com/{formData.slug} to onprez.com/{handleInput}?
+                  </p>
+                  <p className="mt-1 text-xs text-amber-800">
+                    The old handle stays reserved for this business and redirects directly to the
+                    new one.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      disabled={handleSaving}
+                      onClick={changeHandle}
+                    >
+                      {handleSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Confirm change
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={handleSaving}
+                      onClick={() => setConfirmHandleChange(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {!canManageOwnerSettings && (
+                <p className="text-xs text-amber-700">
+                  Only the business owner can change the handle.
+                </p>
+              )}
+
+              {previousHandles.length > 0 && (
+                <p className="text-xs text-gray-500">
+                  Redirecting previous handles:{' '}
+                  {previousHandles.map(handle => `onprez.com/${handle}`).join(', ')}
+                </p>
+              )}
             </div>
 
             <Select
@@ -256,14 +372,14 @@ export default function ProfileSettingsPage() {
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <Checkbox
                 checked={formData.allowSearchEngineIndexing}
-                disabled={!canManageIndexing}
+                disabled={!canManageOwnerSettings}
                 onChange={e =>
                   setFormData({ ...formData, allowSearchEngineIndexing: e.target.checked })
                 }
                 label="Allow search engines to index this presence page"
                 description="When enabled and published, the page can appear in OnPrez's sitemap and search results. Turning this off adds noindex and removes it from the sitemap."
               />
-              {!canManageIndexing && (
+              {!canManageOwnerSettings && (
                 <p className="mt-3 text-xs text-amber-700">
                   Only the business owner can change search-engine visibility.
                 </p>

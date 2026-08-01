@@ -1,5 +1,6 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound, permanentRedirect, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { getCachedPublicHandleRedirect } from '@/lib/presence/public-presence-cache'
 import { BookingIndexClient } from './BookingIndexClient'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -27,7 +28,13 @@ export default async function BookingIndexPage({ params }: BookingIndexPageProps
     },
   })
 
-  if (!business || !business.isPublished) {
+  if (!business) {
+    const canonicalHandle = await getCachedPublicHandleRedirect(handle)
+    if (canonicalHandle) permanentRedirect(`/${canonicalHandle}/book`)
+    notFound()
+  }
+
+  if (!business.isPublished) {
     notFound()
   }
 

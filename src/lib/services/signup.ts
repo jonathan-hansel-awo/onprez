@@ -3,7 +3,7 @@ import { hashPassword } from '@/lib/auth/password'
 import { generateVerificationToken } from '@/lib/utils/token'
 import { sendAccountVerificationEmail } from '@/lib/services/account-verification-email'
 import { logSecurityEvent } from '@/lib/services/security-logging'
-import { RESERVED_HANDLES, type SignupInput } from '@/lib/validation/auth'
+import { businessHandleSchema, type SignupInput } from '@/lib/validation/auth'
 import { env } from '@/lib/config/env'
 import { createDefaultPresencePageContent } from '@/lib/utils/default-presence-page'
 import { Prisma } from '@prisma/client'
@@ -18,8 +18,6 @@ export interface SignupResult {
   requiresVerification: boolean
   error?: string
 }
-
-const HANDLE_REGEX = /^[a-z0-9-]+$/
 
 async function logSecurityEventSafely(event: Parameters<typeof logSecurityEvent>[0]) {
   try {
@@ -55,19 +53,12 @@ export async function signupUser(
   const businessCategory = data.businessCategory
 
   try {
-    if (handle.length < 3 || handle.length > 30 || !HANDLE_REGEX.test(handle)) {
+    const handleValidation = businessHandleSchema.safeParse(handle)
+    if (!handleValidation.success) {
       return {
         success: false,
         requiresVerification: false,
-        error: 'Invalid handle',
-      }
-    }
-
-    if (RESERVED_HANDLES.includes(handle as (typeof RESERVED_HANDLES)[number])) {
-      return {
-        success: false,
-        requiresVerification: false,
-        error: 'This handle is reserved',
+        error: handleValidation.error.issues[0]?.message || 'Invalid handle',
       }
     }
 
@@ -84,12 +75,18 @@ export async function signupUser(
       }
     }
 
-    const existingHandle = await prisma.business.findUnique({
-      where: { slug: handle },
-      select: { id: true },
-    })
+    const [existingHandle, retiredHandle] = await Promise.all([
+      prisma.business.findUnique({
+        where: { slug: handle },
+        select: { id: true },
+      }),
+      prisma.businessHandleRedirect.findUnique({
+        where: { sourceHandle: handle },
+        select: { id: true },
+      }),
+    ])
 
-    if (existingHandle) {
+    if (existingHandle || retiredHandle) {
       return {
         success: false,
         requiresVerification: false,
@@ -228,32 +225,28 @@ export async function checkHandleAvailability(handle: string): Promise<{
   available: boolean
   reason?: string
 }> {
-  const normalizedHandle = handle.toLowerCase().trim()
-
-  if (
-    normalizedHandle.length < 3 ||
-    normalizedHandle.length > 30 ||
-    !HANDLE_REGEX.test(normalizedHandle)
-  ) {
+  const validation = businessHandleSchema.safeParse(handle)
+  if (!validation.success) {
     return {
       available: false,
-      reason: 'Invalid handle',
+      reason: validation.error.issues[0]?.message || 'Invalid handle',
     }
   }
 
-  if (RESERVED_HANDLES.includes(normalizedHandle as (typeof RESERVED_HANDLES)[number])) {
-    return {
-      available: false,
-      reason: 'This handle is reserved',
-    }
-  }
+  const normalizedHandle = validation.data
 
-  const existing = await prisma.business.findUnique({
-    where: { slug: normalizedHandle },
-    select: { id: true },
-  })
+  const [existing, retired] = await Promise.all([
+    prisma.business.findUnique({
+      where: { slug: normalizedHandle },
+      select: { id: true },
+    }),
+    prisma.businessHandleRedirect.findUnique({
+      where: { sourceHandle: normalizedHandle },
+      select: { id: true },
+    }),
+  ])
 
-  if (existing) {
+  if (existing || retired) {
     return {
       available: false,
       reason: 'Handle is already taken',

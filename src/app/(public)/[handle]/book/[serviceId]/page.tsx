@@ -1,6 +1,7 @@
 import { FeatureKey, StripeConnectedAccountStatus } from '@prisma/client'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { getCachedPublicHandleRedirect } from '@/lib/presence/public-presence-cache'
 import { BookingPageClient } from './BookingPageClient'
 import { Metadata } from 'next'
 import {
@@ -41,7 +42,13 @@ export default async function BookingPage({ params }: BookingPageProps) {
     },
   })
 
-  if (!business || !business.isPublished) {
+  if (!business) {
+    const canonicalHandle = await getCachedPublicHandleRedirect(handle)
+    if (canonicalHandle) permanentRedirect(`/${canonicalHandle}/book/${serviceId}`)
+    notFound()
+  }
+
+  if (!business.isPublished) {
     notFound()
   }
 

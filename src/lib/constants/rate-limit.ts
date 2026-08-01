@@ -164,6 +164,13 @@ export const RATE_LIMIT_RULES: Record<string, RateLimitRule> = {
     windowMs: 60 * 1000, // 1 minute
     message: 'Too many handle checks. Please slow down.',
   },
+
+  'handle:update': {
+    endpoint: 'handle:update',
+    maxAttempts: 5,
+    windowMs: 24 * 60 * 60 * 1000,
+    message: 'Too many handle changes. Please try again later.',
+  },
 }
 
 /**

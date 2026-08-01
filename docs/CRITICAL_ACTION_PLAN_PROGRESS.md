@@ -3,15 +3,15 @@
 **Document type:** Living progress tracker  
 **Source plan:** `OnPrez Critical Action Plan`
 
-**Last repository audit:** 1 August 2026
+**Last repository audit:** 2 August 2026
 
 **Audited branch:** `main`
 
-**Audit baseline:** `50f6b1f` plus the current implementation pull request
+**Audit baseline:** `c1a9ad9` plus the current implementation pull request
 
-**Current working phase:** Phase 12 — SEO and Handle Durability
+**Current working phase:** Phase 13 — Testing Maturity
 
-**Next planned item:** P2-028 — Add Handle Change Redirects
+**Next planned item:** P2-029 — Define and Enforce a Test Pyramid
 
 ---
 
@@ -66,21 +66,21 @@ Whenever an action item is completed:
 | Phase 9 — Performance and Scalability                 |        4 |       0 |           0 |      4 |
 | Phase 10 — Privacy and Data Lifecycle                 |        3 |       0 |           0 |      3 |
 | Phase 11 — Communications                             |        3 |       0 |           0 |      3 |
-| Phase 12 — SEO and Handle Durability                  |        1 |       0 |           1 |      2 |
+| Phase 12 — SEO and Handle Durability                  |        2 |       0 |           0 |      2 |
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **54** |   **2** |       **5** | **61** |
+| **Total**                                             |   **55** |   **2** |       **4** | **61** |
 
-**Strict completion:** 54 of 61 items — approximately **89%**.
+**Strict completion:** 55 of 61 items — approximately **90%**.
 
-**Items with at least meaningful implementation:** 56 of 61 — approximately **92%**.
+**Items with at least meaningful implementation:** 57 of 61 — approximately **93%**.
 
 ### Current priorities from this audit
 
 1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
-2. Preserve old presence links safely when owners change handles under **P2-028**.
-3. Complete the remaining testing-maturity and canonical architecture documentation gaps before paid scale.
+2. Define and enforce the repository test pyramid under **P2-029**.
+3. Complete the remaining browser E2E, accessibility, and canonical architecture documentation gaps before paid scale.
 4. Complete the P2-023 provider-account privacy checks and recorded credential-encryption follow-ups before paid scale. Add usage and provider-cost tracking before enforcing paid-plan limits.
 
 ---
@@ -394,8 +394,15 @@ Whenever an action item is completed:
   - `docs/product/PRESENCE_SEO_ACCEPTANCE.md` records the indexing, metadata, structured-data, release-validation, and no-guaranteed-rich-result contract.
   - Deploy migration `20260801180000_presence_seo_controls` before relying on the new setting in production; no new environment variable is required.
 
-- [ ] **P2-028 — Add Handle Change Redirects** — **Not started**
-  - No durable old-handle mapping, redirect history, conflict rules, or redirect loop protection was verified.
+- [x] **P2-028 — Add Handle Change Redirects** — **Complete**
+  - Implemented by the current P2-028 implementation pull request.
+  - Business owners can change handles from Business Profile through a dedicated owner-only, rate-limited endpoint with explicit confirmation; admins and managers cannot bypass the restriction.
+  - Every retired handle is stored as a unique direct relation to its business and resolves with a permanent `308` to the current presence or booking URL, including repeated changes and return to an owner’s earlier handle.
+  - Signup and public availability checks reserve both current and historical handles; another business cannot claim an old link.
+  - PostgreSQL namespace triggers and advisory transaction locks enforce current-versus-retired conflicts under concurrent writes, while direct business relations and self-redirect guards prevent chains and loops.
+  - All current, new, and earlier handle cache tags/routes are invalidated after a durable change, and security logs record bounded from/to handle audit facts.
+  - `docs/product/HANDLE_CHANGE_REDIRECTS.md` records the ownership, redirect, conflict, cache, rollback, and release-verification contract.
+  - Deploy migration `20260802000000_business_handle_redirects` before enabling handle edits; no new environment variable is required.
 
 ---
 
@@ -450,6 +457,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2 August 2026 | Completed P2-028 with owner-only handle changes, durable direct redirects, historical-handle reservation, concurrency-safe namespace guards, and loop protection.                                   | Current P2-028 implementation pull request                                                                                                                                                                                                                        |
 | 1 August 2026 | Completed P2-027 with owner-controlled indexing, published-snapshot FAQ and local-business JSON-LD, sitemap filtering, and realistic recurring SEO validation.                                      | [#134](https://github.com/jonathan-hansel-awo/onprez/pull/134)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-024 with privacy-minimised email delivery history, signed Resend event reconciliation, safe dashboard retries, and bounce/complaint suppression.                                       | [#133](https://github.com/jonathan-hansel-awo/onprez/pull/133)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-023 with the canonical PII inventory/data-flow map, field protection and lifecycle ownership, privacy-boundary fixes, and recurring automated audit.                                   | [#132](https://github.com/jonathan-hansel-awo/onprez/pull/132)                                                                                                                                                                                                    |

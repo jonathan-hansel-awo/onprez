@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export const PUBLIC_PRESENCE_REVALIDATE_SECONDS = 300
 const PUBLIC_PRESENCE_CACHE_KEY = 'public-presence-by-handle'
+const PUBLIC_HANDLE_REDIRECT_CACHE_KEY = 'public-handle-redirect'
 
 export function normalizePublicPresenceHandle(handle?: string | null): string {
   return typeof handle === 'string' ? handle.trim().toLowerCase() : ''
@@ -113,6 +114,34 @@ async function loadPublishedPresence(handle: string) {
   }
 }
 
+async function loadPublicHandleRedirect(sourceHandle: string) {
+  const redirect = await prisma.businessHandleRedirect.findUnique({
+    where: { sourceHandle },
+    select: {
+      business: {
+        select: { slug: true, isActive: true },
+      },
+    },
+  })
+
+  const canonicalHandle = redirect?.business.isActive ? redirect.business.slug : null
+  return canonicalHandle && canonicalHandle !== sourceHandle ? canonicalHandle : null
+}
+
+export async function getCachedPublicHandleRedirect(handle: string) {
+  const normalizedHandle = normalizePublicPresenceHandle(handle)
+  if (!normalizedHandle) return null
+
+  return unstable_cache(
+    () => loadPublicHandleRedirect(normalizedHandle),
+    [PUBLIC_HANDLE_REDIRECT_CACHE_KEY, normalizedHandle],
+    {
+      revalidate: PUBLIC_PRESENCE_REVALIDATE_SECONDS,
+      tags: [publicPresenceCacheTag(normalizedHandle)],
+    }
+  )()
+}
+
 export async function getCachedPublicPresence(handle: string) {
   const normalizedHandle = normalizePublicPresenceHandle(handle)
   if (!normalizedHandle) return null
@@ -125,6 +154,17 @@ export async function getCachedPublicPresence(handle: string) {
       tags: [publicPresenceCacheTag(normalizedHandle)],
     }
   )()
+}
+
+export async function getCachedPublicPresenceResolution(handle: string) {
+  const normalizedHandle = normalizePublicPresenceHandle(handle)
+  if (!normalizedHandle) return { presence: null, canonicalHandle: null }
+
+  const presence = await getCachedPublicPresence(normalizedHandle)
+  if (presence) return { presence, canonicalHandle: normalizedHandle }
+
+  const canonicalHandle = await getCachedPublicHandleRedirect(normalizedHandle)
+  return { presence: null, canonicalHandle }
 }
 
 function reportInvalidationFailure(

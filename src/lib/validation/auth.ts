@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * Handle validation rules
  */
-const HANDLE_REGEX = /^[a-z0-9-]+$/
+export const HANDLE_REGEX = /^[a-z0-9-]+$/
 const MIN_HANDLE_LENGTH = 3
 const MAX_HANDLE_LENGTH = 30
 
@@ -48,6 +48,18 @@ export const RESERVED_HANDLES = [
   'production',
 ] as const
 
+export const businessHandleSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(MIN_HANDLE_LENGTH, `Handle must be at least ${MIN_HANDLE_LENGTH} characters`)
+  .max(MAX_HANDLE_LENGTH, `Handle must not exceed ${MAX_HANDLE_LENGTH} characters`)
+  .regex(HANDLE_REGEX, 'Handle can only contain lowercase letters, numbers, and hyphens')
+  .refine(
+    handle => !RESERVED_HANDLES.includes(handle as (typeof RESERVED_HANDLES)[number]),
+    'This handle is reserved'
+  )
+
 /**
  * Sign up request schema
  */
@@ -60,14 +72,7 @@ export const signupSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/\d/, 'Password must contain at least one number'),
-  handle: z
-    .string()
-    .min(MIN_HANDLE_LENGTH, `Handle must be at least ${MIN_HANDLE_LENGTH} characters`)
-    .max(MAX_HANDLE_LENGTH, `Handle must not exceed ${MAX_HANDLE_LENGTH} characters`)
-    .regex(HANDLE_REGEX, 'Handle can only contain lowercase letters, numbers, and hyphens')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .refine(handle => !RESERVED_HANDLES.includes(handle as any), 'This handle is reserved')
-    .toLowerCase(),
+  handle: businessHandleSchema,
   businessName: z
     .string()
     .min(1, 'Business name is required')
