@@ -1,0 +1,118 @@
+name: Critical path load tests
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/load-testing.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'prisma/schema.prisma'
+      - 'prisma/migrations/**'
+      - 'scripts/load-tests/**'
+      - 'src/app/\[handle\]/**'
+      - 'src/app/api/auth/check-handle/**'
+      - 'src/app/api/auth/login/**'
+      - 'src/app/api/availability/**'
+      - 'src/app/api/bookings/**'
+      - 'src/lib/presence/public-presence-cache.ts'
+      - 'src/lib/services/booking.ts'
+      - 'src/lib/services/login.ts'
+      - 'src/lib/services/rate-limit.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: critical-load-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolated-baseline:
+    name: Isolated capacity baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: onprez
+          POSTGRES_DB: onprez_load_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U onprez -d onprez_load_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: postgresql://onprez@127.0.0.1:5432/onprez_load_test
+      DIRECT_URL: postgresql://onprez@127.0.0.1:5432/onprez_load_test
+      APP_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+      RESEND_API_KEY: re_isolated_load_test_placeholder
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: isolated-load-test
+      CLOUDINARY_API_KEY: isolated-load-test
+      CLOUDINARY_API_SECRET: isolated-load-test
+      JWT_SECRET: isolated-load-test-jwt-secret-at-least-32-characters
+      LOAD_TEST_BASE_URL: http://127.0.0.1:3000
+      LOAD_TEST_FIXTURE_PATH: artifacts/load-tests/fixture.json
+      LOAD_TEST_REPORT_PATH: artifacts/load-tests/critical-path-baseline.json
+      LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS: 'true'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Prepare isolated database
+        run: |
+          npm run db:migrate:deploy
+          npx prisma migrate diff \
+            --from-url "$DIRECT_URL" \
+            --to-schema-datamodel prisma/schema.prisma \
+            --exit-code
+          npm run load-test:seed
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Start isolated application
+        run: |
+          npm run start -- -H 127.0.0.1 -p 3000 > /tmp/onprez-load-test-server.log 2>&1 &
+          echo $! > /tmp/onprez-load-test-server.pid
+          for attempt in {1..45}; do
+            if curl --silent --fail --max-time 2 "$LOAD_TEST_BASE_URL/api/health" >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          tail -n 200 /tmp/onprez-load-test-server.log
+          exit 1
+
+      - name: Run critical path capacity baseline
+        run: npm run load-test:critical
+
+      - name: Show application log on failure
+        if: failure()
+        run: tail -n 300 /tmp/onprez-load-test-server.log || true
+
+      - name: Upload redacted baseline report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: critical-path-load-baseline-${{ github.run_id }}
+          path: |
+            artifacts/load-tests/critical-path-baseline.json
+            artifacts/load-tests/critical-path-baseline.md
+          if-no-files-found: warn
+          retention-days: 90

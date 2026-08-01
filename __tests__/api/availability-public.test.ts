@@ -275,13 +275,27 @@ describe('availability public API', () => {
   })
 
   it('checks specific slot availability against all business appointments, not only same-service appointments', async () => {
+    const targetDate = new Date()
+    targetDate.setDate(targetDate.getDate() + 7)
+    const date = targetDate.toISOString().slice(0, 10)
+
+    mockedPrisma.business.findUnique.mockResolvedValue({
+      ...business,
+      businessHours: [
+        {
+          ...business.businessHours[0],
+          dayOfWeek: targetDate.getDay(),
+        },
+      ],
+    })
+
     const response = await availabilityPOST(
       createRequest('/api/availability', {
         method: 'POST',
         body: JSON.stringify({
           businessId: 'business-1',
           serviceId: 'service-1',
-          date: '2026-08-01',
+          date,
           startTime: '10:00',
         }),
         headers: {

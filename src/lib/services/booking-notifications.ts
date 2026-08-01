@@ -37,6 +37,19 @@ export interface BookingCreatedNotificationResult {
   business: EmailResult
 }
 
+function isIsolatedCiLoadTest(): boolean {
+  if (process.env.CI !== 'true' || process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS !== 'true') {
+    return false
+  }
+
+  try {
+    const hostname = new URL(process.env.APP_URL || '').hostname
+    return ['localhost', '127.0.0.1', '::1'].includes(hostname)
+  } catch {
+    return false
+  }
+}
+
 interface EmailAction {
   href: string
   label: string
@@ -358,6 +371,15 @@ export async function sendBookingCreatedNotifications(
   input: BookingCreatedNotificationInput
 ): Promise<BookingCreatedNotificationResult> {
   logger.info('booking.notifications.started', { bookingId: input.bookingId, status: input.status })
+
+  if (isIsolatedCiLoadTest()) {
+    logger.info('booking.notifications.skipped', {
+      bookingId: input.bookingId,
+      reason: 'isolated_ci_load_test',
+    })
+    const suppressed: EmailResult = { success: true, messageId: 'isolated-load-test-suppressed' }
+    return { customer: suppressed, business: suppressed }
+  }
 
   try {
     const businessRecipient =

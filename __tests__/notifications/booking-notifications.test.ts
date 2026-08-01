@@ -46,10 +46,28 @@ const input = {
   currency: 'GBP',
 }
 
+function restoreEnv(name: string, value: string | undefined) {
+  if (value === undefined) delete process.env[name]
+  else process.env[name] = value
+}
+
 describe('booking notification preferences', () => {
+  const originalCi = process.env.CI
+  const originalAppUrl = process.env.APP_URL
+  const originalLoadTestFlag = process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS
+
   beforeEach(() => {
     jest.clearAllMocks()
     mockSendEmail.mockResolvedValue({ success: true, messageId: 'email-1' })
+    restoreEnv('CI', originalCi)
+    restoreEnv('APP_URL', originalAppUrl)
+    restoreEnv('LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS', originalLoadTestFlag)
+  })
+
+  afterEach(() => {
+    restoreEnv('CI', originalCi)
+    restoreEnv('APP_URL', originalAppUrl)
+    restoreEnv('LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS', originalLoadTestFlag)
   })
 
   it('always sends the customer transactional email when owner alerts are disabled', async () => {
@@ -77,5 +95,20 @@ describe('booking notification preferences', () => {
     expect(mockSendEmail.mock.calls[1][0]).toEqual(
       expect.objectContaining({ to: 'bookings@example-studio.com' })
     )
+  })
+
+  it('suppresses external delivery only for an explicitly isolated local CI load test', async () => {
+    process.env.CI = 'true'
+    process.env.APP_URL = 'http://127.0.0.1:3000'
+    process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS = 'true'
+
+    const result = await sendBookingCreatedNotifications(input)
+
+    expect(result).toEqual({
+      customer: { success: true, messageId: 'isolated-load-test-suppressed' },
+      business: { success: true, messageId: 'isolated-load-test-suppressed' },
+    })
+    expect(mockAppointmentFindUnique).not.toHaveBeenCalled()
+    expect(mockSendEmail).not.toHaveBeenCalled()
   })
 })
