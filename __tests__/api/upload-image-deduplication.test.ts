@@ -95,7 +95,9 @@ describe('image upload duplicate prevention', () => {
       expect.objectContaining({ url: storedImage.secure_url, reused: true })
     )
     expect(json.message).toContain('reused it instead of uploading a duplicate')
-    expect(mockRequireBusinessRole).toHaveBeenCalledBefore(mockResource)
+    expect(mockRequireBusinessRole.mock.invocationCallOrder[0]).toBeLessThan(
+      mockResource.mock.invocationCallOrder[0]
+    )
     expect(mockResource).toHaveBeenCalledWith(storedImage.public_id, {
       resource_type: 'image',
     })
