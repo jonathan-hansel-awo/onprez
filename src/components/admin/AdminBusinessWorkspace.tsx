@@ -193,7 +193,12 @@ export function AdminBusinessWorkspace({
       }
 
       setServiceDraft(current => ({ ...current, imageUrl: result.data.url }))
-      setServiceMessage('Image uploaded. Save the service to keep it.')
+      setServiceMessage(
+        result.data.reused === true
+          ? result.message ||
+              'This image was already in the business media library, so the stored copy was reused.'
+          : result.message || 'Image uploaded. Save the service to keep it.'
+      )
     } catch (error) {
       setServiceMessage(error instanceof Error ? error.message : 'Failed to upload service image')
     } finally {
