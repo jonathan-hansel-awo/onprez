@@ -1,7 +1,0 @@
-[
-  "__tests__/api/upload-images.test.ts",
-  "__tests__/p2-019-image-delivery-contract.test.ts",
-  "src/app/api/upload/image/route.ts",
-  "src/lib/uploads/__tests__/image-optimization.test.ts",
-  "src/lib/uploads/image-security.ts"
-]
