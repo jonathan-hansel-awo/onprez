@@ -81,12 +81,7 @@ async function findStoredImage(publicId: string) {
   }
 }
 
-function uploadToCloudinary(
-  buffer: Buffer,
-  folder: string,
-  mimeType: string,
-  fingerprint: string
-) {
+function uploadToCloudinary(buffer: Buffer, folder: string, mimeType: string, fingerprint: string) {
   return new Promise<UploadApiResponse>((resolve, reject) => {
     cloudinary.uploader
       .upload_stream(

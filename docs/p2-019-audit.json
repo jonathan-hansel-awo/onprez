@@ -1,0 +1,14 @@
+{
+  "uploadCallers": [
+    "src/components/admin/AdminBusinessWorkspace.tsx",
+    "src/components/ui/image-upload.tsx"
+  ],
+  "cloudinaryRenderers": [],
+  "rawImageRenderers": [
+    "src/app/api/pwa/icon/route.tsx",
+    "src/components/templates/HairMakeupDemoPreview.tsx",
+    "src/components/templates/HeavenlyPamperPreview.tsx",
+    "src/components/templates/RegentBarberPreview.tsx",
+    "src/components/ui/avatar-stack.tsx"
+  ]
+}
