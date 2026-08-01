@@ -6,10 +6,7 @@ import { POST } from '@/app/api/upload/image/route'
 import { requireBusinessRole } from '@/lib/auth/business-access'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { checkRateLimit } from '@/lib/services/rate-limit'
-import {
-  fingerprintImageUpload,
-  sanitizeImageUpload,
-} from '@/lib/uploads/image-security'
+import { fingerprintImageUpload, sanitizeImageUpload } from '@/lib/uploads/image-security'
 
 jest.mock('cloudinary', () => ({
   v2: {
