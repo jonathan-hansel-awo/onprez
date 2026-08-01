@@ -88,6 +88,10 @@ export async function GET(request: NextRequest) {
           country: business.country,
           timezone: business.timezone,
           isPublished: business.isPublished,
+          seoTitle: business.seoTitle,
+          seoDescription: business.seoDescription,
+          seoKeywords: business.seoKeywords,
+          allowSearchEngineIndexing: business.allowSearchEngineIndexing,
         }
         break
 
@@ -129,6 +133,10 @@ export async function GET(request: NextRequest) {
           country: business.country,
           timezone: business.timezone,
           isPublished: business.isPublished,
+          seoTitle: business.seoTitle,
+          seoDescription: business.seoDescription,
+          seoKeywords: business.seoKeywords,
+          allowSearchEngineIndexing: business.allowSearchEngineIndexing,
           branding: business.branding || {},
           logoUrl: business.logoUrl,
           coverImageUrl: business.coverImageUrl,
@@ -180,6 +188,17 @@ export async function PUT(request: NextRequest) {
 
     const context = await resolveWritableBusinessContext(user.id, businessId || request)
     const { profile, settings, socialLinks, branding } = validation.data
+
+    if (
+      profile &&
+      Object.prototype.hasOwnProperty.call(profile, 'allowSearchEngineIndexing') &&
+      !context.isOwner
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Only the business owner can change search visibility' },
+        { status: 403 }
+      )
+    }
 
     const existingBusiness = await prisma.business.findUnique({
       where: { id: context.businessId },
@@ -241,6 +260,10 @@ export async function PUT(request: NextRequest) {
         country: true,
         timezone: true,
         isPublished: true,
+        seoTitle: true,
+        seoDescription: true,
+        seoKeywords: true,
+        allowSearchEngineIndexing: true,
         branding: true,
         logoUrl: true,
         coverImageUrl: true,

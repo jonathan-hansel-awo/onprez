@@ -301,6 +301,29 @@ describe('business settings routes', () => {
     )
   })
 
+  it('PUT /api/business/settings reserves search visibility for the business owner', async () => {
+    mockedResolveWritableBusinessContext.mockResolvedValue({
+      ...businessContext,
+      role: 'ADMIN',
+      isOwner: false,
+    })
+
+    const response = await updateBusinessSettings(
+      createRequest('/api/business/settings', {
+        businessId: 'business-1',
+        profile: {
+          allowSearchEngineIndexing: false,
+        },
+      })
+    )
+    const json = await response.json()
+
+    expect(response.status).toBe(403)
+    expect(json.error).toBe('Only the business owner can change search visibility')
+    expect(mockedPrisma.business.findUnique).not.toHaveBeenCalled()
+    expect(mockedPrisma.business.update).not.toHaveBeenCalled()
+  })
+
   it('GET /api/business/features uses readable business context', async () => {
     mockedPrisma.business.findUnique.mockResolvedValue({
       id: 'business-1',

@@ -39,7 +39,8 @@
     "push:generate-vapid": "tsx scripts/generate-vapid-keys.ts",
     "load-test:seed": "tsx scripts/load-tests/seed-critical-paths.ts",
     "load-test:critical": "tsx scripts/load-tests/run-critical-paths.ts",
-    "privacy:audit": "node scripts/audit-pii-handling.mjs"
+    "privacy:audit": "node scripts/audit-pii-handling.mjs",
+    "seo:validate": "node --import tsx scripts/validate-presence-seo.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

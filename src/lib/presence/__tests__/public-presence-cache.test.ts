@@ -40,6 +40,9 @@ const publishedBusiness = {
   state: null,
   zipCode: null,
   country: 'GB',
+  category: 'SPA',
+  latitude: null,
+  longitude: null,
   website: null,
   socialLinks: {},
   settings: {},
@@ -51,6 +54,21 @@ const publishedBusiness = {
   seoTitle: null,
   seoDescription: null,
   seoKeywords: [],
+  allowSearchEngineIndexing: true,
+  businessHours: [{ dayOfWeek: 1, openTime: '09:00', closeTime: '17:00' }],
+  services: [
+    {
+      id: 'service-1',
+      name: 'Restorative Massage',
+      description: 'A tailored full-body treatment.',
+      imageUrl: null,
+      price: { toString: () => '75' },
+      priceType: 'FIXED',
+      priceRangeMin: null,
+      priceRangeMax: null,
+      currency: 'GBP',
+    },
+  ],
 }
 
 describe('public presence cache', () => {
@@ -92,6 +110,8 @@ describe('public presence cache', () => {
     expect(result).toEqual(
       expect.objectContaining({
         business: expect.objectContaining({ slug: 'aurelia-wellness' }),
+        services: [expect.objectContaining({ id: 'service-1', price: '75' })],
+        businessHours: [{ dayOfWeek: 1, openTime: '09:00', closeTime: '17:00' }],
         reviewSummary: { averageRating: 4.8, reviewCount: 12 },
       })
     )

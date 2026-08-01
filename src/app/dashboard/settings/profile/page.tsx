@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Save, Loader2, ExternalLink, Globe, MapPin, Mail, Phone } from 'lucide-react'
 import { BUSINESS_CATEGORY_LABELS, getTimezonesByRegion } from '@/types/business'
-import { Input, FormError, Select, TextArea } from '@/components/form'
+import { Checkbox, Input, FormError, Select, TextArea } from '@/components/form'
 import Loading from '@/app/[handle]/loading'
 
 export default function ProfileSettingsPage() {
@@ -17,6 +17,8 @@ export default function ProfileSettingsPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [canManageIndexing, setCanManageIndexing] = useState(false)
+  const [seoKeywordsInput, setSeoKeywordsInput] = useState('')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -33,6 +35,9 @@ export default function ProfileSettingsPage() {
     zipCode: '',
     country: 'GB',
     timezone: 'Europe/London',
+    seoTitle: '',
+    seoDescription: '',
+    allowSearchEngineIndexing: true,
   })
 
   useEffect(() => {
@@ -45,7 +50,16 @@ export default function ProfileSettingsPage() {
       const data = await response.json()
 
       if (data.success) {
-        setFormData(data.data)
+        const { access, seoKeywords, ...profileData } = data.data
+        setFormData(current => ({
+          ...current,
+          ...profileData,
+          seoTitle: data.data.seoTitle || '',
+          seoDescription: data.data.seoDescription || '',
+          allowSearchEngineIndexing: data.data.allowSearchEngineIndexing !== false,
+        }))
+        setSeoKeywordsInput(Array.isArray(seoKeywords) ? seoKeywords.join(', ') : '')
+        setCanManageIndexing(Boolean(access?.isOwner))
       } else {
         setError('Failed to load business data')
       }
@@ -64,10 +78,19 @@ export default function ProfileSettingsPage() {
     setErrors({})
 
     try {
+      const { allowSearchEngineIndexing, ...sharedProfileFields } = formData
+      const seoKeywords = seoKeywordsInput
+        .split(',')
+        .map(keyword => keyword.trim())
+        .filter(Boolean)
+        .slice(0, 20)
+      const profile = canManageIndexing
+        ? { ...sharedProfileFields, seoKeywords, allowSearchEngineIndexing }
+        : { ...sharedProfileFields, seoKeywords }
       const response = await fetch('/api/business/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile: formData }),
+        body: JSON.stringify({ profile }),
       })
 
       const data = await response.json()
@@ -191,6 +214,76 @@ export default function ProfileSettingsPage() {
               maxLength={2000}
               showCharCount
             />
+          </CardContent>
+        </Card>
+
+        {/* Search appearance */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Search Appearance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <Input
+              label="Search title"
+              value={formData.seoTitle}
+              onChange={e => setFormData({ ...formData, seoTitle: e.target.value })}
+              error={errors.seoTitle}
+              placeholder={`${formData.name || 'Your business'} - OnPrez`}
+              maxLength={60}
+              helperText={`${formData.seoTitle.length}/60 characters. Leave blank to use your business name.`}
+            />
+
+            <TextArea
+              label="Search description"
+              value={formData.seoDescription}
+              onChange={e => setFormData({ ...formData, seoDescription: e.target.value })}
+              error={errors.seoDescription}
+              placeholder="A concise description of your services and location"
+              rows={3}
+              maxLength={160}
+              showCharCount
+            />
+
+            <Input
+              label="Search keywords"
+              value={seoKeywordsInput}
+              onChange={e => setSeoKeywordsInput(e.target.value)}
+              error={errors.seoKeywords}
+              placeholder="massage, Cambridge, wellness"
+              helperText="Optional. Separate up to 20 phrases with commas."
+            />
+
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <Checkbox
+                checked={formData.allowSearchEngineIndexing}
+                disabled={!canManageIndexing}
+                onChange={e =>
+                  setFormData({ ...formData, allowSearchEngineIndexing: e.target.checked })
+                }
+                label="Allow search engines to index this presence page"
+                description="When enabled and published, the page can appear in OnPrez's sitemap and search results. Turning this off adds noindex and removes it from the sitemap."
+              />
+              {!canManageIndexing && (
+                <p className="mt-3 text-xs text-amber-700">
+                  Only the business owner can change search-engine visibility.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-blue-700">
+                Search preview
+              </p>
+              <p className="mt-2 text-lg text-blue-800">
+                {formData.seoTitle || `${formData.name} - OnPrez`}
+              </p>
+              <p className="text-sm text-green-700">onprez.com/{formData.slug}</p>
+              <p className="mt-1 line-clamp-2 text-sm text-gray-700">
+                {formData.seoDescription ||
+                  formData.description ||
+                  `Visit ${formData.name} on OnPrez to explore services and book.`}
+              </p>
+            </div>
           </CardContent>
         </Card>
 

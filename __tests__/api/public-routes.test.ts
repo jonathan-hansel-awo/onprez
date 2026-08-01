@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/services/rate-limit'
+import { sendInquiryCreatedNotifications } from '@/lib/services/inquiry-notifications'
 
 import { GET as publicFaqsGET } from '@/app/api/public/businesses/[handle]/faqs/route'
 import { GET as publicServicesGET } from '@/app/api/public/businesses/[handle]/services/route'
@@ -37,6 +38,10 @@ jest.mock('@/lib/services/rate-limit', () => ({
   checkRateLimit: jest.fn(),
 }))
 
+jest.mock('@/lib/services/inquiry-notifications', () => ({
+  sendInquiryCreatedNotifications: jest.fn(),
+}))
+
 const mockedPrisma = prisma as unknown as {
   business: {
     findUnique: jest.Mock
@@ -59,6 +64,7 @@ const mockedPrisma = prisma as unknown as {
   }
 }
 const mockedCheckRateLimit = checkRateLimit as jest.Mock
+const mockedSendInquiryCreatedNotifications = sendInquiryCreatedNotifications as jest.Mock
 
 function createRequest(path: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
   return new NextRequest(`http://localhost:3000${path}`, init)
@@ -84,6 +90,10 @@ describe('public business routes', () => {
       limit: 5,
       remaining: 4,
       resetAt: new Date(Date.now() + 60_000),
+    })
+    mockedSendInquiryCreatedNotifications.mockResolvedValue({
+      customerSent: true,
+      businessSent: true,
     })
   })
 
