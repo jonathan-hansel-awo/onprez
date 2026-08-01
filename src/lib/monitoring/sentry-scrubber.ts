@@ -3,8 +3,9 @@ const FILTERED = '[Filtered]'
 const SENSITIVE_KEY =
   /(?:authorization|cookie|credential|password|passcode|secret|token|api[_-]?key|session[_-]?id|customer(?:email|name|note|phone|address)|email|phone|ip[_-]?address|username|notes?)/i
 const SENSITIVE_QUERY_PARAM =
-  /^(?:authorization|code|credential|password|passcode|secret|token|api[_-]?key|session[_-]?id)$/i
+  /^(?:authorization|code|credential|password|passcode|secret|token|api[_-]?key|session[_-]?id|e-?mail|customer[_-]?email|phone|customer[_-]?name|address|postcode)$/i
 const EMAIL = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi
+const IP_ADDRESS = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g
 const BEARER_TOKEN = /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi
 const JWT = /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g
 
@@ -27,7 +28,7 @@ function scrubString(value: string): string {
     // Most event strings are not URLs.
   }
 
-  return scrubbed.replace(EMAIL, FILTERED)
+  return scrubbed.replace(EMAIL, FILTERED).replace(IP_ADDRESS, FILTERED)
 }
 
 function scrubValue(value: unknown, seen: WeakSet<object>, depth: number): unknown {

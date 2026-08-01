@@ -135,6 +135,10 @@ export function classifyPerformancePage(pathname: string): PerformancePageGroup 
   return 'other'
 }
 
+export function privacySafeAnalyticsPath(pathname: string): string {
+  return `/${classifyPerformancePage(pathname)}`
+}
+
 export function getPerformanceDeviceClass(viewportWidth: number): PerformanceDeviceClass {
   return viewportWidth < 768 ? 'mobile' : 'desktop'
 }

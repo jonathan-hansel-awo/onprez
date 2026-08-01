@@ -12,6 +12,7 @@ import { useFocusTrap } from '@/lib/hooks/use-focus-trap'
 import { useAnnounce } from '@/lib/hooks/use-announce'
 import { usePasswordVisibility } from '@/lib/hooks/use-password-visibility'
 import { EyeIcon, EyeOffIcon, LockIcon } from 'lucide-react'
+import { saveMfaChallenge } from '@/lib/privacy/client-sensitive-state'
 
 function LoginForm() {
   const router = useRouter()
@@ -132,10 +133,8 @@ function LoginForm() {
       }
 
       if (result.requiresMfa && result.mfaToken) {
-        // Redirect to MFA challenge
-        router.push(
-          `/mfa/challenge?token=${result.mfaToken}&redirect=${encodeURIComponent(redirectTo)}`
-        )
+        saveMfaChallenge(result.mfaToken, redirectTo)
+        router.push('/mfa/challenge')
         return
       }
 

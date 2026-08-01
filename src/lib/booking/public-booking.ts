@@ -63,11 +63,17 @@ export function getBookingConfirmationEmail(
   }
 }
 
-export function buildBookingLookupUrl(confirmationNumber: string, customerEmail: string): string {
-  const params = new URLSearchParams({
-    confirmationNumber,
-    customerEmail,
-  })
-
-  return `/api/bookings?${params.toString()}`
+export function buildBookingLookupRequest(
+  confirmationNumber: string,
+  customerEmail: string
+): { url: string; init: RequestInit } {
+  return {
+    url: '/api/bookings/lookup',
+    init: {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmationNumber, customerEmail }),
+      cache: 'no-store',
+    },
+  }
 }

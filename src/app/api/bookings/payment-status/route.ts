@@ -25,16 +25,9 @@ function getClientIp(request: NextRequest) {
   )
 }
 
-export async function GET(request: NextRequest) {
+async function handleLookup(request: NextRequest, input: unknown) {
   try {
-    const validation = lookupSchema.safeParse({
-      confirmationNumber: request.nextUrl.searchParams.get('confirmationNumber') || '',
-      customerEmail:
-        request.nextUrl.searchParams.get('customerEmail') ||
-        request.nextUrl.searchParams.get('email') ||
-        '',
-      checkoutSessionId: request.nextUrl.searchParams.get('sessionId') || undefined,
-    })
+    const validation = lookupSchema.safeParse(input)
 
     if (!validation.success) {
       return NextResponse.json(
@@ -174,4 +167,24 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json().catch(() => null)
+  return handleLookup(request, body)
+}
+
+/**
+ * Temporary compatibility path for already-issued checkout success URLs.
+ * New application traffic uses POST so customer email is not placed in request URLs.
+ */
+export async function GET(request: NextRequest) {
+  return handleLookup(request, {
+    confirmationNumber: request.nextUrl.searchParams.get('confirmationNumber') || '',
+    customerEmail:
+      request.nextUrl.searchParams.get('customerEmail') ||
+      request.nextUrl.searchParams.get('email') ||
+      '',
+    checkoutSessionId: request.nextUrl.searchParams.get('sessionId') || undefined,
+  })
 }

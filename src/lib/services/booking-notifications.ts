@@ -122,11 +122,10 @@ function escapeCalendarText(value: string): string {
 
 export function buildBusinessBookingCalendarUrl(input: BookingCreatedNotificationInput): string {
   const confirmationNumber = input.bookingId.slice(0, 8).toUpperCase()
-  const phone = input.customerPhone?.trim() || 'Not provided'
   const calendarUrl = new URL('https://calendar.google.com/calendar/render')
 
   calendarUrl.searchParams.set('action', 'TEMPLATE')
-  calendarUrl.searchParams.set('text', `${input.serviceName} with ${input.customerName}`)
+  calendarUrl.searchParams.set('text', input.serviceName)
   calendarUrl.searchParams.set(
     'dates',
     `${formatCalendarUtc(input.startTime)}/${formatCalendarUtc(input.endTime)}`
@@ -135,10 +134,8 @@ export function buildBusinessBookingCalendarUrl(input: BookingCreatedNotificatio
     'details',
     [
       `Booking reference: ${confirmationNumber}`,
-      `Customer: ${input.customerName}`,
-      `Email: ${input.customerEmail}`,
-      `Phone: ${phone}`,
       `Service: ${input.serviceName}`,
+      'Open the OnPrez dashboard for customer contact details and notes.',
     ].join('\n')
   )
 

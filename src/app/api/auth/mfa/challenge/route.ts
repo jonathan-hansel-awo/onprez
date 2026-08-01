@@ -71,11 +71,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: result.message }, { status: 400 })
     }
 
-    return NextResponse.json({
+    if (!result.data?.accessToken || !result.data.refreshToken) {
+      return NextResponse.json(
+        { success: false, message: 'Failed to create authenticated session' },
+        { status: 500 }
+      )
+    }
+
+    const response = NextResponse.json({
       success: true,
       message: result.message,
-      data: result.data,
+      data: { user: result.data.user },
     })
+
+    response.cookies.set('accessToken', result.data.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: trustDevice ? 30 * 24 * 60 * 60 : 24 * 60 * 60,
+      path: '/',
+    })
+    response.cookies.set('refreshToken', result.data.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: trustDevice ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60,
+      path: '/',
+    })
+
+    return response
   } catch (error) {
     console.error('MFA challenge API error:', error)
     return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 })

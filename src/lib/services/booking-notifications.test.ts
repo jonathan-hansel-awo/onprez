@@ -121,10 +121,13 @@ describe('booking creation notifications', () => {
 
     expect(calendarUrl.origin).toBe('https://calendar.google.com')
     expect(calendarUrl.searchParams.get('action')).toBe('TEMPLATE')
-    expect(calendarUrl.searchParams.get('text')).toBe('Serenity Massage with Ada Okoro')
+    expect(calendarUrl.searchParams.get('text')).toBe('Serenity Massage')
     expect(calendarUrl.searchParams.get('dates')).toBe('20260722T090000Z/20260722T100000Z')
     expect(calendarUrl.searchParams.get('location')).toBe('18 Willow Court')
     expect(calendarUrl.searchParams.get('details')).toContain('Booking reference: AB12CD34')
+    expect(calendarUrl.toString()).not.toContain('Ada')
+    expect(calendarUrl.toString()).not.toContain('Example.com')
+    expect(calendarUrl.toString()).not.toContain('07123')
   })
 
   it('attaches an escaped calendar event for non-Google calendar apps', () => {

@@ -16,7 +16,7 @@ export type TraceContext = {
 const traceStorage = new AsyncLocalStorage<TraceContext>()
 const SAFE_ID_PATTERN = /^[A-Za-z0-9._:-]{8,128}$/
 const SENSITIVE_KEY_PATTERN =
-  /password|passcode|token|secret|authorization|cookie|api[-_]?key|private[-_]?key|credential|session|payload|requestbody|formdata/i
+  /password|passcode|token|secret|authorization|cookie|api[-_]?key|private[-_]?key|credential|session|payload|requestbody|formdata|e-?mail|phone|address|postcode|zip-?code|birth(?:day|date)|customer-?name|first-?name|last-?name|user-?agent|ip-?address|recipient|reply-?to|notes?/i
 const MAX_DEPTH = 5
 const MAX_ARRAY_ITEMS = 20
 const MAX_STRING_LENGTH = 1_000
@@ -29,6 +29,12 @@ function redactString(value: string): string {
       '$1$2[REDACTED]'
     )
     .replace(/[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}/g, '[REDACTED]')
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[REDACTED]')
+    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '[REDACTED]')
+    .replace(
+      /([?&](?:e-?mail|customer-?email|phone|customer-?name|address|postcode|token|code|session_?id)=)[^&#\s]*/gi,
+      '$1[REDACTED]'
+    )
 }
 
 function safeTraceId(value: string | null): string | undefined {

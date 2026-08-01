@@ -385,7 +385,6 @@ export async function settleCheckoutSession(session: Stripe.Checkout.Session): P
       eventKey: `booking:${appointment.id}:created`,
       businessId: payment.businessId,
       appointmentId: appointment.id,
-      customerName: appointment.customerName,
       serviceName: appointment.service.name,
       startTime: appointment.startTime,
       timezone: appointment.business.timezone,

@@ -1,5 +1,5 @@
 import {
-  buildBookingLookupUrl,
+  buildBookingLookupRequest,
   formatLocalCalendarDate,
   getBookingConfirmationEmail,
   saveBookingConfirmationEmail,
@@ -45,9 +45,19 @@ describe('public booking helpers', () => {
     expect(getBookingConfirmationEmail('AB12CD34', storage)).toBe('ada@example.com')
   })
 
-  it('builds an encoded confirmation lookup request with both required values', () => {
-    expect(buildBookingLookupUrl('AB12_CD34', 'ada+booking@example.com')).toBe(
-      '/api/bookings?confirmationNumber=AB12_CD34&customerEmail=ada%2Bbooking%40example.com'
+  it('keeps confirmation lookup PII in a POST body rather than a URL', () => {
+    const request = buildBookingLookupRequest('AB12_CD34', 'ada+booking@example.com')
+
+    expect(request.url).toBe('/api/bookings/lookup')
+    expect(request.url).not.toContain('example.com')
+    expect(request.init).toEqual(
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          confirmationNumber: 'AB12_CD34',
+          customerEmail: 'ada+booking@example.com',
+        }),
+      })
     )
   })
 })

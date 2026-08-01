@@ -4,6 +4,7 @@ import {
   getPerformanceDeviceClass,
   getWebVitalThreshold,
   normaliseWebVitalValueForGa,
+  privacySafeAnalyticsPath,
   rateWebVital,
   WEB_VITAL_NAMES,
 } from '@/lib/observability/web-vitals'
@@ -47,6 +48,13 @@ describe('web vitals monitoring helpers', () => {
   it('normalises CLS for integer-only analytics values', () => {
     expect(normaliseWebVitalValueForGa('CLS', 0.1234)).toBe(123)
     expect(normaliseWebVitalValueForGa('LCP', 2_345.6)).toBe(2_346)
+  })
+
+  it('reports only a coarse page group to optional analytics', () => {
+    expect(privacySafeAnalyticsPath('/private-handle/book/service?email=ada@example.com')).toBe(
+      '/public_booking'
+    )
+    expect(privacySafeAnalyticsPath('/dashboard/customers/customer-1')).toBe('/dashboard')
   })
 
   it('builds a privacy-safe report and ignores unsupported Next.js custom metrics', () => {

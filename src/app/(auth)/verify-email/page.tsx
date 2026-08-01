@@ -7,6 +7,10 @@ import { motion } from 'framer-motion'
 import { CheckCircle2, LoaderCircle, MailCheck, XCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import {
+  clearPendingVerificationEmail,
+  getPendingVerificationEmail,
+} from '@/lib/privacy/client-sensitive-state'
 
 type VerificationStatus = 'awaiting' | 'verifying' | 'success' | 'error'
 
@@ -14,7 +18,7 @@ function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
-  const email = searchParams.get('email')
+  const [email, setEmail] = useState<string | null>(null)
 
   const [status, setStatus] = useState<VerificationStatus>(token ? 'verifying' : 'awaiting')
   const [message, setMessage] = useState('')
@@ -32,6 +36,7 @@ function VerifyEmailContent() {
         const result = await response.json()
 
         if (result.success) {
+          clearPendingVerificationEmail()
           setStatus('success')
           setMessage(result.message)
           setTimeout(() => router.push('/login'), 3000)
@@ -49,20 +54,23 @@ function VerifyEmailContent() {
   )
 
   useEffect(() => {
+    const pendingEmail = getPendingVerificationEmail()
+    setEmail(pendingEmail)
+
     if (token) {
       setStatus('verifying')
       void verifyToken(token)
       return
     }
 
-    if (email) {
+    if (pendingEmail) {
       setStatus('awaiting')
       return
     }
 
     setStatus('error')
     setMessage('Invalid verification link')
-  }, [email, token, verifyToken])
+  }, [token, verifyToken])
 
   const handleResend = async () => {
     if (!email) {
