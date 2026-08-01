@@ -1,12 +1,17 @@
 # OnPrez Critical Action Plan Progress Tracker
 
 **Document type:** Living progress tracker  
-**Source plan:** `OnPrez Critical Action Plan`  
-**Last repository audit:** 31 July 2026  
-**Audited branch:** `main`  
-**Audit baseline:** `455ad32`  
-**Current working phase:** Phase 9 — Performance and Scalability  
-**Next planned item:** P2-018 — Cache Public Presence Pages by Handle
+**Source plan:** `OnPrez Critical Action Plan`
+
+**Last repository audit:** 1 August 2026
+
+**Audited branch:** `main`
+
+**Audit baseline:** `5c25844` plus the current implementation pull request
+
+**Current working phase:** Phase 10 — Privacy and Data Lifecycle
+
+**Next planned item:** P2-022 — Add Export and Deletion Workflows
 
 ---
 
@@ -16,7 +21,7 @@ This document records implementation progress against every item in the OnPrez C
 
 The status is based on:
 
-- the code currently merged into `main`;
+- the code currently merged into `main` and the action item's current implementation pull request;
 - tests, workflows, migrations, runbooks, and product documentation in the repository;
 - merged pull-request history;
 - whether the original acceptance criteria can be evidenced from the repository.
@@ -25,11 +30,11 @@ It does **not** assume an item is complete merely because work started or a rela
 
 ## Status legend
 
-- [x] **Complete** — the implementation and the material acceptance criteria are evidenced in `main`.
+- [x] **Complete** — the implementation and material acceptance criteria are evidenced in `main` or in the current implementation pull request after its local acceptance checks pass.
 - [ ] **Partial** — meaningful implementation exists, but at least one material acceptance criterion remains.
 - [ ] **Not started** — no sufficient implementation or repository evidence was found.
 
-> A checked item means complete in the repository. Provider dashboards, production secrets, live smoke tests, legal review, and other external operational checks must still be maintained separately where applicable.
+> A checked item means implementation-complete and ready to merge. The next “next item” pass must still confirm that the preceding pull request merged successfully. Provider dashboards, production secrets, live smoke tests, legal review, and other external operational checks remain separate where applicable.
 
 ## Update procedure
 
@@ -37,11 +42,11 @@ Whenever an action item is completed:
 
 1. Complete the implementation and acceptance tests.
 2. Link the pull request and important source files under the item below.
-3. Change the item to `[x] Complete` only after the PR is merged into `main`.
+3. Change the item to `[x] Complete` in the same implementation PR after the material acceptance checks pass.
 4. Update the phase summary, overall totals, audit date, current phase, and next planned item.
 5. Record any production migration, secret, provider configuration, or manual verification still required.
-6. Do not mark an item complete from a draft or open PR.
-7. When the user says “next item”, first reconcile merged PRs against this tracker, skip every Complete item, and select the earliest Partial or Not started item.
+6. If the implementation PR fails acceptance checks, is closed without merge, or loses material scope during review, revert the item to Partial or Not started as appropriate.
+7. When the user says “next item”, first confirm that the preceding implementation PR merged, reconcile other merged work against this tracker, skip every Complete item, and select the earliest Partial or Not started item.
 
 ---
 
@@ -58,24 +63,25 @@ Whenever an action item is completed:
 | Phase 6 — Public Presence Page UX                     |        5 |       0 |           0 |      5 |
 | Phase 7 — Dashboard UX                                |        4 |       0 |           0 |      4 |
 | Phase 8 — Trust, Positioning, and Marketing Integrity |        4 |       0 |           0 |      4 |
-| Phase 9 — Performance and Scalability                 |        1 |       2 |           1 |      4 |
+| Phase 9 — Performance and Scalability                 |        4 |       0 |           0 |      4 |
 | Phase 10 — Privacy and Data Lifecycle                 |        1 |       1 |           1 |      3 |
 | Phase 11 — Communications                             |        2 |       1 |           0 |      3 |
 | Phase 12 — SEO and Handle Durability                  |        0 |       1 |           1 |      2 |
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **47** |   **7** |       **7** | **61** |
+| **Total**                                             |   **50** |   **5** |       **6** | **61** |
 
-**Strict completion:** 47 of 61 items — approximately **77%**.  
-**Items with at least meaningful implementation:** 54 of 61 — approximately **89%**.
+**Strict completion:** 50 of 61 items — approximately **82%**.
+
+**Items with at least meaningful implementation:** 55 of 61 — approximately **90%**.
 
 ### Current priorities from this audit
 
-1. Merge and deploy **P2-018**, then add measured load tests under **P2-020**. Continue the P2-001 and P2-003 real-user sessions as launch validation.
-2. Optimise image delivery under **P2-019** and review cached public-page performance separately on mobile and desktop after major UI releases.
-3. Complete the remaining privacy, testing-maturity, and canonical architecture documentation gaps before paid scale.
-4. Add usage and provider-cost tracking before enforcing paid-plan limits.
+1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
+2. Add account and business export and staged deletion workflows under **P2-022**, then complete the canonical PII review under **P2-023**.
+3. Complete the remaining testing-maturity and canonical architecture documentation gaps before paid scale.
+4. Add usage and provider-cost tracking before enforcing paid-plan limits. Continue the P2-001 and P2-003 real-user sessions as launch validation.
 
 ---
 
@@ -307,22 +313,27 @@ Whenever an action item is completed:
   - Public and dashboard thresholds are explicit, Google Analytics receives the same dimensions when configured, and `docs/product/WEB_VITALS_MONITORING.md` defines 75th-percentile, release-comparison, and major-UI-change review procedures.
   - Focused tests protect metric coverage, segmentation, thresholds, privacy-safe payloads, server-side rating, validation, and alert behaviour.
 
-- [ ] **P2-018 — Cache Public Presence Pages by Handle** — **Partial — implementation awaiting merge**
-  - [PR #128](https://github.com/jonathan-hansel-awo/onprez/pull/128) replaces per-request public-route Prisma reads with one handle-scoped cache shared by page rendering and metadata.
+- [x] **P2-018 — Cache Public Presence Pages by Handle** — **Complete**
+  - Merged [PR #128](https://github.com/jonathan-hansel-awo/onprez/pull/128) replaces per-request public-route Prisma reads with one handle-scoped cache shared by page rendering and metadata.
   - The cache contains only published business fields, the protected published page snapshot, and published-review aggregates; services and next availability remain live through their public APIs.
   - A five-minute fallback lifetime is paired with immediate tag and rendered-route invalidation after publication, assisted live saves, profile/settings/branding/social updates, and theme changes.
   - Ordinary editor saves remain draft-only and do not invalidate or replace the customer-visible published snapshot.
   - `docs/product/PUBLIC_PRESENCE_CACHE_ACCEPTANCE.md` defines the cache identity, mutation matrix, privacy boundary, operational checks, and future invalidation rule.
   - Focused tests cover key construction, publication filtering, TTL, invalidation, assisted saves, publication changes, and architecture regressions.
-  - Mark Complete after PR #128 merges successfully into `main`.
 
-- [ ] **P2-019 — Optimise Image Delivery** — **Partial**
-  - Cloudinary-backed uploads, image validation, sanitisation, scoped storage, format restrictions, and responsive frontend foundations exist.
-  - Remaining: enforce upload-side resizing and quality policies, generate/serve responsive variants consistently, document delivery budgets, and test realistic galleries on slow mobile networks.
+- [x] **P2-019 — Optimise Image Delivery** — **Complete**
+  - Merged [PR #129](https://github.com/jonathan-hansel-awo/onprez/pull/129) enforces purpose-specific upload dimensions and quality, strips metadata, and reuses exact tenant-scoped duplicate assets before compression or upload.
+  - Customer-facing and upload-preview image components use responsive sizing and the configured modern-format delivery path without opting out of optimisation.
+  - `docs/product/IMAGE_DELIVERY_ACCEPTANCE.md` records mobile image budgets, responsive delivery rules, and the repeatable slow-mobile verification procedure.
+  - Focused tests protect resize policies, duplicate lookup and race handling, user feedback, responsive sizing, and the delivery contract.
 
-- [ ] **P2-020 — Add Load Testing for Critical Paths** — **Not started**
-  - No k6, Artillery, Locust, or equivalent load-test suite and no measured capacity baseline was found.
-  - Required paths remain public pages, handle availability, login, availability calculation, booking creation, and concurrent booking conflict safety.
+- [x] **P2-020 — Add Load Testing for Critical Paths** — **Complete**
+  - Implemented by [PR #130](https://github.com/jonathan-hansel-awo/onprez/pull/130).
+  - The `Critical path load tests` workflow builds the selected revision against disposable PostgreSQL 16, seeds synthetic `.invalid` fixtures, and refuses remote application or database targets.
+  - The baseline measures a warmed cached public page, availability calculation, handle checking, login, and five simultaneous booking attempts for one slot.
+  - Release gates cover error rate, throughput, p95 latency, database-backed rate-limit ceilings, and the non-negotiable result of exactly one `201` booking winner plus four `409` conflicts.
+  - JSON and Markdown reports retain per-scenario request counts, status counts, throughput, p50, p95, p99, and failures as workflow artifacts for 90 days.
+  - `docs/product/CRITICAL_PATH_LOAD_TESTING.md` documents the launch baseline, known bottlenecks, interpretation procedure, and the distinction between isolated measurements and production capacity.
 
 ---
 
@@ -407,7 +418,7 @@ Whenever an action item is completed:
 
 ## Audit notes and known limitations
 
-- This tracker evaluates what is merged into `main`. Open PRs do not count as complete.
+- This tracker counts the current action item's implementation PR as complete after its material acceptance checks pass; the next “next item” reconciliation must confirm that it merged.
 - The audit does not prove that every deployment secret, webhook, OAuth consent screen, provider billing alert, email alias, uptime destination, or scheduled workflow is configured correctly in production.
 - Legal pages are operational drafts and should receive professional review before paid launch.
 - Backup, restore, payment, email, calendar, push, and incident procedures require periodic real-world drills even when their repository action item is checked.
@@ -415,13 +426,14 @@ Whenever an action item is completed:
 
 ## Change log
 
-| Date         | Change                                                                                                                                                                                           | PR                                                                                                                                                                                                                                                                |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 31 July 2026 | Marked merged P2-011, P2-012, P2-013, and P2-016 complete and recorded consented Core Web Vitals monitoring pending PR #127 merge.                                                               | [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124) / [#125](https://github.com/jonathan-hansel-awo/onprez/pull/125) / [#126](https://github.com/jonathan-hansel-awo/onprez/pull/126) / [#127](https://github.com/jonathan-hansel-awo/onprez/pull/127) |
-| 31 July 2026 | Marked merged P2-010 complete and recorded P2-011 private, expiring, non-indexed draft-preview implementation pending PR #124 merge.                                                             | [#123](https://github.com/jonathan-hansel-awo/onprez/pull/123) / [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124)                                                                                                                                   |
-| 31 July 2026 | Reconciled all successfully merged P2-001 through P2-005 work, recorded PR #121’s catalogue-wide booking demos and fictional identity separation, and formalised the “next item” selection rule. | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)–[#121](https://github.com/jonathan-hansel-awo/onprez/pull/121)                                                                                                                                     |
-| 31 July 2026 | Marked P2-003 complete after PR #119 merged and revalidated P2-004 conversion, safe-area, theme, documentation, and regression guarantees.                                                       | [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) / [#120](https://github.com/jonathan-hansel-awo/onprez/pull/120)                                                                                                                                   |
-| 31 July 2026 | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol.                           | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119)                                                                                                                                   |
-| 30 July 2026 | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement.                                 | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                                                                                                                                                    |
-| 30 July 2026 | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                                                            | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                                                                                   |
-| 30 July 2026 | Created the tracker and audited all 61 action items against current `main` and merged history.                                                                                                   | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                                                                                                                                                    |
+| Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 August 2026 | Reconciled merged P2-018 and P2-019 work, completed P2-020 with isolated critical-path capacity and concurrent-booking correctness tests, and aligned the tracker with one-item implementation PRs. | [#128](https://github.com/jonathan-hansel-awo/onprez/pull/128) / [#129](https://github.com/jonathan-hansel-awo/onprez/pull/129) / [#130](https://github.com/jonathan-hansel-awo/onprez/pull/130)                                                                  |
+| 31 July 2026  | Marked merged P2-011, P2-012, P2-013, and P2-016 complete and recorded consented Core Web Vitals monitoring pending PR #127 merge.                                                                  | [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124) / [#125](https://github.com/jonathan-hansel-awo/onprez/pull/125) / [#126](https://github.com/jonathan-hansel-awo/onprez/pull/126) / [#127](https://github.com/jonathan-hansel-awo/onprez/pull/127) |
+| 31 July 2026  | Marked merged P2-010 complete and recorded P2-011 private, expiring, non-indexed draft-preview implementation pending PR #124 merge.                                                                | [#123](https://github.com/jonathan-hansel-awo/onprez/pull/123) / [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124)                                                                                                                                   |
+| 31 July 2026  | Reconciled all successfully merged P2-001 through P2-005 work, recorded PR #121’s catalogue-wide booking demos and fictional identity separation, and formalised the “next item” selection rule.    | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)–[#121](https://github.com/jonathan-hansel-awo/onprez/pull/121)                                                                                                                                     |
+| 31 July 2026  | Marked P2-003 complete after PR #119 merged and revalidated P2-004 conversion, safe-area, theme, documentation, and regression guarantees.                                                          | [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119) / [#120](https://github.com/jonathan-hansel-awo/onprez/pull/120)                                                                                                                                   |
+| 31 July 2026  | Marked P2-002 complete after PR #118 merged and recorded the P2-003 beauty-and-wellness niche decision, product copy, demos, tests, and real-user validation protocol.                              | [#118](https://github.com/jonathan-hansel-awo/onprez/pull/118) / [#119](https://github.com/jonathan-hansel-awo/onprez/pull/119)                                                                                                                                   |
+| 30 July 2026  | Recorded the P2-001 canonical loop, tenant-scoped milestone analytics, 8:45 target, regression coverage, and the remaining observed-user validation requirement.                                    | [#116](https://github.com/jonathan-hansel-awo/onprez/pull/116)                                                                                                                                                                                                    |
+| 30 July 2026  | Marked P1-008 complete after the timezone-aware availability fix merged; updated totals, audit baseline, and chronological next step.                                                               | [#114](https://github.com/jonathan-hansel-awo/onprez/pull/114) / [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                                                                                   |
+| 30 July 2026  | Created the tracker and audited all 61 action items against current `main` and merged history.                                                                                                      | [#115](https://github.com/jonathan-hansel-awo/onprez/pull/115)                                                                                                                                                                                                    |
