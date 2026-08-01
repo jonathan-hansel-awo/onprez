@@ -7,11 +7,11 @@
 
 **Audited branch:** `main`
 
-**Audit baseline:** `934e606` plus the current implementation pull request
+**Audit baseline:** `50f6b1f` plus the current implementation pull request
 
 **Current working phase:** Phase 12 — SEO and Handle Durability
 
-**Next planned item:** P2-027 — Improve Presence SEO
+**Next planned item:** P2-028 — Add Handle Change Redirects
 
 ---
 
@@ -66,20 +66,20 @@ Whenever an action item is completed:
 | Phase 9 — Performance and Scalability                 |        4 |       0 |           0 |      4 |
 | Phase 10 — Privacy and Data Lifecycle                 |        3 |       0 |           0 |      3 |
 | Phase 11 — Communications                             |        3 |       0 |           0 |      3 |
-| Phase 12 — SEO and Handle Durability                  |        0 |       1 |           1 |      2 |
+| Phase 12 — SEO and Handle Durability                  |        1 |       0 |           1 |      2 |
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **53** |   **3** |       **5** | **61** |
+| **Total**                                             |   **54** |   **2** |       **5** | **61** |
 
-**Strict completion:** 53 of 61 items — approximately **87%**.
+**Strict completion:** 54 of 61 items — approximately **89%**.
 
 **Items with at least meaningful implementation:** 56 of 61 — approximately **92%**.
 
 ### Current priorities from this audit
 
 1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
-2. Complete owner-controlled indexing, FAQ schema, richer structured data and realistic validation under **P2-027**.
+2. Preserve old presence links safely when owners change handles under **P2-028**.
 3. Complete the remaining testing-maturity and canonical architecture documentation gaps before paid scale.
 4. Complete the P2-023 provider-account privacy checks and recorded credential-encryption follow-ups before paid scale. Add usage and provider-cost tracking before enforcing paid-plan limits.
 
@@ -384,9 +384,15 @@ Whenever an action item is completed:
 
 ## Phase 12 — SEO and Handle Durability
 
-- [ ] **P2-027 — Improve Presence SEO** — **Partial**
-  - Presence pages provide custom metadata, canonical URLs, Open Graph/Twitter data, sitemap integration, robots directives, and `LocalBusiness` structured data.
-  - Remaining: owner-controlled indexing settings, verified FAQ schema generation, richer structured data where appropriate, and SEO validation against realistic published businesses.
+- [x] **P2-027 — Improve Presence SEO** — **Complete**
+  - Implemented by the current implementation pull request.
+  - Business Profile now exposes bounded search title, description, keywords, and an owner-only search-engine visibility control; non-owners are blocked in both the UI and API.
+  - Opted-out pages remain shareable by direct link but emit `noindex, nofollow` and are excluded from the sitemap; sitemap membership also requires an active, published business and published home page.
+  - Presence JSON-LD is generated server-side from the cached published snapshot with conservative `LocalBusiness` subtypes, structured addresses, geo coordinates, opening hours, published-review aggregates, active service offers, web-page and breadcrumb entities, and injection-safe serialization.
+  - FAQ schema now includes only complete, de-duplicated questions from visible published FAQ sections; hidden, empty, duplicate, and draft-only FAQ content cannot enter the markup, and the duplicate client-side script was removed.
+  - `npm run seo:validate` runs in CI against realistic spa and consultancy fixtures, while focused tests cover metadata, sitemap filtering, owner authorization, JSON-LD richness, FAQ fidelity, safe URLs, and script escaping.
+  - `docs/product/PRESENCE_SEO_ACCEPTANCE.md` records the indexing, metadata, structured-data, release-validation, and no-guaranteed-rich-result contract.
+  - Deploy migration `20260801180000_presence_seo_controls` before relying on the new setting in production; no new environment variable is required.
 
 - [ ] **P2-028 — Add Handle Change Redirects** — **Not started**
   - No durable old-handle mapping, redirect history, conflict rules, or redirect loop protection was verified.
@@ -444,6 +450,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 August 2026 | Completed P2-027 with owner-controlled indexing, published-snapshot FAQ and local-business JSON-LD, sitemap filtering, and realistic recurring SEO validation.                                      | Current implementation pull request                                                                                                                                                                                                                               |
 | 1 August 2026 | Completed P2-024 with privacy-minimised email delivery history, signed Resend event reconciliation, safe dashboard retries, and bounce/complaint suppression.                                       | [#133](https://github.com/jonathan-hansel-awo/onprez/pull/133)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-023 with the canonical PII inventory/data-flow map, field protection and lifecycle ownership, privacy-boundary fixes, and recurring automated audit.                                   | [#132](https://github.com/jonathan-hansel-awo/onprez/pull/132)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-022 with password-verified account/business exports, staged account deletion, customer anonymisation, durable lifecycle auditing, and the retention-safe processing contract.          | [#131](https://github.com/jonathan-hansel-awo/onprez/pull/131)                                                                                                                                                                                                    |

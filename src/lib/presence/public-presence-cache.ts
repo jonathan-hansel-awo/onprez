@@ -26,6 +26,9 @@ async function loadPublishedPresence(handle: string) {
       state: true,
       zipCode: true,
       country: true,
+      category: true,
+      latitude: true,
+      longitude: true,
       website: true,
       socialLinks: true,
       settings: true,
@@ -37,6 +40,32 @@ async function loadPublishedPresence(handle: string) {
       seoTitle: true,
       seoDescription: true,
       seoKeywords: true,
+      allowSearchEngineIndexing: true,
+      businessHours: {
+        where: { isClosed: false },
+        orderBy: { dayOfWeek: 'asc' },
+        select: {
+          dayOfWeek: true,
+          openTime: true,
+          closeTime: true,
+        },
+      },
+      services: {
+        where: { active: true },
+        orderBy: [{ featured: 'desc' }, { order: 'asc' }],
+        take: 20,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          imageUrl: true,
+          price: true,
+          priceType: true,
+          priceRangeMin: true,
+          priceRangeMax: true,
+          currency: true,
+        },
+      },
     },
   })
 
@@ -65,8 +94,17 @@ async function loadPublishedPresence(handle: string) {
 
   if (!page?.isPublished) return null
 
+  const { services, businessHours, ...publicBusiness } = business
+
   return {
-    business,
+    business: publicBusiness,
+    services: services.map(service => ({
+      ...service,
+      price: service.price.toString(),
+      priceRangeMin: service.priceRangeMin?.toString() || null,
+      priceRangeMax: service.priceRangeMax?.toString() || null,
+    })),
+    businessHours,
     page,
     reviewSummary: {
       averageRating: reviewSummary._avg.rating,

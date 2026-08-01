@@ -362,59 +362,60 @@ model RateLimitConfig {
 }
 
 model Business {
-  id                     String                        @id @default(cuid())
-  ownerId                String
-  name                   String
-  slug                   String                        @unique
-  category               BusinessCategory
-  description            String?
-  tagline                String?
-  email                  String?
-  phone                  String?
-  website                String?
-  address                String?
-  city                   String?
-  state                  String?
-  zipCode                String?
-  country                String?                       @default("UK")
-  latitude               Float?
-  longitude              Float?
-  timezone               String                        @default("Europe/London")
-  logoUrl                String?
-  coverImageUrl          String?
-  socialLinks            Json?
-  settings               Json?
-  branding               Json?
-  isPublished            Boolean                       @default(false)
-  isPremium              Boolean                       @default(false)
-  isActive               Boolean                       @default(true)
-  seoTitle               String?
-  seoDescription         String?
-  seoKeywords            String[]
-  createdAt              DateTime                      @default(now())
-  updatedAt              DateTime                      @updatedAt
-  publishedAt            DateTime?
-  appointments           Appointment[]
-  appointmentTransitions AppointmentStatusTransition[]
-  bookingIdempotencyKeys BookingIdempotencyKey[]
-  businessHours          BusinessHours[]
-  specialDates           SpecialDate[]
-  owner                  User                          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  customers              Customer[]
-  faqs                   FAQ[]
-  inquiries              Inquiry[]
-  reviews                Review[]
-  serviceCategories      ServiceCategory[]
-  services               Service[]
-  teamInvitations        TeamInvitation[]
-  members                BusinessMember[]
-  pages                  Page[]
-  featureEntitlements    FeatureEntitlement[]
-  stripeConnectedAccount StripeConnectedAccount?
-  bookingPayments        BookingPayment[]
-  pushNotificationOutbox PushNotificationOutbox[]
-  dataLifecycleRequests  DataLifecycleRequest[]
-  emailDeliveries        EmailDelivery[]
+  id                        String                        @id @default(cuid())
+  ownerId                   String
+  name                      String
+  slug                      String                        @unique
+  category                  BusinessCategory
+  description               String?
+  tagline                   String?
+  email                     String?
+  phone                     String?
+  website                   String?
+  address                   String?
+  city                      String?
+  state                     String?
+  zipCode                   String?
+  country                   String?                       @default("UK")
+  latitude                  Float?
+  longitude                 Float?
+  timezone                  String                        @default("Europe/London")
+  logoUrl                   String?
+  coverImageUrl             String?
+  socialLinks               Json?
+  settings                  Json?
+  branding                  Json?
+  isPublished               Boolean                       @default(false)
+  allowSearchEngineIndexing Boolean                       @default(true)
+  isPremium                 Boolean                       @default(false)
+  isActive                  Boolean                       @default(true)
+  seoTitle                  String?
+  seoDescription            String?
+  seoKeywords               String[]
+  createdAt                 DateTime                      @default(now())
+  updatedAt                 DateTime                      @updatedAt
+  publishedAt               DateTime?
+  appointments              Appointment[]
+  appointmentTransitions    AppointmentStatusTransition[]
+  bookingIdempotencyKeys    BookingIdempotencyKey[]
+  businessHours             BusinessHours[]
+  specialDates              SpecialDate[]
+  owner                     User                          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  customers                 Customer[]
+  faqs                      FAQ[]
+  inquiries                 Inquiry[]
+  reviews                   Review[]
+  serviceCategories         ServiceCategory[]
+  services                  Service[]
+  teamInvitations           TeamInvitation[]
+  members                   BusinessMember[]
+  pages                     Page[]
+  featureEntitlements       FeatureEntitlement[]
+  stripeConnectedAccount    StripeConnectedAccount?
+  bookingPayments           BookingPayment[]
+  pushNotificationOutbox    PushNotificationOutbox[]
+  dataLifecycleRequests     DataLifecycleRequest[]
+  emailDeliveries           EmailDelivery[]
 
   @@index([ownerId])
   @@index([category])

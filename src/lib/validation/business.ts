@@ -87,6 +87,7 @@ export const updateBusinessProfileSchema = z.object({
   seoTitle: z.string().max(60).optional().nullable(),
   seoDescription: z.string().max(160).optional().nullable(),
   seoKeywords: z.array(z.string().max(50)).max(20).optional(),
+  allowSearchEngineIndexing: z.boolean().optional(),
 
   // Status
   isPublished: z.boolean().optional(),

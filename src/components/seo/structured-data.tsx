@@ -1,37 +1,14 @@
+import { serializeJsonLd } from '@/lib/seo/presence-structured-data'
+
 interface StructuredDataProps {
-  business: {
-    name: string
-    description?: string
-    url: string
-    logo?: string
-    address?: string
-    phone?: string
-    email?: string
-  }
+  data: unknown
 }
 
-export function StructuredData({ business }: StructuredDataProps) {
-  const structuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: business.name,
-    description: business.description,
-    url: business.url,
-    image: business.logo,
-    telephone: business.phone,
-    email: business.email,
-    address: business.address
-      ? {
-          '@type': 'PostalAddress',
-          streetAddress: business.address,
-        }
-      : undefined,
-  }
-
+export function StructuredData({ data }: StructuredDataProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
     />
   )
 }

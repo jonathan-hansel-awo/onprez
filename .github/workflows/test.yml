@@ -58,6 +58,9 @@ jobs:
       - name: Audit PII handling
         run: npm run privacy:audit
 
+      - name: Validate presence SEO fixtures
+        run: npm run seo:validate
+
       - name: Run tests
         run: npm run test:ci
 

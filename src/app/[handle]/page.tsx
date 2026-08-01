@@ -6,6 +6,9 @@ import { StructuredData } from '@/components/seo/structured-data'
 import type { PresenceTrustSignals } from '@/components/presence/PresenceConversion'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
 import { getCachedPublicPresence } from '@/lib/presence/public-presence-cache'
+import { buildMissingPresenceMetadata, buildPresenceMetadata } from '@/lib/seo/presence-metadata'
+import { buildPresenceStructuredData } from '@/lib/seo/presence-structured-data'
+import { getAppUrl } from '@/lib/utils/get-app-url'
 import type { PageSection } from '@/types/page-sections'
 
 export const revalidate = 300
@@ -22,7 +25,7 @@ export default async function PresencePage({ params }: PresencePageProps) {
 
   if (!presence) notFound()
 
-  const { business, page, reviewSummary } = presence
+  const { business, page, reviewSummary, services, businessHours } = presence
   const sections = (page.publishedContent || page.content) as unknown as PageSection[]
   const settings = business.settings as any
   const theme = settings?.theme || {}
@@ -48,20 +51,18 @@ export default async function PresencePage({ params }: PresencePageProps) {
         )
       : undefined,
   }
+  const structuredData = buildPresenceStructuredData({
+    baseUrl: getAppUrl(),
+    business,
+    services,
+    businessHours,
+    reviewSummary,
+    sections,
+  })
 
   return (
     <>
-      <StructuredData
-        business={{
-          name: business.name,
-          description: business.description || undefined,
-          url: `https://onprez.com/${business.slug}`,
-          logo: business.logoUrl || undefined,
-          address: fullAddress || undefined,
-          phone: business.phone || undefined,
-          email: business.email || undefined,
-        }}
-      />
+      <StructuredData data={structuredData} />
 
       <ThemeProvider theme={theme}>
         <div
@@ -97,59 +98,8 @@ export async function generateMetadata({ params }: PresencePageProps): Promise<M
   const presence = await getCachedPublicPresence(handle)
 
   if (!presence) {
-    return {
-      title: 'Not Found - OnPrez',
-      description: 'This page could not be found.',
-      robots: { index: false, follow: false },
-    }
+    return buildMissingPresenceMetadata()
   }
 
-  const { business } = presence
-  const title = business.seoTitle || `${business.name} - OnPrez`
-  const description =
-    business.seoDescription ||
-    business.description ||
-    `Visit ${business.name} on OnPrez. Professional services and booking in ${business.city || business.country}.`
-
-  const imageUrl = business.coverImageUrl || business.logoUrl || '/og-default.png'
-  const canonicalUrl = `https://onprez.com/${business.slug}`
-
-  return {
-    title,
-    description,
-    keywords: business.seoKeywords || [],
-    openGraph: {
-      title,
-      description,
-      url: canonicalUrl,
-      siteName: 'OnPrez',
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: business.name,
-        },
-      ],
-      locale: 'en_GB',
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [imageUrl],
-    },
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-      },
-    },
-  }
+  return buildPresenceMetadata(presence.business, getAppUrl())
 }

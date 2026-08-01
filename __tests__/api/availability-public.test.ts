@@ -277,7 +277,12 @@ describe('availability public API', () => {
   it('checks specific slot availability against all business appointments, not only same-service appointments', async () => {
     const targetDate = new Date()
     targetDate.setDate(targetDate.getDate() + 7)
-    const date = targetDate.toISOString().slice(0, 10)
+    targetDate.setHours(12, 0, 0, 0)
+    const date = [
+      targetDate.getFullYear(),
+      String(targetDate.getMonth() + 1).padStart(2, '0'),
+      String(targetDate.getDate()).padStart(2, '0'),
+    ].join('-')
 
     mockedPrisma.business.findUnique.mockResolvedValue({
       ...business,

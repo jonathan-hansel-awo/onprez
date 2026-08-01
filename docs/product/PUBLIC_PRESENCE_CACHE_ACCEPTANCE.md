@@ -10,7 +10,8 @@ The handle cache contains only public, published data required to render the pre
 
 - business name, handle, description, contact and location fields;
 - public branding, social links, theme and booking-policy display settings;
-- SEO title, description, keywords, logo, and cover image;
+- SEO title, description, keywords, owner-controlled indexing preference, logo, and cover image;
+- active service summaries and open business hours used for published structured data;
 - the protected `publishedContent` snapshot for the home page;
 - the aggregate rating and count of published reviews.
 
@@ -18,7 +19,7 @@ An unpublished business or unpublished home page resolves to no cached public re
 
 ## Data that remains live
 
-Services and next availability continue to load through their existing public APIs in the browser. The cache does not store appointment slots, customer details, booking records, inquiry submissions, private drafts, or dashboard data.
+Full service rendering and next availability continue to load through their existing public APIs in the browser. The cache stores only up to 20 active service summaries for JSON-LD; it does not store appointment slots, customer details, booking records, inquiry submissions, private drafts, or dashboard data.
 
 This boundary means a cached presence shell cannot expose stale appointment availability or private operational records.
 
@@ -52,7 +53,7 @@ Any future mutation that changes a field read by the cached loader must call the
 
 ## Metadata and indexing
 
-The rendered page and `generateMetadata` use the same cached loader. This prevents duplicate database work and ensures an unpublished business does not retain indexable metadata. Missing or unpublished handles return a not-found title and `noindex, nofollow` metadata.
+The rendered page and `generateMetadata` use the same cached loader. This prevents duplicate database work and ensures an unpublished business does not retain indexable metadata. Missing or unpublished handles return a not-found title and `noindex, nofollow` metadata. Published businesses can also opt out; opted-out pages remain directly reachable but emit `noindex, nofollow` and are excluded from the sitemap.
 
 ## Operational verification
 
@@ -76,4 +77,4 @@ After deployment:
 - Real-time service and availability data remain outside the cache.
 - Automated tests cover key construction, TTL, publication filtering, invalidation, and architectural mutation coverage.
 
-No database migration or new environment variable is required.
+P2-027 adds migration `20260801180000_presence_seo_controls`; no new environment variable is required.
