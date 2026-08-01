@@ -1,0 +1,53 @@
+name: P2-019 branch helper
+
+on:
+  push:
+    branches:
+      - agent/p2-019-image-delivery-optimisation
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: agent/p2-019-image-delivery-optimisation
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Format implementation
+        run: npx prettier --write src/app/api/upload/image/route.ts src/lib/uploads/image-security.ts __tests__/p2-019-repository-audit.test.ts
+      - name: Write compact image path inventory
+        run: |
+          node <<'NODE'
+          const fs = require('fs')
+          const path = require('path')
+          function walk(dir) {
+            return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+              const absolute = path.join(dir, entry.name)
+              return entry.isDirectory() ? walk(absolute) : [absolute]
+            })
+          }
+          const files = walk('src').filter(file => /\.(ts|tsx)$/.test(file))
+          const inventory = {
+            uploadCallers: files.filter(file => fs.readFileSync(file, 'utf8').includes('/api/upload/image')),
+            cloudinaryRenderers: files.filter(file => /\bCldImage\b/.test(fs.readFileSync(file, 'utf8'))),
+            rawImageRenderers: files.filter(file => /<img\b/.test(fs.readFileSync(file, 'utf8'))),
+          }
+          fs.writeFileSync('docs/p2-019-audit.json', JSON.stringify(inventory, null, 2) + '\n')
+          NODE
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/p2-019-helper.yml
+      - name: Commit helper result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "chore: format P2-019 and record image path audit"
+          git push
