@@ -56,16 +56,6 @@ function assertFileSize(file: File) {
   }
 }
 
-export async function fingerprintImageUpload(file: File) {
-  assertFileSize(file)
-  const buffer = Buffer.from(await file.arrayBuffer())
-
-  return {
-    buffer,
-    fingerprint: createHash('sha256').update(buffer).digest('hex'),
-  }
-}
-
 function getFileExtension(filename: string) {
   const lastDot = filename.lastIndexOf('.')
 
@@ -102,6 +92,36 @@ function detectImageMimeType(buffer: Buffer) {
   return null
 }
 
+function resolveSupportedImage(file: File, buffer: Buffer) {
+  const extension = getFileExtension(file.name)
+  const supportedImage = SUPPORTED_IMAGES.find(image => image.extension === extension)
+
+  if (!supportedImage) {
+    throw new ImageUploadValidationError('Only JPG, JPEG, PNG, and WEBP files are allowed')
+  }
+
+  if (file.type !== supportedImage.mimeType) {
+    throw new ImageUploadValidationError('File extension and declared image type do not match')
+  }
+
+  if (detectImageMimeType(buffer) !== supportedImage.mimeType) {
+    throw new ImageUploadValidationError('File content does not match its declared image type')
+  }
+
+  return supportedImage
+}
+
+export async function fingerprintImageUpload(file: File) {
+  assertFileSize(file)
+  const buffer = Buffer.from(await file.arrayBuffer())
+  resolveSupportedImage(file, buffer)
+
+  return {
+    buffer,
+    fingerprint: createHash('sha256').update(buffer).digest('hex'),
+  }
+}
+
 function imageDecoder(buffer: Buffer) {
   return sharp(buffer, {
     failOn: 'warning',
@@ -116,24 +136,8 @@ export async function sanitizeImageUpload(
   sourceBuffer?: Buffer
 ) {
   assertFileSize(file)
-
-  const extension = getFileExtension(file.name)
-  const supportedImage = SUPPORTED_IMAGES.find(image => image.extension === extension)
-
-  if (!supportedImage) {
-    throw new ImageUploadValidationError('Only JPG, JPEG, PNG, and WEBP files are allowed')
-  }
-
-  if (file.type !== supportedImage.mimeType) {
-    throw new ImageUploadValidationError('File extension and declared image type do not match')
-  }
-
   const buffer = sourceBuffer ?? Buffer.from(await file.arrayBuffer())
-  const detectedMimeType = detectImageMimeType(buffer)
-
-  if (detectedMimeType !== supportedImage.mimeType) {
-    throw new ImageUploadValidationError('File content does not match its declared image type')
-  }
+  const supportedImage = resolveSupportedImage(file, buffer)
 
   try {
     const metadata = await imageDecoder(buffer).metadata()
