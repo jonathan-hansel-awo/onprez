@@ -38,6 +38,8 @@ model User {
   invitationsSent            TeamInvitation[]            @relation("InvitedInvitations")
   trustedDevices             TrustedDevice[]
   businessMemberships        BusinessMember[]
+  dataLifecycleRequestsMade  DataLifecycleRequest[]      @relation("DataLifecycleRequestedBy")
+  dataLifecycleRequestsAbout DataLifecycleRequest[]      @relation("DataLifecycleSubject")
 
   @@map("users")
 }
@@ -288,13 +290,39 @@ model SecurityLog {
   userAgent String?
   severity  String
   createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([action])
   @@index([severity])
   @@index([createdAt])
   @@map("security_logs")
+}
+
+model DataLifecycleRequest {
+  id                 String                     @id @default(cuid())
+  type               DataLifecycleRequestType
+  status             DataLifecycleRequestStatus @default(REQUESTED)
+  requestedByUserId  String?
+  subjectUserId      String?
+  businessId         String?
+  verificationMethod String                     @default("CURRENT_PASSWORD")
+  scheduledFor       DateTime?
+  holdReason         String?
+  metadata           Json?
+  requestedAt        DateTime                   @default(now())
+  cancelledAt        DateTime?
+  completedAt        DateTime?
+  updatedAt          DateTime                   @updatedAt
+  requestedBy        User?                      @relation("DataLifecycleRequestedBy", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+  subjectUser        User?                      @relation("DataLifecycleSubject", fields: [subjectUserId], references: [id], onDelete: SetNull)
+  business           Business?                  @relation(fields: [businessId], references: [id], onDelete: SetNull)
+
+  @@index([requestedByUserId, requestedAt])
+  @@index([subjectUserId, status])
+  @@index([businessId, status])
+  @@index([status, scheduledFor])
+  @@map("data_lifecycle_requests")
 }
 
 model RateLimit {
@@ -384,6 +412,7 @@ model Business {
   stripeConnectedAccount StripeConnectedAccount?
   bookingPayments        BookingPayment[]
   pushNotificationOutbox PushNotificationOutbox[]
+  dataLifecycleRequests  DataLifecycleRequest[]
 
   @@index([ownerId])
   @@index([category])
@@ -986,6 +1015,19 @@ enum UserRole {
   USER
   ADMIN
   SUPERADMIN
+}
+
+enum DataLifecycleRequestType {
+  ACCOUNT_DELETION
+}
+
+enum DataLifecycleRequestStatus {
+  REQUESTED
+  SCHEDULED
+  REVIEW_REQUIRED
+  CANCELLED
+  COMPLETED
+  REJECTED
 }
 
 enum BusinessRole {
