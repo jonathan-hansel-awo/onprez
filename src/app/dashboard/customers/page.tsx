@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Mail, Phone, RefreshCw, Users } from 'lucide-react'
+import { Mail, Phone, RefreshCw, UserX, Users } from 'lucide-react'
+import { PasswordConfirmModal } from '@/components/account'
 import { GuidedEmptyState } from '@/components/dashboard/guided-empty-state'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,8 +22,12 @@ const currency = new Intl.NumberFormat('en-GB', { style: 'currency', currency: '
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [businessId, setBusinessId] = useState('')
+  const [canManagePersonalData, setCanManagePersonalData] = useState(false)
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const fetchCustomers = useCallback(async () => {
     setLoading(true)
@@ -33,6 +38,8 @@ export default function CustomersPage() {
       const result = await response.json()
 
       if (!response.ok) throw new Error(result.error || 'Failed to load customers')
+      setBusinessId(result.data.businessId)
+      setCanManagePersonalData(result.data.canManagePersonalData === true)
       setCustomers(result.data.customers)
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Failed to load customers')
@@ -40,6 +47,24 @@ export default function CustomersPage() {
       setLoading(false)
     }
   }, [])
+
+  const anonymizeSelectedCustomer = async (password: string) => {
+    if (!selectedCustomer || !businessId) return
+
+    const response = await fetch(`/api/dashboard/customers/${selectedCustomer.id}/personal-data`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ businessId, password }),
+    })
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to remove customer personal data')
+    }
+
+    setSuccess(result.message)
+    await fetchCustomers()
+  }
 
   useEffect(() => {
     fetchCustomers()
@@ -51,6 +76,15 @@ export default function CustomersPage() {
         <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
         <p className="mt-1 text-gray-600">See everyone who has booked with your business.</p>
       </div>
+
+      {success && (
+        <div
+          role="status"
+          className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-800"
+        >
+          {success}
+        </div>
+      )}
 
       {loading && (
         <div className="space-y-3" aria-label="Loading customers">
@@ -104,6 +138,17 @@ export default function CustomersPage() {
                       {customer.totalBookings} booking{customer.totalBookings === 1 ? '' : 's'}
                     </p>
                     <p className="mt-1 text-gray-500">{currency.format(customer.totalSpent)}</p>
+                    {canManagePersonalData &&
+                      !customer.email.endsWith('@privacy.onprez.invalid') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-3 text-red-700"
+                          onClick={() => setSelectedCustomer(customer)}
+                        >
+                          <UserX className="mr-2 h-4 w-4" aria-hidden="true" /> Remove personal data
+                        </Button>
+                      )}
                   </div>
                 </div>
               </CardContent>
@@ -111,6 +156,14 @@ export default function CustomersPage() {
           ))}
         </div>
       )}
+
+      <PasswordConfirmModal
+        isOpen={selectedCustomer !== null}
+        onClose={() => setSelectedCustomer(null)}
+        onConfirm={anonymizeSelectedCustomer}
+        title="Remove customer personal data"
+        description="This anonymises direct identifiers and message content while retaining booking, service, status, policy, and payment records that may be legally required."
+      />
     </div>
   )
 }

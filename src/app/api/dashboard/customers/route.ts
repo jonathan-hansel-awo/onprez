@@ -31,6 +31,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        businessId: context.businessId,
+        canManagePersonalData:
+          context.isOwner || context.role === 'ADMIN' || context.role === 'MANAGER',
         customers: customers.map(customer => ({
           ...customer,
           totalSpent: Number(customer.totalSpent),

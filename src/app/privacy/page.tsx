@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <LegalPage
       title="Privacy Policy"
       description="This notice explains how OnPrez handles information about professionals, their teams, customers, and visitors."
-      lastUpdated="22 July 2026"
+      lastUpdated="1 August 2026"
     >
       <section>
         <h2>1. Who we are</h2>
@@ -202,10 +202,12 @@ export default function PrivacyPage() {
           on consent, you may withdraw it at any time without affecting earlier lawful processing.
         </p>
         <p>
-          To exercise a right, request account export or deletion, or ask a privacy question, email{' '}
-          <a href="mailto:privacy@onprez.com">privacy@onprez.com</a>. We may need to verify your
-          identity. If the request concerns records controlled by a professional, we may direct the
-          request to that professional or assist them in responding.
+          Account holders can download account and business data or start a staged deletion request
+          from <Link href="/account/data">Data &amp; privacy</Link>. These sensitive actions require
+          password verification, and deletion requests have a 14-day cooling-off period. You can
+          also email <a href="mailto:privacy@onprez.com">privacy@onprez.com</a>. If the request
+          concerns records controlled by a professional, we may direct the request to that
+          professional or assist them in responding.
         </p>
         <aside>
           <strong>Your right to object:</strong> You may object to processing based on legitimate

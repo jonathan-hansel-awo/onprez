@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Activity, LogOut, Monitor, Shield } from 'lucide-react'
+import { Activity, Database, LogOut, Monitor, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -21,6 +21,11 @@ const navigation = [
     name: 'Activity',
     href: '/account/activity',
     icon: Activity,
+  },
+  {
+    name: 'Data & privacy',
+    href: '/account/data',
+    icon: Database,
   },
 ]
 

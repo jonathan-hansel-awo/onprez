@@ -7,11 +7,11 @@
 
 **Audited branch:** `main`
 
-**Audit baseline:** `5c25844` plus the current implementation pull request
+**Audit baseline:** `c6d8d63` plus the current implementation pull request
 
 **Current working phase:** Phase 10 — Privacy and Data Lifecycle
 
-**Next planned item:** P2-022 — Add Export and Deletion Workflows
+**Next planned item:** P2-023 — Review PII Handling
 
 ---
 
@@ -64,22 +64,22 @@ Whenever an action item is completed:
 | Phase 7 — Dashboard UX                                |        4 |       0 |           0 |      4 |
 | Phase 8 — Trust, Positioning, and Marketing Integrity |        4 |       0 |           0 |      4 |
 | Phase 9 — Performance and Scalability                 |        4 |       0 |           0 |      4 |
-| Phase 10 — Privacy and Data Lifecycle                 |        1 |       1 |           1 |      3 |
+| Phase 10 — Privacy and Data Lifecycle                 |        2 |       1 |           0 |      3 |
 | Phase 11 — Communications                             |        2 |       1 |           0 |      3 |
 | Phase 12 — SEO and Handle Durability                  |        0 |       1 |           1 |      2 |
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **50** |   **5** |       **6** | **61** |
+| **Total**                                             |   **51** |   **5** |       **5** | **61** |
 
-**Strict completion:** 50 of 61 items — approximately **82%**.
+**Strict completion:** 51 of 61 items — approximately **84%**.
 
-**Items with at least meaningful implementation:** 55 of 61 — approximately **90%**.
+**Items with at least meaningful implementation:** 56 of 61 — approximately **92%**.
 
 ### Current priorities from this audit
 
 1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
-2. Add account and business export and staged deletion workflows under **P2-022**, then complete the canonical PII review under **P2-023**.
+2. Complete the canonical PII inventory, data-flow map, field classification, and recurring audit under **P2-023**.
 3. Complete the remaining testing-maturity and canonical architecture documentation gaps before paid scale.
 4. Add usage and provider-cost tracking before enforcing paid-plan limits. Continue the P2-001 and P2-003 real-user sessions as launch validation.
 
@@ -343,8 +343,13 @@ Whenever an action item is completed:
   - `src/app/privacy/page.tsx` documents retention rules for accounts, media, appointments/customer records, logs, analytics, and backups.
   - Automated enforcement should be added where required, but the action item’s definition and public documentation criteria are met.
 
-- [ ] **P2-022 — Add Export and Deletion Workflows** — **Not started**
-  - The Privacy Policy provides an email route for requests, but no self-service account/business export, staged deletion, ownership verification workflow, or deletion audit trail was found.
+- [x] **P2-022 — Add Export and Deletion Workflows** — **Complete**
+  - Implemented by [PR #131](https://github.com/jonathan-hansel-awo/onprez/pull/131).
+  - `/account/data` provides password-verified, rate-limited account and owner-only business JSON exports with private no-store downloads and explicit authentication-secret exclusions.
+  - Account deletion is a durable 14-day staged request that can be cancelled and moves owned businesses, future bookings, or payment records into retention and ownership review instead of cascading them.
+  - Owners, admins, and managers can anonymise customer PII from the Customers page while retaining booking, service, status, policy, payment, and aggregate facts that may remain legally or operationally required.
+  - Lifecycle actions are recorded in persistent security audit events whose account relation uses `ON DELETE SET NULL`; exported payloads, passwords, tokens, and customer identity are not copied into those events.
+  - `docs/product/DATA_EXPORT_AND_DELETION_WORKFLOWS.md` defines export boundaries, the retention matrix, safe terminal-processing procedure, provider and backup limitations, and acceptance evidence.
 
 - [ ] **P2-023 — Review PII Handling** — **Partial**
   - Strong access controls, tenant isolation, token hashing, encrypted Google refresh tokens, restricted logs, cookie consent, and privacy disclosures exist.
@@ -428,6 +433,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 August 2026 | Completed P2-022 with password-verified account/business exports, staged account deletion, customer anonymisation, durable lifecycle auditing, and the retention-safe processing contract.          | [#131](https://github.com/jonathan-hansel-awo/onprez/pull/131)                                                                                                                                                                                                    |
 | 1 August 2026 | Reconciled merged P2-018 and P2-019 work, completed P2-020 with isolated critical-path capacity and concurrent-booking correctness tests, and aligned the tracker with one-item implementation PRs. | [#128](https://github.com/jonathan-hansel-awo/onprez/pull/128) / [#129](https://github.com/jonathan-hansel-awo/onprez/pull/129) / [#130](https://github.com/jonathan-hansel-awo/onprez/pull/130)                                                                  |
 | 31 July 2026  | Marked merged P2-011, P2-012, P2-013, and P2-016 complete and recorded consented Core Web Vitals monitoring pending PR #127 merge.                                                                  | [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124) / [#125](https://github.com/jonathan-hansel-awo/onprez/pull/125) / [#126](https://github.com/jonathan-hansel-awo/onprez/pull/126) / [#127](https://github.com/jonathan-hansel-awo/onprez/pull/127) |
 | 31 July 2026  | Marked merged P2-010 complete and recorded P2-011 private, expiring, non-indexed draft-preview implementation pending PR #124 merge.                                                                | [#123](https://github.com/jonathan-hansel-awo/onprez/pull/123) / [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124)                                                                                                                                   |
