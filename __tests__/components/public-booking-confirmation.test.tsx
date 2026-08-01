@@ -143,8 +143,15 @@ describe('public booking confirmation handoff', () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        '/api/bookings?confirmationNumber=AB12CD34&customerEmail=ada%40example.com',
-        { cache: 'no-store' }
+        '/api/bookings/lookup',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            confirmationNumber: 'AB12CD34',
+            customerEmail: 'ada@example.com',
+          }),
+          cache: 'no-store',
+        })
       )
     )
     expect(await screen.findByRole('heading', { name: 'Booking Confirmed!' })).toBeInTheDocument()

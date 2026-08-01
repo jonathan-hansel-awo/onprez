@@ -20,7 +20,10 @@ import {
   CalendarPlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { buildBookingLookupUrl, getBookingConfirmationEmail } from '@/lib/booking/public-booking'
+import {
+  buildBookingLookupRequest,
+  getBookingConfirmationEmail,
+} from '@/lib/booking/public-booking'
 
 interface Business {
   id: string
@@ -133,18 +136,22 @@ export function BookingSuccessClient({
 
       try {
         if (paymentResult === 'success' && checkoutSessionId) {
-          const statusUrl = new URL('/api/bookings/payment-status', window.location.origin)
-          statusUrl.searchParams.set('confirmationNumber', confirmationNumber)
-          statusUrl.searchParams.set('customerEmail', customerEmail)
-          statusUrl.searchParams.set('sessionId', checkoutSessionId)
-          await fetch(statusUrl.toString(), { cache: 'no-store' })
+          await fetch('/api/bookings/payment-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              confirmationNumber,
+              customerEmail,
+              checkoutSessionId,
+            }),
+            cache: 'no-store',
+          })
         }
 
         let latest: BookingDetails | null = null
         for (let attempt = 0; attempt < 4; attempt += 1) {
-          const response = await fetch(buildBookingLookupUrl(confirmationNumber, customerEmail), {
-            cache: 'no-store',
-          })
+          const request = buildBookingLookupRequest(confirmationNumber, customerEmail)
+          const response = await fetch(request.url, request.init)
           const result = await response.json()
 
           if (!response.ok) {

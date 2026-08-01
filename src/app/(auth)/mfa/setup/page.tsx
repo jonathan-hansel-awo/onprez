@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
@@ -12,7 +11,6 @@ import { Shield, Copy, Check, Download, AlertTriangle, ArrowLeft } from 'lucide-
 
 function MfaSetupContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [step, setStep] = useState<'loading' | 'scan' | 'verify' | 'backup'>('loading')
   const [qrCodeUrl, setQrCodeUrl] = useState('')
   const [secret, setSecret] = useState('')
@@ -29,22 +27,9 @@ function MfaSetupContent() {
 
   const setupMfa = async () => {
     try {
-      const token = localStorage.getItem('accessToken')
-      const userId = searchParams.get('userId')
-      const email = searchParams.get('email')
-
-      if (!token || !userId || !email) {
-        router.push('/login')
-        return
-      }
-
       const response = await fetch('/api/auth/mfa/setup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId, email }),
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const data = await response.json()
@@ -74,16 +59,10 @@ function MfaSetupContent() {
     setError('')
 
     try {
-      const token = localStorage.getItem('accessToken')
-      const userId = searchParams.get('userId')
-
       const response = await fetch('/api/auth/mfa/verify-setup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId, token: verificationCode }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: verificationCode }),
       })
 
       const data = await response.json()

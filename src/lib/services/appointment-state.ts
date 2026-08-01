@@ -203,7 +203,6 @@ export async function transitionAppointment(input: TransitionAppointmentInput) {
             eventKey: `booking:${appointment.id}:cancelled:${changedAt.toISOString()}`,
             businessId: input.businessId,
             appointmentId: appointment.id,
-            customerName: appointment.customerName,
             serviceName: appointment.service.name,
             startTime: appointment.startTime,
             timezone: appointment.business.timezone,

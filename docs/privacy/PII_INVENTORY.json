@@ -1,0 +1,384 @@
+{
+  "version": "2026-08-01",
+  "reviewedAt": "2026-08-01",
+  "nextReviewDue": "2026-11-01",
+  "reviewCadence": "quarterly and before any new provider or personal-data field ships",
+  "owners": {
+    "platform_privacy": "OnPrez operator: account, platform-security, analytics, provider and rights-request records",
+    "business_controller": "Business owner: customer, inquiry, review, booking-note and business-content records",
+    "finance_operations": "OnPrez operator and business owner: payment, refund, dispute and accounting records",
+    "security_operations": "OnPrez operator: authentication, abuse-prevention, audit and incident records"
+  },
+  "processingActivities": [
+    {
+      "id": "account-and-access",
+      "subjects": ["account holder", "team member"],
+      "purpose": "Create accounts, authenticate users, manage sessions and provide account security controls",
+      "lawfulBasis": "contract and legitimate interests in platform security",
+      "sources": ["account holder", "browser/device"],
+      "destinations": [
+        "Neon",
+        "Vercel",
+        "Sentry after scrubbing",
+        "transactional email provider when required"
+      ],
+      "retention": "active account; routine security records normally up to 30 days; active incidents may be held longer"
+    },
+    {
+      "id": "business-presence",
+      "subjects": ["business owner", "team member", "people named in business content"],
+      "purpose": "Publish and operate the business presence page and team workspace",
+      "lawfulBasis": "contract",
+      "sources": ["business owner", "authorised team member"],
+      "destinations": ["Neon", "Vercel", "Cloudinary", "public web only when explicitly published"],
+      "retention": "active business plus up to 90 days after cancellation for orderly recovery/deletion"
+    },
+    {
+      "id": "customer-booking-and-inquiry",
+      "subjects": ["customer", "inquirer", "reviewer"],
+      "purpose": "Create and manage bookings, inquiries, reviews, reminders and service communications",
+      "lawfulBasis": "contract or requested pre-contract steps; business-defined lawful basis for CRM use",
+      "sources": ["customer", "business user", "browser/device"],
+      "destinations": [
+        "Neon",
+        "Vercel",
+        "Resend",
+        "authorised business users",
+        "Google Calendar only when connected"
+      ],
+      "retention": "normally up to two years after the interaction unless the business documents another lawful period"
+    },
+    {
+      "id": "payments",
+      "subjects": ["customer", "business owner"],
+      "purpose": "Collect deposits, reconcile payments, issue refunds and retain dispute/accounting evidence",
+      "lawfulBasis": "contract and legal obligations",
+      "sources": ["customer", "business owner", "Stripe"],
+      "destinations": ["Stripe", "Neon", "authorised business users"],
+      "retention": "transactional facts retained only for the applicable accounting, dispute or legal period"
+    },
+    {
+      "id": "diagnostics-and-analytics",
+      "subjects": ["visitor", "account holder", "customer"],
+      "purpose": "Protect, diagnose and improve OnPrez without collecting form values or raw private routes",
+      "lawfulBasis": "legitimate interests for security/diagnostics; consent for optional audience analytics",
+      "sources": ["browser/device", "application"],
+      "destinations": [
+        "structured application logs",
+        "Sentry after scrubbing",
+        "Google Analytics using coarse page groups only"
+      ],
+      "retention": "routine diagnostics normally up to 30 days; optional analytics no longer than 12 months"
+    }
+  ],
+  "fieldPolicies": [
+    {
+      "fields": [
+        "User.email",
+        "TeamInvitation.email",
+        "EmailVerificationToken.email",
+        "AuthAttempt.email"
+      ],
+      "classification": "direct_identifier",
+      "protection": "plaintext_required; TLS in transit; provider/database encryption at rest; tenant or account access controls",
+      "retention": "account/team lifecycle; verification tokens expire; auth attempts normally up to 30 days",
+      "deletionOwner": "platform_privacy",
+      "deletionAction": "delete with account/invitation or anonymise retained audit records"
+    },
+    {
+      "fields": ["User.passwordHash"],
+      "classification": "authentication_secret",
+      "protection": "one-way bcrypt hash; never exported or logged",
+      "retention": "active account only",
+      "deletionOwner": "security_operations",
+      "deletionAction": "delete during terminal account processing"
+    },
+    {
+      "fields": [
+        "Session.token",
+        "Session.refreshToken",
+        "PasswordResetToken.token",
+        "EmailVerificationToken.token",
+        "MfaTempToken.token"
+      ],
+      "classification": "authentication_secret",
+      "protection": "keyed one-way hash at rest; raw value exists only during issuance/use; TLS and HttpOnly cookies where applicable",
+      "retention": "until expiry, use or revocation",
+      "deletionOwner": "security_operations",
+      "deletionAction": "expire/revoke promptly and delete with account"
+    },
+    {
+      "fields": ["TeamInvitation.token"],
+      "classification": "authentication_secret",
+      "protection": "random single-purpose invitation credential, TLS and strict expiry; currently plaintext-required for lookup and recorded for migration to a keyed hash",
+      "retention": "until acceptance, revocation or expiry",
+      "deletionOwner": "security_operations",
+      "deletionAction": "delete with invitation or business; never log/export"
+    },
+    {
+      "fields": ["MfaSecret.encryptedSecret", "MfaSecret.iv"],
+      "classification": "authentication_secret",
+      "protection": "application-level authenticated encryption; key held outside the database",
+      "retention": "while MFA remains enabled",
+      "deletionOwner": "security_operations",
+      "deletionAction": "delete when MFA is disabled or the account is removed"
+    },
+    {
+      "fields": ["MfaBackupCode.hashedCode"],
+      "classification": "authentication_secret",
+      "protection": "one-way hash; raw codes shown once",
+      "retention": "until used, regenerated or MFA/account removal",
+      "deletionOwner": "security_operations",
+      "deletionAction": "delete on regeneration, MFA disablement or account removal"
+    },
+    {
+      "fields": ["PushSubscription.endpoint", "PushSubscription.p256dh", "PushSubscription.auth"],
+      "classification": "provider_credential_and_online_identifier",
+      "protection": "plaintext required by current sender; TLS and strict account scoping; never exported/logged; application-level encryption is a recorded pre-paid-launch hardening decision",
+      "retention": "active subscription; prune on expiry/provider 404 or 410/account deletion",
+      "deletionOwner": "security_operations",
+      "deletionAction": "delete subscription and delivery link"
+    },
+    {
+      "fields": [
+        "Session.deviceInfo",
+        "Session.ipAddress",
+        "Session.userAgent",
+        "AuthAttempt.ipAddress",
+        "AuthAttempt.userAgent",
+        "SecurityLog.ipAddress",
+        "SecurityLog.userAgent",
+        "TrustedDevice.deviceFingerprint",
+        "TrustedDevice.deviceName",
+        "TrustedDevice.ipAddress",
+        "TrustedDevice.userAgent",
+        "PushSubscription.deviceName",
+        "PushSubscription.userAgent",
+        "RateLimit.key",
+        "RateLimit.userAgent"
+      ],
+      "classification": "online_and_device_identifier",
+      "protection": "plaintext required for security controls; restricted UI/API access; redacted from external diagnostics",
+      "retention": "session/device lifetime; routine security/rate-limit records normally up to 30 days",
+      "deletionOwner": "security_operations",
+      "deletionAction": "delete with session/device/account or expire through security retention"
+    },
+    {
+      "fields": [
+        "SecurityLog.details",
+        "RateLimit.metadata",
+        "DataLifecycleRequest.metadata",
+        "DataLifecycleRequest.holdReason",
+        "AuthAttempt.failureReason"
+      ],
+      "classification": "restricted_audit_free_text",
+      "protection": "allowlisted operational facts only; structured logger and lifecycle contract prohibit contact details, secrets and payload copies",
+      "retention": "routine security records normally up to 30 days; lifecycle evidence as required for the request/claim",
+      "deletionOwner": "security_operations",
+      "deletionAction": "minimise/anonymise; retain only documented evidence under a hold"
+    },
+    {
+      "fields": [
+        "Business.name",
+        "Business.email",
+        "Business.phone",
+        "Business.website",
+        "Business.address",
+        "Business.city",
+        "Business.state",
+        "Business.zipCode",
+        "Business.country",
+        "Business.latitude",
+        "Business.longitude",
+        "Business.socialLinks",
+        "Business.branding",
+        "Business.description",
+        "Business.tagline"
+      ],
+      "classification": "business_contact_and_profile_data",
+      "protection": "plaintext required; private in dashboard and public only after explicit publication/configuration",
+      "retention": "active business plus published-content recovery/deletion window",
+      "deletionOwner": "business_controller",
+      "deletionAction": "unpublish immediately; delete after ownership, retention and provider review"
+    },
+    {
+      "fields": ["Business.settings"],
+      "classification": "mixed_configuration_and_personal_data",
+      "protection": "JSON is private; Google refresh token nested value uses AES-256-GCM; accountEmail/notification recipients remain plaintext and access-controlled",
+      "retention": "active business/integration",
+      "deletionOwner": "business_controller",
+      "deletionAction": "disconnect providers, revoke tokens and remove settings during business deletion"
+    },
+    {
+      "fields": [
+        "Page.content",
+        "Page.publishedContent",
+        "Page.lastPublishedBy",
+        "BusinessHours.notes",
+        "SpecialDate.notes"
+      ],
+      "classification": "business_authored_content_and_pseudonymous_editor_id",
+      "protection": "draft content tenant-private; published snapshot intentionally public; editors must not place customer PII in public content",
+      "retention": "business/content lifecycle",
+      "deletionOwner": "business_controller",
+      "deletionAction": "unpublish/delete with business and remove editor link where required"
+    },
+    {
+      "fields": [
+        "Appointment.customerName",
+        "Appointment.customerEmail",
+        "Appointment.customerPhone",
+        "Customer.name",
+        "Customer.firstName",
+        "Customer.lastName",
+        "Customer.email",
+        "Customer.phone",
+        "Customer.alternatePhone"
+      ],
+      "classification": "direct_customer_identifier",
+      "protection": "plaintext required for service delivery; tenant-scoped access; excluded from logs, analytics, push payloads and URLs",
+      "retention": "normally up to two years after interaction unless controller documents another lawful period",
+      "deletionOwner": "business_controller",
+      "deletionAction": "verified anonymisation replaces identity with non-routable placeholder while retained facts remain"
+    },
+    {
+      "fields": [
+        "Customer.address",
+        "Customer.city",
+        "Customer.state",
+        "Customer.zipCode",
+        "Customer.country",
+        "Customer.birthday",
+        "Customer.gender",
+        "Customer.preferredLanguage"
+      ],
+      "classification": "customer_profile_and_quasi_identifier",
+      "protection": "plaintext, tenant-scoped and optional; collect only where necessary",
+      "retention": "customer/business purpose and normally no longer than booking retention",
+      "deletionOwner": "business_controller",
+      "deletionAction": "erase during verified customer anonymisation"
+    },
+    {
+      "fields": [
+        "Customer.preferences",
+        "Customer.tags",
+        "Customer.customFields",
+        "Customer.notes",
+        "Customer.privateNotes",
+        "Customer.blockReason",
+        "Customer.source",
+        "Customer.referredBy",
+        "Customer.metadata"
+      ],
+      "classification": "high_risk_customer_free_text_and_profile_data",
+      "protection": "plaintext/JSON, tenant-scoped; no special-category data by default and no copying to diagnostics",
+      "retention": "documented business purpose only and normally no longer than customer retention",
+      "deletionOwner": "business_controller",
+      "deletionAction": "erase during verified customer anonymisation"
+    },
+    {
+      "fields": [
+        "Appointment.customerNotes",
+        "Appointment.businessNotes",
+        "Appointment.cancellationReason",
+        "Appointment.cancellationDetails",
+        "Appointment.rescheduleReason",
+        "Appointment.bookingSource",
+        "Appointment.bookingIp",
+        "Appointment.metadata",
+        "Appointment.cancellationPolicySnapshot"
+      ],
+      "classification": "booking_free_text_network_and_policy_data",
+      "protection": "tenant-scoped plaintext/JSON; booking IP and notes excluded from logs, analytics, push and URLs",
+      "retention": "booking lifecycle and normally up to two years, subject to disputes/legal holds",
+      "deletionOwner": "business_controller",
+      "deletionAction": "erase direct/free-text PII; retain only minimal timing/status/policy facts when justified"
+    },
+    {
+      "fields": [
+        "Inquiry.customerName",
+        "Inquiry.customerEmail",
+        "Inquiry.customerPhone",
+        "Inquiry.subject",
+        "Inquiry.message",
+        "Inquiry.ipAddress",
+        "Inquiry.userAgent",
+        "InquiryReply.message"
+      ],
+      "classification": "inquiry_identity_content_and_network_data",
+      "protection": "tenant-scoped plaintext; purpose-bound transactional email only; excluded from logs/analytics/push/URLs",
+      "retention": "inquiry/customer lifecycle and normally up to two years",
+      "deletionOwner": "business_controller",
+      "deletionAction": "replace identity/content and remove network identifiers during verified anonymisation"
+    },
+    {
+      "fields": ["Review.title", "Review.comment", "Review.businessResponse"],
+      "classification": "customer_generated_content",
+      "protection": "tenant-private until explicitly published; publication must not expose unnecessary identifiers",
+      "retention": "review/business relationship",
+      "deletionOwner": "business_controller",
+      "deletionAction": "unpublish and erase content during verified anonymisation"
+    },
+    {
+      "fields": [
+        "BookingPayment.providerAccountId",
+        "BookingPayment.providerCheckoutSessionId",
+        "BookingPayment.providerCheckoutUrl",
+        "BookingPayment.providerPaymentIntentId",
+        "BookingPayment.providerChargeId",
+        "BookingPayment.providerRefundId",
+        "BookingPayment.idempotencyKey",
+        "StripeConnectedAccount.stripeAccountId",
+        "StripeConnectedAccount.country"
+      ],
+      "classification": "financial_provider_identifier",
+      "protection": "tenant-scoped plaintext identifiers; payment card data is not stored by OnPrez; TLS to Stripe",
+      "retention": "payment/dispute/accounting period",
+      "deletionOwner": "finance_operations",
+      "deletionAction": "retain minimal provider references while legally/operationally required, then delete"
+    },
+    {
+      "fields": [
+        "BookingPayment.refundReason",
+        "BookingPayment.refundFailureMessage",
+        "BookingPayment.retainedReason",
+        "BookingPayment.policySnapshot",
+        "BookingPayment.failureMessage",
+        "BookingPayment.metadata",
+        "StripeWebhookEvent.lastError",
+        "ReminderLog.error"
+      ],
+      "classification": "financial_and_delivery_free_text",
+      "protection": "restricted operational data; provider errors must be scrubbed before persistence where possible",
+      "retention": "payment/reminder evidence period; transient errors no longer than necessary",
+      "deletionOwner": "finance_operations",
+      "deletionAction": "minimise/anonymise; retain only evidence required for accounting, disputes or incidents"
+    },
+    {
+      "fields": [
+        "AppointmentStatusTransition.changedBy",
+        "AppointmentStatusTransition.reason",
+        "AppointmentStatusTransition.metadata",
+        "BookingIdempotencyKey.requestHash"
+      ],
+      "classification": "pseudonymous_audit_and_derived_data",
+      "protection": "tenant-scoped IDs and one-way request digest; no raw request payload in audit fields",
+      "retention": "booking lifecycle and justified audit period",
+      "deletionOwner": "business_controller",
+      "deletionAction": "detach/anonymise actor where required; retain minimal transition facts"
+    },
+    {
+      "fields": [
+        "PushNotificationOutbox.payload",
+        "PushNotificationOutbox.lastError",
+        "PushNotificationDelivery.deviceName",
+        "PushNotificationDelivery.lastError"
+      ],
+      "classification": "notification_operational_data",
+      "protection": "payload contains only service/time/coarse event and internal IDs; no customer identity/contact/notes; provider errors are bounded",
+      "retention": "short delivery/retry audit window",
+      "deletionOwner": "security_operations",
+      "deletionAction": "delete with appointment/subscription or after delivery audit retention"
+    }
+  ]
+}

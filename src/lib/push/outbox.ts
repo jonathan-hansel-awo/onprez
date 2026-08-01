@@ -25,16 +25,15 @@ interface EnqueueBookingPushInput {
   eventKey: string
   businessId: string
   appointmentId: string
-  customerName: string
   serviceName: string
   startTime: Date
   timezone: string
 }
 
-function eventHeading(eventType: PushNotificationEventType, customerName: string): string {
+function eventHeading(eventType: PushNotificationEventType): string {
   switch (eventType) {
     case PushNotificationEventType.NEW_BOOKING:
-      return `New booking from ${customerName}`
+      return 'New booking received'
     case PushNotificationEventType.BOOKING_CANCELLED:
       return 'Booking cancelled'
     case PushNotificationEventType.BOOKING_RESCHEDULED:
@@ -47,8 +46,8 @@ export function buildBookingPushPayload(input: EnqueueBookingPushInput): Booking
   const time = formatTimeInTimezone(input.startTime, input.timezone)
 
   return pushPayloadSchema.parse({
-    title: eventHeading(input.eventType, input.customerName),
-    body: `${input.customerName} · ${input.serviceName} · ${date} at ${time}`,
+    title: eventHeading(input.eventType),
+    body: `${input.serviceName} · ${date} at ${time}`,
     url: `/dashboard/bookings?businessId=${encodeURIComponent(
       input.businessId
     )}&bookingId=${encodeURIComponent(input.appointmentId)}`,

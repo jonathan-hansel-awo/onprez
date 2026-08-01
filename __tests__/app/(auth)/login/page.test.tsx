@@ -17,6 +17,7 @@ describe('LoginPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    window.sessionStorage.clear()
     ;(useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
       refresh: mockRefresh,
@@ -85,10 +86,11 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith(
-        '/mfa/challenge?token=mfa-token-123&redirect=%2Fdashboard'
-      )
+      expect(mockPush).toHaveBeenCalledWith('/mfa/challenge')
     })
+    expect(window.sessionStorage.getItem('onprez:mfa-challenge')).toBe(
+      JSON.stringify({ tempToken: 'mfa-token-123', redirectTo: '/dashboard' })
+    )
   })
 
   it('should display error message on failed login', async () => {

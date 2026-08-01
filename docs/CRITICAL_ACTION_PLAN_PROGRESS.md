@@ -7,11 +7,11 @@
 
 **Audited branch:** `main`
 
-**Audit baseline:** `c6d8d63` plus the current implementation pull request
+**Audit baseline:** `d9d9d66` plus the current implementation pull request
 
-**Current working phase:** Phase 10 — Privacy and Data Lifecycle
+**Current working phase:** Phase 11 — Communications
 
-**Next planned item:** P2-023 — Review PII Handling
+**Next planned item:** P2-024 — Add Email Delivery Logging
 
 ---
 
@@ -64,24 +64,24 @@ Whenever an action item is completed:
 | Phase 7 — Dashboard UX                                |        4 |       0 |           0 |      4 |
 | Phase 8 — Trust, Positioning, and Marketing Integrity |        4 |       0 |           0 |      4 |
 | Phase 9 — Performance and Scalability                 |        4 |       0 |           0 |      4 |
-| Phase 10 — Privacy and Data Lifecycle                 |        2 |       1 |           0 |      3 |
+| Phase 10 — Privacy and Data Lifecycle                 |        3 |       0 |           0 |      3 |
 | Phase 11 — Communications                             |        2 |       1 |           0 |      3 |
 | Phase 12 — SEO and Handle Durability                  |        0 |       1 |           1 |      2 |
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **51** |   **5** |       **5** | **61** |
+| **Total**                                             |   **52** |   **4** |       **5** | **61** |
 
-**Strict completion:** 51 of 61 items — approximately **84%**.
+**Strict completion:** 52 of 61 items — approximately **85%**.
 
 **Items with at least meaningful implementation:** 56 of 61 — approximately **92%**.
 
 ### Current priorities from this audit
 
 1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
-2. Complete the canonical PII inventory, data-flow map, field classification, and recurring audit under **P2-023**.
+2. Add persistent business-facing email delivery history, retry controls, and bounce/complaint handling under **P2-024**.
 3. Complete the remaining testing-maturity and canonical architecture documentation gaps before paid scale.
-4. Add usage and provider-cost tracking before enforcing paid-plan limits. Continue the P2-001 and P2-003 real-user sessions as launch validation.
+4. Complete the P2-023 provider-account privacy checks and recorded credential-encryption follow-ups before paid scale. Add usage and provider-cost tracking before enforcing paid-plan limits.
 
 ---
 
@@ -351,9 +351,15 @@ Whenever an action item is completed:
   - Lifecycle actions are recorded in persistent security audit events whose account relation uses `ON DELETE SET NULL`; exported payloads, passwords, tokens, and customer identity are not copied into those events.
   - `docs/product/DATA_EXPORT_AND_DELETION_WORKFLOWS.md` defines export boundaries, the retention matrix, safe terminal-processing procedure, provider and backup limitations, and acceptance evidence.
 
-- [ ] **P2-023 — Review PII Handling** — **Partial**
-  - Strong access controls, tenant isolation, token hashing, encrypted Google refresh tokens, restricted logs, cookie consent, and privacy disclosures exist.
-  - Remaining: a canonical PII inventory and data-flow map, field-by-field encryption classification, retention/deletion ownership, and a recurring audit confirming no PII enters logs, analytics, errors, notification payloads, or URLs.
+- [x] **P2-023 — Review PII Handling** — **Complete**
+  - Implemented by [PR #132](https://github.com/jonathan-hansel-awo/onprez/pull/132).
+  - `docs/privacy/PII_INVENTORY.json` is the machine-readable source of truth for 129 identified database fields across five processing activities, including protection/encryption decisions, retention, deletion action, and named ownership.
+  - `docs/privacy/PII_HANDLING_REVIEW.md` records the controller/processor boundaries, source-to-provider data-flow map, allowed/prohibited destinations, retention matrix, open hardening decisions, and quarterly review procedure.
+  - `npm run privacy:audit` validates the inventory against Prisma, discovers likely new PII fields, verifies analytics/logging/Sentry/push/calendar URL safeguards, and becomes overdue automatically after the recorded review date.
+  - The audit runs in every pull-request quality gate and in a scheduled Monday workflow.
+  - Current flows no longer send optional-analytics query strings, signup email or MFA challenge data in URLs, current booking-lookup email in GET URLs, customer identity in push payloads, or customer contact data in Google Calendar template URLs.
+  - Structured logging and Sentry scrubbing now filter contact and network identifiers, and MFA completion returns HttpOnly session cookies instead of browser-stored tokens.
+  - Provider-account configuration checks, application-level encryption for web-push credentials, and keyed hashing for invitation tokens are explicit pre-scale operational/hardening decisions with owners; they are no longer undocumented PII handling gaps.
 
 ---
 
@@ -433,6 +439,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 August 2026 | Completed P2-023 with the canonical PII inventory/data-flow map, field protection and lifecycle ownership, privacy-boundary fixes, and recurring automated audit.                                   | [#132](https://github.com/jonathan-hansel-awo/onprez/pull/132)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-022 with password-verified account/business exports, staged account deletion, customer anonymisation, durable lifecycle auditing, and the retention-safe processing contract.          | [#131](https://github.com/jonathan-hansel-awo/onprez/pull/131)                                                                                                                                                                                                    |
 | 1 August 2026 | Reconciled merged P2-018 and P2-019 work, completed P2-020 with isolated critical-path capacity and concurrent-booking correctness tests, and aligned the tracker with one-item implementation PRs. | [#128](https://github.com/jonathan-hansel-awo/onprez/pull/128) / [#129](https://github.com/jonathan-hansel-awo/onprez/pull/129) / [#130](https://github.com/jonathan-hansel-awo/onprez/pull/130)                                                                  |
 | 31 July 2026  | Marked merged P2-011, P2-012, P2-013, and P2-016 complete and recorded consented Core Web Vitals monitoring pending PR #127 merge.                                                                  | [#124](https://github.com/jonathan-hansel-awo/onprez/pull/124) / [#125](https://github.com/jonathan-hansel-awo/onprez/pull/125) / [#126](https://github.com/jonathan-hansel-awo/onprez/pull/126) / [#127](https://github.com/jonathan-hansel-awo/onprez/pull/127) |

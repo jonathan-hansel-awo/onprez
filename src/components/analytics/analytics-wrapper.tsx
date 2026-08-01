@@ -1,13 +1,14 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { WebVitalsReporter } from '@/components/analytics/web-vitals-reporter'
 import {
   COOKIE_CONSENT_CHANGED_EVENT,
   COOKIE_CONSENT_STORAGE_KEY,
   hasAnalyticsConsent,
 } from '@/lib/privacy/cookie-consent'
+import { privacySafeAnalyticsPath } from '@/lib/observability/web-vitals'
 
 declare global {
   interface Window {
@@ -17,7 +18,6 @@ declare global {
 
 function AnalyticsContent() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const [analyticsAllowed, setAnalyticsAllowed] = useState(false)
 
   useEffect(() => {
@@ -42,14 +42,11 @@ function AnalyticsContent() {
     const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
     if (!analyticsAllowed || !measurementId || !window.gtag) return
 
-    const query = searchParams?.toString()
-    const url = `${pathname}${query ? `?${query}` : ''}`
-
     window.gtag('config', measurementId, {
-      page_path: url,
+      page_path: privacySafeAnalyticsPath(pathname),
       anonymize_ip: true,
     })
-  }, [analyticsAllowed, pathname, searchParams])
+  }, [analyticsAllowed, pathname])
 
   return null
 }
@@ -58,9 +55,7 @@ export function AnalyticsWrapper() {
   return (
     <>
       <WebVitalsReporter />
-      <Suspense fallback={null}>
-        <AnalyticsContent />
-      </Suspense>
+      <AnalyticsContent />
     </>
   )
 }

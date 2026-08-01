@@ -233,7 +233,7 @@ export default function SecurityPage() {
                 Disable MFA
               </Button>
             ) : (
-              <Button variant="primary" onClick={() => router.push('/mfa/setup?from=account')}>
+              <Button variant="primary" onClick={() => router.push('/mfa/setup')}>
                 Enable MFA
               </Button>
             )}

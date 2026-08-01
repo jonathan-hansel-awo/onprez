@@ -13,11 +13,13 @@ const mockedUseSearchParams = useSearchParams as jest.Mock
 describe('VerifyEmailPage', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    window.sessionStorage.clear()
     mockedUseRouter.mockReturnValue({ push: jest.fn() })
   })
 
   it('tells a newly signed-up user that a verification email was sent', async () => {
-    mockedUseSearchParams.mockReturnValue(new URLSearchParams('email=louise%40example.com'))
+    mockedUseSearchParams.mockReturnValue(new URLSearchParams())
+    window.sessionStorage.setItem('onprez:pending-verification-email', 'louise@example.com')
 
     render(<VerifyEmailPage />)
 

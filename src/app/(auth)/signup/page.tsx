@@ -19,6 +19,7 @@ import { useClipboard } from '@/lib/hooks/use-clipboard'
 import { sessionStorage } from '@/lib/utils/session-storage'
 import Loading from '@/app/[handle]/loading'
 import { OnPrezMark } from '@/components/brand/onprez-mark'
+import { savePendingVerificationEmail } from '@/lib/privacy/client-sensitive-state'
 
 const BUSINESS_CATEGORIES: SelectOption[] = [
   { value: 'SALON', label: 'Hair Salon' },
@@ -247,9 +248,10 @@ function SignupPageComponent() {
 
       setLoadingStage('success')
       sessionStorage.clear()
+      savePendingVerificationEmail(formData.email)
       setShowSuccess(true)
       setTimeout(() => {
-        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
+        router.push('/verify-email')
       }, 3000)
     } catch (_error) {
       setErrors({

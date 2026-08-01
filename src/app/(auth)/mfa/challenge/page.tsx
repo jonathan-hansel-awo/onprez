@@ -1,17 +1,18 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, FormError, Checkbox } from '@/components/form'
 import { Shield, KeyRound, ArrowLeft, Clock } from 'lucide-react'
+import { clearMfaChallenge, getMfaChallenge } from '@/lib/privacy/client-sensitive-state'
 
 function MfaChallengeContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const [challenge] = useState(() => getMfaChallenge())
   const [code, setCode] = useState('')
   const [useBackupCode, setUseBackupCode] = useState(false)
   const [trustDevice, setTrustDevice] = useState(false)
@@ -19,7 +20,7 @@ function MfaChallengeContent() {
   const [error, setError] = useState('')
   const [timeRemaining, setTimeRemaining] = useState(300) // 5 minutes
 
-  const tempToken = searchParams.get('token')
+  const tempToken = challenge?.tempToken
 
   useEffect(() => {
     if (!tempToken) {
@@ -89,15 +90,8 @@ function MfaChallengeContent() {
         return
       }
 
-      // Store tokens
-      if (result.data?.accessToken) {
-        localStorage.setItem('accessToken', result.data.accessToken)
-        localStorage.setItem('refreshToken', result.data.refreshToken)
-      }
-
-      // Redirect to dashboard
-      const redirect = searchParams.get('redirect') || '/dashboard'
-      router.push(redirect)
+      clearMfaChallenge()
+      router.push(challenge?.redirectTo || '/dashboard')
     } catch (err) {
       setError('An error occurred during verification')
       console.error('MFA challenge error:', err)

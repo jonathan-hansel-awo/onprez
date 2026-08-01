@@ -55,6 +55,9 @@ jobs:
       - name: Validate Prisma schema
         run: npx prisma validate
 
+      - name: Audit PII handling
+        run: npm run privacy:audit
+
       - name: Run tests
         run: npm run test:ci
 
