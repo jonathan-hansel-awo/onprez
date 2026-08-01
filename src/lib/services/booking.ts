@@ -15,7 +15,7 @@ import {
   zonedDateTimeToUtc,
 } from '@/lib/utils/timezone'
 import { AppointmentTransitionError, transitionAppointment } from '@/lib/services/appointment-state'
-import { sendAppointmentStatusEmail } from '@/lib/services/email'
+import { sendTrackedAppointmentStatusEmail } from '@/lib/email-delivery/tracked-notifications'
 import { logger } from '@/lib/observability/logger'
 import { deliverPushOutboxSafely } from '@/lib/push/delivery'
 import { enqueueBookingPushNotification } from '@/lib/push/outbox'
@@ -674,7 +674,7 @@ export async function rescheduleAppointment(
       ? syncAppointmentToGoogleCalendar(result.appointment.id)
       : Promise.resolve({ success: true, skipped: true }),
     notifyCustomer && result.appointment
-      ? sendAppointmentStatusEmail({
+      ? sendTrackedAppointmentStatusEmail(businessId, {
           to: result.appointment.customerEmail,
           customerName: result.appointment.customerName,
           businessName: result.appointment.business.name,

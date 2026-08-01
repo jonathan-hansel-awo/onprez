@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
 
     try {
       await sendInquiryCreatedNotifications({
+        businessId: business.id,
         inquiryId: inquiry.id,
         customerName: data.customerName,
         customerEmail,

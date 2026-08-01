@@ -1,4 +1,4 @@
-import { Resend, type Attachment } from 'resend'
+import { Resend, type Attachment, type WebhookEventPayload } from 'resend'
 import { AppointmentStatus } from '@prisma/client'
 import {
   buildBookingCalendarAttachment,
@@ -17,6 +17,21 @@ function getResendInstance(): Resend {
     resendInstance = new Resend(env.RESEND_API_KEY)
   }
   return resendInstance
+}
+
+export function verifyResendWebhook(
+  payload: string,
+  headers: { id: string; timestamp: string; signature: string }
+): WebhookEventPayload {
+  if (!env.RESEND_WEBHOOK_SECRET) {
+    throw new Error('RESEND_WEBHOOK_SECRET is not configured')
+  }
+
+  return getResendInstance().webhooks.verify({
+    payload,
+    headers,
+    webhookSecret: env.RESEND_WEBHOOK_SECRET,
+  })
 }
 
 export interface SendEmailOptions {

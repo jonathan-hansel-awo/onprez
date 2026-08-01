@@ -7,11 +7,11 @@
 
 **Audited branch:** `main`
 
-**Audit baseline:** `d9d9d66` plus the current implementation pull request
+**Audit baseline:** `934e606` plus the current implementation pull request
 
-**Current working phase:** Phase 11 — Communications
+**Current working phase:** Phase 12 — SEO and Handle Durability
 
-**Next planned item:** P2-024 — Add Email Delivery Logging
+**Next planned item:** P2-027 — Improve Presence SEO
 
 ---
 
@@ -65,21 +65,21 @@ Whenever an action item is completed:
 | Phase 8 — Trust, Positioning, and Marketing Integrity |        4 |       0 |           0 |      4 |
 | Phase 9 — Performance and Scalability                 |        4 |       0 |           0 |      4 |
 | Phase 10 — Privacy and Data Lifecycle                 |        3 |       0 |           0 |      3 |
-| Phase 11 — Communications                             |        2 |       1 |           0 |      3 |
+| Phase 11 — Communications                             |        3 |       0 |           0 |      3 |
 | Phase 12 — SEO and Handle Durability                  |        0 |       1 |           1 |      2 |
 | Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **52** |   **4** |       **5** | **61** |
+| **Total**                                             |   **53** |   **3** |       **5** | **61** |
 
-**Strict completion:** 52 of 61 items — approximately **85%**.
+**Strict completion:** 53 of 61 items — approximately **87%**.
 
 **Items with at least meaningful implementation:** 56 of 61 — approximately **92%**.
 
 ### Current priorities from this audit
 
 1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
-2. Add persistent business-facing email delivery history, retry controls, and bounce/complaint handling under **P2-024**.
+2. Complete owner-controlled indexing, FAQ schema, richer structured data and realistic validation under **P2-027**.
 3. Complete the remaining testing-maturity and canonical architecture documentation gaps before paid scale.
 4. Complete the P2-023 provider-account privacy checks and recorded credential-encryption follow-ups before paid scale. Add usage and provider-cost tracking before enforcing paid-plan limits.
 
@@ -365,9 +365,14 @@ Whenever an action item is completed:
 
 ## Phase 11 — Communications
 
-- [ ] **P2-024 — Add Email Delivery Logging** — **Partial**
-  - Transactional booking emails are sent independently of booking success, structured delivery failures are logged, duplicate replay emails are suppressed, and provider outcomes are test-covered.
-  - Push delivery has a durable outbox and per-device audit records, but an equivalent persistent business-facing email delivery log, status history, retry interface, and bounce/complaint workflow was not verified.
+- [x] **P2-024 — Add Email Delivery Logging** — **Complete**
+  - Implemented by [PR #133](https://github.com/jonathan-hansel-awo/onprez/pull/133).
+  - Booking, appointment, reminder and inquiry emails now create tenant-scoped delivery records with append-only application and Resend provider events.
+  - Signed raw-body Resend webhooks idempotently reconcile sent, delivered, delayed, bounced, complained, failed and suppressed outcomes by provider message ID.
+  - Dashboard notification settings show masked delivery history and allow authorised, same-origin, rate-limited retries only for failed or delayed messages, with a three-attempt ceiling and current-recipient/status checks.
+  - Hard bounces, complaints and provider suppressions create keyed global recipient suppressions that block future tracked sends and cannot be bypassed from the business dashboard.
+  - Delivery records retain no plaintext recipient, subject, body, attachments or raw webhook payload; the PII inventory now classifies 142 fields and the recurring privacy audit protects this boundary.
+  - `docs/product/EMAIL_DELIVERY_OPERATIONS.md` defines Resend setup, webhook events, retry rules, bounce/complaint handling, test recipients, 90-day operational retention and acceptance checks.
 
 - [x] **P2-025 — Add Calendar Links** — **Complete**
   - Delivered by [PR #109](https://github.com/jonathan-hansel-awo/onprez/pull/109): Google and Outlook links, `.ics` attachments, stable event IDs, and optional automatic Google Calendar synchronisation.
@@ -439,6 +444,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 August 2026 | Completed P2-024 with privacy-minimised email delivery history, signed Resend event reconciliation, safe dashboard retries, and bounce/complaint suppression.                                       | [#133](https://github.com/jonathan-hansel-awo/onprez/pull/133)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-023 with the canonical PII inventory/data-flow map, field protection and lifecycle ownership, privacy-boundary fixes, and recurring automated audit.                                   | [#132](https://github.com/jonathan-hansel-awo/onprez/pull/132)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-022 with password-verified account/business exports, staged account deletion, customer anonymisation, durable lifecycle auditing, and the retention-safe processing contract.          | [#131](https://github.com/jonathan-hansel-awo/onprez/pull/131)                                                                                                                                                                                                    |
 | 1 August 2026 | Reconciled merged P2-018 and P2-019 work, completed P2-020 with isolated critical-path capacity and concurrent-booking correctness tests, and aligned the tracker with one-item implementation PRs. | [#128](https://github.com/jonathan-hansel-awo/onprez/pull/128) / [#129](https://github.com/jonathan-hansel-awo/onprez/pull/129) / [#130](https://github.com/jonathan-hansel-awo/onprez/pull/130)                                                                  |

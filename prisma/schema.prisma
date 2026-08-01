@@ -40,6 +40,7 @@ model User {
   businessMemberships        BusinessMember[]
   dataLifecycleRequestsMade  DataLifecycleRequest[]      @relation("DataLifecycleRequestedBy")
   dataLifecycleRequestsAbout DataLifecycleRequest[]      @relation("DataLifecycleSubject")
+  emailDeliveryRetries       EmailDelivery[]             @relation("EmailDeliveryRetriedBy")
 
   @@map("users")
 }
@@ -413,6 +414,7 @@ model Business {
   bookingPayments        BookingPayment[]
   pushNotificationOutbox PushNotificationOutbox[]
   dataLifecycleRequests  DataLifecycleRequest[]
+  emailDeliveries        EmailDelivery[]
 
   @@index([ownerId])
   @@index([category])
@@ -670,6 +672,7 @@ model Appointment {
   statusTransitions            AppointmentStatusTransition[]
   payments                     BookingPayment[]
   pushNotificationOutbox       PushNotificationOutbox[]
+  emailDeliveries              EmailDelivery[]
 
   @@index([serviceId])
   @@index([customerId])
@@ -752,6 +755,77 @@ model StripeWebhookEvent {
   @@index([status, updatedAt])
   @@index([type, createdAt])
   @@map("stripe_webhook_events")
+}
+
+model EmailDelivery {
+  id                String                @id @default(cuid())
+  businessId        String
+  appointmentId     String?
+  inquiryId         String?
+  dedupeKey         String                @unique
+  providerMessageId String?               @unique
+  category          EmailDeliveryCategory
+  audience          EmailDeliveryAudience
+  status            EmailDeliveryStatus   @default(PENDING)
+  recipientHash     String
+  recipientMasked   String
+  appointmentStatus AppointmentStatus?
+  reminderType      String?
+  attempts          Int                   @default(1)
+  maxAttempts       Int                   @default(3)
+  lastAttemptAt     DateTime              @default(now())
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  lastErrorCode     String?
+  lastError         String?
+  retriedByUserId   String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  business          Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  appointment       Appointment?          @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  inquiry           Inquiry?              @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  retriedBy         User?                 @relation("EmailDeliveryRetriedBy", fields: [retriedByUserId], references: [id], onDelete: SetNull)
+  events            EmailDeliveryEvent[]
+
+  @@index([businessId, createdAt])
+  @@index([businessId, status, createdAt])
+  @@index([appointmentId, createdAt])
+  @@index([inquiryId, createdAt])
+  @@index([recipientHash, createdAt])
+  @@map("email_deliveries")
+}
+
+model EmailDeliveryEvent {
+  id              String                   @id @default(cuid())
+  deliveryId      String
+  providerEventId String?                  @unique
+  type            String
+  status          EmailDeliveryStatus
+  source          EmailDeliveryEventSource
+  errorCode       String?
+  errorMessage    String?
+  occurredAt      DateTime
+  receivedAt      DateTime                 @default(now())
+  delivery        EmailDelivery            @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@index([deliveryId, occurredAt])
+  @@index([type, occurredAt])
+  @@map("email_delivery_events")
+}
+
+model EmailSuppression {
+  id                String                 @id @default(cuid())
+  recipientHash     String                 @unique
+  recipientMasked   String
+  reason            EmailSuppressionReason
+  providerMessageId String?
+  active            Boolean                @default(true)
+  occurredAt        DateTime
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  @@index([active, occurredAt])
+  @@map("email_suppressions")
 }
 
 model AppointmentStatusTransition {
@@ -920,24 +994,25 @@ model FAQ {
 }
 
 model Inquiry {
-  id            String          @id @default(cuid())
-  businessId    String
-  customerId    String?
-  customerEmail String
-  customerName  String
-  customerPhone String?
-  subject       String
-  message       String
-  status        InquiryStatus   @default(PENDING)
-  priority      InquiryPriority @default(NORMAL)
-  isRead        Boolean         @default(false)
-  ipAddress     String?
-  userAgent     String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  business      Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer      Customer?       @relation(fields: [customerId], references: [id])
-  replies       InquiryReply[]
+  id              String          @id @default(cuid())
+  businessId      String
+  customerId      String?
+  customerEmail   String
+  customerName    String
+  customerPhone   String?
+  subject         String
+  message         String
+  status          InquiryStatus   @default(PENDING)
+  priority        InquiryPriority @default(NORMAL)
+  isRead          Boolean         @default(false)
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  business        Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer        Customer?       @relation(fields: [customerId], references: [id])
+  replies         InquiryReply[]
+  emailDeliveries EmailDelivery[]
 
   @@index([businessId, status])
   @@index([businessId, createdAt])
@@ -1098,6 +1173,42 @@ enum PushNotificationDeliveryStatus {
   RETRY
   FAILED
   EXPIRED
+}
+
+enum EmailDeliveryCategory {
+  BOOKING_CUSTOMER_CONFIRMATION
+  BOOKING_BUSINESS_NOTIFICATION
+  APPOINTMENT_STATUS_UPDATE
+  APPOINTMENT_REMINDER
+  INQUIRY_CUSTOMER_ACKNOWLEDGEMENT
+  INQUIRY_BUSINESS_NOTIFICATION
+}
+
+enum EmailDeliveryAudience {
+  CUSTOMER
+  BUSINESS
+}
+
+enum EmailDeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED
+  DELAYED
+  BOUNCED
+  COMPLAINED
+  FAILED
+  SUPPRESSED
+}
+
+enum EmailDeliveryEventSource {
+  APPLICATION
+  RESEND
+}
+
+enum EmailSuppressionReason {
+  BOUNCE
+  COMPLAINT
+  PROVIDER_SUPPRESSION
 }
 
 enum CancellationSource {

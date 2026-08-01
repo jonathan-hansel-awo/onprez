@@ -98,6 +98,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...       # Server-side only!
 
 ```bash
 RESEND_API_KEY=re_...                   # From resend.com
+RESEND_WEBHOOK_SECRET=whsec_...         # Signing secret for /api/webhooks/resend
 ```
 
 ### Payment Processing

@@ -1,10 +1,15 @@
-import type { AppointmentStatus } from '@prisma/client'
+import {
+  EmailDeliveryAudience,
+  EmailDeliveryCategory,
+  type AppointmentStatus,
+} from '@prisma/client'
 import {
   buildBookingCalendarAttachment,
   buildCustomerGoogleCalendarUrl,
   buildCustomerOutlookCalendarUrl,
 } from '@/lib/calendar/booking-calendar'
 import { syncAppointmentToGoogleCalendar } from '@/lib/integrations/google-calendar'
+import { sendTrackedEmail } from '@/lib/email-delivery/delivery'
 import { readNotificationPreferences } from '@/lib/notifications/preferences'
 import { logger } from '@/lib/observability/logger'
 import { prisma } from '@/lib/prisma'
@@ -346,21 +351,27 @@ export function buildBusinessBookingEmail(
   }
 }
 
-async function shouldNotifyBusiness(bookingId: string): Promise<boolean> {
+async function getBookingNotificationContext(
+  bookingId: string
+): Promise<{ businessId: string; notifyBusiness: boolean } | null> {
   try {
     const appointment = await prisma.appointment.findUnique({
       where: { id: bookingId },
-      select: { business: { select: { settings: true } } },
+      select: { businessId: true, business: { select: { settings: true } } },
     })
 
-    return readNotificationPreferences(appointment?.business.settings).bookingOwnerEmail
+    if (!appointment) return null
+    return {
+      businessId: appointment.businessId,
+      notifyBusiness: readNotificationPreferences(appointment.business.settings).bookingOwnerEmail,
+    }
   } catch (error) {
     // Preserve existing delivery behaviour if the preference lookup itself is unavailable.
     logger.warn('booking.notifications.preference_lookup_failed', {
       bookingId,
       errorType: error instanceof Error ? error.name : typeof error,
     })
-    return true
+    return null
   }
 }
 
@@ -381,14 +392,40 @@ export async function sendBookingCreatedNotifications(
   try {
     const businessRecipient =
       normalizeEmail(input.businessEmail) || normalizeEmail(input.businessOwnerEmail)
-    const notifyBusiness = await shouldNotifyBusiness(input.bookingId)
+    const trackingContext = await getBookingNotificationContext(input.bookingId)
+    const notifyBusiness = trackingContext?.notifyBusiness ?? true
 
     // Customer confirmation is a required transactional service email and always sends.
-    const customerPromise = sendEmail(buildCustomerBookingEmail(input))
+    const customerOptions = buildCustomerBookingEmail(input)
+    const customerPromise = trackingContext
+      ? sendTrackedEmail(
+          {
+            businessId: trackingContext.businessId,
+            appointmentId: input.bookingId,
+            dedupeKey: `booking:${input.bookingId}:created:customer`,
+            category: EmailDeliveryCategory.BOOKING_CUSTOMER_CONFIRMATION,
+            audience: EmailDeliveryAudience.CUSTOMER,
+            appointmentStatus: input.status,
+          },
+          customerOptions
+        )
+      : sendEmail(customerOptions)
     const businessPromise = !notifyBusiness
       ? Promise.resolve<EmailResult>({ success: true })
       : businessRecipient
-        ? sendEmail(buildBusinessBookingEmail(input, businessRecipient))
+        ? trackingContext
+          ? sendTrackedEmail(
+              {
+                businessId: trackingContext.businessId,
+                appointmentId: input.bookingId,
+                dedupeKey: `booking:${input.bookingId}:created:business`,
+                category: EmailDeliveryCategory.BOOKING_BUSINESS_NOTIFICATION,
+                audience: EmailDeliveryAudience.BUSINESS,
+                appointmentStatus: input.status,
+              },
+              buildBusinessBookingEmail(input, businessRecipient)
+            )
+          : sendEmail(buildBusinessBookingEmail(input, businessRecipient))
         : Promise.resolve<EmailResult>({
             success: false,
             error: 'No business notification recipient is configured',
