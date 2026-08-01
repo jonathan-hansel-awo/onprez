@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Upload, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils/cn'
+import { Loader2, Upload } from 'lucide-react'
 import Image from 'next/image'
+import { useRef, useState } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { ActionFeedback } from './action-feedback'
 
 export interface ImageUploadProps {
@@ -16,6 +16,11 @@ export interface ImageUploadProps {
   aspect?: 'square' | 'landscape' | 'portrait'
   maxSize?: number // MB
   showRemoveButton?: boolean
+}
+
+type UploadConfirmation = {
+  reused: boolean
+  message: string
 }
 
 export function ImageUpload({
@@ -31,7 +36,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
-  const [uploaded, setUploaded] = useState(false)
+  const [confirmation, setConfirmation] = useState<UploadConfirmation | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const uploadInProgressRef = useRef(false)
 
@@ -65,7 +70,7 @@ export function ImageUpload({
     }
 
     setError('')
-    setUploaded(false)
+    setConfirmation(null)
     setUploading(true)
     uploadInProgressRef.current = true
 
@@ -83,8 +88,16 @@ export function ImageUpload({
       const data = await response.json()
 
       if (data.success) {
+        const reused = data.data?.reused === true
         onChange(data.data.url)
-        setUploaded(true)
+        setConfirmation({
+          reused,
+          message:
+            data.message ||
+            (reused
+              ? 'This image was already in your media library, so the stored copy was reused.'
+              : 'The new image is ready. Save your changes to publish it.'),
+        })
       } else {
         setError(data.error || 'The image could not be uploaded. Check the file and try again.')
       }
@@ -105,7 +118,13 @@ export function ImageUpload({
       <div className={cn('relative w-full', aspectClasses[aspect])}>
         {value ? (
           <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-gray-200 group">
-            <Image src={value} alt="Upload preview" fill className="object-cover" unoptimized />
+            <Image
+              src={value}
+              alt="Upload preview"
+              fill
+              sizes="(max-width: 768px) 100vw, 640px"
+              className="object-cover"
+            />
 
             <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
               <button
@@ -149,7 +168,7 @@ export function ImageUpload({
             {uploading ? (
               <>
                 <Loader2 className="w-8 h-8 text-onprez-blue animate-spin" />
-                <p className="text-sm text-gray-600">Uploading...</p>
+                <p className="text-sm text-gray-600">Checking and optimising...</p>
               </>
             ) : (
               <>
@@ -173,11 +192,11 @@ export function ImageUpload({
         disabled={uploading}
       />
 
-      {uploaded && (
+      {confirmation && (
         <ActionFeedback
           status="success"
-          title="Image uploaded"
-          message="The new image is ready. Save your changes to publish it."
+          title={confirmation.reused ? 'Existing image reused' : 'Image uploaded'}
+          message={confirmation.message}
           className="mt-3"
         />
       )}
