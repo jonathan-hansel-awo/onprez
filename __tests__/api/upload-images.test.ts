@@ -16,7 +16,9 @@ jest.mock('cloudinary', () => ({
   v2: {
     config: jest.fn(),
     api: {
-      resource: mockResource,
+      resource: jest.fn((publicId: string, options?: Record<string, unknown>) =>
+        mockResource(publicId, options)
+      ),
     },
     uploader: {
       upload_stream: jest.fn((options, callback) => {
