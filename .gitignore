@@ -49,3 +49,6 @@ Thumbs.db
 # Keep .env.example (this is safe to commit)
 !.env.example
 /generated/prisma
+
+# Sentry Config File
+.env.sentry-build-plugin
