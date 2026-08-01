@@ -1,8 +1,30 @@
+import { createHash } from 'node:crypto'
 import sharp from 'sharp'
 
 export const MAX_IMAGE_SIZE_BYTES = 4 * 1024 * 1024
 export const MAX_IMAGE_PIXELS = 25_000_000
 export const MAX_IMAGE_DIMENSION = 8_192
+
+export type ImageUploadPurpose =
+  | 'profile'
+  | 'business-logo'
+  | 'business-cover'
+  | 'service'
+  | 'gallery'
+
+export type ImageUploadPolicy = {
+  maxWidth: number
+  maxHeight: number
+  quality: number
+}
+
+export const IMAGE_UPLOAD_POLICIES: Record<ImageUploadPurpose, ImageUploadPolicy> = {
+  profile: { maxWidth: 1_024, maxHeight: 1_024, quality: 82 },
+  'business-logo': { maxWidth: 1_200, maxHeight: 1_200, quality: 82 },
+  'business-cover': { maxWidth: 1_920, maxHeight: 1_080, quality: 82 },
+  service: { maxWidth: 1_600, maxHeight: 1_600, quality: 82 },
+  gallery: { maxWidth: 1_600, maxHeight: 1_600, quality: 82 },
+}
 
 type SupportedImage = {
   extension: '.jpg' | '.jpeg' | '.png' | '.webp'
@@ -21,6 +43,26 @@ export class ImageUploadValidationError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'ImageUploadValidationError'
+  }
+}
+
+function assertFileSize(file: File) {
+  if (file.size <= 0) {
+    throw new ImageUploadValidationError('File is empty')
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    throw new ImageUploadValidationError('File too large. Maximum size is 4MB.')
+  }
+}
+
+export async function fingerprintImageUpload(file: File) {
+  assertFileSize(file)
+  const buffer = Buffer.from(await file.arrayBuffer())
+
+  return {
+    buffer,
+    fingerprint: createHash('sha256').update(buffer).digest('hex'),
   }
 }
 
@@ -68,14 +110,12 @@ function imageDecoder(buffer: Buffer) {
   })
 }
 
-export async function sanitizeImageUpload(file: File) {
-  if (file.size <= 0) {
-    throw new ImageUploadValidationError('File is empty')
-  }
-
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    throw new ImageUploadValidationError('File too large. Maximum size is 4MB.')
-  }
+export async function sanitizeImageUpload(
+  file: File,
+  purpose: ImageUploadPurpose = 'profile',
+  sourceBuffer?: Buffer
+) {
+  assertFileSize(file)
 
   const extension = getFileExtension(file.name)
   const supportedImage = SUPPORTED_IMAGES.find(image => image.extension === extension)
@@ -88,7 +128,7 @@ export async function sanitizeImageUpload(file: File) {
     throw new ImageUploadValidationError('File extension and declared image type do not match')
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer())
+  const buffer = sourceBuffer ?? Buffer.from(await file.arrayBuffer())
   const detectedMimeType = detectImageMimeType(buffer)
 
   if (detectedMimeType !== supportedImage.mimeType) {
@@ -116,17 +156,23 @@ export async function sanitizeImageUpload(file: File) {
       throw new ImageUploadValidationError('Image dimensions are too large')
     }
 
-    let sanitizer = imageDecoder(buffer).rotate()
+    const policy = IMAGE_UPLOAD_POLICIES[purpose]
+    let sanitizer = imageDecoder(buffer).rotate().resize({
+      width: policy.maxWidth,
+      height: policy.maxHeight,
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
 
     switch (supportedImage.format) {
       case 'jpeg':
-        sanitizer = sanitizer.jpeg({ quality: 85, mozjpeg: true })
+        sanitizer = sanitizer.jpeg({ quality: policy.quality, mozjpeg: true })
         break
       case 'png':
-        sanitizer = sanitizer.png({ compressionLevel: 9 })
+        sanitizer = sanitizer.png({ compressionLevel: 9, quality: policy.quality })
         break
       case 'webp':
-        sanitizer = sanitizer.webp({ quality: 85 })
+        sanitizer = sanitizer.webp({ quality: policy.quality })
         break
     }
 
@@ -145,6 +191,7 @@ export async function sanitizeImageUpload(file: File) {
       width: sanitized.info.width,
       height: sanitized.info.height,
       bytes: sanitized.data.length,
+      policy,
     }
   } catch (error) {
     if (error instanceof ImageUploadValidationError) {
