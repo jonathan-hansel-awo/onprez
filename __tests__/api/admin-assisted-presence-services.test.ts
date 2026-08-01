@@ -1,16 +1,16 @@
 /** @jest-environment node */
 
-import { revalidatePath } from 'next/cache'
 import { NextRequest } from 'next/server'
 
 import { POST as createAdminService } from '@/app/api/admin/businesses/[businessId]/services/route'
 import { PUT as saveAdminPresence } from '@/app/api/admin/businesses/[businessId]/presence/route'
-import { recordAdminActionSafely } from '@/lib/admin/audit'
 import { requirePlatformAdminApi } from '@/lib/admin/access'
+import { recordAdminActionSafely } from '@/lib/admin/audit'
+import { invalidatePublicPresence } from '@/lib/presence/public-presence-cache'
 import { prisma } from '@/lib/prisma'
 
-jest.mock('next/cache', () => ({
-  revalidatePath: jest.fn(),
+jest.mock('@/lib/presence/public-presence-cache', () => ({
+  invalidatePublicPresence: jest.fn(),
 }))
 
 jest.mock('@/lib/prisma', () => ({
@@ -45,7 +45,7 @@ const mockedPrisma = prisma as unknown as {
 }
 const mockedRequirePlatformAdmin = requirePlatformAdminApi as jest.Mock
 const mockedRecordAdminActionSafely = recordAdminActionSafely as jest.Mock
-const mockedRevalidatePath = revalidatePath as jest.Mock
+const mockedInvalidatePublicPresence = jest.mocked(invalidatePublicPresence)
 
 function jsonRequest(path: string, method: 'POST' | 'PUT', body: unknown) {
   return new NextRequest(`http://localhost:3000${path}`, {
@@ -154,7 +154,7 @@ describe('platform-admin assisted services and presence', () => {
     expect(mockedRecordAdminActionSafely).not.toHaveBeenCalled()
   })
 
-  it('updates the live snapshot in the same request when an admin saves a published page', async () => {
+  it('updates the live snapshot and invalidates its handle when an admin saves a published page', async () => {
     const sections = [
       {
         id: 'services-section',
@@ -197,7 +197,7 @@ describe('platform-admin assisted services and presence', () => {
         publishedContent: sections,
       },
     })
-    expect(mockedRevalidatePath).toHaveBeenCalledWith('/heavenlypamperpalace')
+    expect(mockedInvalidatePublicPresence).toHaveBeenCalledWith('heavenlypamperpalace')
     expect(mockedRecordAdminActionSafely).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'admin.presence.draft_saved',
@@ -207,7 +207,7 @@ describe('platform-admin assisted services and presence', () => {
     )
   })
 
-  it('keeps an unpublished assisted page as a draft', async () => {
+  it('keeps an unpublished assisted page as a draft without invalidating the public cache', async () => {
     const sections = [
       {
         id: 'services-section',
@@ -238,6 +238,6 @@ describe('platform-admin assisted services and presence', () => {
       where: { id: 'page-1' },
       data: { content: sections },
     })
-    expect(mockedRevalidatePath).not.toHaveBeenCalled()
+    expect(mockedInvalidatePublicPresence).not.toHaveBeenCalled()
   })
 })

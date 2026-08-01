@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
 import { businessAuthErrorResponse, requireBusinessRole } from '@/lib/auth/business-access'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { invalidatePublicPresence } from '@/lib/presence/public-presence-cache'
+import { prisma } from '@/lib/prisma'
 
 const publishPageSchema = z.object({
   pageId: z.string().min(1, 'Page ID is required').max(128),
@@ -34,7 +35,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { pageId, businessId, isPublished } = validation.data
-
     const context = await requireBusinessRole(user.id, businessId, ['ADMIN'])
 
     const currentPage = await prisma.page.findFirst({
@@ -87,6 +87,8 @@ export async function POST(request: NextRequest) {
       },
       select: { id: true },
     })
+
+    invalidatePublicPresence(context.business.slug)
 
     return NextResponse.json({
       success: true,

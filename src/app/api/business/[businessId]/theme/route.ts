@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse, requireBusinessRole } from '@/lib/auth/business-access'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { invalidatePublicPresence } from '@/lib/presence/public-presence-cache'
+import { prisma } from '@/lib/prisma'
 
 const updateThemeSchema = z.object({
   theme: z
@@ -80,6 +81,8 @@ export async function PUT(
         updatedAt: true,
       },
     })
+
+    invalidatePublicPresence(updatedBusiness.slug)
 
     return NextResponse.json({
       success: true,

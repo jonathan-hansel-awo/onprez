@@ -1,9 +1,9 @@
-import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
-import { prisma } from '@/lib/prisma'
 import { platformAdminErrorResponse, requirePlatformAdminApi } from '@/lib/admin/access'
 import { recordAdminActionSafely } from '@/lib/admin/audit'
+import { invalidatePublicPresence } from '@/lib/presence/public-presence-cache'
+import { prisma } from '@/lib/prisma'
 
 type RouteContext = { params: Promise<{ businessId: string }> }
 
@@ -93,7 +93,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     })
 
     if (page.isPublished) {
-      revalidatePath(`/${page.business.slug}`)
+      invalidatePublicPresence(page.business.slug)
     }
 
     await recordAdminActionSafely({
