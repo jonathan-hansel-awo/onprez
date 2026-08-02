@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { SectionRenderer } from '@/components/presence/sections/SectionRenderer'
 import { StructuredData } from '@/components/seo/structured-data'
 import type { PresenceTrustSignals } from '@/components/presence/PresenceConversion'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
-import { getCachedPublicPresence } from '@/lib/presence/public-presence-cache'
+import { getCachedPublicPresenceResolution } from '@/lib/presence/public-presence-cache'
 import { buildMissingPresenceMetadata, buildPresenceMetadata } from '@/lib/seo/presence-metadata'
 import { buildPresenceStructuredData } from '@/lib/seo/presence-structured-data'
 import { getAppUrl } from '@/lib/utils/get-app-url'
@@ -21,11 +21,15 @@ interface PresencePageProps {
 
 export default async function PresencePage({ params }: PresencePageProps) {
   const { handle } = await params
-  const presence = await getCachedPublicPresence(handle)
+  const resolution = await getCachedPublicPresenceResolution(handle)
 
-  if (!presence) notFound()
+  if (!resolution.presence && resolution.canonicalHandle) {
+    permanentRedirect(`/${resolution.canonicalHandle}`)
+  }
 
-  const { business, page, reviewSummary, services, businessHours } = presence
+  if (!resolution.presence) notFound()
+
+  const { business, page, reviewSummary, services, businessHours } = resolution.presence
   const sections = (page.publishedContent || page.content) as unknown as PageSection[]
   const settings = business.settings as any
   const theme = settings?.theme || {}
@@ -95,11 +99,15 @@ export default async function PresencePage({ params }: PresencePageProps) {
 
 export async function generateMetadata({ params }: PresencePageProps): Promise<Metadata> {
   const { handle } = await params
-  const presence = await getCachedPublicPresence(handle)
+  const resolution = await getCachedPublicPresenceResolution(handle)
 
-  if (!presence) {
+  if (!resolution.presence && resolution.canonicalHandle) {
+    permanentRedirect(`/${resolution.canonicalHandle}`)
+  }
+
+  if (!resolution.presence) {
     return buildMissingPresenceMetadata()
   }
 
-  return buildPresenceMetadata(presence.business, getAppUrl())
+  return buildPresenceMetadata(resolution.presence.business, getAppUrl())
 }

@@ -2,6 +2,7 @@ import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import {
   getCachedPublicPresence,
+  getCachedPublicPresenceResolution,
   invalidatePublicPresence,
   normalizePublicPresenceHandle,
   PUBLIC_PRESENCE_REVALIDATE_SECONDS,
@@ -17,6 +18,7 @@ jest.mock('next/cache', () => ({
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     business: { findUnique: jest.fn() },
+    businessHandleRedirect: { findUnique: jest.fn() },
     page: { findFirst: jest.fn() },
     review: { aggregate: jest.fn() },
   },
@@ -26,6 +28,7 @@ const mockUnstableCache = jest.mocked(unstable_cache)
 const mockRevalidatePath = jest.mocked(revalidatePath)
 const mockRevalidateTag = jest.mocked(revalidateTag)
 const mockFindBusiness = jest.mocked(prisma.business.findUnique)
+const mockFindRedirect = jest.mocked(prisma.businessHandleRedirect.findUnique)
 const mockFindPage = jest.mocked(prisma.page.findFirst)
 const mockAggregateReviews = jest.mocked(prisma.review.aggregate)
 
@@ -74,6 +77,7 @@ const publishedBusiness = {
 describe('public presence cache', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockFindRedirect.mockResolvedValue(null)
   })
 
   it('normalises handles and creates a stable handle-scoped tag', () => {
@@ -123,6 +127,38 @@ describe('public presence cache', () => {
     await expect(getCachedPublicPresence('aurelia-wellness')).resolves.toBeNull()
     expect(mockFindPage).not.toHaveBeenCalled()
     expect(mockAggregateReviews).not.toHaveBeenCalled()
+  })
+
+  it('resolves a retired handle directly to the business current handle', async () => {
+    mockFindBusiness.mockResolvedValue(null)
+    mockFindRedirect.mockResolvedValue({
+      business: { slug: 'aurelia-wellness', isActive: true },
+    } as never)
+
+    await expect(getCachedPublicPresenceResolution('old-aurelia')).resolves.toEqual({
+      presence: null,
+      canonicalHandle: 'aurelia-wellness',
+    })
+    expect(mockFindRedirect).toHaveBeenCalledWith({
+      where: { sourceHandle: 'old-aurelia' },
+      select: {
+        business: {
+          select: { slug: true, isActive: true },
+        },
+      },
+    })
+  })
+
+  it('refuses a self-referential redirect instead of looping', async () => {
+    mockFindBusiness.mockResolvedValue(null)
+    mockFindRedirect.mockResolvedValue({
+      business: { slug: 'old-aurelia', isActive: true },
+    } as never)
+
+    await expect(getCachedPublicPresenceResolution('old-aurelia')).resolves.toEqual({
+      presence: null,
+      canonicalHandle: null,
+    })
   })
 
   it('expires both the data tag and the rendered handle route after a live mutation', () => {

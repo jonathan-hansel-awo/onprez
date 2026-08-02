@@ -79,6 +79,7 @@
 | `/api/business/current`            | Business-scoped | Validate session; resolve current business for user              | Needs review | Must not assume one business forever.                          |
 | `/api/business/features`           | Business-scoped | Validate session; require business access                        | Needs review | Write operations may require owner/admin.                      |
 | `/api/business/hours`              | Business-scoped | Validate session; require business access                        | Needs review | Mutations should require owner/admin or configured staff role. |
+| `/api/business/handle`             | Owner-only      | Validate session; owner scope; rate limit; reserve history       | Reviewed     | Durable redirects; current/retired namespace is transactional. |
 | `/api/business/settings`           | Business-scoped | Validate session; require business access                        | Needs review | Sensitive settings may require owner/admin.                    |
 | `/api/business/settings/booking`   | Business-scoped | Validate session; require business access                        | Needs review | Booking rules affect public availability.                      |
 | `/api/business/special-dates`      | Business-scoped | Validate session; require business access                        | Needs review | Mutations should be owner/admin or staff with permission.      |
@@ -256,6 +257,7 @@ publicRateLimit(request, key)
    | `/api/auth/password-reset/request` | Public | Validate email; rate limit by IP+email hash; generic response; store hashed reset token | Reviewed | Raw reset token only appears in email link. |
    | `/api/auth/password-reset/complete` | Public token-based | Validate token/password; rate limit; look up hashed token with legacy fallback; consume once; delete sessions | Reviewed | Atomic token consumption and session invalidation. |
    | `/api/business/current` | Business-scoped | Validate DB-backed session; resolve default owned/member business context | Reviewed | No longer assumes owner-only access; returns selected business fields. |
+   | `/api/business/handle` | Owner-only | GET requires business access; PUT requires owner, rate limit, validation and transactional namespace guard | Reviewed | Old handles remain reserved and redirect directly to the business current handle. |
    | `/api/business/settings` | Business-scoped | GET requires business access; PUT/PATCH requires owner/admin/manager access | Reviewed | Supports explicit `businessId` with centralized authorization. |
    | `/api/business/features` | Business-scoped | GET requires business access; PUT requires owner/admin/manager access | Reviewed | Uses selected settings only. |
    | `/api/business/hours` | Business-scoped | GET requires business access; PUT requires owner/admin/manager access | Reviewed | Updates hours transactionally for authorized business only. |

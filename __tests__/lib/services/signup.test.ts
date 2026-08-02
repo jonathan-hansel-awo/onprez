@@ -16,6 +16,9 @@ jest.mock('@/lib/prisma', () => ({
     business: {
       findUnique: jest.fn(),
     },
+    businessHandleRedirect: {
+      findUnique: jest.fn(),
+    },
     $transaction: jest.fn(),
   },
 }))
@@ -45,6 +48,7 @@ import { signupUser, checkHandleAvailability } from '@/lib/services/signup'
 describe('Signup Service', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(prisma.businessHandleRedirect.findUnique as jest.Mock).mockResolvedValue(null)
   })
 
   describe('signupUser', () => {
@@ -182,6 +186,21 @@ describe('Signup Service', () => {
 
       expect(result.available).toBe(false)
       expect(result.reason).toContain('already taken')
+    })
+
+    it('keeps retired handles unavailable to new businesses', async () => {
+      ;(prisma.business.findUnique as jest.Mock).mockResolvedValue(null)
+      ;(prisma.businessHandleRedirect.findUnique as jest.Mock).mockResolvedValue({
+        id: 'redirect-1',
+      })
+
+      const result = await checkHandleAvailability('retired-handle')
+
+      expect(result).toEqual({ available: false, reason: 'Handle is already taken' })
+      expect(prisma.businessHandleRedirect.findUnique).toHaveBeenCalledWith({
+        where: { sourceHandle: 'retired-handle' },
+        select: { id: true },
+      })
     })
 
     it('should normalize handle before checking', async () => {

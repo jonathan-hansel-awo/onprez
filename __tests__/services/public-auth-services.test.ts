@@ -31,6 +31,9 @@ jest.mock('@/lib/prisma', () => ({
     business: {
       findUnique: jest.fn(),
     },
+    businessHandleRedirect: {
+      findUnique: jest.fn(),
+    },
     emailVerificationToken: {
       findFirst: jest.fn(),
       deleteMany: jest.fn(),
@@ -71,9 +74,7 @@ jest.mock('@/lib/config/env', () => ({
   },
 }))
 
-jest.mock('@/lib/validation/auth', () => ({
-  RESERVED_HANDLES: ['admin', 'api', 'dashboard'],
-}))
+jest.mock('@/lib/validation/auth', () => jest.requireActual('@/lib/validation/auth'))
 
 jest.mock('@/lib/utils/default-presence-page', () => ({
   createDefaultPresencePageContent: jest.fn(() => ({ blocks: [] })),
@@ -84,6 +85,9 @@ const mockedPrisma = prisma as unknown as {
     findUnique: jest.Mock
   }
   business: {
+    findUnique: jest.Mock
+  }
+  businessHandleRedirect: {
     findUnique: jest.Mock
   }
   emailVerificationToken: {
@@ -115,6 +119,7 @@ describe('public auth services', () => {
     process.env.PASSWORD_RESET_TOKEN_PEPPER = 'test-password-reset-pepper'
 
     mockedLogSecurityEvent.mockResolvedValue(undefined)
+    mockedPrisma.businessHandleRedirect.findUnique.mockResolvedValue(null)
   })
 
   it('hashEmailVerificationToken returns a non-raw deterministic token hash', () => {

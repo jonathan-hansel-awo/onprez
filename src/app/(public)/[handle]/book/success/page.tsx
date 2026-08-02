@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { getCachedPublicHandleRedirect } from '@/lib/presence/public-presence-cache'
 import { BookingSuccessClient } from './BookingSuccessClient'
 
 interface PageProps {
@@ -42,6 +43,15 @@ export default async function BookingSuccessPage({ params, searchParams }: PageP
   })
 
   if (!business) {
+    const canonicalHandle = await getCachedPublicHandleRedirect(handle)
+    if (canonicalHandle) {
+      const query = new URLSearchParams()
+      if (confirmation) query.set('confirmation', confirmation)
+      if (payment) query.set('payment', payment)
+      if (sessionId) query.set('session_id', sessionId)
+      const suffix = query.size > 0 ? `?${query.toString()}` : ''
+      permanentRedirect(`/${canonicalHandle}/book/success${suffix}`)
+    }
     notFound()
   }
 

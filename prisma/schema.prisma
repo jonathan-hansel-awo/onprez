@@ -416,6 +416,7 @@ model Business {
   pushNotificationOutbox    PushNotificationOutbox[]
   dataLifecycleRequests     DataLifecycleRequest[]
   emailDeliveries           EmailDelivery[]
+  handleRedirects           BusinessHandleRedirect[]
 
   @@index([ownerId])
   @@index([category])
@@ -423,6 +424,18 @@ model Business {
   @@index([isPublished, isActive, slug])
   @@index([city, state])
   @@map("businesses")
+}
+
+model BusinessHandleRedirect {
+  id           String   @id @default(cuid())
+  businessId   String
+  sourceHandle String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+  @@map("business_handle_redirects")
 }
 
 model FeatureEntitlement {
