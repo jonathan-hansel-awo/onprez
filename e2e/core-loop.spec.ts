@@ -59,7 +59,7 @@ test.describe.serial('first sellable user loop', () => {
       await page.getByLabel('Choose your handle').fill(fixture.handle)
       await expect(page.getByText('Perfect! This handle is available')).toBeVisible()
       await page.getByLabel('Email Address').fill(fixture.email)
-      await page.getByLabel('Password').fill(fixture.password)
+      await page.getByLabel('Password', { exact: true }).fill(fixture.password)
       await page.getByLabel('Business Name').fill(fixture.businessName)
       await page.getByLabel('Business Category').selectOption('CONSULTING')
       await page.getByRole('button', { name: 'Claim Your Handle' }).click()
@@ -85,7 +85,7 @@ test.describe.serial('first sellable user loop', () => {
     await test.step('sign in and configure business availability', async () => {
       await page.goto('/login')
       await page.getByLabel('Email address').fill(fixture.email)
-      await page.getByLabel('Password').fill(fixture.password)
+      await page.getByLabel('Password', { exact: true }).fill(fixture.password)
       await page.getByRole('button', { name: 'Sign in', exact: true }).click()
       await expect(page).toHaveURL(/\/dashboard(?:\/|$)/)
       await expect(page.getByRole('heading', { name: /Welcome|Dashboard/i }).first()).toBeVisible()
