@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "strategyDocument": "docs/testing/TESTING_STRATEGY.md",
   "discovery": {
-    "roots": ["__tests__", "src", "scripts"],
+    "roots": ["__tests__", "src", "scripts", "e2e"],
     "fileSuffixes": [
       ".test.ts",
       ".test.tsx",
@@ -58,6 +58,12 @@
         "__tests__/*.spec.*",
         "src/app/__tests__/**"
       ]
+    },
+    {
+      "id": "browser-e2e",
+      "owner": "The feature author owns deterministic core journeys and fixtures; the release owner owns browser evidence, artifacts and flaky-test remediation.",
+      "minimumFiles": 1,
+      "patterns": ["e2e/**/*.test.*", "e2e/**/*.spec.*"]
     }
   ],
   "shape": {
@@ -65,14 +71,7 @@
     "higherLayers": ["integration"],
     "rule": "foundation_file_count_must_be_at_least_higher_file_count"
   },
-  "plannedLayers": [
-    {
-      "id": "browser-e2e",
-      "state": "planned",
-      "trackerItem": "P2-030",
-      "paths": ["e2e/**", "tests/e2e/**", "playwright/**", "cypress/**"]
-    }
-  ],
+  "plannedLayers": [],
   "changeRules": [
     {
       "id": "domain-logic",
@@ -125,6 +124,16 @@
         "npm run load-test:critical",
         "actions/upload-artifact@v7"
       ]
+    },
+    {
+      "id": "browser-e2e",
+      "workflow": ".github/workflows/e2e.yml",
+      "requiredCommands": [
+        "npm run db:migrate:deploy",
+        "npx playwright install --with-deps chromium",
+        "npm run test:e2e",
+        "actions/upload-artifact@v7"
+      ]
     }
   ],
   "requiredPackageScripts": [
@@ -132,6 +141,7 @@
     "test:watch",
     "test:ci",
     "test:pyramid",
+    "test:e2e",
     "load-test:seed",
     "load-test:critical"
   ]

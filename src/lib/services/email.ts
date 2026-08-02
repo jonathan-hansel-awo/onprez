@@ -12,6 +12,19 @@ import { logger } from '@/lib/observability/logger'
 // Lazy initialization - only create Resend instance when needed
 let resendInstance: Resend | null = null
 
+function shouldSuppressExternalEmail(): boolean {
+  if (process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS !== 'true') {
+    return false
+  }
+
+  try {
+    const hostname = new URL(process.env.APP_URL || '').hostname
+    return ['localhost', '127.0.0.1', '::1'].includes(hostname)
+  } catch {
+    return false
+  }
+}
+
 function getResendInstance(): Resend {
   if (!resendInstance) {
     resendInstance = new Resend(env.RESEND_API_KEY)
@@ -56,6 +69,14 @@ export interface EmailResult {
 export async function sendEmail(options: SendEmailOptions): Promise<EmailResult> {
   const recipientCount = Array.isArray(options.to) ? options.to.length : 1
   logger.info('email.send.started', { recipientCount })
+
+  if (shouldSuppressExternalEmail()) {
+    logger.info('email.send.suppressed', {
+      recipientCount,
+      reason: 'isolated_local_test',
+    })
+    return { success: true, messageId: 'isolated-test-suppressed' }
+  }
 
   try {
     const resend = getResendInstance()

@@ -7,11 +7,11 @@
 
 **Audited branch:** `main`
 
-**Audit baseline:** `6a7176c` plus the current implementation pull request
+**Audit baseline:** `4963136` plus the current implementation pull request
 
 **Current working phase:** Phase 13 — Testing Maturity
 
-**Next planned item:** P2-030 — Add E2E Tests for the Core Loop
+**Next planned item:** P2-031 — Add Accessibility Testing
 
 ---
 
@@ -67,20 +67,20 @@ Whenever an action item is completed:
 | Phase 10 — Privacy and Data Lifecycle                 |        3 |       0 |           0 |      3 |
 | Phase 11 — Communications                             |        3 |       0 |           0 |      3 |
 | Phase 12 — SEO and Handle Durability                  |        2 |       0 |           0 |      2 |
-| Phase 13 — Testing Maturity                           |        1 |       1 |           1 |      3 |
+| Phase 13 — Testing Maturity                           |        2 |       1 |           0 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **56** |   **1** |       **4** | **61** |
+| **Total**                                             |   **57** |   **1** |       **3** | **61** |
 
-**Strict completion:** 56 of 61 items — approximately **92%**.
+**Strict completion:** 57 of 61 items — approximately **93%**.
 
-**Items with at least meaningful implementation:** 57 of 61 — approximately **93%**.
+**Items with at least meaningful implementation:** 58 of 61 — approximately **95%**.
 
 ### Current priorities from this audit
 
 1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
-2. Add browser E2E coverage for the complete core loop under **P2-030**.
-3. Complete the remaining browser E2E, accessibility, and canonical architecture documentation gaps before paid scale.
+2. Keep the **P2-030** core-loop browser journey green on every pull request, `main` push and daily run, and review its retained browser evidence when it fails.
+3. Complete the remaining accessibility and canonical architecture documentation gaps before paid scale.
 4. Complete the P2-023 provider-account privacy checks and recorded credential-encryption follow-ups before paid scale. Add usage and provider-cost tracking before enforcing paid-plan limits.
 
 ---
@@ -411,11 +411,15 @@ Whenever an action item is completed:
 - [x] **P2-029 — Define and Enforce a Test Pyramid** — **Complete**
   - `docs/testing/TESTING_STRATEGY.md` is the canonical strategy for unit, component, integration, contract, browser E2E, and capacity evidence, with explicit ownership, feature-layer requirements, database-test rules, release gates, and regression handling.
   - `config/test-pyramid.json` provides the machine-readable policy, while `npm run test:pyramid` classifies every automated test file, rejects overlaps and focused tests, guards the pyramid shape, verifies release-workflow commands, and requires governed source changes to include an appropriate test-layer change.
-  - The quality workflow uses full Git history and runs the validator on every pull request and `main` push. Browser E2E remains explicitly planned under P2-030 rather than being misrepresented as complete.
+  - The quality workflow uses full Git history and runs the validator on every pull request and `main` push. The browser-E2E layer is now active, classified, owned, and enforced through P2-030.
 
-- [ ] **P2-030 — Add E2E Tests for the Core Loop** — **Not started**
-  - No Playwright, Cypress, or equivalent browser E2E framework is installed in `package.json`.
-  - The complete claim-to-book-to-manage journey is therefore not yet proven through a real browser and deployed-like system boundary.
+- [x] **P2-030 — Add E2E Tests for the Core Loop** — **Complete**
+  - Playwright Chromium now proves signup, real email verification, login, business hours, service creation, presence publication, sharing, guest booking in a separate browser context, and professional cancellation as one serial sellable journey.
+  - The fixture may prepare a known synthetic verification-token hash, but every user-visible state change and all seven product milestones are completed through the real browser and application routes.
+  - `.github/workflows/e2e.yml` runs on every pull request, `main` push, daily schedule and manual dispatch against a production build and disposable PostgreSQL 16 after migration replay and schema-drift validation.
+  - Loopback database guards, `.invalid` identities, generated runtime secrets and explicit loopback-only email suppression prevent production data or providers from entering the test.
+  - Screenshots, traces, video, the HTML report and server log are retained for 30 days; a journey failure is a launch blocker under `docs/testing/TESTING_STRATEGY.md`.
+  - `docs/testing/CORE_LOOP_E2E.md` records the acceptance boundary, local procedure, isolation rules and failure-triage contract.
 
 - [ ] **P2-031 — Add Accessibility Testing** — **Partial**
   - Keyboard semantics, ARIA feedback, reduced-motion support, focus behaviour, mobile touch targets, and accessibility regressions exist across components.
@@ -458,6 +462,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2 August 2026 | Completed P2-030 with launch-blocking Playwright coverage for the signup-to-publish-to-book-to-manage loop, isolated PostgreSQL, provider suppression, and retained browser evidence.               | [#137](https://github.com/jonathan-hansel-awo/onprez/pull/137)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-029 with a canonical testing strategy, machine-readable layer ownership, changed-file test requirements, pyramid-shape validation, database policy, and enforced CI release gates.     | [#136](https://github.com/jonathan-hansel-awo/onprez/pull/136)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-028 with owner-only handle changes, durable direct redirects, historical-handle reservation, concurrency-safe namespace guards, and loop protection.                                   | [#135](https://github.com/jonathan-hansel-awo/onprez/pull/135)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-027 with owner-controlled indexing, published-snapshot FAQ and local-business JSON-LD, sitemap filtering, and realistic recurring SEO validation.                                      | [#134](https://github.com/jonathan-hansel-awo/onprez/pull/134)                                                                                                                                                                                                    |
