@@ -22,11 +22,13 @@ export function FontSelectorPanel({ selectedFont, onFontChange }: FontSelectorPa
         {fonts.map(font => (
           <motion.button
             key={font.value}
+            type="button"
+            aria-pressed={selectedFont === font.value}
             className={cn(
               'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
               font.class,
               selectedFont === font.value
-                ? 'bg-onprez-blue text-white'
+                ? 'bg-blue-700 text-white'
                 : 'bg-gray-50 text-gray-900 hover:bg-gray-100'
             )}
             onClick={() => onFontChange(font.value)}

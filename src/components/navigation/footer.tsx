@@ -88,7 +88,7 @@ export function Footer() {
             </p>
             <a
               href="mailto:privacy@onprez.com"
-              className="mt-3 inline-block text-sm font-semibold text-onprez-blue hover:underline"
+              className="mt-3 inline-block text-sm font-semibold text-blue-700 hover:underline"
             >
               Privacy contact
             </a>

@@ -238,7 +238,7 @@ export function Hero() {
                         >
                           <div>
                             <p className="text-sm font-bold">{service.name}</p>
-                            <p className="mt-0.5 text-xs text-slate-500">{service.detail}</p>
+                            <p className="mt-0.5 text-xs text-slate-600">{service.detail}</p>
                           </div>
                           <p className="text-sm font-bold text-rose-700">{service.price}</p>
                         </div>
@@ -316,7 +316,7 @@ export function Hero() {
           </motion.div>
         </div>
 
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 border-t border-slate-900/10 pt-6 text-xs font-semibold text-slate-500 sm:text-sm lg:mt-16">
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 border-t border-slate-900/10 pt-6 text-xs font-semibold text-slate-600 sm:text-sm lg:mt-16">
           <span>Made for the places clients already find you:</span>
           <span className="inline-flex items-center gap-1.5 text-slate-700">
             <Instagram className="h-4 w-4" aria-hidden="true" />

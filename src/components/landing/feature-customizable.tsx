@@ -243,6 +243,9 @@ export function FeatureCustomizable() {
                               <span>{section.name}</span>
                             </span>
                             <button
+                              type="button"
+                              aria-label={`${section.name} section`}
+                              aria-pressed={sections[section.key]}
                               onClick={() => toggleSection(section.key)}
                               className={`w-11 h-6 rounded-full relative transition-all shadow-inner ${
                                 sections[section.key] ? 'bg-onprez-blue' : 'bg-gray-300'
@@ -446,6 +449,9 @@ export function FeatureCustomizable() {
                         <span>{section.name}</span>
                       </span>
                       <button
+                        type="button"
+                        aria-label={`${section.name} section`}
+                        aria-pressed={sections[section.key]}
                         onClick={() => toggleSection(section.key)}
                         className={`w-11 h-6 rounded-full relative transition-all shadow-inner ${
                           sections[section.key] ? 'bg-onprez-blue' : 'bg-gray-300'

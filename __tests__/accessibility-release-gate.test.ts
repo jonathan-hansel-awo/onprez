@@ -28,4 +28,18 @@ describe('accessibility release gate', () => {
     expect(guide).toMatch(/colour\s+contrast/)
     expect(guide).toContain('npm run test:a11y')
   })
+
+  it('keeps homepage demo controls named and its recurring contrast fixes explicit', () => {
+    const colorPicker = read('src/components/landing/panels/color-picker-panel.tsx')
+    const customizable = read('src/components/landing/feature-customizable.tsx')
+    const examples = read('src/components/landing/examples-carousel.tsx')
+    const stepDots = read('src/components/landing/how-it-works/step-dots.tsx')
+
+    expect(colorPicker).toContain('aria-label={`Use ${color.name} brand colour`}')
+    expect(colorPicker).toContain('aria-pressed={selectedColor === color.value}')
+    expect(customizable).toContain('aria-label={`${section.name} section`}')
+    expect(examples).toContain('text-blue-700')
+    expect(examples).not.toContain('tracking-[0.16em] opacity-60')
+    expect(stepDots).toContain('h-8 w-10')
+  })
 })

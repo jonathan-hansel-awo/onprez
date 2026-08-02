@@ -74,10 +74,10 @@ export function CookieConsentBanner() {
                   your cookie preference. Optional analytics only run after you agree.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                  <Link className="font-medium text-onprez-blue hover:underline" href="/cookies">
+                  <Link className="font-medium text-blue-700 hover:underline" href="/cookies">
                     Cookie policy
                   </Link>
-                  <Link className="font-medium text-onprez-blue hover:underline" href="/privacy">
+                  <Link className="font-medium text-blue-700 hover:underline" href="/privacy">
                     Privacy policy
                   </Link>
                 </div>
