@@ -18,6 +18,8 @@ export default defineConfig({
   ],
   use: {
     baseURL,
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
     permissions: ['clipboard-read', 'clipboard-write'],
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
