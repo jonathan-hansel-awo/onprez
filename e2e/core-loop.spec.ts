@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
 import { PrismaClient } from '@prisma/client'
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 
 const prisma = new PrismaClient()
 const runId = (process.env.E2E_RUN_ID || Date.now().toString())
@@ -36,6 +36,10 @@ async function removeFixture() {
       },
     },
   })
+}
+
+async function chooseEssentialCookies(page: Page) {
+  await page.getByRole('button', { name: 'Essential only' }).click()
 }
 
 test.describe.serial('first sellable user loop', () => {
@@ -89,6 +93,7 @@ test.describe.serial('first sellable user loop', () => {
       await page.getByRole('button', { name: 'Sign in to your account', exact: true }).click()
       await expect(page).toHaveURL(/\/dashboard(?:\/|$)/)
       await expect(page.getByRole('heading', { name: /Welcome|Dashboard/i }).first()).toBeVisible()
+      await chooseEssentialCookies(page)
 
       await page.goto('/dashboard/settings/hours')
       await expect(page.getByRole('heading', { name: 'Business Hours' })).toBeVisible()
@@ -132,6 +137,7 @@ test.describe.serial('first sellable user loop', () => {
       const publicResponse = await customerPage.goto(`/${fixture.handle}`)
       expect(publicResponse?.status()).toBe(200)
       await expect(customerPage.getByText(fixture.businessName).first()).toBeVisible()
+      await chooseEssentialCookies(customerPage)
 
       await customerPage.goto(`/${fixture.handle}/book`)
       await customerPage.getByRole('button', { name: new RegExp(fixture.serviceName) }).click()
