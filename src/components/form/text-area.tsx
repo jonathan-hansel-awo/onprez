@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, TextareaHTMLAttributes, useState } from 'react'
+import { forwardRef, TextareaHTMLAttributes, useId, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
@@ -14,6 +14,8 @@ export interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 
 const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   ({ className, label, error, helperText, showCharCount, maxLength, ...props }, ref) => {
+    const generatedId = useId()
+    const textAreaId = props.id || (label ? generatedId : undefined)
     const [charCount, setCharCount] = useState(0)
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -29,6 +31,8 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           <textarea
             ref={ref}
             maxLength={maxLength}
+            {...props}
+            id={textAreaId}
             className={cn(
               'w-full px-4 py-3 text-base border-2 rounded-lg resize-none transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-onprez-blue/20',
@@ -39,12 +43,14 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
               className
             )}
             onChange={handleChange}
-            {...props}
           />
 
           {/* Floating Label */}
           {label && (
-            <label className="absolute left-4 top-2 text-xs text-onprez-blue pointer-events-none">
+            <label
+              htmlFor={textAreaId}
+              className="absolute left-4 top-2 text-xs text-onprez-blue pointer-events-none"
+            >
               {label}
             </label>
           )}

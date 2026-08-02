@@ -16,6 +16,8 @@
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --runInBand",
     "test:pyramid": "node scripts/validate-test-pyramid.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "prepare": "husky",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
@@ -81,6 +83,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",

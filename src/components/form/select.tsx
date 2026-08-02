@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, SelectHTMLAttributes, ReactNode } from 'react'
+import { forwardRef, SelectHTMLAttributes, ReactNode, useId } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { ChevronDown } from 'lucide-react'
@@ -20,6 +20,9 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, label, error, options, leftIcon, ...props }, ref) => {
+    const generatedId = useId()
+    const selectId = props.id || (label ? generatedId : undefined)
+
     return (
       <div className="relative w-full">
         <div className="relative">
@@ -45,6 +48,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               className
             )}
             {...props}
+            id={selectId}
           >
             {options.map((option, index) => (
               <option key={index} value={option.value}>
@@ -56,6 +60,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {/* Floating Label */}
           {label && (
             <label
+              htmlFor={selectId}
               className={cn(
                 'absolute pointer-events-none transition-all duration-200',
                 leftIcon ? 'left-11' : 'left-4',

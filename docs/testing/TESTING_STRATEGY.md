@@ -21,16 +21,13 @@ guard, not a substitute for useful assertions or a coverage percentage.
 | Component   | User-visible rendering, interaction, feedback, responsive behaviour and accessible semantics                    | React tests under component/app test paths                                              | Query by role/label where practical; exercise loading, success, empty, validation and failure states relevant to the change |
 | Integration | Route and workflow contracts across authentication, authorisation, tenancy, validation and persistence adapters | API route tests under `__tests__/api` and `src/app/api`                                 | Prove anonymous and cross-tenant rejection, stable status/body contracts, and side-effect boundaries                        |
 | Contract    | Database constraints, schema/migration expectations, privacy, security, deployment and cross-cutting invariants | Database and repository-wide regression tests                                           | Fail closed when a protected invariant, workflow command or documented boundary disappears                                  |
-| Browser E2E | Real browser proof of the claim-to-publish-to-book-to-manage loop                                               | Planned in P2-030                                                                       | Runs against an isolated deployed-like system; never against production                                                     |
+| Browser E2E | Real browser proof of the claim-to-publish-to-book-to-manage loop                                               | `e2e/core-loop.spec.ts` and `.github/workflows/e2e.yml`                                 | Chromium against a production build and disposable PostgreSQL; retained evidence on failure; never production               |
 | Capacity    | Concurrency correctness and launch baseline for critical paths                                                  | `.github/workflows/load-testing.yml`                                                    | Fresh PostgreSQL, local production build, retained redacted report, exactly one concurrent booking winner                   |
 
-Every Jest test file must match exactly one configured unit, component, integration or contract
-layer. Unclassified or multiply classified files fail `npm run test:pyramid`. Committed focused
-tests such as `test.only` also fail the gate. The combined unit and component foundation must not be
-smaller than the integration layer.
-
-Browser E2E remains deliberately marked `planned` until P2-030. Adding an E2E directory without
-updating this policy fails validation rather than creating an unowned shadow suite.
+Every Jest or Playwright test file must match exactly one configured unit, component, integration,
+contract or browser-E2E layer. Unclassified or multiply classified files fail
+`npm run test:pyramid`. Committed focused tests such as `test.only` also fail the gate. The combined
+unit and component foundation must not be smaller than the integration layer.
 
 ## Ownership
 
@@ -40,8 +37,8 @@ updating this policy fails validation rather than creating an unowned shadow sui
   tenancy, privacy, payments, notifications, migrations and provider boundaries.
 - The reviewer owns test adequacy: assertions must prove behaviour and failure modes, not merely
   execute lines. The reviewer also checks that mocks end at a real architectural boundary.
-- The release owner owns the final GitHub status, retained load report, preview smoke test and any
-  provider or production-only verification called out by the change.
+- The release owner owns the final GitHub status, retained browser and load evidence, preview smoke
+  test and any provider or production-only verification called out by the change.
 - A failing or flaky test is owned by the author of the change that exposed it until it is repaired
   or a named subsystem owner accepts it. Rerunning until green is not a resolution.
 
@@ -55,6 +52,7 @@ updating this policy fails validation rather than creating an unowned shadow sui
 | Prisma schema, migration, query or critical constraint              | Contract/integration regression plus fresh migration replay and schema-drift check                                                            |
 | Booking, payment, authentication, privacy or notification lifecycle | Unit coverage for state decisions and integration coverage for the external boundary; retain existing security/privacy gates                  |
 | Public critical-path performance or concurrency                     | Normal correctness tests plus the isolated capacity workflow and report review                                                                |
+| Complete sellable journey or cross-page navigation                  | Lower-layer evidence for each changed boundary plus the launch-blocking browser E2E journey                                                   |
 | Defect fix                                                          | A regression that fails before the fix and passes after it at the lowest layer capable of proving the defect                                  |
 | Documentation-only or non-behavioural metadata                      | No new behavioural test, but all existing release gates remain required                                                                       |
 
@@ -83,6 +81,11 @@ represent. Those tests must:
 6. destroy or discard the database after the run; and
 7. never copy production personal data into a fixture or retained artifact.
 
+Browser E2E follows the same database rules. Its fixture may prepare a synthetic verification token
+through Prisma so the browser can exercise the real verification route, but it must not mutate a
+user directly into a verified or completed product state. The browser performs every customer- and
+professional-visible action.
+
 An isolated database failure is a release blocker. Changing a migration that has already reached
 production is prohibited; add a forward reconciliation migration instead.
 
@@ -102,6 +105,14 @@ Security scanning and Vercel preview status remain separate required checks. Cha
 critical-load path must also pass fresh migration replay, schema comparison, production startup and
 the capacity scenarios. Releases stop on any substantive failure; required checks are never
 weakened merely to merge a feature.
+
+The `Core loop browser E2E` workflow is launch-blocking on every pull request and `main` push and
+runs once daily to reveal environment drift. It replays migrations on disposable PostgreSQL,
+compares the resulting schema, builds and starts the production application, installs the pinned
+Chromium browser, and completes signup, verification, login, availability setup, service creation,
+publication, sharing, guest booking and owner cancellation. Failure screenshots, videos, traces,
+the HTML report and application log are retained for 30 days. A failed or flaky browser journey is
+a release blocker and is repaired at its cause rather than rerun until green.
 
 Production-only verification—such as provider dashboards, OAuth consent, live webhook delivery or
 a designated low-value payment—must be recorded as an operational follow-up. It complements the
@@ -126,3 +137,10 @@ For a production regression:
 3. implement the fix;
 4. run the affected suite, the full quality gate and any relevant database/load workflow; and
 5. record operational recovery separately from the permanent regression evidence.
+
+## Browser E2E operation
+
+The detailed fixture, safety, local-run and failure-triage contract lives in
+`docs/testing/CORE_LOOP_E2E.md`. The standard command is `npm run test:e2e`. Local execution requires
+an explicitly disposable PostgreSQL database and the two token secrets documented there; the
+Playwright-managed local application automatically enables loopback-only provider suppression.

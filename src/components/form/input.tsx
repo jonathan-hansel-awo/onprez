@@ -1,6 +1,6 @@
 'use client'
 
-import { InputHTMLAttributes, forwardRef, useState } from 'react'
+import { InputHTMLAttributes, forwardRef, useId, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
@@ -30,6 +30,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
+    const generatedId = useId()
+    const inputId = props.id || (label ? generatedId : undefined)
     const [isFocused, setIsFocused] = useState(false)
     const [hasValue, setHasValue] = useState(false)
 
@@ -53,6 +55,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             type={type}
+            {...props}
+            id={inputId}
             className={cn(
               'w-full px-4 py-3 text-base border-2 rounded-lg transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-onprez-blue/20',
@@ -67,13 +71,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             onChange={handleChange}
-            {...props}
           />
 
           {/* Floating Label */}
           {label && (
             <motion.label
-              htmlFor={props.id}
+              htmlFor={inputId}
               className={cn(
                 'absolute pointer-events-none transition-all duration-200',
                 leftIcon ? 'left-11' : 'left-4',

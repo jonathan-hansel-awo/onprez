@@ -51,6 +51,61 @@ describe('Email Service', () => {
   })
 
   describe('sendEmail', () => {
+    it('suppresses provider delivery only for explicitly isolated local test runs', async () => {
+      const previous = {
+        flag: process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS,
+        appUrl: process.env.APP_URL,
+      }
+
+      process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS = 'true'
+      process.env.APP_URL = 'http://localhost:3000'
+
+      try {
+        const result = await sendEmail({
+          to: 'test@example.invalid',
+          subject: 'Synthetic test message',
+          html: '<p>Never delivered</p>',
+        })
+
+        expect(result).toEqual({
+          success: true,
+          messageId: 'isolated-test-suppressed',
+        })
+        expect(mockSend).not.toHaveBeenCalled()
+      } finally {
+        if (previous.flag === undefined) delete process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS
+        else process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS = previous.flag
+        if (previous.appUrl === undefined) delete process.env.APP_URL
+        else process.env.APP_URL = previous.appUrl
+      }
+    })
+
+    it('does not suppress delivery for a non-loopback application URL', async () => {
+      const previous = {
+        flag: process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS,
+        appUrl: process.env.APP_URL,
+      }
+
+      process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS = 'true'
+      process.env.APP_URL = 'https://onprez.com'
+
+      try {
+        const result = await sendEmail({
+          to: 'test@example.com',
+          subject: 'Production-bound message',
+          html: '<p>Delivered through the mocked provider</p>',
+        })
+
+        expect(result).toEqual({ success: true, messageId: 'email-123' })
+        expect(mockSend).toHaveBeenCalledTimes(1)
+      } finally {
+        if (previous.flag === undefined) delete process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS
+        else process.env.LOAD_TEST_DISABLE_EXTERNAL_SIDE_EFFECTS = previous.flag
+        if (previous.appUrl === undefined) delete process.env.APP_URL
+        else process.env.APP_URL = previous.appUrl
+      }
+    })
+
     it('should send email successfully', async () => {
       const result = await sendEmail({
         to: 'test@example.com',
