@@ -176,7 +176,7 @@ export function Hero() {
                   <Link2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   <span className="truncate">onprez.com/crown-and-canvas</span>
                 </div>
-                <span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-emerald-700 sm:inline">
+                <span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-emerald-800 sm:inline">
                   Taking bookings
                 </span>
               </div>
