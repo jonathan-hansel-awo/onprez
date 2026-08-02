@@ -32,6 +32,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const generatedId = useId()
     const inputId = props.id || (label ? generatedId : undefined)
+    const errorId = inputId && error ? `${inputId}-error` : undefined
+    const helperId = inputId && helperText && !error ? `${inputId}-description` : undefined
+    const describedBy = [
+      ...new Set([props['aria-describedby'], errorId || helperId].filter(Boolean)),
+    ]
+      .join(' ')
+      .trim()
     const [isFocused, setIsFocused] = useState(false)
     const [hasValue, setHasValue] = useState(false)
 
@@ -47,7 +54,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           {/* Left Icon */}
           {leftIcon && (
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
+            <div
+              aria-hidden="true"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
+            >
               {leftIcon}
             </div>
           )}
@@ -57,6 +67,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             type={type}
             {...props}
             id={inputId}
+            aria-describedby={describedBy || undefined}
+            aria-invalid={props['aria-invalid'] ?? Boolean(error)}
             className={cn(
               'w-full px-4 py-3 text-base border-2 rounded-lg transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-onprez-blue/20',
@@ -111,12 +123,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <AnimatePresence>
           {(error || helperText) && (
             <motion.p
-              id={props.id ? `${props.id}-${error ? 'error' : 'description'}` : undefined}
+              id={errorId || helperId}
               role={error ? 'alert' : undefined}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className={cn('mt-1 text-sm', error ? 'text-red-500' : 'text-gray-500')}
+              className={cn('mt-1 text-sm', error ? 'text-red-700' : 'text-gray-600')}
             >
               {error || helperText}
             </motion.p>

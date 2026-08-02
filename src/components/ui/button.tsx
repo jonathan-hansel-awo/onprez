@@ -30,11 +30,11 @@ export interface ButtonProps
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', children, ...props }, ref) => {
     const baseStyles =
-      'font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+      'font-semibold rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-onprez-blue focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
 
     const variants = {
       primary:
-        'bg-gradient-to-r from-onprez-blue to-onprez-purple text-white shadow-lg hover:shadow-xl hover:scale-105 animate-glow-pulse',
+        'bg-gradient-to-r from-blue-700 to-purple-700 text-white shadow-lg hover:shadow-xl hover:scale-105 animate-glow-pulse',
       secondary:
         'bg-white text-onprez-blue border-2 border-onprez-blue hover:bg-onprez-blue hover:text-white',
       ghost: 'bg-transparent text-onprez-blue hover:bg-onprez-blue/10 border border-onprez-blue/20',

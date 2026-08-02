@@ -16,6 +16,13 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   ({ className, label, error, helperText, showCharCount, maxLength, ...props }, ref) => {
     const generatedId = useId()
     const textAreaId = props.id || (label ? generatedId : undefined)
+    const errorId = textAreaId && error ? `${textAreaId}-error` : undefined
+    const helperId = textAreaId && helperText && !error ? `${textAreaId}-description` : undefined
+    const describedBy = [
+      ...new Set([props['aria-describedby'], errorId || helperId].filter(Boolean)),
+    ]
+      .join(' ')
+      .trim()
     const [charCount, setCharCount] = useState(0)
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -33,6 +40,8 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             maxLength={maxLength}
             {...props}
             id={textAreaId}
+            aria-describedby={describedBy || undefined}
+            aria-invalid={props['aria-invalid'] ?? Boolean(error)}
             className={cn(
               'w-full px-4 py-3 text-base border-2 rounded-lg resize-none transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-onprez-blue/20',
@@ -61,10 +70,12 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           <AnimatePresence>
             {(error || helperText) && (
               <motion.p
+                id={errorId || helperId}
+                role={error ? 'alert' : undefined}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className={cn('text-sm', error ? 'text-red-500' : 'text-gray-500')}
+                className={cn('text-sm', error ? 'text-red-700' : 'text-gray-600')}
               >
                 {error || helperText}
               </motion.p>

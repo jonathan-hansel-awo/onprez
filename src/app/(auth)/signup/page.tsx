@@ -660,7 +660,11 @@ function SignupPageComponent() {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    {errors.handle && <p className="mt-2 text-sm text-red-600">{errors.handle}</p>}
+                    {errors.handle && (
+                      <p id="handle-error" role="alert" className="mt-2 text-sm text-red-700">
+                        {errors.handle}
+                      </p>
+                    )}
                   </motion.div>
                   {/* Email */}
                   <motion.div
