@@ -154,13 +154,16 @@ test.describe.serial('first sellable user loop', () => {
       await expect(customerPage.getByRole('heading', { name: 'Select a Date' })).toBeVisible()
       const availableDate = customerPage
         .locator('.grid.grid-cols-7.gap-1 button:not([disabled])')
-        .first()
+        .nth(1)
       await expect(availableDate).toBeVisible()
       await availableDate.click()
 
       await expect(customerPage.getByRole('heading', { name: 'Select a Time' })).toBeVisible()
       const availableTime = customerPage
-        .getByRole('button', { name: /^\d{1,2}:\d{2} (?:AM|PM)$/ })
+        .getByRole('button', {
+          name: /^\d{1,2}:\d{2} (?:AM|PM)$/,
+          disabled: false,
+        })
         .first()
       await expect(availableTime).toBeVisible()
       await availableTime.click()
