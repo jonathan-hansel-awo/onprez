@@ -86,7 +86,7 @@ test.describe.serial('first sellable user loop', () => {
       await page.goto('/login')
       await page.getByLabel('Email address').fill(fixture.email)
       await page.getByLabel('Password', { exact: true }).fill(fixture.password)
-      await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+      await page.getByRole('button', { name: 'Sign in to your account', exact: true }).click()
       await expect(page).toHaveURL(/\/dashboard(?:\/|$)/)
       await expect(page.getByRole('heading', { name: /Welcome|Dashboard/i }).first()).toBeVisible()
 
