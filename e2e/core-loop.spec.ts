@@ -140,8 +140,16 @@ test.describe.serial('first sellable user loop', () => {
       await chooseEssentialCookies(customerPage)
 
       await customerPage.goto(`/${fixture.handle}/book`)
-      await customerPage.getByRole('button', { name: new RegExp(fixture.serviceName) }).click()
-      await customerPage.getByRole('button', { name: 'Continue' }).click()
+      const serviceButton = customerPage.getByRole('button', {
+        name: new RegExp(fixture.serviceName),
+      })
+      await expect(
+        customerPage.getByRole('heading', { name: /Select a (?:Service|Date)/ })
+      ).toBeVisible()
+      if (await serviceButton.isVisible()) {
+        await serviceButton.click()
+        await customerPage.getByRole('button', { name: 'Continue' }).click()
+      }
 
       await expect(customerPage.getByRole('heading', { name: 'Select a Date' })).toBeVisible()
       const availableDate = customerPage
