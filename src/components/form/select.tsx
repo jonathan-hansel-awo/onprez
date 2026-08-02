@@ -56,6 +56,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {/* Floating Label */}
           {label && (
             <label
+              htmlFor={props.id}
               className={cn(
                 'absolute pointer-events-none transition-all duration-200',
                 leftIcon ? 'left-11' : 'left-4',
