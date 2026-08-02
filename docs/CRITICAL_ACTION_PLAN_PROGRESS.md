@@ -7,11 +7,11 @@
 
 **Audited branch:** `main`
 
-**Audit baseline:** `c1a9ad9` plus the current implementation pull request
+**Audit baseline:** `6a7176c` plus the current implementation pull request
 
 **Current working phase:** Phase 13 — Testing Maturity
 
-**Next planned item:** P2-029 — Define and Enforce a Test Pyramid
+**Next planned item:** P2-030 — Add E2E Tests for the Core Loop
 
 ---
 
@@ -67,19 +67,19 @@ Whenever an action item is completed:
 | Phase 10 — Privacy and Data Lifecycle                 |        3 |       0 |           0 |      3 |
 | Phase 11 — Communications                             |        3 |       0 |           0 |      3 |
 | Phase 12 — SEO and Handle Durability                  |        2 |       0 |           0 |      2 |
-| Phase 13 — Testing Maturity                           |        0 |       2 |           1 |      3 |
+| Phase 13 — Testing Maturity                           |        1 |       1 |           1 |      3 |
 | Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **55** |   **2** |       **4** | **61** |
+| **Total**                                             |   **56** |   **1** |       **4** | **61** |
 
-**Strict completion:** 55 of 61 items — approximately **90%**.
+**Strict completion:** 56 of 61 items — approximately **92%**.
 
 **Items with at least meaningful implementation:** 57 of 61 — approximately **93%**.
 
 ### Current priorities from this audit
 
 1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
-2. Define and enforce the repository test pyramid under **P2-029**.
+2. Add browser E2E coverage for the complete core loop under **P2-030**.
 3. Complete the remaining browser E2E, accessibility, and canonical architecture documentation gaps before paid scale.
 4. Complete the P2-023 provider-account privacy checks and recorded credential-encryption follow-ups before paid scale. Add usage and provider-cost tracking before enforcing paid-plan limits.
 
@@ -408,9 +408,10 @@ Whenever an action item is completed:
 
 ## Phase 13 — Testing Maturity
 
-- [ ] **P2-029 — Define and Enforce a Test Pyramid** — **Partial**
-  - The repository has a large Jest unit/component/API suite, shared fixtures, security regressions, build gates, migration validation, and extensive focused tests.
-  - Remaining: a canonical in-repository testing-strategy document defining the test pyramid, ownership, required layers per feature, database-test policy, and release gates.
+- [x] **P2-029 — Define and Enforce a Test Pyramid** — **Complete**
+  - `docs/testing/TESTING_STRATEGY.md` is the canonical strategy for unit, component, integration, contract, browser E2E, and capacity evidence, with explicit ownership, feature-layer requirements, database-test rules, release gates, and regression handling.
+  - `config/test-pyramid.json` provides the machine-readable policy, while `npm run test:pyramid` classifies every automated test file, rejects overlaps and focused tests, guards the pyramid shape, verifies release-workflow commands, and requires governed source changes to include an appropriate test-layer change.
+  - The quality workflow uses full Git history and runs the validator on every pull request and `main` push. Browser E2E remains explicitly planned under P2-030 rather than being misrepresented as complete.
 
 - [ ] **P2-030 — Add E2E Tests for the Core Loop** — **Not started**
   - No Playwright, Cypress, or equivalent browser E2E framework is installed in `package.json`.
@@ -457,6 +458,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2 August 2026 | Completed P2-029 with a canonical testing strategy, machine-readable layer ownership, changed-file test requirements, pyramid-shape validation, database policy, and enforced CI release gates.     | [#136](https://github.com/jonathan-hansel-awo/onprez/pull/136)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-028 with owner-only handle changes, durable direct redirects, historical-handle reservation, concurrency-safe namespace guards, and loop protection.                                   | [#135](https://github.com/jonathan-hansel-awo/onprez/pull/135)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-027 with owner-controlled indexing, published-snapshot FAQ and local-business JSON-LD, sitemap filtering, and realistic recurring SEO validation.                                      | [#134](https://github.com/jonathan-hansel-awo/onprez/pull/134)                                                                                                                                                                                                    |
 | 1 August 2026 | Completed P2-024 with privacy-minimised email delivery history, signed Resend event reconciliation, safe dashboard retries, and bounce/complaint suppression.                                       | [#133](https://github.com/jonathan-hansel-awo/onprez/pull/133)                                                                                                                                                                                                    |

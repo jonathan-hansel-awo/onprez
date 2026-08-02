@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "strategyDocument": "docs/testing/TESTING_STRATEGY.md",
+  "discovery": {
+    "roots": ["__tests__", "src", "scripts"],
+    "fileSuffixes": [
+      ".test.ts",
+      ".test.tsx",
+      ".test.js",
+      ".test.jsx",
+      ".test.mjs",
+      ".test.cjs",
+      ".spec.ts",
+      ".spec.tsx",
+      ".spec.js",
+      ".spec.jsx",
+      ".spec.mjs",
+      ".spec.cjs"
+    ]
+  },
+  "layers": [
+    {
+      "id": "unit",
+      "owner": "The feature author owns focused domain and utility coverage; the reviewer owns boundary and failure-case review.",
+      "minimumFiles": 1,
+      "patterns": [
+        "__tests__/lib/**",
+        "__tests__/services/**",
+        "src/lib/**",
+        "src/types/**",
+        "src/data/**",
+        "scripts/**/*.test.*",
+        "scripts/**/*.spec.*"
+      ]
+    },
+    {
+      "id": "component",
+      "owner": "The feature author owns user-visible states and interactions; the reviewer owns accessibility and error-state coverage.",
+      "minimumFiles": 1,
+      "patterns": ["__tests__/components/**", "__tests__/app/**", "src/components/**"]
+    },
+    {
+      "id": "integration",
+      "owner": "The route or workflow author owns authentication, authorisation, tenancy, validation, persistence-boundary and response-contract coverage.",
+      "minimumFiles": 1,
+      "patterns": ["__tests__/api/**", "src/app/api/**"]
+    },
+    {
+      "id": "contract",
+      "owner": "The subsystem owner owns cross-cutting, database-schema, deployment, privacy, security and static-regression contracts.",
+      "minimumFiles": 1,
+      "patterns": [
+        "__tests__/database/**",
+        "__tests__/calendar/**",
+        "__tests__/notifications/**",
+        "__tests__/scripts/**",
+        "__tests__/*.test.*",
+        "__tests__/*.spec.*",
+        "src/app/__tests__/**"
+      ]
+    }
+  ],
+  "shape": {
+    "foundationLayers": ["unit", "component"],
+    "higherLayers": ["integration"],
+    "rule": "foundation_file_count_must_be_at_least_higher_file_count"
+  },
+  "plannedLayers": [
+    {
+      "id": "browser-e2e",
+      "state": "planned",
+      "trackerItem": "P2-030",
+      "paths": ["e2e/**", "tests/e2e/**", "playwright/**", "cypress/**"]
+    }
+  ],
+  "changeRules": [
+    {
+      "id": "domain-logic",
+      "sourcePatterns": ["src/lib/**", "src/types/**", "src/data/**"],
+      "requiredLayers": ["unit", "contract"]
+    },
+    {
+      "id": "api-routes",
+      "sourcePatterns": ["src/app/api/**"],
+      "requiredLayers": ["integration"]
+    },
+    {
+      "id": "user-interface",
+      "sourcePatterns": ["src/components/**", "src/app/**/page.tsx", "src/app/**/layout.tsx"],
+      "requiredLayers": ["component", "contract"]
+    },
+    {
+      "id": "database-contract",
+      "sourcePatterns": ["prisma/schema.prisma", "prisma/migrations/**"],
+      "requiredLayers": ["contract", "integration"]
+    },
+    {
+      "id": "application-boundary",
+      "sourcePatterns": [
+        "src/proxy.ts",
+        "src/app/sitemap.ts",
+        "src/app/robots.ts",
+        "next.config.*"
+      ],
+      "requiredLayers": ["contract", "integration"]
+    }
+  ],
+  "releaseGates": [
+    {
+      "id": "quality",
+      "workflow": ".github/workflows/test.yml",
+      "requiredCommands": [
+        "npm run test:pyramid",
+        "npm run test:ci",
+        "npm run privacy:audit",
+        "npm run seo:validate",
+        "npm run build"
+      ]
+    },
+    {
+      "id": "critical-load",
+      "workflow": ".github/workflows/load-testing.yml",
+      "requiredCommands": [
+        "npm run load-test:seed",
+        "npm run load-test:critical",
+        "actions/upload-artifact@v7"
+      ]
+    }
+  ],
+  "requiredPackageScripts": [
+    "test",
+    "test:watch",
+    "test:ci",
+    "test:pyramid",
+    "load-test:seed",
+    "load-test:critical"
+  ]
+}

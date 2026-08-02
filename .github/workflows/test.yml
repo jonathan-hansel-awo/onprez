@@ -31,6 +31,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -40,6 +42,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate test pyramid
+        env:
+          TEST_PYRAMID_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: npm run test:pyramid
 
       - name: Check formatting
         if: github.head_ref != 'fix/public-booking-reliability'

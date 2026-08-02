@@ -15,6 +15,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --runInBand",
+    "test:pyramid": "node scripts/validate-test-pyramid.mjs",
     "prepare": "husky",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
