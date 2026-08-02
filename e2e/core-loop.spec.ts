@@ -63,7 +63,7 @@ test.describe.serial('first sellable user loop', () => {
       await page.getByLabel('Business Name').fill(fixture.businessName)
       await page.getByLabel('Business Category').selectOption('CONSULTING')
       await page.getByRole('button', { name: 'Claim Your Handle' }).click()
-      await expect(page.getByRole('heading', { name: 'Account Created!' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: /Your handle is secured!/ })).toBeVisible()
 
       const verificationPepper = process.env.EMAIL_VERIFICATION_TOKEN_PEPPER
       if (!verificationPepper) {
