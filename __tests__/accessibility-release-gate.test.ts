@@ -78,4 +78,16 @@ describe('accessibility release gate', () => {
     expect(globalStyles).toContain('color: var(--theme-accent-contrast)')
     expect(premiumSections).toContain('text-[var(--theme-primary-contrast,#000)]')
   })
+
+  it('honours reduced motion throughout booking step and time-slot transitions', () => {
+    const bookingWidget = read('src/components/booking/BookingWidget.tsx')
+    const timeSlots = read('src/components/booking/steps/TimeSlotSelectionStep.tsx')
+
+    expect(bookingWidget).toContain('useReducedMotion')
+    expect(bookingWidget).toContain('initial={shouldReduceMotion ? false')
+    expect(bookingWidget).toContain('duration: shouldReduceMotion ? 0 : 0.2')
+    expect(timeSlots).toContain('useReducedMotion')
+    expect(timeSlots).toContain('initial={shouldReduceMotion ? false')
+    expect(timeSlots).toContain('delay: shouldReduceMotion ? 0 : index * 0.02')
+  })
 })

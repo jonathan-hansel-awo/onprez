@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Clock, Loader2, AlertCircle, Sun, Sunset, Moon, ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
@@ -79,6 +79,7 @@ export function TimeSlotSelectionStep({
   onSelect,
   onBack,
 }: TimeSlotSelectionStepProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [slots, setSlots] = useState<TimeSlot[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -306,11 +307,15 @@ export function TimeSlotSelectionStep({
                           type="button"
                           onClick={() => handleSlotClick(slot)}
                           disabled={!isAvailable}
-                          initial={{ opacity: 0, scale: 0.9 }}
+                          initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: index * 0.02 }}
-                          whileHover={isAvailable ? { scale: 1.05 } : undefined}
-                          whileTap={isAvailable ? { scale: 0.95 } : undefined}
+                          transition={{ delay: shouldReduceMotion ? 0 : index * 0.02 }}
+                          whileHover={
+                            isAvailable && !shouldReduceMotion ? { scale: 1.05 } : undefined
+                          }
+                          whileTap={
+                            isAvailable && !shouldReduceMotion ? { scale: 0.95 } : undefined
+                          }
                           className={cn(
                             'min-h-11 rounded-lg px-2 py-2.5 text-sm font-medium transition-all sm:px-3',
                             'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
@@ -341,9 +346,9 @@ export function TimeSlotSelectionStep({
       <AnimatePresence>
         {selectedTimeSlot && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
             className="p-4 bg-blue-50 border border-blue-200 rounded-lg"
           >
             <div className="flex items-center gap-3">
