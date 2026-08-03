@@ -69,6 +69,20 @@ async function reachWithTab(page: Page, target: Locator, maximumTabs = 30) {
   throw new Error(`Keyboard focus did not reach ${await target.getAttribute('aria-label')}`)
 }
 
+function expectReducedMotionDuration(value: string, property: string) {
+  for (const duration of value.split(',')) {
+    const normalized = duration.trim().toLowerCase()
+    const milliseconds = normalized.endsWith('ms')
+      ? Number.parseFloat(normalized)
+      : Number.parseFloat(normalized) * 1_000
+
+    expect(
+      milliseconds,
+      `${property} must be no longer than 0.01ms when reduced motion is requested; received ${value}`
+    ).toBeLessThanOrEqual(0.01)
+  }
+}
+
 test.describe.serial('WCAG AA accessibility journey', () => {
   test.beforeAll(async () => {
     assertIsolatedDatabase()
@@ -133,8 +147,8 @@ test.describe.serial('WCAG AA accessibility journey', () => {
           }
         })
       expect(motionDuration.scrollBehavior).toBe('auto')
-      expect(['0s', '0.01ms']).toContain(motionDuration.animationDuration)
-      expect(['0s', '0.01ms']).toContain(motionDuration.transitionDuration)
+      expectReducedMotionDuration(motionDuration.animationDuration, 'animation-duration')
+      expectReducedMotionDuration(motionDuration.transitionDuration, 'transition-duration')
     })
 
     await test.step('create and verify an isolated professional account', async () => {
