@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, TextareaHTMLAttributes, useId, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 export interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -24,6 +24,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       .join(' ')
       .trim()
     const [charCount, setCharCount] = useState(0)
+    const shouldReduceMotion = useReducedMotion()
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setCharCount(e.target.value.length)
@@ -72,9 +73,9 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
               <motion.p
                 id={errorId || helperId}
                 role={error ? 'alert' : undefined}
-                initial={{ opacity: 0, y: -10 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
                 className={cn('text-sm', error ? 'text-red-700' : 'text-gray-600')}
               >
                 {error || helperText}

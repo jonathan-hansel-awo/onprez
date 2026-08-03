@@ -1,7 +1,7 @@
 'use client'
 
 import { InputHTMLAttributes, forwardRef, useId, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -41,6 +41,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       .trim()
     const [isFocused, setIsFocused] = useState(false)
     const [hasValue, setHasValue] = useState(false)
+    const shouldReduceMotion = useReducedMotion()
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setHasValue(e.target.value.length > 0)
@@ -125,9 +126,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <motion.p
               id={errorId || helperId}
               role={error ? 'alert' : undefined}
-              initial={{ opacity: 0, y: -10 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
               className={cn('mt-1 text-sm', error ? 'text-red-700' : 'text-gray-600')}
             >
               {error || helperText}

@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, SelectHTMLAttributes, ReactNode, useId } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { ChevronDown } from 'lucide-react'
 
@@ -26,6 +26,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const describedBy = [...new Set([props['aria-describedby'], errorId].filter(Boolean))]
       .join(' ')
       .trim()
+    const shouldReduceMotion = useReducedMotion()
 
     return (
       <div className="relative w-full">
@@ -94,8 +95,9 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <motion.p
             id={errorId}
             role="alert"
-            initial={{ opacity: 0, y: -10 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
             className="mt-1 text-sm text-red-700"
           >
             {error}
