@@ -73,7 +73,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               className={cn(
                 'absolute pointer-events-none transition-all duration-200',
                 leftIcon ? 'left-11' : 'left-4',
-                'top-2 text-xs text-onprez-blue'
+                'top-2 text-xs text-blue-700'
               )}
             >
               {label}

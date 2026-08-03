@@ -58,7 +58,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           {label && (
             <label
               htmlFor={textAreaId}
-              className="absolute left-4 top-2 text-xs text-onprez-blue pointer-events-none"
+              className="absolute left-4 top-2 text-xs text-blue-700 pointer-events-none"
             >
               {label}
             </label>

@@ -174,7 +174,7 @@ export function ImageUpload({
               <>
                 <Upload className="w-8 h-8 text-gray-400" />
                 <p className="text-sm text-gray-600">Click to upload</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-600">
                   PNG, JPG, WebP (max {Math.min(maxSize, 4)}MB)
                 </p>
               </>

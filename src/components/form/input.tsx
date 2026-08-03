@@ -93,7 +93,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 'absolute pointer-events-none transition-all duration-200',
                 leftIcon ? 'left-11' : 'left-4',
                 isFocused || hasValue || props.value
-                  ? 'top-2 text-xs text-onprez-blue'
+                  ? 'top-2 text-xs text-blue-700'
                   : 'top-1/2 -translate-y-1/2 text-base text-gray-500'
               )}
               initial={false}

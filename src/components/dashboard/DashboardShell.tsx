@@ -166,7 +166,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 {dashboardPrimaryNavigationGroups.map(group => (
                   <div key={group.id} className="space-y-1" role="group" aria-label={group.label}>
                     <p
-                      className={`px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400 ${
+                      className={`px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-600 ${
                         sidebarCollapsed ? 'lg:hidden' : ''
                       }`}
                     >

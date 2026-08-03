@@ -45,4 +45,22 @@ describe('accessibility release gate', () => {
     expect(hero).toContain('text-emerald-800')
     expect(stepDots).toContain('h-8 w-10')
   })
+
+  it('keeps dashboard navigation, form controls, and upload guidance contrast-safe', () => {
+    const dashboardShell = read('src/components/dashboard/DashboardShell.tsx')
+    const input = read('src/components/form/input.tsx')
+    const select = read('src/components/form/select.tsx')
+    const textArea = read('src/components/form/text-area.tsx')
+    const button = read('src/components/ui/button.tsx')
+    const imageUpload = read('src/components/ui/image-upload.tsx')
+
+    expect(dashboardShell).toContain('tracking-[0.16em] text-gray-600')
+    expect(input).toContain("'top-2 text-xs text-blue-700'")
+    expect(select).toContain("'top-2 text-xs text-blue-700'")
+    expect(textArea).toContain('top-2 text-xs text-blue-700')
+    expect(button).toContain('bg-transparent text-blue-700')
+    expect(button).not.toContain('text-onprez-blue border')
+    expect(imageUpload).toContain('text-xs text-gray-600')
+    expect(imageUpload).not.toContain('text-xs text-gray-400')
+  })
 })
