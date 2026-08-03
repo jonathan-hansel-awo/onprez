@@ -1,5 +1,11 @@
 # Database Setup Guide
 
+> [!WARNING]
+> **ARCHIVED — NOT CURRENT GUIDANCE.** Superseded on 3 August 2026 because this guide contains
+> placeholder schema and environment-routing claims that no longer describe the application.
+> Start with [`CURRENT_STATE.md`](../../../CURRENT_STATE.md), `prisma/schema.prisma`, and the active
+> [`MIGRATIONS.md`](../../MIGRATIONS.md). The content below is retained only as historical context.
+
 ## Neon PostgreSQL Configuration
 
 ### Branches

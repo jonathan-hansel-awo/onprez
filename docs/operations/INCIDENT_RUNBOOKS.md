@@ -10,7 +10,7 @@ Use them with:
 - [Production error monitoring](./ERROR_MONITORING.md)
 - [Backup and restore verification](./BACKUP_RESTORE.md)
 - [Database migrations](../MIGRATIONS.md)
-- [Environment variables](../ENVIRONMENT_VARIABLES.md)
+- [Environment and provider boundaries](../../CURRENT_STATE.md#environment-and-provider-boundaries)
 - [Production readiness checklist](../production/PRODUCTION_READINESS_CHECKLIST.md)
 
 ## Operating principles
