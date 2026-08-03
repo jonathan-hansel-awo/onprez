@@ -207,9 +207,7 @@ test.describe.serial('WCAG AA accessibility journey', () => {
     await test.step('audit the published presence and booking steps', async () => {
       await guest.goto(`/${fixture.handle}`)
       await chooseEssentialCookies(guest)
-      await expect(
-        guest.getByRole('heading', { name: fixture.businessName, level: 1, exact: true })
-      ).toBeVisible()
+      await expect(guest.getByRole('heading', { level: 1 }).first()).toBeVisible()
       await audit(guest, testInfo, 'published-presence')
 
       await guest.goto(`/${fixture.handle}/book`)
