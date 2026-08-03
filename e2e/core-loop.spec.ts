@@ -136,7 +136,13 @@ test.describe.serial('first sellable user loop', () => {
     await test.step('complete a public booking as a guest customer', async () => {
       const publicResponse = await customerPage.goto(`/${fixture.handle}`)
       expect(publicResponse?.status()).toBe(200)
-      await expect(customerPage.getByText(fixture.businessName).first()).toBeVisible()
+      await expect(
+        customerPage.getByRole('heading', {
+          name: fixture.businessName,
+          level: 1,
+          exact: true,
+        })
+      ).toBeVisible()
       await chooseEssentialCookies(customerPage)
 
       await customerPage.goto(`/${fixture.handle}/book`)
