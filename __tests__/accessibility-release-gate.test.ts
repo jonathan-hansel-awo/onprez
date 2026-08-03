@@ -93,5 +93,7 @@ describe('accessibility release gate', () => {
     expect(customerDetails).toContain('useReducedMotion')
     expect(customerDetails).toContain('initial={shouldReduceMotion ? false')
     expect(customerDetails).toContain('delay: shouldReduceMotion ? 0')
+    expect(customerDetails).not.toContain('font-normal text-gray-400')
+    expect(customerDetails).toContain('text-blue-700 underline underline-offset-2')
   })
 })

@@ -132,7 +132,7 @@ export function CustomerDetailsStep({
           transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
         >
           <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 mb-1">
-            Full Name <span className="text-red-500">*</span>
+            Full Name <span className="text-red-700">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -175,7 +175,7 @@ export function CustomerDetailsStep({
           transition={{ delay: shouldReduceMotion ? 0 : 0.2 }}
         >
           <label htmlFor="customerEmail" className="block text-sm font-medium text-gray-700 mb-1">
-            Email Address <span className="text-red-500">*</span>
+            Email Address <span className="text-red-700">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -221,7 +221,7 @@ export function CustomerDetailsStep({
           transition={{ delay: shouldReduceMotion ? 0 : 0.3 }}
         >
           <label htmlFor="customerPhone" className="block text-sm font-medium text-gray-700 mb-1">
-            Phone Number <span className="text-gray-400 font-normal">(optional)</span>
+            Phone Number <span className="font-normal text-gray-600">(optional)</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -265,7 +265,7 @@ export function CustomerDetailsStep({
           transition={{ delay: shouldReduceMotion ? 0 : 0.4 }}
         >
           <label htmlFor="customerNotes" className="block text-sm font-medium text-gray-700 mb-1">
-            Additional Notes <span className="text-gray-400 font-normal">(optional)</span>
+            Additional Notes <span className="font-normal text-gray-600">(optional)</span>
           </label>
           <div className="relative">
             <div className="absolute top-2.5 left-3 pointer-events-none">
@@ -301,7 +301,11 @@ export function CustomerDetailsStep({
           By proceeding, you agree to receive booking confirmations and reminders via email. Your
           information will be used solely for managing your appointment and will be handled in
           accordance with our{' '}
-          <a href="/privacy" className="text-blue-600 hover:underline" target="_blank">
+          <a
+            href="/privacy"
+            className="text-blue-700 underline underline-offset-2 hover:decoration-2"
+            target="_blank"
+          >
             Privacy Policy
           </a>
           .
