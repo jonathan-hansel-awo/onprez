@@ -38,8 +38,7 @@ async function removeFixture() {
 }
 
 async function chooseEssentialCookies(page: Page) {
-  const choice = page.getByRole('button', { name: 'Essential only' })
-  if (await choice.isVisible()) await choice.click()
+  await page.getByRole('button', { name: 'Essential only' }).click()
 }
 
 async function audit(page: Page, testInfo: TestInfo, name: string) {
