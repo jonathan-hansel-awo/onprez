@@ -82,6 +82,7 @@ describe('accessibility release gate', () => {
   it('honours reduced motion throughout booking step and time-slot transitions', () => {
     const bookingWidget = read('src/components/booking/BookingWidget.tsx')
     const timeSlots = read('src/components/booking/steps/TimeSlotSelectionStep.tsx')
+    const customerDetails = read('src/components/booking/steps/CustomerDetailsStep.tsx')
 
     expect(bookingWidget).toContain('useReducedMotion')
     expect(bookingWidget).toContain('initial={shouldReduceMotion ? false')
@@ -89,5 +90,8 @@ describe('accessibility release gate', () => {
     expect(timeSlots).toContain('useReducedMotion')
     expect(timeSlots).toContain('initial={shouldReduceMotion ? false')
     expect(timeSlots).toContain('delay: shouldReduceMotion ? 0 : index * 0.02')
+    expect(customerDetails).toContain('useReducedMotion')
+    expect(customerDetails).toContain('initial={shouldReduceMotion ? false')
+    expect(customerDetails).toContain('delay: shouldReduceMotion ? 0')
   })
 })

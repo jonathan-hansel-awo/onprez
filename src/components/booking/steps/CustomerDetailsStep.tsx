@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { User, Mail, Phone, MessageSquare, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -63,6 +63,7 @@ export function CustomerDetailsStep({
   onUpdate,
   errors: externalErrors,
 }: CustomerDetailsStepProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({})
 
@@ -126,9 +127,9 @@ export function CustomerDetailsStep({
       <div className="space-y-4">
         {/* Full Name */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: shouldReduceMotion ? 0 : 0.1 }}
         >
           <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 mb-1">
             Full Name <span className="text-red-500">*</span>
@@ -157,7 +158,7 @@ export function CustomerDetailsStep({
           </div>
           {touched.customerName && errors.customerName && (
             <motion.p
-              initial={{ opacity: 0, height: 0 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mt-1.5 text-sm text-red-600 flex items-center gap-1"
             >
@@ -169,9 +170,9 @@ export function CustomerDetailsStep({
 
         {/* Email Address */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: shouldReduceMotion ? 0 : 0.2 }}
         >
           <label htmlFor="customerEmail" className="block text-sm font-medium text-gray-700 mb-1">
             Email Address <span className="text-red-500">*</span>
@@ -200,7 +201,7 @@ export function CustomerDetailsStep({
           </div>
           {touched.customerEmail && errors.customerEmail && (
             <motion.p
-              initial={{ opacity: 0, height: 0 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mt-1.5 text-sm text-red-600 flex items-center gap-1"
             >
@@ -215,9 +216,9 @@ export function CustomerDetailsStep({
 
         {/* Phone Number */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: shouldReduceMotion ? 0 : 0.3 }}
         >
           <label htmlFor="customerPhone" className="block text-sm font-medium text-gray-700 mb-1">
             Phone Number <span className="text-gray-400 font-normal">(optional)</span>
@@ -246,7 +247,7 @@ export function CustomerDetailsStep({
           </div>
           {touched.customerPhone && errors.customerPhone && (
             <motion.p
-              initial={{ opacity: 0, height: 0 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mt-1.5 text-sm text-red-600 flex items-center gap-1"
             >
@@ -259,9 +260,9 @@ export function CustomerDetailsStep({
 
         {/* Additional Notes */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: shouldReduceMotion ? 0 : 0.4 }}
         >
           <label htmlFor="customerNotes" className="block text-sm font-medium text-gray-700 mb-1">
             Additional Notes <span className="text-gray-400 font-normal">(optional)</span>
@@ -291,9 +292,9 @@ export function CustomerDetailsStep({
 
       {/* Privacy Notice */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={shouldReduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: shouldReduceMotion ? 0 : 0.5 }}
         className="p-4 bg-gray-50 rounded-lg border border-gray-200"
       >
         <p className="text-xs text-gray-600 leading-relaxed">
