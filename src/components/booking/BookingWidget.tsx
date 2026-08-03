@@ -303,6 +303,13 @@ export function BookingWidget({
                     isClickable && !isCurrent && 'cursor-pointer'
                   )}
                   aria-current={isCurrent ? 'step' : undefined}
+                  aria-label={
+                    isCurrent
+                      ? `${step.label}, current step`
+                      : isCompleted
+                        ? `${step.label}, completed; go back to this step`
+                        : `${step.label}, unavailable`
+                  }
                 >
                   {isCompleted ? <Check className="w-4 h-4" /> : index + 1}
                 </button>

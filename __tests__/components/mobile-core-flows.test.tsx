@@ -127,7 +127,11 @@ describe('mobile core-flow affordances', () => {
       />
     )
 
-    expect(screen.getByRole('button', { name: '1' })).toHaveClass('h-11', 'w-11')
+    expect(screen.getByRole('button', { name: 'Select Service, current step' })).toHaveClass(
+      'h-11',
+      'w-11'
+    )
+    expect(screen.getByRole('button', { name: 'Choose Date & Time, unavailable' })).toBeDisabled()
     expect(screen.getByRole('button', { name: /continue/i })).toHaveClass('min-h-11')
     await waitFor(() => expect(screen.getByText(/no services available/i)).toBeInTheDocument())
   })
