@@ -21,7 +21,7 @@ guard, not a substitute for useful assertions or a coverage percentage.
 | Component   | User-visible rendering, interaction, feedback, responsive behaviour and accessible semantics                    | React tests under component/app test paths                                              | Query by role/label where practical; exercise loading, success, empty, validation and failure states relevant to the change |
 | Integration | Route and workflow contracts across authentication, authorisation, tenancy, validation and persistence adapters | API route tests under `__tests__/api` and `src/app/api`                                 | Prove anonymous and cross-tenant rejection, stable status/body contracts, and side-effect boundaries                        |
 | Contract    | Database constraints, schema/migration expectations, privacy, security, deployment and cross-cutting invariants | Database and repository-wide regression tests                                           | Fail closed when a protected invariant, workflow command or documented boundary disappears                                  |
-| Browser E2E | Real browser proof of the claim-to-publish-to-book-to-manage loop                                               | `e2e/core-loop.spec.ts` and `.github/workflows/e2e.yml`                                 | Chromium against a production build and disposable PostgreSQL; retained evidence on failure; never production               |
+| Browser E2E | Real browser proof of the core commercial loop and WCAG AA page states                                          | `e2e/core-loop.spec.ts`, `e2e/accessibility.spec.ts`, and `.github/workflows/e2e.yml`   | Chromium against a production build and disposable PostgreSQL; retained evidence on failure; never production               |
 | Capacity    | Concurrency correctness and launch baseline for critical paths                                                  | `.github/workflows/load-testing.yml`                                                    | Fresh PostgreSQL, local production build, retained redacted report, exactly one concurrent booking winner                   |
 
 Every Jest or Playwright test file must match exactly one configured unit, component, integration,
@@ -106,13 +106,16 @@ critical-load path must also pass fresh migration replay, schema comparison, pro
 the capacity scenarios. Releases stop on any substantive failure; required checks are never
 weakened merely to merge a feature.
 
-The `Core loop browser E2E` workflow is launch-blocking on every pull request and `main` push and
-runs once daily to reveal environment drift. It replays migrations on disposable PostgreSQL,
-compares the resulting schema, builds and starts the production application, installs the pinned
-Chromium browser, and completes signup, verification, login, availability setup, service creation,
-publication, sharing, guest booking and owner cancellation. Failure screenshots, videos, traces,
-the HTML report and application log are retained for 30 days. A failed or flaky browser journey is
-a release blocker and is repaired at its cause rather than rerun until green.
+The browser workflow is launch-blocking on every pull request and `main` push and runs once daily to
+reveal environment drift. It replays migrations on disposable PostgreSQL, compares the resulting
+schema, builds and starts the production application, and installs the pinned Chromium browser. The
+core journey completes signup, verification, login, availability setup, service creation,
+publication, sharing, guest booking and owner cancellation. The accessibility journey adds WCAG
+A/AA axe audits with colour contrast, keyboard operation, visible focus, validation announcements,
+and reduced-motion checks across public, authentication, dashboard, presence and booking states.
+Failure screenshots, videos, traces, axe JSON, the HTML report and application log are retained for
+30 days. A failed or flaky browser journey is a release blocker and is repaired at its cause rather
+than rerun until green.
 
 Production-only verification—such as provider dashboards, OAuth consent, live webhook delivery or
 a designated low-value payment—must be recorded as an operational follow-up. It complements the
@@ -144,3 +147,5 @@ The detailed fixture, safety, local-run and failure-triage contract lives in
 `docs/testing/CORE_LOOP_E2E.md`. The standard command is `npm run test:e2e`. Local execution requires
 an explicitly disposable PostgreSQL database and the two token secrets documented there; the
 Playwright-managed local application automatically enables loopback-only provider suppression.
+The automated and VoiceOver/NVDA accessibility acceptance contract lives in
+`docs/testing/ACCESSIBILITY_TESTING.md`; its focused command is `npm run test:a11y`.

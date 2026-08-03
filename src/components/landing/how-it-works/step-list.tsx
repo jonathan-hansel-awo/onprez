@@ -43,7 +43,7 @@ export function StepList({ activeStep, onStepClick }: StepListProps) {
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-all duration-500 ${
                     isActive
                       ? 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/25'
-                      : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'
+                      : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200 group-hover:text-slate-700'
                   }`}
                 >
                   {String(step.id).padStart(2, '0')}
@@ -52,7 +52,7 @@ export function StepList({ activeStep, onStepClick }: StepListProps) {
                 <div className="flex-1 pt-1">
                   <h3
                     className={`text-xl font-bold tracking-tight transition-colors duration-500 sm:text-2xl ${
-                      isActive ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'
+                      isActive ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-700'
                     }`}
                   >
                     {step.title}

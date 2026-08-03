@@ -322,8 +322,10 @@ body {
 /* Default theme variables (fallbacks) */
 :root {
   --theme-primary: #3b82f6;
+  --theme-primary-contrast: #000000;
   --theme-secondary: #8b5cf6;
   --theme-accent: #10b981;
+  --theme-accent-contrast: #000000;
   --theme-bg: #ffffff;
   --theme-text: #111827;
   --theme-font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -335,7 +337,7 @@ body {
 /* Apply theme to common elements */
 .theme-button-primary {
   background-color: var(--theme-primary);
-  color: white;
+  color: var(--theme-primary-contrast);
   border-radius: var(--theme-radius);
   transition: all 0.2s;
 }
@@ -356,7 +358,7 @@ body {
 
 .theme-button-outline:hover {
   background-color: var(--theme-primary);
-  color: white;
+  color: var(--theme-primary-contrast);
 }
 
 .theme-gradient {
@@ -365,7 +367,7 @@ body {
 
 .theme-badge {
   background-color: var(--theme-accent);
-  color: white;
+  color: var(--theme-accent-contrast);
   padding: 0.25rem 0.75rem;
   border-radius: calc(var(--theme-radius) * 2);
   font-size: 0.875rem;

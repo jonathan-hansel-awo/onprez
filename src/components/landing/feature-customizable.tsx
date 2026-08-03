@@ -120,7 +120,7 @@ export function FeatureCustomizable() {
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-900">Brand Colors</h4>
-                          <p className="text-xs text-gray-500">Choose palette</p>
+                          <p className="text-xs text-gray-700">Choose palette</p>
                         </div>
                       </div>
                       <ColorPickerPanel
@@ -157,7 +157,7 @@ export function FeatureCustomizable() {
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-900">Typography</h4>
-                          <p className="text-xs text-gray-500">Select fonts</p>
+                          <p className="text-xs text-gray-700">Select fonts</p>
                         </div>
                       </div>
                       <FontSelectorPanel
@@ -194,7 +194,7 @@ export function FeatureCustomizable() {
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-900">Layout Style</h4>
-                          <p className="text-xs text-gray-500">Arrange content</p>
+                          <p className="text-xs text-gray-700">Arrange content</p>
                         </div>
                       </div>
                       <LayoutOptionsPanel
@@ -227,7 +227,7 @@ export function FeatureCustomizable() {
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-900">Page Sections</h4>
-                          <p className="text-xs text-gray-500">Toggle visibility</p>
+                          <p className="text-xs text-gray-700">Toggle visibility</p>
                         </div>
                       </div>
                       <div className="space-y-3">
@@ -243,6 +243,9 @@ export function FeatureCustomizable() {
                               <span>{section.name}</span>
                             </span>
                             <button
+                              type="button"
+                              aria-label={`${section.name} section`}
+                              aria-pressed={sections[section.key]}
                               onClick={() => toggleSection(section.key)}
                               className={`w-11 h-6 rounded-full relative transition-all shadow-inner ${
                                 sections[section.key] ? 'bg-onprez-blue' : 'bg-gray-300'
@@ -370,7 +373,7 @@ export function FeatureCustomizable() {
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900">Brand Colors</h4>
-                    <p className="text-xs text-gray-500">Choose your palette</p>
+                    <p className="text-xs text-gray-700">Choose your palette</p>
                   </div>
                 </div>
                 <ColorPickerPanel
@@ -390,7 +393,7 @@ export function FeatureCustomizable() {
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900">Typography</h4>
-                    <p className="text-xs text-gray-500">Select your fonts</p>
+                    <p className="text-xs text-gray-700">Select your fonts</p>
                   </div>
                 </div>
                 <FontSelectorPanel
@@ -410,7 +413,7 @@ export function FeatureCustomizable() {
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900">Layout Style</h4>
-                    <p className="text-xs text-gray-500">Arrange your content</p>
+                    <p className="text-xs text-gray-700">Arrange your content</p>
                   </div>
                 </div>
                 <LayoutOptionsPanel
@@ -430,7 +433,7 @@ export function FeatureCustomizable() {
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900">Page Sections</h4>
-                    <p className="text-xs text-gray-500">Toggle visibility</p>
+                    <p className="text-xs text-gray-700">Toggle visibility</p>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -446,6 +449,9 @@ export function FeatureCustomizable() {
                         <span>{section.name}</span>
                       </span>
                       <button
+                        type="button"
+                        aria-label={`${section.name} section`}
+                        aria-pressed={sections[section.key]}
                         onClick={() => toggleSection(section.key)}
                         className={`w-11 h-6 rounded-full relative transition-all shadow-inner ${
                           sections[section.key] ? 'bg-onprez-blue' : 'bg-gray-300'

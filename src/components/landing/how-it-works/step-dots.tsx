@@ -28,7 +28,7 @@ export function StepDots({ activeStep, onStepClick, progress, paused }: StepDots
             aria-selected={isActive}
             aria-label={`Go to step ${step.id}: ${step.title}`}
             onClick={() => onStepClick(step.id)}
-            className="group relative flex h-6 items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 rounded-full"
+            className="group relative flex h-8 w-10 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
           >
             <motion.div
               animate={{

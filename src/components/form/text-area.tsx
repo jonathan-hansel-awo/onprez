@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, TextareaHTMLAttributes, useId, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 export interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -16,7 +16,15 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   ({ className, label, error, helperText, showCharCount, maxLength, ...props }, ref) => {
     const generatedId = useId()
     const textAreaId = props.id || (label ? generatedId : undefined)
+    const errorId = textAreaId && error ? `${textAreaId}-error` : undefined
+    const helperId = textAreaId && helperText && !error ? `${textAreaId}-description` : undefined
+    const describedBy = [
+      ...new Set([props['aria-describedby'], errorId || helperId].filter(Boolean)),
+    ]
+      .join(' ')
+      .trim()
     const [charCount, setCharCount] = useState(0)
+    const shouldReduceMotion = useReducedMotion()
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setCharCount(e.target.value.length)
@@ -33,6 +41,8 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             maxLength={maxLength}
             {...props}
             id={textAreaId}
+            aria-describedby={describedBy || undefined}
+            aria-invalid={props['aria-invalid'] ?? Boolean(error)}
             className={cn(
               'w-full px-4 py-3 text-base border-2 rounded-lg resize-none transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-onprez-blue/20',
@@ -49,7 +59,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           {label && (
             <label
               htmlFor={textAreaId}
-              className="absolute left-4 top-2 text-xs text-onprez-blue pointer-events-none"
+              className="absolute left-4 top-2 text-xs text-blue-700 pointer-events-none"
             >
               {label}
             </label>
@@ -61,10 +71,12 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           <AnimatePresence>
             {(error || helperText) && (
               <motion.p
-                initial={{ opacity: 0, y: -10 }}
+                id={errorId || helperId}
+                role={error ? 'alert' : undefined}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className={cn('text-sm', error ? 'text-red-500' : 'text-gray-500')}
+                exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
+                className={cn('text-sm', error ? 'text-red-700' : 'text-gray-600')}
               >
                 {error || helperText}
               </motion.p>

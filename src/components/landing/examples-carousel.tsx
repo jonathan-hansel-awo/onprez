@@ -26,7 +26,7 @@ export function ExamplesCarousel() {
     <section className="bg-gray-50 px-5 py-24 sm:px-8 md:py-32">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-onprez-blue">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">
             Beauty and wellness presence pages
           </p>
           <h2 className="mt-4 text-4xl font-bold text-gray-900 md:text-5xl">
@@ -54,15 +54,14 @@ export function ExamplesCarousel() {
                   }}
                 >
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-60">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Demo preview
                     </p>
                     <p className="mt-3 text-sm font-medium">{template.preview.businessName}</p>
                   </div>
                   <p className="text-2xl font-semibold leading-tight">{template.preview.headline}</p>
                   <div
-                    className="rounded-full px-4 py-2 text-center text-xs font-semibold text-white"
-                    style={{ backgroundColor: template.palette.primary }}
+                    className="rounded-full bg-slate-900 px-4 py-2 text-center text-xs font-semibold text-white"
                   >
                     Book a service
                   </div>
@@ -76,7 +75,7 @@ export function ExamplesCarousel() {
                 <p className="mt-2 text-sm leading-6 text-gray-600">{template.description}</p>
                 <Link
                   href={realisticDemoHrefs[template.slug] || `/templates/${template.slug}`}
-                  className="mt-5 inline-flex font-semibold text-onprez-blue"
+                  className="mt-5 inline-flex font-semibold text-blue-700"
                 >
                   {realisticDemoHrefs[template.slug] ? 'Explore full demo' : 'Preview template'}
                 </Link>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Check, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
@@ -101,6 +101,7 @@ export function BookingWidget({
   onComplete,
   onCancel,
 }: BookingWidgetProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [currentStep, setCurrentStep] = useState<BookingStep>(
     preselectedServiceId || preselectedService ? 'datetime' : 'service'
   )
@@ -303,6 +304,13 @@ export function BookingWidget({
                     isClickable && !isCurrent && 'cursor-pointer'
                   )}
                   aria-current={isCurrent ? 'step' : undefined}
+                  aria-label={
+                    isCurrent
+                      ? `${step.label}, current step`
+                      : isCompleted
+                        ? `${step.label}, completed; go back to this step`
+                        : `${step.label}, unavailable`
+                  }
                 >
                   {isCompleted ? <Check className="w-4 h-4" /> : index + 1}
                 </button>
@@ -336,13 +344,13 @@ export function BookingWidget({
 
       {/* Step Content */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={!shouldReduceMotion}>
           <motion.div
             key={currentStep + (currentStep === 'datetime' ? `-${dateTimeSubStep}` : '')}
-            initial={{ opacity: 0, x: 20 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0, x: -20 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
             className="p-3 sm:p-6"
           >
             {/* Service Selection Step */}

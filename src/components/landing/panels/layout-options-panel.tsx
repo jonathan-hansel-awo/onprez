@@ -24,6 +24,8 @@ export function LayoutOptionsPanel({ selectedLayout, onLayoutChange }: LayoutOpt
           return (
             <motion.button
               key={layout.value}
+              type="button"
+              aria-pressed={selectedLayout === layout.value}
               className={cn(
                 'flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors',
                 selectedLayout === layout.value
@@ -37,13 +39,13 @@ export function LayoutOptionsPanel({ selectedLayout, onLayoutChange }: LayoutOpt
               <Icon
                 className={cn(
                   'w-5 h-5',
-                  selectedLayout === layout.value ? 'text-onprez-blue' : 'text-gray-600'
+                  selectedLayout === layout.value ? 'text-blue-700' : 'text-gray-600'
                 )}
               />
               <span
                 className={cn(
                   'text-xs font-medium',
-                  selectedLayout === layout.value ? 'text-onprez-blue' : 'text-gray-600'
+                  selectedLayout === layout.value ? 'text-blue-700' : 'text-gray-600'
                 )}
               >
                 {layout.name}

@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, ReactNode, useEffect } from 'react'
+import { getAccessibleTextColor } from '@/lib/accessibility/color-contrast'
 
 interface ThemeSettings {
   primaryColor?: string
@@ -101,10 +102,14 @@ function generatePatternCSS(
 export function ThemeProvider({ theme, children }: ThemeProviderProps) {
   useEffect(() => {
     const root = document.documentElement
+    const primaryColor = theme.primaryColor || '#3B82F6'
+    const accentColor = theme.accentColor || '#10B981'
 
-    root.style.setProperty('--theme-primary', theme.primaryColor || '#3B82F6')
+    root.style.setProperty('--theme-primary', primaryColor)
+    root.style.setProperty('--theme-primary-contrast', getAccessibleTextColor(primaryColor))
     root.style.setProperty('--theme-secondary', theme.secondaryColor || '#8B5CF6')
-    root.style.setProperty('--theme-accent', theme.accentColor || '#10B981')
+    root.style.setProperty('--theme-accent', accentColor)
+    root.style.setProperty('--theme-accent-contrast', getAccessibleTextColor(accentColor))
     root.style.setProperty('--theme-bg', theme.backgroundColor || '#FFFFFF')
     root.style.setProperty('--theme-text', theme.textColor || '#111827')
 

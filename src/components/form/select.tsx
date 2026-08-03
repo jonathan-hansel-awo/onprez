@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, SelectHTMLAttributes, ReactNode, useId } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { ChevronDown } from 'lucide-react'
 
@@ -22,13 +22,21 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, label, error, options, leftIcon, ...props }, ref) => {
     const generatedId = useId()
     const selectId = props.id || (label ? generatedId : undefined)
+    const errorId = selectId && error ? `${selectId}-error` : undefined
+    const describedBy = [...new Set([props['aria-describedby'], errorId].filter(Boolean))]
+      .join(' ')
+      .trim()
+    const shouldReduceMotion = useReducedMotion()
 
     return (
       <div className="relative w-full">
         <div className="relative">
           {/* Left Icon */}
           {leftIcon && (
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
+            <div
+              aria-hidden="true"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
+            >
               {leftIcon}
             </div>
           )}
@@ -49,6 +57,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             )}
             {...props}
             id={selectId}
+            aria-describedby={describedBy || undefined}
+            aria-invalid={props['aria-invalid'] ?? Boolean(error)}
           >
             {options.map((option, index) => (
               <option key={index} value={option.value}>
@@ -64,7 +74,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               className={cn(
                 'absolute pointer-events-none transition-all duration-200',
                 leftIcon ? 'left-11' : 'left-4',
-                'top-2 text-xs text-onprez-blue'
+                'top-2 text-xs text-blue-700'
               )}
             >
               {label}
@@ -72,7 +82,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           )}
 
           {/* Dropdown Icon */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <div
+            aria-hidden="true"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          >
             <ChevronDown className="w-5 h-5" />
           </div>
         </div>
@@ -80,9 +93,12 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {/* Error Message */}
         {error && (
           <motion.p
-            initial={{ opacity: 0, y: -10 }}
+            id={errorId}
+            role="alert"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-1 text-sm text-red-500"
+            exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
+            className="mt-1 text-sm text-red-700"
           >
             {error}
           </motion.p>

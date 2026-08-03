@@ -22,6 +22,9 @@ export function ColorPickerPanel({ selectedColor, onColorChange }: ColorPickerPa
         {colors.map(color => (
           <motion.button
             key={color.value}
+            type="button"
+            aria-label={`Use ${color.name} brand colour`}
+            aria-pressed={selectedColor === color.value}
             className={`w-10 h-10 rounded-lg ${color.bg} relative`}
             onClick={() => onColorChange(color.value)}
             whileHover={{ scale: 1.1 }}
