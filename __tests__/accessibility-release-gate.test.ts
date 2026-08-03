@@ -63,4 +63,16 @@ describe('accessibility release gate', () => {
     expect(imageUpload).toContain('text-xs text-gray-600')
     expect(imageUpload).not.toContain('text-xs text-gray-400')
   })
+
+  it('derives readable text for custom presence theme colours', () => {
+    const provider = read('src/contexts/ThemeProvider.tsx')
+    const globalStyles = read('src/app/globals.css')
+    const premiumSections = read('src/components/presence/premium/PremiumSectionVariants.tsx')
+
+    expect(provider).toContain("setProperty('--theme-primary-contrast'")
+    expect(provider).toContain("setProperty('--theme-accent-contrast'")
+    expect(globalStyles).toContain('color: var(--theme-primary-contrast)')
+    expect(globalStyles).toContain('color: var(--theme-accent-contrast)')
+    expect(premiumSections).toContain('text-[var(--theme-primary-contrast,#000)]')
+  })
 })
