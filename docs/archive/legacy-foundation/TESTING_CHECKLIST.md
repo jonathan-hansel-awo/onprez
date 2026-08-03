@@ -1,5 +1,12 @@
 # OnPrez Landing Page - Testing Checklist
 
+> [!WARNING]
+> **ARCHIVED — NOT CURRENT GUIDANCE.** Superseded on 3 August 2026 by the enforced test pyramid,
+> Playwright core-loop journey, WCAG accessibility gate, SEO/load workflows, and production-readiness
+> checklist. Start with [`CURRENT_STATE.md`](../../../CURRENT_STATE.md) and the active
+> [`TESTING_STRATEGY.md`](../../testing/TESTING_STRATEGY.md). The content below is retained only as
+> historical context.
+
 ## ✅ Functionality Testing
 
 ### Navigation

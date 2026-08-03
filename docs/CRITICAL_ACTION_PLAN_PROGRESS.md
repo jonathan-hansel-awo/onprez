@@ -3,15 +3,15 @@
 **Document type:** Living progress tracker  
 **Source plan:** `OnPrez Critical Action Plan`
 
-**Last repository audit:** 2 August 2026
+**Last repository audit:** 3 August 2026
 
 **Audited branch:** `main`
 
-**Audit baseline:** `f4bd7db` plus the current implementation pull request
+**Audit baseline:** `763d1b3` plus the current implementation pull request
 
 **Current working phase:** Phase 14 — Documentation and Architecture Discipline
 
-**Next planned item:** P2-032 — Replace Stale Documentation
+**Next planned item:** P2-033 — Add Architecture Decision Records
 
 ---
 
@@ -68,19 +68,19 @@ Whenever an action item is completed:
 | Phase 11 — Communications                             |        3 |       0 |           0 |      3 |
 | Phase 12 — SEO and Handle Durability                  |        2 |       0 |           0 |      2 |
 | Phase 13 — Testing Maturity                           |        3 |       0 |           0 |      3 |
-| Phase 14 — Documentation and Architecture Discipline  |        0 |       0 |           2 |      2 |
+| Phase 14 — Documentation and Architecture Discipline  |        1 |       0 |           1 |      2 |
 | Phase 15 — Monetisation Readiness                     |        1 |       0 |           1 |      2 |
-| **Total**                                             |   **58** |   **0** |       **3** | **61** |
+| **Total**                                             |   **59** |   **0** |       **2** | **61** |
 
-**Strict completion:** 58 of 61 items — approximately **95%**.
+**Strict completion:** 59 of 61 items — approximately **97%**.
 
-**Items with at least meaningful implementation:** 58 of 61 — approximately **95%**.
+**Items with at least meaningful implementation:** 59 of 61 — approximately **97%**.
 
 ### Current priorities from this audit
 
 1. Keep the **P2-020** isolated capacity baseline green when public, authentication, availability, or booking critical paths change, and review its retained report before releases.
 2. Keep the **P2-030** core-loop browser journey green on every pull request, `main` push and daily run, and review its retained browser evidence when it fails.
-3. Complete the remaining canonical architecture documentation gaps before paid scale.
+3. Record the remaining canonical architecture decisions before paid scale.
 4. Complete the P2-023 provider-account privacy checks and recorded credential-encryption follow-ups before paid scale. Add usage and provider-cost tracking before enforcing paid-plan limits.
 
 ---
@@ -432,9 +432,11 @@ Whenever an action item is completed:
 
 ## Phase 14 — Documentation and Architecture Discipline
 
-- [ ] **P2-032 — Replace Stale Documentation** — **Not started**
-  - Current architecture knowledge exists in project documents outside the repository, but no verified canonical `CURRENT_STATE.md` was found in `main`.
-  - The repository needs one source of truth covering current framework versions, Neon/Prisma, custom auth, Cloudinary, Resend, Stripe, Sentry, PWA push, calendars, deployment, data flows, and known limitations.
+- [x] **P2-032 — Replace Stale Documentation** — **Complete**
+  - Root `CURRENT_STATE.md` is the canonical ten-minute orientation for the product definition, resolved stack versions, runtime/tenancy/booking/publication/deployment architecture, repository map, provider boundaries, testing evidence, limitations, and update ownership.
+  - The capability inventory distinguishes built, partially or operationally unverified, planned, and deprecated/legacy work and links directly to the current roadmap, scope, production, security, privacy, migration, and testing contracts.
+  - `README.md` and `.env.example` now direct contributors through the actual Node 20, PostgreSQL, custom-auth, Resend, Cloudinary, provider, and quality-gate setup rather than the earlier milestone sequence.
+  - Superseded database, environment, seed-data, and landing-checklist guides now live under `docs/archive/legacy-foundation` with explicit non-normative warning banners; a repository contract checks critical locked versions, links, archive labels, and environment names for drift.
 
 - [ ] **P2-033 — Add Architecture Decision Records** — **Not started**
   - No ADR directory or decision-log convention was verified.
@@ -465,6 +467,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3 August 2026 | Completed P2-032 with one canonical current-state overview, accurate onboarding and environment guidance, clearly archived legacy documents, and automated documentation-drift checks.              | [#151](https://github.com/jonathan-hansel-awo/onprez/pull/151)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-031 with recurring WCAG AA axe/contrast audits, keyboard and reduced-motion checks, announced form semantics, retained evidence, and VoiceOver/NVDA release guidance.                  | [#138](https://github.com/jonathan-hansel-awo/onprez/pull/138)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-030 with launch-blocking Playwright coverage for the signup-to-publish-to-book-to-manage loop, isolated PostgreSQL, provider suppression, and retained browser evidence.               | [#137](https://github.com/jonathan-hansel-awo/onprez/pull/137)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-029 with a canonical testing strategy, machine-readable layer ownership, changed-file test requirements, pyramid-shape validation, database policy, and enforced CI release gates.     | [#136](https://github.com/jonathan-hansel-awo/onprez/pull/136)                                                                                                                                                                                                    |

@@ -1,5 +1,12 @@
 # Seed Data Documentation
 
+> [!WARNING]
+> **ARCHIVED — NOT CURRENT GUIDANCE.** Superseded on 3 August 2026 because the referenced `db:seed`
+> script and fixture accounts are not part of the current repository. Start with
+> [`CURRENT_STATE.md`](../../../CURRENT_STATE.md) and the active
+> [`TESTING_STRATEGY.md`](../../testing/TESTING_STRATEGY.md). The content below is retained only as
+> historical context and must never be applied to production.
+
 ## Overview
 
 OnPrez includes comprehensive seed data for development and testing.

@@ -1,5 +1,11 @@
 # Environment Variables Guide
 
+> [!WARNING]
+> **ARCHIVED — NOT CURRENT GUIDANCE.** Superseded on 3 August 2026 because this guide describes
+> Supabase authentication and already-built providers as future milestones. Start with
+> [`CURRENT_STATE.md`](../../../CURRENT_STATE.md) and the committed [`.env.example`](../../../.env.example).
+> The content below is retained only as historical context.
+
 ## Overview
 
 OnPrez uses environment variables for configuration. This guide explains how to set them up and use them correctly.
