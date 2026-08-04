@@ -1,6 +1,7 @@
 export type DashboardNavigationIcon =
   | 'overview'
   | 'bookings'
+  | 'money'
   | 'customers'
   | 'presence'
   | 'services'
@@ -28,6 +29,7 @@ export const dashboardPrimaryNavigationGroups: DashboardNavigationGroup[] = [
     items: [
       { name: 'Overview', href: '/dashboard', icon: 'overview' },
       { name: 'Bookings', href: '/dashboard/bookings', icon: 'bookings' },
+      { name: 'Money', href: '/dashboard/money', icon: 'money' },
       { name: 'Customers', href: '/dashboard/customers', icon: 'customers' },
     ],
   },
