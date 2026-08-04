@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
   AlertTriangle,
@@ -10,6 +11,7 @@ import {
   LockKeyhole,
   RefreshCw,
   ShieldCheck,
+  WalletCards,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -161,8 +163,8 @@ export default function PaymentsSettingsPage() {
           </span>
         </div>
         <p className="mt-2 max-w-3xl text-gray-600">
-          Connect the business directly to Stripe so customers can later pay booking deposits into
-          its own Stripe balance. OnPrez does not collect bank or card details.
+          Connect the business directly to Stripe so customer booking fees go into its own Stripe
+          account. OnPrez verifies the payment but never receives, holds or controls the money.
         </p>
       </div>
 
@@ -193,8 +195,8 @@ export default function PaymentsSettingsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-6 text-gray-600">
-              When enabled, the business owner can connect Stripe once and later choose which
-              services require a booking deposit.
+              When enabled, the business owner can connect Stripe once and choose which services
+              require a booking fee.
             </p>
           </CardContent>
         </Card>
@@ -307,16 +309,22 @@ export default function PaymentsSettingsPage() {
                       </Button>
                     )}
                     {account.status === 'READY' && (
-                      <a
-                        href="https://dashboard.stripe.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center rounded-lg border-2 border-onprez-blue px-5 py-3 font-semibold text-onprez-blue transition hover:bg-onprez-blue/5"
-                      >
-                        Open Stripe Dashboard
-                        <ExternalLink className="ml-2 h-4 w-4" />
-                      </a>
+                      <Button asChild>
+                        <Link href="/dashboard/money">
+                          <WalletCards className="mr-2 h-4 w-4" />
+                          View booking fees &amp; payouts
+                        </Link>
+                      </Button>
                     )}
+                    <a
+                      href="https://dashboard.stripe.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex min-h-10 items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                    >
+                      Advanced Stripe settings
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </a>
                   </div>
                 </div>
               )}
@@ -328,20 +336,25 @@ export default function PaymentsSettingsPage() {
             enabled={account?.status === 'READY'}
           />
 
-          <Card className="border-blue-200 bg-blue-50">
+          <Card className="border-green-200 bg-green-50">
             <CardContent className="p-5">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
-                <div>
-                  <h2 className="font-semibold text-blue-950">
-                    No customer payments are active yet
-                  </h2>
-                  <p className="mt-1 text-sm leading-6 text-blue-900">
-                    This phase only connects and verifies the professional's Stripe account. Service
-                    deposit rules are now configurable, but customer checkout remains disabled until
-                    Phase 4.
-                  </p>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <WalletCards className="mt-0.5 h-5 w-5 shrink-0 text-green-700" />
+                  <div>
+                    <h2 className="font-semibold text-green-950">
+                      Manage everyday payment information inside OnPrez
+                    </h2>
+                    <p className="mt-1 text-sm leading-6 text-green-900">
+                      The Money page shows verified booking fees, pending and available Stripe
+                      balances, and payout progress. Stripe is only needed for advanced account,
+                      identity or bank-detail changes.
+                    </p>
+                  </div>
                 </div>
+                <Button asChild variant="outline" className="shrink-0 border-green-700 text-green-800">
+                  <Link href="/dashboard/money">Open Money</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
