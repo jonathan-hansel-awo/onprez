@@ -1,9 +1,4 @@
-import {
-  BookingPaymentStatus,
-  BookingRefundStatus,
-  PaymentProvider,
-  Prisma,
-} from '@prisma/client'
+import { BookingPaymentStatus, PaymentProvider, Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -64,6 +59,7 @@ export async function GET(request: NextRequest) {
             providerPaymentIntentId: true,
             providerChargeId: true,
             refundStatus: true,
+            refundedAmount: true,
             refundReason: true,
             paidAt: true,
             failedAt: true,
@@ -100,9 +96,9 @@ export async function GET(request: NextRequest) {
           where: {
             businessId,
             provider: PaymentProvider.STRIPE,
-            refundStatus: BookingRefundStatus.SUCCEEDED,
+            refundedAmount: { gt: 0 },
           },
-          _sum: { amount: true },
+          _sum: { refundedAmount: true },
           _count: { _all: true },
         }),
         prisma.bookingPayment.count({
@@ -205,7 +201,7 @@ export async function GET(request: NextRequest) {
     }
 
     const verifiedGrossMinor = decimalToMinorUnits(verifiedAggregate._sum.amount)
-    const refundedMinor = decimalToMinorUnits(refundedAggregate._sum.amount)
+    const refundedMinor = decimalToMinorUnits(refundedAggregate._sum.refundedAmount)
 
     return NextResponse.json({
       success: true,
@@ -235,7 +231,7 @@ export async function GET(request: NextRequest) {
         summary: {
           verifiedGrossMinor,
           refundedMinor,
-          retainedAfterFullRefundsMinor: Math.max(0, verifiedGrossMinor - refundedMinor),
+          retainedAfterRefundsMinor: Math.max(0, verifiedGrossMinor - refundedMinor),
           verifiedCount: verifiedAggregate._count._all,
           refundedCount: refundedAggregate._count._all,
           pendingCount,
@@ -253,6 +249,7 @@ export async function GET(request: NextRequest) {
           currency: payment.currency.toUpperCase(),
           status: payment.status,
           refundStatus: payment.refundStatus,
+          refundedAmountMinor: decimalToMinorUnits(payment.refundedAmount),
           refundReason: payment.refundReason,
           reference: safePaymentReference(payment),
           paidAt: payment.paidAt?.toISOString() || null,
