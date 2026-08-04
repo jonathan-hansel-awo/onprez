@@ -151,7 +151,9 @@ function StatusBadge({ status, payout = false }: { status: string; payout?: bool
       }
 
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${copy.className}`}>
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${copy.className}`}
+    >
       {copy.label}
     </span>
   )
@@ -277,7 +279,9 @@ export default function MoneyDashboardPage() {
         <Card className="border-dashed border-gray-300">
           <CardContent className="p-8 text-center">
             <CreditCard className="mx-auto h-10 w-10 text-onprez-blue" />
-            <h2 className="mt-4 text-xl font-semibold text-gray-950">Connect Stripe to take booking fees</h2>
+            <h2 className="mt-4 text-xl font-semibold text-gray-950">
+              Connect Stripe to take booking fees
+            </h2>
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-gray-600">
               Once connected, this page will show booking-fee payments, Stripe balances and payout
               progress in one place.
@@ -342,7 +346,9 @@ export default function MoneyDashboardPage() {
                     <div>
                       <p className="text-sm font-medium text-gray-600">Available at Stripe</p>
                       <p className="mt-2 text-2xl font-bold text-gray-950">
-                        {data.balance ? formatMoney(availableBalanceMinor, currency) : 'Unavailable'}
+                        {data.balance
+                          ? formatMoney(availableBalanceMinor, currency)
+                          : 'Unavailable'}
                       </p>
                     </div>
                     <div className="rounded-xl bg-blue-100 p-2.5 text-blue-700">
@@ -392,7 +398,9 @@ export default function MoneyDashboardPage() {
               <div className="flex items-start gap-3">
                 <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
                 <div>
-                  <h2 className="font-semibold text-blue-950">Why can the available balance show £0?</h2>
+                  <h2 className="font-semibold text-blue-950">
+                    Why can the available balance show £0?
+                  </h2>
                   <p className="mt-1 text-sm leading-6 text-blue-900">
                     When Stripe starts sending money to your bank, it leaves the available balance
                     and appears under payout history. Check the latest payout above rather than
@@ -426,7 +434,9 @@ export default function MoneyDashboardPage() {
                       <article key={payment.id} className="py-4 first:pt-0 last:pb-0">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0">
-                            <p className="truncate font-semibold text-gray-950">{payment.serviceName}</p>
+                            <p className="truncate font-semibold text-gray-950">
+                              {payment.serviceName}
+                            </p>
                             <p className="mt-1 text-sm text-gray-600">{payment.customerName}</p>
                             <p className="mt-1 text-xs text-gray-500">
                               Appointment: {formatDateTime(payment.appointmentStartTime)}
