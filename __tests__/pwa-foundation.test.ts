@@ -10,11 +10,6 @@ describe('Installable PWA foundation', () => {
     path.join(process.cwd(), 'src', 'components', 'navigation', 'logo.tsx'),
     'utf8'
   )
-  const iconRoute = fs.readFileSync(
-    path.join(process.cwd(), 'src', 'app', 'api', 'pwa', 'icon', 'route.tsx'),
-    'utf8'
-  )
-
   it('launches the installed app at the authenticated dashboard', () => {
     const appManifest = manifest()
 
@@ -24,34 +19,46 @@ describe('Installable PWA foundation', () => {
     expect(appManifest.icons).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          src: '/api/pwa/icon?size=192',
+          src: '/icons/onprez-wordmark-192.png',
           sizes: '192x192',
         }),
         expect.objectContaining({
-          src: '/api/pwa/icon?size=512',
+          src: '/icons/onprez-wordmark-512.png',
           sizes: '512x512',
         }),
         expect.objectContaining({
-          src: '/api/pwa/icon?size=512&maskable=1',
+          src: '/icons/onprez-wordmark-512-maskable.png',
           purpose: 'maskable',
         }),
       ])
     )
+    expect(appManifest.icons).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: 'image/svg+xml' })])
+    )
   })
 
-  it('renders supported app icons from the OnPrez wordmark', () => {
-    expect(iconRoute).toContain('const SUPPORTED_SIZES = new Set([180, 192, 512])')
-    expect(iconRoute).toContain('const WORDMARK_SVG')
-    expect(iconRoute).toContain("background: '#F7F7FF'")
-    expect(iconRoute).toContain("'Cache-Control': 'public, max-age=31536000, immutable'")
+  it('ships rasterised wordmark icons for launcher compatibility', () => {
+    const iconNames = [
+      'onprez-wordmark-180.png',
+      'onprez-wordmark-192.png',
+      'onprez-wordmark-512.png',
+      'onprez-wordmark-512-maskable.png',
+    ]
+
+    for (const iconName of iconNames) {
+      const iconPath = path.join(process.cwd(), 'public', 'icons', iconName)
+
+      expect(fs.existsSync(iconPath)).toBe(true)
+      expect(fs.statSync(iconPath).size).toBeGreaterThan(1_000)
+    }
   })
 
   it('uses a network-first navigation fallback without caching private responses', () => {
     expect(serviceWorker).toContain("request.mode !== 'navigate'")
     expect(serviceWorker).toContain('fetch(request).catch')
     expect(serviceWorker).toContain('caches.match(OFFLINE_URL)')
-    expect(serviceWorker).toContain("const CACHE_NAME = 'onprez-offline-v2'")
-    expect(serviceWorker).toContain("const PWA_ICON_URL = '/api/pwa/icon?size=192'")
+    expect(serviceWorker).toContain("const CACHE_NAME = 'onprez-offline-v3'")
+    expect(serviceWorker).toContain("const PWA_ICON_URL = '/icons/onprez-wordmark-192.png'")
     expect(serviceWorker).toContain("'/onprez-wordmark.svg'")
     expect(serviceWorker).not.toContain('cache.put')
     expect(serviceWorker).not.toContain("'/api/dashboard")

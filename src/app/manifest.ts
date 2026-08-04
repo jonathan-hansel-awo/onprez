@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 const pwaIcon = (size: 180 | 192 | 512, maskable = false) =>
-  `/api/pwa/icon?size=${size}${maskable ? '&maskable=1' : ''}`
+  `/icons/onprez-wordmark-${size}${maskable ? '-maskable' : ''}.png`
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -33,12 +33,6 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
     icons: [
-      {
-        src: '/favicon.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
-        purpose: 'any',
-      },
       {
         src: pwaIcon(192),
         sizes: '192x192',
