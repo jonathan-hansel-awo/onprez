@@ -1,0 +1,51 @@
+name: Format Stripe money dashboard
+
+on:
+  push:
+    branches:
+      - feat/stripe-money-dashboard
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v7
+        with:
+          ref: feat/stripe-money-dashboard
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Format changed implementation files
+        run: |
+          npx prettier --write \
+            src/app/api/dashboard/money/route.ts \
+            src/app/dashboard/money/page.tsx \
+            src/app/dashboard/settings/payments/page.tsx
+
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            echo "Files already formatted"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/app/api/dashboard/money/route.ts \
+            src/app/dashboard/money/page.tsx \
+            src/app/dashboard/settings/payments/page.tsx
+          git commit -m "style: format Stripe money dashboard"
+          git push origin HEAD:feat/stripe-money-dashboard
