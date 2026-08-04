@@ -3,15 +3,15 @@
 **Document type:** Living progress tracker  
 **Source plan:** `OnPrez Critical Action Plan`
 
-**Last repository audit:** 3 August 2026
+**Last repository audit:** 4 August 2026
 
 **Audited branch:** `main`
 
-**Audit baseline:** `763d1b3` plus the current implementation pull request
+**Audit baseline:** `d978c5c` plus the current implementation pull request
 
-**Current working phase:** Phase 14 — Documentation and Architecture Discipline
+**Current working phase:** Phase 15 — Monetisation Readiness
 
-**Next planned item:** P3-002 — Add Usage Tracking Before Enforcing Limits
+**Next planned item:** None — every implementation item in this tracker is complete after this pull request; live evidence and provider operations remain before paid-limit enforcement.
 
 ---
 
@@ -451,9 +451,12 @@ Whenever an action item is completed:
 - [x] **P3-001 — Define Plans Based on Real Value** — **Complete**
   - [PR #94](https://github.com/jonathan-hansel-awo/onprez/pull/94) implemented Free, Professional, and Business plans at £0, £8, and £20, with explicit service, media, booking, branding, deposit, support, and fair-use boundaries.
 
-- [ ] **P3-002 — Add Usage Tracking Before Enforcing Limits** — **Not started**
-  - No verified central usage-ledger or admin overhead dashboard currently measures media storage/delivery, transactional emails, monthly bookings by plan, provider cost estimates, and warning thresholds before enforcement.
-  - This should be coordinated with the proposed admin overhead and cost-monitoring work.
+- [x] **P3-002 — Add Usage Tracking Before Enforcing Limits** — **Complete**
+  - Canonical account usage is derived from published pages, active services, current-month bookings, owner-plus-member seats, successful tracked email sends, and a durable business-media asset ledger rather than drift-prone mutable counters.
+  - Business uploads now upsert Cloudinary public ID, fingerprint, purpose, dimensions, format, and original bytes; duplicate reuse does not inflate usage, and `npm run usage:backfill-media` reconciles the historical business namespace after deployment.
+  - Free, Professional, and Business attribution plus public pricing allowances share one typed configuration. The read-only warning states at 70%, 95%, and 100% remain observational and do not enforce or remove access.
+  - `/admin/operations` and `/api/admin/usage` are restricted to platform administrators and expose per-business usage, current UTC-month totals, stored planning rates, and clearly labelled cost estimates.
+  - CDN delivery and transformation usage remain explicitly unavailable until a provider API/export is connected; missing rates produce unavailable estimates rather than false zeroes.
 
 ---
 
@@ -469,7 +472,8 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4 August 2026 | Completed P2-033 with an indexed ADR lifecycle, eight accepted architectural decisions, implementation evidence, and an automated documentation contract.                                           | This pull request                                                                                                                                                                                                                                                 |
+| 4 August 2026 | Completed P3-002 with canonical account usage, durable media-byte accounting and backfill, platform-admin overhead inspection, plan thresholds, and reproducible labelled cost estimates.           | [#153](https://github.com/jonathan-hansel-awo/onprez/pull/153)                                                                                                                                                                                                    |
+| 4 August 2026 | Completed P2-033 with an indexed ADR lifecycle, eight accepted architectural decisions, implementation evidence, and an automated documentation contract.                                           | [#152](https://github.com/jonathan-hansel-awo/onprez/pull/152)                                                                                                                                                                                                    |
 | 3 August 2026 | Completed P2-032 with one canonical current-state overview, accurate onboarding and environment guidance, clearly archived legacy documents, and automated documentation-drift checks.              | [#151](https://github.com/jonathan-hansel-awo/onprez/pull/151)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-031 with recurring WCAG AA axe/contrast audits, keyboard and reduced-motion checks, announced form semantics, retained evidence, and VoiceOver/NVDA release guidance.                  | [#138](https://github.com/jonathan-hansel-awo/onprez/pull/138)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-030 with launch-blocking Playwright coverage for the signup-to-publish-to-book-to-manage loop, isolated PostgreSQL, provider suppression, and retained browser evidence.               | [#137](https://github.com/jonathan-hansel-awo/onprez/pull/137)                                                                                                                                                                                                    |

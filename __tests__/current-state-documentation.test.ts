@@ -58,7 +58,8 @@ describe('canonical current-state documentation', () => {
     )
     expect(currentState).toContain('[`Architecture`](#architecture)')
     expect(currentState).toContain('[`docs/adr/README.md`](./docs/adr/README.md)')
-    expect(currentState).toContain('P3-002')
+    expect(currentState).toContain('Critical Action Plan implementation queue is complete')
+    expect(currentState).toContain('docs/admin/USAGE_AND_OVERHEAD.md')
   })
 
   it('keeps every relative markdown file link resolvable', () => {

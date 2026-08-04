@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/auth/get-user'
 import { businessAuthErrorResponse, requireBusinessRole } from '@/lib/auth/business-access'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { POST } from '@/app/api/upload/image/route'
+import { recordBusinessMediaAsset } from '@/lib/usage/media-asset'
 
 const mockUploadStreamEnd = jest.fn()
 const mockUploadStream = jest.fn()
@@ -54,11 +55,13 @@ jest.mock('@/lib/auth/business-access', () => ({
     }
   },
 }))
+jest.mock('@/lib/usage/media-asset', () => ({ recordBusinessMediaAsset: jest.fn() }))
 
 const mockedGetCurrentUser = getCurrentUser as jest.Mock
 const mockedRequireBusinessRole = requireBusinessRole as jest.Mock
 const mockedBusinessAuthErrorResponse = businessAuthErrorResponse as jest.Mock
 const mockedCheckRateLimit = checkRateLimit as jest.Mock
+const mockedRecordBusinessMediaAsset = recordBusinessMediaAsset as jest.Mock
 
 let validPngBuffer: Buffer
 
@@ -302,6 +305,7 @@ describe('POST /api/upload/images', () => {
     )
 
     expect(mockUploadStreamEnd).toHaveBeenCalled()
+    expect(mockedRecordBusinessMediaAsset).not.toHaveBeenCalled()
   })
 
   it('strips embedded image metadata before upload', async () => {
@@ -372,6 +376,12 @@ describe('POST /api/upload/images', () => {
         folder: 'onprez/businesses/business-1/business-logo',
       }),
       expect.any(Function)
+    )
+    expect(mockedRecordBusinessMediaAsset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        businessId: 'business-1',
+        purpose: 'business-logo',
+      })
     )
   })
 

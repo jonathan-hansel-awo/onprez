@@ -7,6 +7,7 @@ import { requireBusinessRole } from '@/lib/auth/business-access'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { checkRateLimit } from '@/lib/services/rate-limit'
 import { fingerprintImageUpload, sanitizeImageUpload } from '@/lib/uploads/image-security'
+import { recordBusinessMediaAsset } from '@/lib/usage/media-asset'
 
 jest.mock('cloudinary', () => ({
   v2: {
@@ -32,12 +33,14 @@ jest.mock('@/lib/uploads/image-security', () => ({
   fingerprintImageUpload: jest.fn(),
   sanitizeImageUpload: jest.fn(),
 }))
+jest.mock('@/lib/usage/media-asset', () => ({ recordBusinessMediaAsset: jest.fn() }))
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser)
 const mockRequireBusinessRole = jest.mocked(requireBusinessRole)
 const mockCheckRateLimit = jest.mocked(checkRateLimit)
 const mockFingerprint = jest.mocked(fingerprintImageUpload)
 const mockSanitize = jest.mocked(sanitizeImageUpload)
+const mockRecordBusinessMediaAsset = jest.mocked(recordBusinessMediaAsset)
 const mockResource = cloudinary.api.resource as jest.Mock
 const mockUploadStream = cloudinary.uploader.upload_stream as jest.Mock
 
@@ -103,6 +106,12 @@ describe('image upload duplicate prevention', () => {
     })
     expect(mockSanitize).not.toHaveBeenCalled()
     expect(mockUploadStream).not.toHaveBeenCalled()
+    expect(mockRecordBusinessMediaAsset).toHaveBeenCalledWith({
+      businessId: 'business-1',
+      purpose: 'service',
+      fingerprint: 'a'.repeat(64),
+      image: storedImage,
+    })
   })
 
   it('optimises and uploads a new image using its deterministic fingerprint', async () => {
@@ -140,5 +149,11 @@ describe('image upload duplicate prevention', () => {
       }),
       expect.any(Function)
     )
+    expect(mockRecordBusinessMediaAsset).toHaveBeenCalledWith({
+      businessId: 'business-1',
+      purpose: 'service',
+      fingerprint: 'a'.repeat(64),
+      image: storedImage,
+    })
   })
 })

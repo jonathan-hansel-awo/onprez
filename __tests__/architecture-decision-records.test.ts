@@ -101,8 +101,11 @@ describe('architecture decision records', () => {
     const roadmap = read('docs/CRITICAL_ACTION_PLAN_PROGRESS.md')
 
     expect(currentState).toContain('[`docs/adr/README.md`](./docs/adr/README.md)')
-    expect(currentState).toContain('P3-002')
+    expect(currentState).toContain('Critical Action Plan implementation queue is complete')
     expect(roadmap).toContain('P2-033 — Add Architecture Decision Records** — **Complete**')
-    expect(roadmap).toContain('**Next planned item:** P3-002')
+    expect(roadmap).toContain(
+      'P3-002 — Add Usage Tracking Before Enforcing Limits** — **Complete**'
+    )
+    expect(roadmap).toContain('**Next planned item:** None')
   })
 })

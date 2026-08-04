@@ -11,6 +11,7 @@ import {
   type ImageUploadPurpose,
   sanitizeImageUpload,
 } from '@/lib/uploads/image-security'
+import { recordBusinessMediaAsset } from '@/lib/usage/media-asset'
 
 const PERSONAL_PURPOSES = new Set<ImageUploadPurpose>(['profile'])
 const BUSINESS_PURPOSES = new Set<ImageUploadPurpose>([
@@ -213,6 +214,10 @@ async function handlePost(request: NextRequest) {
     const existingImage = await findStoredImage(publicId)
 
     if (existingImage) {
+      if (isBusinessPurpose && businessId) {
+        await recordBusinessMediaAsset({ businessId, purpose, fingerprint, image: existingImage })
+      }
+
       logger.info('upload.image.reused', {
         userId: user.id,
         businessId,
@@ -231,6 +236,11 @@ async function handlePost(request: NextRequest) {
         sanitizedImage.mimeType,
         fingerprint
       )
+      const storedImage = toStoredImage(result)
+
+      if (isBusinessPurpose && businessId) {
+        await recordBusinessMediaAsset({ businessId, purpose, fingerprint, image: storedImage })
+      }
 
       logger.info('upload.image.succeeded', {
         userId: user.id,
@@ -241,11 +251,15 @@ async function handlePost(request: NextRequest) {
         publicId: result.public_id,
       })
 
-      return imageResponse(toStoredImage(result), false)
+      return imageResponse(storedImage, false)
     } catch (uploadError) {
       // A concurrent request may have stored the same content after our first lookup.
       const racedImage = await findStoredImage(publicId)
       if (racedImage) {
+        if (isBusinessPurpose && businessId) {
+          await recordBusinessMediaAsset({ businessId, purpose, fingerprint, image: racedImage })
+        }
+
         logger.info('upload.image.reused_after_race', {
           userId: user.id,
           businessId,

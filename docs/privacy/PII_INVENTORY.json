@@ -1,6 +1,6 @@
 {
-  "version": "2026-08-01-p2-024",
-  "reviewedAt": "2026-08-01",
+  "version": "2026-08-04-p3-002",
+  "reviewedAt": "2026-08-04",
   "nextReviewDue": "2026-11-01",
   "reviewCadence": "quarterly and before any new provider or personal-data field ships",
   "owners": {
@@ -69,6 +69,15 @@
         "Google Analytics using coarse page groups only"
       ],
       "retention": "routine diagnostics normally up to 30 days; optional analytics no longer than 12 months"
+    },
+    {
+      "id": "platform-usage-and-cost",
+      "subjects": ["account holder", "team member"],
+      "purpose": "Attribute plan usage, prevent abuse, forecast provider overhead and review costs before enforcing limits",
+      "lawfulBasis": "contract and legitimate interests in reliable platform operation and cost control",
+      "sources": ["application records", "Cloudinary metadata", "Resend delivery records"],
+      "destinations": ["Neon", "restricted OnPrez platform administrators"],
+      "retention": "current account usage follows source-record lifecycle; effective-dated aggregate planning rates remain as operational history"
     }
   ],
   "fieldPolicies": [
@@ -401,6 +410,21 @@
       "retention": "delivery history normally 90 days; active bounce/complaint suppression retained while needed to protect sender reputation",
       "deletionOwner": "security_operations",
       "deletionAction": "delete delivery events with booking/inquiry or after audit retention; remove suppression only after provider and recipient verification"
+    },
+    {
+      "fields": [
+        "MediaAsset.publicId",
+        "MediaAsset.secureUrl",
+        "MediaAsset.fingerprint",
+        "MediaAsset.purpose",
+        "ProviderCostRate.source",
+        "ProviderCostRate.notes"
+      ],
+      "classification": "platform_usage_and_provider_metadata",
+      "protection": "tenant-scoped media references and platform-admin-only planning metadata; no customer message content or recipient address is stored",
+      "retention": "media reference follows the business asset lifecycle; effective-dated planning rates remain as reproducible operational history",
+      "deletionOwner": "platform_privacy",
+      "deletionAction": "delete media references with the business/provider asset; retain superseded non-personal cost-rate history for auditability"
     }
   ]
 }

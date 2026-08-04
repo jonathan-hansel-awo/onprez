@@ -33,16 +33,17 @@ based on its sector, services, location or use of customer information.
 
 ## Data-flow map
 
-| Source                            | OnPrez boundary                                                   | Permitted destination                                                                        | Prohibited destination/content                                                                 |
-| --------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Account/signup and security forms | HTTPS route, validation, rate limit, Neon                         | Purpose-bound Resend message; restricted security record                                     | Query strings, analytics, raw application logs, Sentry user/request bodies                     |
-| Business dashboard                | Authenticated tenant boundary, Neon, published-snapshot boundary  | Vercel public rendering only after publish; Cloudinary for selected media                    | Another tenant, public draft data, analytics form values                                       |
-| Customer booking/inquiry forms    | HTTPS public route, rate limit, tenant-scoped Neon record         | Relevant business, purpose-bound Resend message, Stripe when a deposit is requested          | Analytics, logs, lock-screen push identity, customer email/name/phone in application URLs      |
-| Booking events                    | Durable booking, email-delivery records and notification outboxes | Authorised business users; coarse push event; connected Google Calendar; transactional email | Customer identity/contact/notes in web-push payloads or third-party calendar-link URLs         |
-| Browser performance               | Consent check, coarse page classification                         | Same-origin web-vitals endpoint and optional Google Analytics                                | Raw handle, customer route, query string, full URL or form content                             |
-| Runtime exception                 | Structured logger and Sentry scrubber                             | Bounded operational fields and pseudonymous internal IDs                                     | Passwords, tokens, cookies, request bodies, emails, phone/address fields, IP/user-agent fields |
-| Rights request                    | Password-verified lifecycle route                                 | Private no-store export or staged/anonymised processing                                      | Export payload copies in audit logs or immediate destructive cascade                           |
-| Resend delivery event             | Signed raw-body verification, provider-message lookup, Neon       | Tenant-scoped masked delivery history and keyed suppression record                           | Webhook recipient, subject, message content or raw provider payload in the database or logs    |
+| Source                            | OnPrez boundary                                                    | Permitted destination                                                                        | Prohibited destination/content                                                                  |
+| --------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Account/signup and security forms | HTTPS route, validation, rate limit, Neon                          | Purpose-bound Resend message; restricted security record                                     | Query strings, analytics, raw application logs, Sentry user/request bodies                      |
+| Business dashboard                | Authenticated tenant boundary, Neon, published-snapshot boundary   | Vercel public rendering only after publish; Cloudinary for selected media                    | Another tenant, public draft data, analytics form values                                        |
+| Customer booking/inquiry forms    | HTTPS public route, rate limit, tenant-scoped Neon record          | Relevant business, purpose-bound Resend message, Stripe when a deposit is requested          | Analytics, logs, lock-screen push identity, customer email/name/phone in application URLs       |
+| Booking events                    | Durable booking, email-delivery records and notification outboxes  | Authorised business users; coarse push event; connected Google Calendar; transactional email | Customer identity/contact/notes in web-push payloads or third-party calendar-link URLs          |
+| Browser performance               | Consent check, coarse page classification                          | Same-origin web-vitals endpoint and optional Google Analytics                                | Raw handle, customer route, query string, full URL or form content                              |
+| Runtime exception                 | Structured logger and Sentry scrubber                              | Bounded operational fields and pseudonymous internal IDs                                     | Passwords, tokens, cookies, request bodies, emails, phone/address fields, IP/user-agent fields  |
+| Rights request                    | Password-verified lifecycle route                                  | Private no-store export or staged/anonymised processing                                      | Export payload copies in audit logs or immediate destructive cascade                            |
+| Resend delivery event             | Signed raw-body verification, provider-message lookup, Neon        | Tenant-scoped masked delivery history and keyed suppression record                           | Webhook recipient, subject, message content or raw provider payload in the database or logs     |
+| Plan usage and provider overhead  | Canonical business records, media ledger and stored planning rates | Restricted aggregate platform-admin report                                                   | Customer message content, recipient address, provider secrets or estimates labelled as invoices |
 
 Purpose-bound email and connected calendar events may contain the contact/booking information needed
 by the customer or selected business. That is an intentional delivery flow, not permission to copy
@@ -84,6 +85,9 @@ plaintext application fields.
   request bodies, cookies, query strings, contact data and network identifiers.
 - The audit discovers newly added likely-PII Prisma fields and fails until they receive an explicit
   classification, retention owner and deletion action.
+- The usage dashboard derives aggregate business counters from their owning records and labels
+  provider-cost calculations as estimates; it does not expose customer message content or recipient
+  addresses.
 
 ## Retention and deletion matrix
 

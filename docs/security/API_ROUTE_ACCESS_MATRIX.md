@@ -192,13 +192,14 @@
 
 # Team Routes
 
-| Route                                  | Access Level       | Required Checks                                                     | Status       | Notes                                                  |
-| -------------------------------------- | ------------------ | ------------------------------------------------------------------- | ------------ | ------------------------------------------------------ |
-| `/api/team/invitations`                | Owner/Admin-only   | Validate session; require business owner/admin role                 | Needs review | Invitation abuse and privilege escalation risk.        |
-| `/api/team/invitations/[id]`           | Owner/Admin-only   | Validate session; ensure invitation belongs to user's business      | Needs review | ID tampering risk.                                     |
-| `/api/team/invitations/accept/[token]` | Public token-based | Validate invitation token; expiry; single-use; safe account linking | Needs review | Should not leak invitation details.                    |
-| `/api/team/members`                    | Owner/Admin-only   | Validate session; require business owner/admin role                 | Needs review | Staff list privacy/permissions.                        |
-| `/api/team/members/[id]`               | Owner/Admin-only   | Validate session; ensure member belongs to user's business          | Needs review | Prevent removing/changing users from another business. |
+| Route                                  | Access Level        | Required Checks                                                      | Status       | Notes                                                              |
+| -------------------------------------- | ------------------- | -------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------ |
+| `/api/team/invitations`                | Owner/Admin-only    | Validate session; require business owner/admin role                  | Needs review | Invitation abuse and privilege escalation risk.                    |
+| `/api/team/invitations/[id]`           | Owner/Admin-only    | Validate session; ensure invitation belongs to user's business       | Needs review | ID tampering risk.                                                 |
+| `/api/team/invitations/accept/[token]` | Public token-based  | Validate invitation token; expiry; single-use; safe account linking  | Needs review | Should not leak invitation details.                                |
+| `/api/team/members`                    | Owner/Admin-only    | Validate session; require business owner/admin role                  | Needs review | Staff list privacy/permissions.                                    |
+| `/api/team/members/[id]`               | Owner/Admin-only    | Validate session; ensure member belongs to user's business           | Needs review | Prevent removing/changing users from another business.             |
+| `/api/admin/usage`                     | Platform-admin only | Validate database-backed session and require `ADMIN` or `SUPERADMIN` | Reviewed     | Read-only aggregate usage; ordinary business roles have no access. |
 
 ---
 
