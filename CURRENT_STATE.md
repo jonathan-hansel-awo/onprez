@@ -22,7 +22,7 @@ When this file conflicts with an archived guide, this file and the linked execut
 | Where does it run?                | Next.js on Vercel, backed by Neon PostgreSQL and Prisma.                                                                                                                                                     |
 | How is authentication handled?    | Custom email/password authentication with hashed passwords, JWT cookies, database sessions, verification/reset tokens, MFA, trusted devices, and security logging. Supabase is not the active auth provider. |
 | Is it production-ready?           | The core loop and automated release gates are built. Real-user evidence, provider/live checks, legal review, and several production-readiness drills remain open.                                            |
-| What should be built next?        | Architecture decision records (P2-033), then central usage/provider-cost tracking before paid-plan limits (P3-002).                                                                                          |
+| What should be built next?        | Central usage and provider-cost tracking before paid-plan limits (P3-002).                                                                                                                                   |
 | Where is the roadmap?             | [`docs/CRITICAL_ACTION_PLAN_PROGRESS.md`](./docs/CRITICAL_ACTION_PLAN_PROGRESS.md), with evidence-gated deferred work in [`docs/product/LATER.md`](./docs/product/LATER.md).                                 |
 
 ## Product definition
@@ -73,13 +73,10 @@ operator verification.
 
 ### Planned next
 
-1. **P2-033 — Architecture decision records:** record the decisions behind custom auth, Neon,
-   Vercel, Cloudinary, canonical presence rendering, transactional booking locks, migration
-   separation, Stripe Connect, push delivery, and calendar-token encryption.
-2. **P3-002 — Usage before limits:** add a central usage ledger and admin overhead dashboard for
+1. **P3-002 — Usage before limits:** add a central usage ledger and admin overhead dashboard for
    media storage/delivery, emails, bookings, provider-cost estimates, and thresholds before paid
    plan enforcement.
-3. **Evidence-gated later queue:** native mobile apps, custom domains, SMS, public APIs/webhooks,
+2. **Evidence-gated later queue:** native mobile apps, custom domains, SMS, public APIs/webhooks,
    campaigns, advanced analytics, referral tooling, and broader workforce tools remain in
    [`docs/product/LATER.md`](./docs/product/LATER.md) until their stated triggers are met.
 
@@ -128,6 +125,10 @@ boundary deliberately and keep generation, validation, build, migration replay, 
 tests, and the isolated browser/load workflows green.
 
 ## Architecture
+
+Durable architectural choices and their trade-offs are recorded in the
+[`Architecture Decision Record index`](./docs/adr/README.md). When an accepted boundary changes,
+add a superseding ADR instead of rewriting the original decision.
 
 ### Runtime topology
 
@@ -248,6 +249,7 @@ production. Provider deliveries are suppressed in isolated browser/load runs.
 | Need                             | Source of truth                                                                                            |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Current product and architecture | **This document**, especially [`Architecture`](#architecture)                                              |
+| Architecture decisions           | [`docs/adr/README.md`](./docs/adr/README.md)                                                               |
 | Roadmap and completion evidence  | [`docs/CRITICAL_ACTION_PLAN_PROGRESS.md`](./docs/CRITICAL_ACTION_PLAN_PROGRESS.md)                         |
 | Current MVP scope                | [`docs/product/MVP_SCOPE.md`](./docs/product/MVP_SCOPE.md)                                                 |
 | Evidence-gated deferred work     | [`docs/product/LATER.md`](./docs/product/LATER.md)                                                         |
@@ -286,3 +288,6 @@ Update `CURRENT_STATE.md` in the same pull request when any of these changes:
 Prefer links to executable sources and narrowly owned acceptance documents over copying long-lived
 details here. Archive superseded documents with a warning banner instead of leaving contradictory
 guidance active.
+
+When a change reverses or materially alters an accepted architectural decision, add a new ADR and
+supersede the old record in the same pull request.

@@ -11,7 +11,7 @@
 
 **Current working phase:** Phase 14 — Documentation and Architecture Discipline
 
-**Next planned item:** P2-033 — Add Architecture Decision Records
+**Next planned item:** P3-002 — Add Usage Tracking Before Enforcing Limits
 
 ---
 
@@ -438,9 +438,11 @@ Whenever an action item is completed:
   - `README.md` and `.env.example` now direct contributors through the actual Node 20, PostgreSQL, custom-auth, Resend, Cloudinary, provider, and quality-gate setup rather than the earlier milestone sequence.
   - Superseded database, environment, seed-data, and landing-checklist guides now live under `docs/archive/legacy-foundation` with explicit non-normative warning banners; a repository contract checks critical locked versions, links, archive labels, and environment names for drift.
 
-- [ ] **P2-033 — Add Architecture Decision Records** — **Not started**
-  - No ADR directory or decision-log convention was verified.
-  - Decisions such as custom auth, Neon, Vercel, Cloudinary, canonical presence rendering, transactional booking locks, migration separation, Stripe Connect, push outbox, and calendar-token encryption should be recorded.
+- [x] **P2-033 — Add Architecture Decision Records** — **Complete**
+  - `docs/adr/README.md` defines the proposed, accepted, superseded, and deprecated lifecycle, the required record shape, and the numbered decision index.
+  - Eight accepted records capture Neon PostgreSQL, custom authentication, Vercel deployment, Prisma data access, Cloudinary media, immutable tenant identity with public handles, transactional booking conflict control, and deliberately narrow public-presence caching.
+  - Each record includes context, the decision, consequences, alternatives, and links to executable implementation or current operating evidence.
+  - `__tests__/architecture-decision-records.test.ts` prevents unindexed, malformed, incomplete, or silently rewritten decision records while allowing new numbered ADRs through the documented lifecycle.
 
 ---
 
@@ -467,6 +469,7 @@ Whenever an action item is completed:
 
 | Date          | Change                                                                                                                                                                                              | PR                                                                                                                                                                                                                                                                |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4 August 2026 | Completed P2-033 with an indexed ADR lifecycle, eight accepted architectural decisions, implementation evidence, and an automated documentation contract.                                           | This pull request                                                                                                                                                                                                                                                 |
 | 3 August 2026 | Completed P2-032 with one canonical current-state overview, accurate onboarding and environment guidance, clearly archived legacy documents, and automated documentation-drift checks.              | [#151](https://github.com/jonathan-hansel-awo/onprez/pull/151)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-031 with recurring WCAG AA axe/contrast audits, keyboard and reduced-motion checks, announced form semantics, retained evidence, and VoiceOver/NVDA release guidance.                  | [#138](https://github.com/jonathan-hansel-awo/onprez/pull/138)                                                                                                                                                                                                    |
 | 2 August 2026 | Completed P2-030 with launch-blocking Playwright coverage for the signup-to-publish-to-book-to-manage loop, isolated PostgreSQL, provider suppression, and retained browser evidence.               | [#137](https://github.com/jonathan-hansel-awo/onprez/pull/137)                                                                                                                                                                                                    |
