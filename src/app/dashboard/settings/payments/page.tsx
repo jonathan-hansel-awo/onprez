@@ -352,7 +352,11 @@ export default function PaymentsSettingsPage() {
                     </p>
                   </div>
                 </div>
-                <Button asChild variant="outline" className="shrink-0 border-green-700 text-green-800">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="shrink-0 border-green-700 text-green-800"
+                >
                   <Link href="/dashboard/money">Open Money</Link>
                 </Button>
               </div>

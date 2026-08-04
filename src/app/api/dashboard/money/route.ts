@@ -38,92 +38,98 @@ export async function GET(request: NextRequest) {
     const context = await resolveWritableBusinessContext(user.id, request, [])
     const businessId = context.businessId
 
-    const [connectedAccount, recentPayments, verifiedAggregate, refundedAggregate, pendingCount, failedCount] =
-      await Promise.all([
-        prisma.stripeConnectedAccount.findUnique({
-          where: { businessId },
-        }),
-        prisma.bookingPayment.findMany({
-          where: {
-            businessId,
-            provider: PaymentProvider.STRIPE,
-          },
-          orderBy: { createdAt: 'desc' },
-          take: RECENT_PAYMENT_LIMIT,
-          select: {
-            id: true,
-            appointmentId: true,
-            status: true,
-            amount: true,
-            currency: true,
-            providerPaymentIntentId: true,
-            providerChargeId: true,
-            refundStatus: true,
-            refundedAmount: true,
-            refundReason: true,
-            paidAt: true,
-            failedAt: true,
-            refundedAt: true,
-            createdAt: true,
-            updatedAt: true,
-            appointment: {
-              select: {
-                customerName: true,
-                startTime: true,
-                service: {
-                  select: { name: true },
-                },
+    const [
+      connectedAccount,
+      recentPayments,
+      verifiedAggregate,
+      refundedAggregate,
+      pendingCount,
+      failedCount,
+    ] = await Promise.all([
+      prisma.stripeConnectedAccount.findUnique({
+        where: { businessId },
+      }),
+      prisma.bookingPayment.findMany({
+        where: {
+          businessId,
+          provider: PaymentProvider.STRIPE,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: RECENT_PAYMENT_LIMIT,
+        select: {
+          id: true,
+          appointmentId: true,
+          status: true,
+          amount: true,
+          currency: true,
+          providerPaymentIntentId: true,
+          providerChargeId: true,
+          refundStatus: true,
+          refundedAmount: true,
+          refundReason: true,
+          paidAt: true,
+          failedAt: true,
+          refundedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          appointment: {
+            select: {
+              customerName: true,
+              startTime: true,
+              service: {
+                select: { name: true },
               },
             },
           },
-        }),
-        prisma.bookingPayment.aggregate({
-          where: {
-            businessId,
-            provider: PaymentProvider.STRIPE,
-            status: {
-              in: [
-                BookingPaymentStatus.SUCCEEDED,
-                BookingPaymentStatus.PARTIALLY_REFUNDED,
-                BookingPaymentStatus.REFUNDED,
-              ],
-            },
+        },
+      }),
+      prisma.bookingPayment.aggregate({
+        where: {
+          businessId,
+          provider: PaymentProvider.STRIPE,
+          status: {
+            in: [
+              BookingPaymentStatus.SUCCEEDED,
+              BookingPaymentStatus.PARTIALLY_REFUNDED,
+              BookingPaymentStatus.REFUNDED,
+            ],
           },
-          _sum: { amount: true },
-          _count: { _all: true },
-        }),
-        prisma.bookingPayment.aggregate({
-          where: {
-            businessId,
-            provider: PaymentProvider.STRIPE,
-            refundedAmount: { gt: 0 },
+        },
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+      prisma.bookingPayment.aggregate({
+        where: {
+          businessId,
+          provider: PaymentProvider.STRIPE,
+          refundedAmount: { gt: 0 },
+        },
+        _sum: { refundedAmount: true },
+        _count: { _all: true },
+      }),
+      prisma.bookingPayment.count({
+        where: {
+          businessId,
+          provider: PaymentProvider.STRIPE,
+          status: {
+            in: [
+              BookingPaymentStatus.PENDING,
+              BookingPaymentStatus.REQUIRES_ACTION,
+              BookingPaymentStatus.PROCESSING,
+            ],
           },
-          _sum: { refundedAmount: true },
-          _count: { _all: true },
-        }),
-        prisma.bookingPayment.count({
-          where: {
-            businessId,
-            provider: PaymentProvider.STRIPE,
-            status: {
-              in: [
-                BookingPaymentStatus.PENDING,
-                BookingPaymentStatus.REQUIRES_ACTION,
-                BookingPaymentStatus.PROCESSING,
-              ],
-            },
+        },
+      }),
+      prisma.bookingPayment.count({
+        where: {
+          businessId,
+          provider: PaymentProvider.STRIPE,
+          status: {
+            in: [BookingPaymentStatus.FAILED, BookingPaymentStatus.CANCELLED],
           },
-        }),
-        prisma.bookingPayment.count({
-          where: {
-            businessId,
-            provider: PaymentProvider.STRIPE,
-            status: {
-              in: [BookingPaymentStatus.FAILED, BookingPaymentStatus.CANCELLED],
-            },
-          },
-        }),
-      ])
+        },
+      }),
+    ])
 
     const warnings: string[] = []
     let balance: {
