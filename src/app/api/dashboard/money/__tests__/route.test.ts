@@ -62,6 +62,7 @@ function configureLocalPaymentData() {
       providerPaymentIntentId: 'pi_booking_1234567890',
       providerChargeId: 'ch_booking_1234567890',
       refundStatus: 'NOT_REQUESTED',
+      refundedAmount: decimal('0.00'),
       refundReason: null,
       paidAt: new Date('2026-08-01T10:30:00.000Z'),
       failedAt: null,
@@ -77,7 +78,10 @@ function configureLocalPaymentData() {
   ])
   mockedAggregatePayments
     .mockResolvedValueOnce({ _sum: { amount: decimal('5.00') }, _count: { _all: 1 } })
-    .mockResolvedValueOnce({ _sum: { amount: null }, _count: { _all: 0 } })
+    .mockResolvedValueOnce({
+      _sum: { refundedAmount: decimal('1.50') },
+      _count: { _all: 1 },
+    })
   mockedCountPayments.mockResolvedValueOnce(0).mockResolvedValueOnce(0)
 }
 
@@ -141,6 +145,8 @@ describe('GET /api/dashboard/money', () => {
     expect(response.status).toBe(200)
     expect(mockedResolveBusiness).toHaveBeenCalledWith('user-1', expect.any(NextRequest), [])
     expect(payload.data.summary.verifiedGrossMinor).toBe(500)
+    expect(payload.data.summary.refundedMinor).toBe(150)
+    expect(payload.data.summary.retainedAfterRefundsMinor).toBe(350)
     expect(payload.data.balance.available[0].amountMinor).toBe(0)
     expect(payload.data.payouts[0]).toEqual(
       expect.objectContaining({ amountMinor: 500, status: 'in_transit' })
@@ -150,6 +156,7 @@ describe('GET /api/dashboard/money', () => {
         customerName: 'Jonathan',
         serviceName: 'Swedish Massage',
         amountMinor: 500,
+        refundedAmountMinor: 0,
         status: 'SUCCEEDED',
       })
     )
