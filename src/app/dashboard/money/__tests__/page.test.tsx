@@ -91,7 +91,7 @@ describe('MoneyDashboardPage', () => {
     expect(await screen.findByRole('heading', { name: 'Money' })).toBeInTheDocument()
     expect(screen.getByText('Swedish Massage')).toBeInTheDocument()
     expect(screen.getByText('Jonathan')).toBeInTheDocument()
-    expect(screen.getAllByText('£5.00')).toHaveLength(3)
+    expect(screen.getAllByText('£5.00')).toHaveLength(4)
     expect(screen.getAllByText('£0.00')).toHaveLength(2)
     expect(screen.getAllByText('On the way')).toHaveLength(2)
     expect(screen.getByText(/Why can the available balance show £0/i)).toBeInTheDocument()
