@@ -4,15 +4,7 @@ import manifest from '@/app/manifest'
 
 describe('PWA icon delivery boundary', () => {
   it('retires the dynamic icon API route in favour of static assets', () => {
-    const legacyRoute = path.join(
-      process.cwd(),
-      'src',
-      'app',
-      'api',
-      'pwa',
-      'icon',
-      'route.tsx'
-    )
+    const legacyRoute = path.join(process.cwd(), 'src', 'app', 'api', 'pwa', 'icon', 'route.tsx')
 
     expect(fs.existsSync(legacyRoute)).toBe(false)
   })
