@@ -19,7 +19,7 @@ const baseData = {
   summary: {
     verifiedGrossMinor: 500,
     refundedMinor: 0,
-    retainedAfterFullRefundsMinor: 500,
+    retainedAfterRefundsMinor: 500,
     verifiedCount: 1,
     refundedCount: 0,
     pendingCount: 0,
@@ -57,6 +57,7 @@ const baseData = {
       currency: 'GBP',
       status: 'SUCCEEDED',
       refundStatus: 'NOT_REQUESTED',
+      refundedAmountMinor: 0,
       refundReason: null,
       reference: '1234567890',
       paidAt: '2026-08-01T10:30:00.000Z',
@@ -71,7 +72,7 @@ const baseData = {
   generatedAt: '2026-08-05T00:00:00.000Z',
 }
 
-function mockMoneyResponse(data = baseData) {
+function mockMoneyResponse(data: unknown = baseData) {
   global.fetch = jest.fn().mockResolvedValue({
     ok: true,
     json: async () => ({ success: true, data }),
