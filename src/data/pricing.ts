@@ -1,3 +1,5 @@
+import { PLAN_USAGE_ALLOWANCES } from '@/lib/usage/plan-limits'
+
 export interface PricingPlan {
   id: 'free' | 'professional' | 'business'
   name: string
@@ -33,9 +35,9 @@ export const pricingPlans: PricingPlan[] = [
     features: [
       'Your onprez.com handle',
       'Basic presence page',
-      'Up to 5 services',
-      'Up to 5 media items',
-      '10 bookings per month',
+      `Up to ${PLAN_USAGE_ALLOWANCES.FREE.activeServices} services`,
+      `Up to ${PLAN_USAGE_ALLOWANCES.FREE.mediaItems} media items`,
+      `${PLAN_USAGE_ALLOWANCES.FREE.monthlyBookings} bookings per month`,
       'Customer records and email notifications',
     ],
     cta: 'Claim Your Handle Free',
@@ -50,9 +52,9 @@ export const pricingPlans: PricingPlan[] = [
     features: [
       'Everything in Free, plus:',
       'Advanced presence page',
-      'Up to 20 services',
-      'Up to 20 media items',
-      '100 bookings per month',
+      `Up to ${PLAN_USAGE_ALLOWANCES.PROFESSIONAL.activeServices} services`,
+      `Up to ${PLAN_USAGE_ALLOWANCES.PROFESSIONAL.mediaItems} media items`,
+      `${PLAN_USAGE_ALLOWANCES.PROFESSIONAL.monthlyBookings} bookings per month`,
       'Custom branding',
       'Booking deposits and protection',
       'Priority support',
@@ -68,8 +70,8 @@ export const pricingPlans: PricingPlan[] = [
     features: [
       'Everything in Professional, plus:',
       'Premium presence page',
-      'Up to 50 services',
-      'Up to 50 media items',
+      `Up to ${PLAN_USAGE_ALLOWANCES.BUSINESS.activeServices} services`,
+      `Up to ${PLAN_USAGE_ALLOWANCES.BUSINESS.mediaItems} media items`,
       'Unlimited bookings under fair use',
       'Homepage and featured-listing eligibility',
       'Priority support',
@@ -96,15 +98,15 @@ export const featureComparison: FeatureComparisonCategory[] = [
       },
       {
         name: 'Services',
-        free: '5',
-        professional: '20',
-        business: '50',
+        free: String(PLAN_USAGE_ALLOWANCES.FREE.activeServices),
+        professional: String(PLAN_USAGE_ALLOWANCES.PROFESSIONAL.activeServices),
+        business: String(PLAN_USAGE_ALLOWANCES.BUSINESS.activeServices),
       },
       {
         name: 'Shared media library',
-        free: '5 items',
-        professional: '20 items',
-        business: '50 items',
+        free: `${PLAN_USAGE_ALLOWANCES.FREE.mediaItems} items`,
+        professional: `${PLAN_USAGE_ALLOWANCES.PROFESSIONAL.mediaItems} items`,
+        business: `${PLAN_USAGE_ALLOWANCES.BUSINESS.mediaItems} items`,
       },
       {
         name: 'Custom branding',
@@ -119,8 +121,8 @@ export const featureComparison: FeatureComparisonCategory[] = [
     features: [
       {
         name: 'Monthly bookings',
-        free: '10',
-        professional: '100',
+        free: String(PLAN_USAGE_ALLOWANCES.FREE.monthlyBookings),
+        professional: String(PLAN_USAGE_ALLOWANCES.PROFESSIONAL.monthlyBookings),
         business: 'Unlimited*',
       },
       {

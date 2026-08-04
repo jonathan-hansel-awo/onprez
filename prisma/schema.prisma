@@ -388,6 +388,7 @@ model Business {
   isPublished               Boolean                       @default(false)
   allowSearchEngineIndexing Boolean                       @default(true)
   isPremium                 Boolean                       @default(false)
+  planTier                  PlanTier                      @default(FREE)
   isActive                  Boolean                       @default(true)
   seoTitle                  String?
   seoDescription            String?
@@ -417,6 +418,7 @@ model Business {
   dataLifecycleRequests     DataLifecycleRequest[]
   emailDeliveries           EmailDelivery[]
   handleRedirects           BusinessHandleRedirect[]
+  mediaAssets               MediaAsset[]
 
   @@index([ownerId])
   @@index([category])
@@ -424,6 +426,47 @@ model Business {
   @@index([isPublished, isActive, slug])
   @@index([city, state])
   @@map("businesses")
+}
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  businessId  String
+  provider    String   @default("CLOUDINARY")
+  publicId    String   @unique
+  fingerprint String
+  purpose     String
+  secureUrl   String
+  bytes       BigInt
+  width       Int
+  height      Int
+  format      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastSeenAt  DateTime @default(now())
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, purpose, fingerprint])
+  @@index([businessId, createdAt])
+  @@map("media_assets")
+}
+
+model ProviderCostRate {
+  id            String    @id @default(cuid())
+  provider      String
+  metric        String
+  unit          String
+  rate          Decimal   @db.Decimal(20, 10)
+  currency      String    @default("GBP")
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  source        String
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([provider, metric, effectiveFrom])
+  @@index([provider, metric, effectiveFrom])
+  @@map("provider_cost_rates")
 }
 
 model BusinessHandleRedirect {
@@ -1052,6 +1095,12 @@ model InquiryReply {
 
 enum FeatureKey {
   BOOKING_DEPOSITS
+}
+
+enum PlanTier {
+  FREE
+  PROFESSIONAL
+  BUSINESS
 }
 
 enum EntitlementSource {

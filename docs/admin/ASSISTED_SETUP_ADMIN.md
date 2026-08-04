@@ -26,6 +26,8 @@ Sign out and sign back in after changing the role so the latest database-backed 
 
 ## Capabilities
 
+- Open the separate **Usage & overhead** view for canonical account usage, plan thresholds, and
+  explicitly estimated provider-cost allocation.
 - Search businesses by business name, handle, or owner email.
 - Review setup and publication state.
 - Update business profile and contact content.
@@ -33,6 +35,9 @@ Sign out and sign back in after changing the role so the latest database-backed 
 - Save draft presence sections and publish or unpublish on the business's behalf.
 - Create, edit, activate, feature, and delete services.
 - Preview the public presence page.
+
+Usage accounting, coverage limitations, and the post-deploy media backfill are documented in
+[`USAGE_AND_OVERHEAD.md`](./USAGE_AND_OVERHEAD.md).
 
 ## Security boundaries
 

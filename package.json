@@ -39,6 +39,7 @@
     "entitlement:booking-deposits": "tsx scripts/set-booking-deposit-entitlement.ts",
     "presence:repair-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts",
     "presence:overhaul-template-fidelity": "tsx scripts/repair-presence-template-fidelity.ts --mode=overhaul",
+    "usage:backfill-media": "tsx scripts/backfill-business-media-assets.ts",
     "payments:reconcile": "tsx scripts/reconcile-booking-payments.ts",
     "push:generate-vapid": "tsx scripts/generate-vapid-keys.ts",
     "load-test:seed": "tsx scripts/load-tests/seed-critical-paths.ts",

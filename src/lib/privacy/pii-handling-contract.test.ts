@@ -11,11 +11,18 @@ describe('P2-023 PII handling contract', () => {
   it('keeps a complete, owned and time-bounded machine-readable inventory', () => {
     const inventory = JSON.parse(read('docs/privacy/PII_INVENTORY.json')) as {
       nextReviewDue: string
-      processingActivities: unknown[]
+      processingActivities: Array<{ id: string }>
       fieldPolicies: Array<Record<string, unknown>>
     }
 
-    expect(inventory.processingActivities).toHaveLength(5)
+    expect(inventory.processingActivities.map(activity => activity.id)).toEqual([
+      'account-and-access',
+      'business-presence',
+      'customer-booking-and-inquiry',
+      'payments',
+      'diagnostics-and-analytics',
+      'platform-usage-and-cost',
+    ])
     expect(inventory.fieldPolicies.length).toBeGreaterThanOrEqual(20)
     expect(Date.parse(inventory.nextReviewDue)).toBeGreaterThan(Date.parse('2026-08-01'))
     expect(inventory.fieldPolicies).toEqual(
