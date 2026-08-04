@@ -57,7 +57,7 @@ describe('canonical current-state documentation', () => {
       '[`docs/CRITICAL_ACTION_PLAN_PROGRESS.md`](./docs/CRITICAL_ACTION_PLAN_PROGRESS.md)'
     )
     expect(currentState).toContain('[`Architecture`](#architecture)')
-    expect(currentState).toContain('P2-033')
+    expect(currentState).toContain('[`docs/adr/README.md`](./docs/adr/README.md)')
     expect(currentState).toContain('P3-002')
   })
 
