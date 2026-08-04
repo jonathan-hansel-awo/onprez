@@ -20,6 +20,7 @@ import {
   Settings,
   Share2,
   Users,
+  WalletCards,
   Wrench,
   X,
   type LucideIcon,
@@ -38,6 +39,7 @@ import {
 const navigationIconComponents: Record<DashboardNavigationIcon, LucideIcon> = {
   overview: LayoutDashboard,
   bookings: Calendar,
+  money: WalletCards,
   customers: Users,
   presence: Palette,
   services: Package,
