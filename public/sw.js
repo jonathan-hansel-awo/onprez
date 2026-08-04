@@ -1,8 +1,8 @@
 /* global self, caches, fetch */
 
-const CACHE_NAME = 'onprez-offline-v2'
+const CACHE_NAME = 'onprez-offline-v3'
 const OFFLINE_URL = '/offline.html'
-const PWA_ICON_URL = '/api/pwa/icon?size=192'
+const PWA_ICON_URL = '/icons/onprez-wordmark-192.png'
 const OFFLINE_ASSETS = [OFFLINE_URL, '/favicon.svg', PWA_ICON_URL, '/onprez-wordmark.svg']
 
 self.addEventListener('install', event => {
