@@ -83,7 +83,7 @@ function configureLocalPaymentData() {
 
 describe('GET /api/dashboard/money', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
     mockedGetCurrentUser.mockResolvedValue({ id: 'user-1' })
     mockedResolveBusiness.mockResolvedValue({
       businessId: 'business-1',
