@@ -81,7 +81,7 @@ function mockMoneyResponse(data: unknown = baseData) {
 
 describe('MoneyDashboardPage', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
+    jest.clearAllMocks()
   })
 
   it('shows verified booking fees even when Stripe has moved the available balance into a payout', async () => {
