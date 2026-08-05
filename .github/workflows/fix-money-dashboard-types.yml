@@ -1,0 +1,87 @@
+name: Fix money dashboard type errors
+
+on:
+  push:
+    branches:
+      - feat/stripe-money-dashboard
+    paths:
+      - .github/workflows/fix-money-dashboard-types.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/stripe-money-dashboard
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply compatibility fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_exact(path: str, old: str, new: str) -> None:
+              file_path = Path(path)
+              text = file_path.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected exactly one match in {path}, found {count}: {old!r}")
+              file_path.write_text(text.replace(old, new))
+
+          replace_exact(
+              "src/app/api/dashboard/money/route.ts",
+              "stripe.balance.retrieve(requestOptions),",
+              "stripe.balance.retrieve({}, requestOptions),",
+          )
+
+          replace_exact(
+              "src/app/dashboard/money/page.tsx",
+              '''            <Button asChild className="mt-5">\n              <Link href="/dashboard/settings/payments">Set up booking payments</Link>\n            </Button>''',
+              '''            <Link\n              href="/dashboard/settings/payments"\n              className="mt-5 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-700 to-purple-700 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-onprez-blue focus-visible:ring-offset-2"\n            >\n              Set up booking payments\n            </Link>''',
+          )
+
+          replace_exact(
+              "src/app/dashboard/money/page.tsx",
+              '''            <Button asChild variant="outline">\n              <Link href="/dashboard/settings/payments">\n                Manage connection\n                <ExternalLink className="ml-2 h-4 w-4" />\n              </Link>\n            </Button>''',
+              '''            <Link\n              href="/dashboard/settings/payments"\n              className="inline-flex items-center justify-center rounded-lg border-2 border-blue-700 bg-transparent px-6 py-3 text-base font-semibold text-blue-700 transition-all duration-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-onprez-blue focus-visible:ring-offset-2"\n            >\n              Manage connection\n              <ExternalLink className="ml-2 h-4 w-4" />\n            </Link>''',
+          )
+
+          replace_exact(
+              "src/app/dashboard/settings/payments/page.tsx",
+              '''                      <Button asChild>\n                        <Link href="/dashboard/money">\n                          <WalletCards className="mr-2 h-4 w-4" />\n                          View booking fees &amp; payouts\n                        </Link>\n                      </Button>''',
+              '''                      <Link\n                        href="/dashboard/money"\n                        className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-700 to-purple-700 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-onprez-blue focus-visible:ring-offset-2"\n                      >\n                        <WalletCards className="mr-2 h-4 w-4" />\n                        View booking fees &amp; payouts\n                      </Link>''',
+          )
+
+          replace_exact(
+              "src/app/dashboard/settings/payments/page.tsx",
+              '''                <Button\n                  asChild\n                  variant="outline"\n                  className="shrink-0 border-green-700 text-green-800"\n                >\n                  <Link href="/dashboard/money">Open Money</Link>\n                </Button>''',
+              '''                <Link\n                  href="/dashboard/money"\n                  className="inline-flex shrink-0 items-center justify-center rounded-lg border-2 border-green-700 bg-transparent px-6 py-3 text-base font-semibold text-green-800 transition-all duration-200 hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-700 focus-visible:ring-offset-2"\n                >\n                  Open Money\n                </Link>''',
+          )
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format changed files
+        run: npx prettier --write src/app/api/dashboard/money/route.ts src/app/dashboard/money/page.tsx src/app/dashboard/settings/payments/page.tsx
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Commit verified fix and remove one-off workflow
+        run: |
+          rm .github/workflows/fix-money-dashboard-types.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: resolve money dashboard type errors"
+          git push origin HEAD:feat/stripe-money-dashboard
