@@ -7,12 +7,13 @@ import {
 } from '@/lib/dashboard/navigation'
 
 describe('dashboard navigation information architecture', () => {
-  it('keeps the five core destinations in the primary navigation', () => {
+  it('keeps the six core destinations in the primary navigation', () => {
     const primaryItems = dashboardPrimaryNavigationGroups.flatMap(group => group.items)
 
     expect(primaryItems.map(item => item.name)).toEqual([
       'Overview',
       'Bookings',
+      'Money',
       'Customers',
       'Presence',
       'Services',
@@ -34,6 +35,7 @@ describe('dashboard navigation information architecture', () => {
     expect(dashboardNavigationItems.map(item => item.href)).toEqual([
       '/dashboard',
       '/dashboard/bookings',
+      '/dashboard/money',
       '/dashboard/customers',
       '/dashboard/presence',
       '/dashboard/services',
