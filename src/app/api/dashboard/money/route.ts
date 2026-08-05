@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
       const stripe = getStripeClient()
       const requestOptions = { stripeAccount: connectedAccount.stripeAccountId }
       const [balanceResult, payoutsResult] = await Promise.allSettled([
-        stripe.balance.retrieve(requestOptions),
+        stripe.balance.retrieve({}, requestOptions),
         stripe.payouts.list({ limit: RECENT_PAYOUT_LIMIT }, requestOptions),
       ])
 

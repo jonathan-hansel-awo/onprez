@@ -309,12 +309,13 @@ export default function PaymentsSettingsPage() {
                       </Button>
                     )}
                     {account.status === 'READY' && (
-                      <Button asChild>
-                        <Link href="/dashboard/money">
-                          <WalletCards className="mr-2 h-4 w-4" />
-                          View booking fees &amp; payouts
-                        </Link>
-                      </Button>
+                      <Link
+                        href="/dashboard/money"
+                        className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-700 to-purple-700 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-onprez-blue focus-visible:ring-offset-2"
+                      >
+                        <WalletCards className="mr-2 h-4 w-4" />
+                        View booking fees &amp; payouts
+                      </Link>
                     )}
                     <a
                       href="https://dashboard.stripe.com"
@@ -352,13 +353,12 @@ export default function PaymentsSettingsPage() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="shrink-0 border-green-700 text-green-800"
+                <Link
+                  href="/dashboard/money"
+                  className="inline-flex shrink-0 items-center justify-center rounded-lg border-2 border-green-700 bg-transparent px-6 py-3 text-base font-semibold text-green-800 transition-all duration-200 hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-700 focus-visible:ring-offset-2"
                 >
-                  <Link href="/dashboard/money">Open Money</Link>
-                </Button>
+                  Open Money
+                </Link>
               </div>
             </CardContent>
           </Card>
