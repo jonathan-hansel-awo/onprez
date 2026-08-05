@@ -286,9 +286,12 @@ export default function MoneyDashboardPage() {
               Once connected, this page will show booking-fee payments, Stripe balances and payout
               progress in one place.
             </p>
-            <Button asChild className="mt-5">
-              <Link href="/dashboard/settings/payments">Set up booking payments</Link>
-            </Button>
+            <Link
+              href="/dashboard/settings/payments"
+              className="mt-5 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-700 to-purple-700 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-onprez-blue focus-visible:ring-offset-2"
+            >
+              Set up booking payments
+            </Link>
           </CardContent>
         </Card>
       ) : (
@@ -514,12 +517,13 @@ export default function MoneyDashboardPage() {
                 Use settings only when Stripe needs identity, bank or account information changed.
               </p>
             </div>
-            <Button asChild variant="outline">
-              <Link href="/dashboard/settings/payments">
-                Manage connection
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <Link
+              href="/dashboard/settings/payments"
+              className="inline-flex items-center justify-center rounded-lg border-2 border-blue-700 bg-transparent px-6 py-3 text-base font-semibold text-blue-700 transition-all duration-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-onprez-blue focus-visible:ring-offset-2"
+            >
+              Manage connection
+              <ExternalLink className="ml-2 h-4 w-4" />
+            </Link>
           </div>
 
           <p className="text-center text-xs text-gray-500">
