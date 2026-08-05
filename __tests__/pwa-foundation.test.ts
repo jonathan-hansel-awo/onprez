@@ -19,15 +19,15 @@ describe('Installable PWA foundation', () => {
     expect(appManifest.icons).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          src: '/icons/onprez-wordmark-192.png',
+          src: '/icons/onprez-wordmark-v2-192.png',
           sizes: '192x192',
         }),
         expect.objectContaining({
-          src: '/icons/onprez-wordmark-512.png',
+          src: '/icons/onprez-wordmark-v2-512.png',
           sizes: '512x512',
         }),
         expect.objectContaining({
-          src: '/icons/onprez-wordmark-512-maskable.png',
+          src: '/icons/onprez-wordmark-v2-512-maskable.png',
           purpose: 'maskable',
         }),
       ])
@@ -39,10 +39,10 @@ describe('Installable PWA foundation', () => {
 
   it('ships rasterised wordmark icons for launcher compatibility', () => {
     const iconNames = [
-      'onprez-wordmark-180.png',
-      'onprez-wordmark-192.png',
-      'onprez-wordmark-512.png',
-      'onprez-wordmark-512-maskable.png',
+      'onprez-wordmark-v2-180.png',
+      'onprez-wordmark-v2-192.png',
+      'onprez-wordmark-v2-512.png',
+      'onprez-wordmark-v2-512-maskable.png',
     ]
 
     for (const iconName of iconNames) {
@@ -57,8 +57,8 @@ describe('Installable PWA foundation', () => {
     expect(serviceWorker).toContain("request.mode !== 'navigate'")
     expect(serviceWorker).toContain('fetch(request).catch')
     expect(serviceWorker).toContain('caches.match(OFFLINE_URL)')
-    expect(serviceWorker).toContain("const CACHE_NAME = 'onprez-offline-v3'")
-    expect(serviceWorker).toContain("const PWA_ICON_URL = '/icons/onprez-wordmark-192.png'")
+    expect(serviceWorker).toContain("const CACHE_NAME = 'onprez-offline-v4'")
+    expect(serviceWorker).toContain("const PWA_ICON_URL = '/icons/onprez-wordmark-v2-192.png'")
     expect(serviceWorker).toContain("'/onprez-wordmark.svg'")
     expect(serviceWorker).not.toContain('cache.put')
     expect(serviceWorker).not.toContain("'/api/dashboard")
