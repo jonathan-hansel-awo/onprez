@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -78,7 +79,7 @@ export function Hero() {
 
             <h1
               id="hero-heading"
-              className="mt-7 text-balance text-5xl font-semibold leading-[0.96] tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[4.5rem] xl:text-[5.25rem]"
+              className="mt-7 text-balance text-[2.7rem] font-semibold leading-[1.02] tracking-[-0.05em] text-slate-950 sm:text-6xl lg:text-[3.5rem] xl:text-[4rem]"
             >
               <span className="block">{homepagePositioning.headlineLines[0]}</span>
               <span className="mt-2 block font-serif font-normal italic text-blue-700">
@@ -208,10 +209,22 @@ export function Hero() {
                       </div>
                     </div>
 
-                    <div className="relative hidden min-h-[15rem] overflow-hidden bg-[linear-gradient(145deg,#f8c9bd_0%,#c9988b_45%,#5d3d38_100%)] sm:block">
-                      <div className="absolute -bottom-12 left-1/2 h-56 w-44 -translate-x-1/2 rounded-t-[48%] bg-[#2b1b19]/80" />
-                      <div className="absolute left-1/2 top-10 h-24 w-24 -translate-x-1/2 rounded-full bg-[#8f5f52] shadow-[0_0_0_16px_rgba(57,32,28,0.82)]" />
-                      <div className="absolute inset-x-5 bottom-5 rounded-full border border-white/20 bg-black/20 px-3 py-2 text-center text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur">
+                    <div className="relative min-h-[12rem] overflow-hidden bg-[#5d3d38] sm:min-h-[15rem]">
+                      <div className="absolute inset-x-0 bottom-8 top-0">
+                        <Image
+                          src="/images/landing/hero-hair-stylist.webp"
+                          alt="Example hair stylist in her salon"
+                          fill
+                          priority
+                          sizes="(min-width: 1280px) 300px, (min-width: 640px) 40vw, 100vw"
+                          className="object-cover object-center"
+                        />
+                        <div
+                          className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="absolute inset-x-0 bottom-0 flex h-8 items-center justify-center border-t border-white/15 bg-[#201b1a] px-3 text-center text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-white">
                         Your brand, your way
                       </div>
                     </div>
