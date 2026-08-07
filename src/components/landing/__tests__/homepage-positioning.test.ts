@@ -3,12 +3,19 @@ import { homepagePositioning, homepageScenario } from '../homepage-positioning'
 describe('homepage positioning', () => {
   it('states the product outcome in concrete terms', () => {
     const headline = homepagePositioning.headlineLines.join(' ').toLowerCase()
+    const summary = homepagePositioning.summary.toLowerCase()
 
-    expect(headline).toContain('services')
-    expect(headline).toContain('availability')
-    expect(headline).toContain('bookings')
-    expect(homepagePositioning.summary.toLowerCase()).toContain('clients')
-    expect(homepagePositioning.summary.toLowerCase()).toContain('book')
+    expect(headline).toContain('online home')
+    expect(headline).toContain('seen')
+    expect(headline).toContain('shared')
+    expect(headline).toContain('booked')
+    expect(summary).toContain('brand')
+    expect(summary).toContain('work')
+    expect(summary).toContain('services')
+    expect(summary).toContain('book')
+    expect(summary).toContain('schedule')
+    expect(homepagePositioning.primaryCta).toBe('Claim Your Handle Free')
+    expect(homepagePositioning.secondaryCta).toBe('See What Clients See')
   })
 
   it('identifies beauty and wellness as the first launch niche', () => {

@@ -3,7 +3,7 @@
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
-import { Logo } from '@/components/navigation'
+import { Logo } from './logo'
 import { UserMenu } from '@/components/navigation/UserMenu'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'

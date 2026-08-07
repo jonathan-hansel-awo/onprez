@@ -65,10 +65,10 @@ describe('Installable PWA foundation', () => {
     expect(serviceWorker).not.toContain("'/api/bookings")
   })
 
-  it('uses the supplied wordmark for general OnPrez branding', () => {
-    expect(navigationLogo).toContain('src="/onprez-wordmark.svg"')
-    expect(navigationLogo).toContain('width={616}')
-    expect(navigationLogo).toContain('height={176}')
+  it('renders the wordmark inline for reliable general OnPrez branding', () => {
+    expect(navigationLogo).toContain('<LogoSVG className={className} variant={variant} />')
+    expect(navigationLogo).toContain('viewBox="0 0 154 44"')
+    expect(navigationLogo).toContain('aria-label="OnPrez home"')
   })
 
   it('uses the OnPrez wordmark on the offline experience', () => {
