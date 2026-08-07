@@ -28,6 +28,8 @@ interface Booking {
   customer: { name: string; email: string }
 }
 
+const QUICK_CREATE_BOOKING_HREF = '/dashboard/bookings?create=true'
+
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<Stats | null>(null)
@@ -95,7 +97,7 @@ export default function DashboardPage() {
             </Link>
           </Button>
           <Button variant="primary" size="sm">
-            <Link href="/dashboard/bookings/new">
+            <Link href={QUICK_CREATE_BOOKING_HREF}>
               <Plus className="w-4 h-4 mr-2" />
               New Booking
             </Link>
@@ -177,7 +179,7 @@ export default function DashboardPage() {
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">No upcoming appointments</p>
                 <Button variant="primary" size="sm" className="mt-4">
-                  <Link href="/dashboard/bookings/new">Create Booking</Link>
+                  <Link href={QUICK_CREATE_BOOKING_HREF}>Create Booking</Link>
                 </Button>
               </div>
             ) : (
@@ -275,7 +277,7 @@ export default function DashboardPage() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button variant="ghost" className="h-24 flex-col">
-              <Link href="/dashboard/bookings/new">
+              <Link href={QUICK_CREATE_BOOKING_HREF}>
                 <Plus className="w-6 h-6 mb-2" />
                 New Booking
               </Link>
