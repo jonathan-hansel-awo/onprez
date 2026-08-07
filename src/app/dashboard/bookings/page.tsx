@@ -187,7 +187,7 @@ function Bookings() {
   const [isPaymentActionRunning, setIsPaymentActionRunning] = useState(false)
 
   // Quick create state
-  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false)
+  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(searchParams.get('create') === 'true')
 
   // Status change state
   const [pendingStatusChange, setPendingStatusChange] = useState<{
@@ -298,13 +298,24 @@ function Bookings() {
     if (endDate) params.set('endDate', endDate.toISOString().split('T')[0])
     if (linkedBookingId) params.set('bookingId', linkedBookingId)
     if (linkedBookingId && linkedBusinessId) params.set('businessId', linkedBusinessId)
+    if (isQuickCreateOpen) params.set('create', 'true')
 
     const [sortBy, sortOrder] = sortValue.split('-')
     if (sortBy !== 'startTime') params.set('sortBy', sortBy)
     if (sortOrder !== 'desc') params.set('sortOrder', sortOrder)
 
     router.replace(`/dashboard/bookings?${params.toString()}`, { scroll: false })
-  }, [status, search, startDate, endDate, sortValue, linkedBookingId, linkedBusinessId, router])
+  }, [
+    status,
+    search,
+    startDate,
+    endDate,
+    sortValue,
+    linkedBookingId,
+    linkedBusinessId,
+    isQuickCreateOpen,
+    router,
+  ])
 
   // Handlers
   const handleQuickCreateSuccess = () => {
