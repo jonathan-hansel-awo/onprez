@@ -303,7 +303,7 @@ export function PresencePublicationStatus() {
   if (isEditor) {
     return (
       <aside
-        className="fixed bottom-4 right-4 z-[80] w-[min(25rem,calc(100vw-2rem))]"
+        className="fixed bottom-4 right-4 z-[80] hidden w-[min(25rem,calc(100vw-2rem))] md:block"
         aria-live="polite"
         aria-label="Presence publication status"
       >
