@@ -16,26 +16,26 @@ const booking = {
 }
 
 describe('booking management modals', () => {
-  const originalTimezone = process.env.TZ
-
-  beforeAll(() => {
-    process.env.TZ = 'Europe/London'
-  })
-
-  afterAll(() => {
-    process.env.TZ = originalTimezone
-  })
-
   afterEach(() => {
+    jest.useRealTimers()
     jest.restoreAllMocks()
     delete (global as { fetch?: typeof fetch }).fetch
   })
 
-  it('requests and submits the selected local calendar date during BST', async () => {
-    const selectedDate = new Date(2026, 7, 14)
+  it('formats local calendar fields without converting them to UTC', () => {
+    const selectedDate = new Date('2026-08-13T23:00:00.000Z')
+
+    jest.spyOn(selectedDate, 'getFullYear').mockReturnValue(2026)
+    jest.spyOn(selectedDate, 'getMonth').mockReturnValue(7)
+    jest.spyOn(selectedDate, 'getDate').mockReturnValue(14)
 
     expect(selectedDate.toISOString().split('T')[0]).toBe('2026-08-13')
     expect(formatCalendarDate(selectedDate)).toBe('2026-08-14')
+  })
+
+  it('requests and submits the selected local calendar date', async () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-08-08T12:00:00.000Z'))
 
     global.fetch = jest.fn(async () => {
       return {
