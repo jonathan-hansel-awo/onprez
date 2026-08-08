@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BarChart3,
   Calendar,
+  CalendarDays,
   ChevronDown,
   ChevronRight,
   HelpCircle,
@@ -39,6 +40,7 @@ import {
 const navigationIconComponents: Record<DashboardNavigationIcon, LucideIcon> = {
   overview: LayoutDashboard,
   bookings: Calendar,
+  calendar: CalendarDays,
   money: WalletCards,
   customers: Users,
   presence: Palette,
