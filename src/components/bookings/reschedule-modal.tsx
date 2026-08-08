@@ -42,8 +42,12 @@ function getFirstDayOfMonth(year: number, month: number): number {
   return new Date(year, month, 1).getDay()
 }
 
-function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0]
+export function formatCalendarDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
 }
 
 function formatDisplayDate(date: Date): string {
@@ -102,13 +106,15 @@ export function RescheduleModal({
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
+      const currentDate = new Date()
+
       setStep('date')
       setSelectedDate(null)
       setSelectedSlot(null)
       setReason('')
       setError(null)
-      setViewMonth(today.getMonth())
-      setViewYear(today.getFullYear())
+      setViewMonth(currentDate.getMonth())
+      setViewYear(currentDate.getFullYear())
     }
   }, [isOpen])
 
@@ -121,7 +127,7 @@ export function RescheduleModal({
       setError(null)
 
       try {
-        const dateStr = formatDate(date)
+        const dateStr = formatCalendarDate(date)
         const response = await fetch(
           `/api/availability?slug=${encodeURIComponent(businessSlug)}&date=${dateStr}&serviceId=${booking.service.id}&includeSlots=true`
         )
@@ -147,7 +153,7 @@ export function RescheduleModal({
         } else {
           setTimeSlots([])
         }
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load available times. Please try again.')
         setTimeSlots([])
       } finally {
@@ -179,7 +185,7 @@ export function RescheduleModal({
 
     try {
       await onReschedule(
-        formatDate(selectedDate),
+        formatCalendarDate(selectedDate),
         selectedSlot.startTime,
         selectedSlot.endTime,
         reason || undefined
@@ -310,8 +316,9 @@ export function RescheduleModal({
                 }
 
                 const isSelectable = isDateSelectable(date)
-                const isToday = formatDate(date) === formatDate(today)
-                const isSelected = selectedDate && formatDate(date) === formatDate(selectedDate)
+                const isToday = formatCalendarDate(date) === formatCalendarDate(today)
+                const isSelected =
+                  selectedDate && formatCalendarDate(date) === formatCalendarDate(selectedDate)
 
                 return (
                   <button
@@ -357,7 +364,7 @@ export function RescheduleModal({
                   <Skeleton key={i} className="h-12 rounded-lg" />
                 ))}
               </div>
-            ) : timeSlots.length === 0 ? (
+            ) : timeSlots.every(slot => !slot.available) ? (
               <div className="text-center py-8">
                 <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-600">No available times for this date</p>
