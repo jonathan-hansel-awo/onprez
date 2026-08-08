@@ -7,12 +7,13 @@ import {
 } from '@/lib/dashboard/navigation'
 
 describe('dashboard navigation information architecture', () => {
-  it('keeps the six core destinations in the primary navigation', () => {
+  it('groups the seven core destinations by function in the primary navigation', () => {
     const primaryItems = dashboardPrimaryNavigationGroups.flatMap(group => group.items)
 
     expect(primaryItems.map(item => item.name)).toEqual([
       'Overview',
       'Bookings',
+      'Calendar',
       'Money',
       'Customers',
       'Presence',
@@ -35,6 +36,7 @@ describe('dashboard navigation information architecture', () => {
     expect(dashboardNavigationItems.map(item => item.href)).toEqual([
       '/dashboard',
       '/dashboard/bookings',
+      '/dashboard/bookings/calendar',
       '/dashboard/money',
       '/dashboard/customers',
       '/dashboard/presence',
@@ -69,6 +71,21 @@ describe('dashboard navigation active-route matching', () => {
     expect(
       isDashboardNavigationItemActive('/dashboard/settings/booking', '/dashboard/settings')
     ).toBe(true)
+  })
+
+  it('prefers Calendar over its parent Bookings destination on calendar routes', () => {
+    expect(
+      isDashboardNavigationItemActive(
+        '/dashboard/bookings/calendar?view=month',
+        '/dashboard/bookings/calendar'
+      )
+    ).toBe(true)
+    expect(
+      isDashboardNavigationItemActive(
+        '/dashboard/bookings/calendar?view=month',
+        '/dashboard/bookings'
+      )
+    ).toBe(false)
   })
 
   it('does not match unrelated routes that merely share a prefix', () => {

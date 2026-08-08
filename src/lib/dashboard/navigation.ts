@@ -1,6 +1,7 @@
 export type DashboardNavigationIcon =
   | 'overview'
   | 'bookings'
+  | 'calendar'
   | 'money'
   | 'customers'
   | 'presence'
@@ -29,6 +30,7 @@ export const dashboardPrimaryNavigationGroups: DashboardNavigationGroup[] = [
     items: [
       { name: 'Overview', href: '/dashboard', icon: 'overview' },
       { name: 'Bookings', href: '/dashboard/bookings', icon: 'bookings' },
+      { name: 'Calendar', href: '/dashboard/bookings/calendar', icon: 'calendar' },
       { name: 'Money', href: '/dashboard/money', icon: 'money' },
       { name: 'Customers', href: '/dashboard/customers', icon: 'customers' },
     ],
@@ -70,7 +72,21 @@ export function isDashboardNavigationItemActive(pathname: string, href: string) 
     return currentPath === itemPath
   }
 
-  return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`)
+  const itemMatches = currentPath === itemPath || currentPath.startsWith(`${itemPath}/`)
+
+  if (!itemMatches) return false
+
+  const moreSpecificMatch = dashboardNavigationItems.some(item => {
+    const candidatePath = normalisePath(item.href)
+
+    return (
+      candidatePath.length > itemPath.length &&
+      candidatePath.startsWith(`${itemPath}/`) &&
+      (currentPath === candidatePath || currentPath.startsWith(`${candidatePath}/`))
+    )
+  })
+
+  return !moreSpecificMatch
 }
 
 export function isDashboardNavigationGroupActive(
