@@ -11,6 +11,7 @@ import {
   Globe2,
   LoaderCircle,
   RefreshCw,
+  X,
 } from 'lucide-react'
 import {
   formatPublishedAt,
@@ -87,6 +88,7 @@ export function PresencePublicationStatus() {
   const [refreshing, setRefreshing] = useState(false)
   const [generatingPreview, setGeneratingPreview] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isDismissed, setIsDismissed] = useState(false)
   const [previewFeedback, setPreviewFeedback] = useState<{
     type: 'success' | 'error'
     message: string
@@ -138,6 +140,8 @@ export function PresencePublicationStatus() {
   }, [])
 
   useEffect(() => {
+    if (isEditor && isDismissed) return
+
     void refreshStatus()
 
     const interval = window.setInterval(() => void refreshStatus(), isEditor ? 4000 : 15000)
@@ -148,7 +152,7 @@ export function PresencePublicationStatus() {
       window.clearInterval(interval)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [isEditor, refreshStatus])
+  }, [isDismissed, isEditor, refreshStatus])
 
   useEffect(() => {
     setPreviewUrl(null)
@@ -201,7 +205,7 @@ export function PresencePublicationStatus() {
     }
   }
 
-  if (!status) return null
+  if (!status || (isEditor && isDismissed)) return null
 
   const { state, businessSlug } = status
   const lastPublished = formatPublishedAt(state.publishedAt)
@@ -224,15 +228,28 @@ export function PresencePublicationStatus() {
               </p>
               <h2 className="mt-1 text-base font-bold">{state.label}</h2>
             </div>
-            <button
-              type="button"
-              onClick={() => void refreshStatus()}
-              disabled={refreshing}
-              className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-current/15 bg-white/60 p-2 transition hover:bg-white disabled:opacity-60"
-              aria-label="Refresh publication status"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void refreshStatus()}
+                disabled={refreshing}
+                className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-current/15 bg-white/60 p-2 transition hover:bg-white disabled:opacity-60"
+                aria-label="Refresh publication status"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+
+              {isEditor && (
+                <button
+                  type="button"
+                  onClick={() => setIsDismissed(true)}
+                  className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-current/15 bg-white/60 p-2 transition hover:bg-white"
+                  aria-label="Close publication status notification"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              )}
+            </div>
           </div>
 
           <p className="mt-2 text-sm font-medium leading-6">{state.shortDescription}</p>
