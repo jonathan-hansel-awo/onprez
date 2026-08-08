@@ -1,6 +1,6 @@
 export const homepagePositioning = {
   badge: 'For beauty & wellness professionals and small teams',
-  headlineLines: ['Your business’s modern online home ', 'built to be seen, shared and booked.'],
+  headlineLines: ['Your business’s modern online home', 'built to be seen, shared and booked.'],
   summary:
     'Share one beautiful page where clients can discover your brand, explore your work and services, and book with confidence — while you manage your schedule seamlessly.',
   audience:
