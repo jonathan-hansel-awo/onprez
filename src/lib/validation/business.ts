@@ -236,6 +236,18 @@ export const createSpecialDateSchema = specialDateSchema.refine(
   { message: 'Open and close times are required when not closed', path: ['openTime'] }
 )
 
+export const bulkCloseDatesSchema = z.object({
+  dates: z
+    .array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (use YYYY-MM-DD)'))
+    .min(1, 'Select at least one date')
+    .max(62, 'You can block up to 62 dates at once')
+    .refine(dates => new Set(dates).size === dates.length, 'Dates must be unique'),
+  name: z.string().trim().min(1, 'Reason is required').max(100),
+  notes: z.string().trim().max(500).optional().nullable(),
+})
+
+export type BulkCloseDatesInput = z.infer<typeof bulkCloseDatesSchema>
+
 export const updateSpecialDateSchema = specialDateSchema.partial().extend({
   id: z.string().cuid(),
 })

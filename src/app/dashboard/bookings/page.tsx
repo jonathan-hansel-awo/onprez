@@ -31,6 +31,7 @@ import { AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { RescheduleModal } from '@/components/bookings/reschedule-modal'
 import { CancelBookingModal } from '@/components/bookings/cancel-booking-modal'
 import { QuickCreateBookingModal } from '@/components/bookings/quick-create-booking-modal'
+import { BookingsViewNavigation } from '@/components/bookings/bookings-view-navigation'
 import { GuidedEmptyState } from '@/components/dashboard/guided-empty-state'
 import Loading from '@/app/[handle]/loading'
 
@@ -617,10 +618,13 @@ function Bookings() {
           <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
           <p className="text-gray-600 mt-1">Manage and track all your appointments</p>
         </div>
-        <Button variant="secondary" onClick={fetchBookings} disabled={loading}>
-          <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
-          Refresh
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <BookingsViewNavigation current="list" />
+          <Button variant="secondary" onClick={fetchBookings} disabled={loading}>
+            <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Status Tabs */}

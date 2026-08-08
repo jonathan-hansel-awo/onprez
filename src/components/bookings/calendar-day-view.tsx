@@ -35,6 +35,7 @@ interface BusinessHours {
 }
 
 interface CalendarDayViewProps {
+  initialDate?: string
   onBookingClick?: (booking: Booking) => void
   onAddBooking?: (time?: string) => void
   refreshTrigger?: number
@@ -51,11 +52,14 @@ function generateTimeSlots(): string[] {
 }
 
 export function CalendarDayView({
+  initialDate,
   onBookingClick,
   onAddBooking,
   refreshTrigger,
 }: CalendarDayViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(
+    initialDate ? new Date(`${initialDate}T12:00:00`) : new Date()
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -69,6 +73,10 @@ export function CalendarDayView({
   })
 
   const timeSlots = useMemo(() => generateTimeSlots(), [])
+
+  useEffect(() => {
+    if (initialDate) setCurrentDate(new Date(`${initialDate}T12:00:00`))
+  }, [initialDate])
 
   // Fetch day's bookings
   const fetchDayBookings = async () => {

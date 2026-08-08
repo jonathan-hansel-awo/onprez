@@ -7,7 +7,17 @@ import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist'
 import { InstallOnPrezCard } from '@/components/pwa/install-onprez-card'
-import { Calendar, DollarSign, Users, Clock, Plus, ExternalLink, ArrowRight } from 'lucide-react'
+import {
+  Calendar,
+  CalendarDays,
+  CalendarX2,
+  DollarSign,
+  Users,
+  Clock,
+  Plus,
+  ExternalLink,
+  ArrowRight,
+} from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
@@ -275,11 +285,23 @@ export default function DashboardPage() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
             <Button variant="ghost" className="h-24 flex-col">
               <Link href={QUICK_CREATE_BOOKING_HREF}>
                 <Plus className="w-6 h-6 mb-2" />
                 New Booking
+              </Link>
+            </Button>
+            <Button variant="ghost" className="h-24 flex-col">
+              <Link href="/dashboard/bookings/calendar">
+                <CalendarDays className="w-6 h-6 mb-2" />
+                Calendar
+              </Link>
+            </Button>
+            <Button variant="ghost" className="h-24 flex-col">
+              <Link href="/dashboard/bookings/calendar?block=true">
+                <CalendarX2 className="w-6 h-6 mb-2" />
+                Block Time
               </Link>
             </Button>
             <Button variant="ghost" className="h-24 flex-col">
