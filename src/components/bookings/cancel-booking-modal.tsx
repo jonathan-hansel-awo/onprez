@@ -325,10 +325,10 @@ export function CancelBookingModal({
         )}
 
         {/* Notification Toggle */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div>
+        <div className="flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="min-w-0">
             <p className="font-medium text-gray-900">Notify customer</p>
-            <p className="text-sm text-gray-500">
+            <p className="break-words text-sm text-gray-500">
               Send a cancellation email to {booking.customer.email}
             </p>
           </div>
@@ -336,16 +336,18 @@ export function CancelBookingModal({
             type="button"
             role="switch"
             aria-checked={notifyCustomer}
+            aria-label="Notify customer of cancellation"
             onClick={() => setNotifyCustomer(!notifyCustomer)}
             className={cn(
-              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+              'relative inline-flex h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
               notifyCustomer ? 'bg-red-600' : 'bg-gray-300'
             )}
           >
             <span
+              aria-hidden="true"
               className={cn(
-                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                notifyCustomer ? 'translate-x-6' : 'translate-x-1'
+                'absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+                notifyCustomer ? 'translate-x-5' : 'translate-x-0'
               )}
             />
           </button>
